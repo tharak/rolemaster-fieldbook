@@ -163,6 +163,7 @@
         select.innerHTML = detail.columns.map((column, index) => `<option value="${index}">${esc(column.group)} · ${esc(column.label)}</option>`).join('');
         $('#column-select-field').firstChild.textContent = detail.code === 'A-10.9.11' ? 'Target' : 'Target armor';
         $('.table-scroll').hidden = false; $('.lookup-controls').hidden = false; $('#lookup-result').hidden = false; $('#table-source').hidden = true;
+        $('.table-scroll').innerHTML = `<details class="full-attack-table"><summary>Show the complete attack table</summary><div class="table-scroll-inner"><table id="attack-grid" class="attack-grid"></table></div></details>`;
         renderGrid(); updateLookup();
         $('#table-note').textContent = 'Damage and critical severity appear together, for example 12E means 12 hits and an E critical. UM rows depend on the unmodified die result.';
       } else if (detail.categories && detail.professions) {
@@ -177,8 +178,8 @@
   function renderSource(table) {
     $('.table-scroll').hidden = true;
     $('#table-source').hidden = false;
-    $('#table-source').innerHTML = (table.sourcePages || []).map(page => `<section class="source-page"><div class="source-page-head"><span>${esc(table.code)}</span><span>CORE PAGE ${page.printedPage}</span></div><pre>${esc(page.lines.map(line => line.text).join('\n'))}</pre></section>`).join('');
-    $('#table-note').textContent = 'Text is transcribed from the book text layer with original spacing preserved. Multi-page tables include each referenced page.';
+    $('#table-source').innerHTML = (table.sourcePages || []).map(page => `<section class="source-page"><div class="source-page-head"><span>${esc(table.code)}</span><span>CORE PAGE ${page.printedPage}</span></div><div class="source-lines">${page.lines.map(line => line.cells?.length > 1 ? `<p>${line.cells.map(cell => `<span>${esc(cell)}</span>`).join('')}</p>` : `<p>${esc(line.text.trim())}</p>`).filter(line => !line.includes('<p></p>')).join('')}</div></section>`).join('');
+    $('#table-note').textContent = 'Transcribed from the book text layer and reflowed to fit the page. Multi-page tables include each referenced page.';
   }
   function renderGrid() {
     if (!activeTable?.columns || !activeTable?.rows) return;
