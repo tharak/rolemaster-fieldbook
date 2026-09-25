@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#171a16">
+  <meta name="description" content="Create and keep Rolemaster FRP characters, and jump to the attack tables at the table.">
+  <title>Rolemaster Fieldbook</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="#home" aria-label="Rolemaster Fieldbook home"><span class="brand-mark">R</span><span>ROLEMASTER <small>FIELD BOOK</small></span></a>
+    <nav aria-label="Main navigation">
+      <button class="nav-link active" data-view="home">Characters <span id="character-count">0</span></button>
+      <button class="nav-link" data-view="tables">Attack tables</button>
+    </nav>
+    <span class="edition">FRP · 2ND EDITION</span>
+  </header>
+
+  <main>
+    <section id="home-view" class="view active">
+      <div class="hero">
+        <div class="hero-copy"><p class="eyebrow">YOUR CAMPAIGN COMPANION</p><h1>Make a hero.<br><em>Know their numbers.</em></h1><p class="intro">Build and keep your Rolemaster characters in one place. Open the original attack tables in a click when the dice hit the table.</p><button id="new-character" class="button button-light">＋ Create a character</button></div>
+        <div class="hero-art" aria-hidden="true"><div class="orbit orbit-one"></div><div class="orbit orbit-two"></div><div class="sigil">ᚱ</div><div class="art-caption">THE ADVENTURE<br>STARTS HERE</div></div>
+      </div>
+      <div class="section-heading"><div><p class="eyebrow">YOUR ROSTER</p><h2>Characters</h2></div><span id="roster-label" class="muted">Saved on this device</span></div>
+      <div id="roster" class="roster"></div>
+      <div class="empty-state" id="empty-state"><span class="empty-icon">✳</span><h3>Your next story starts with a name.</h3><p>Create a character to keep their stats, skills, and notes ready for the next session.</p><button class="button button-dark" id="empty-create">Create your first character</button></div>
+    </section>
+
+    <section id="editor-view" class="view">
+      <div class="editor-top"><button class="back-link" id="back-roster">← All characters</button><div class="editor-actions"><button class="button button-quiet" id="print-character">Print sheet</button><button class="button button-quiet danger" id="delete-character">Delete</button></div></div>
+      <div class="editor-title"><p class="eyebrow">CHARACTER RECORD</p><h1 id="editor-heading">New character</h1><p>Keep the essentials close. Your sheet saves automatically on this device.</p></div>
+      <form id="character-form">
+        <div class="sheet-grid">
+          <section class="panel identity-panel"><div class="panel-head"><span class="step">01</span><div><h2>Identity</h2><p>The person behind the numbers</p></div></div>
+            <label class="field wide">Character name<input name="name" required maxlength="50" placeholder="A name worth remembering"></label>
+            <label class="field">Player<input name="player" maxlength="50" placeholder="Your name"></label>
+            <label class="field">Campaign<input name="campaign" maxlength="50" placeholder="Campaign or world"></label>
+            <label class="field">Race<select name="race"><option>Common Man</option><option>High Man</option><option>Wood Elf</option><option>Dwarf</option><option>Halfling</option></select></label>
+            <label class="field">Profession<select name="profession"><option>Fighter</option><option>Thief</option><option>Rogue</option><option>Cleric</option><option>Magician</option><option>Mentalist</option><option>Ranger</option><option>Dabbler</option><option>Bard</option></select></label>
+            <label class="field">Realm of power<select name="realm"><option>None</option><option>Essence</option><option>Channeling</option><option>Mentalism</option><option>Choose at table</option></select></label>
+            <label class="field">Level<input name="level" type="number" min="1" max="100" value="1"></label>
+            <label class="field">Experience points<input name="xp" type="number" min="0" value="10000"></label>
+            <label class="field">Age<input name="age" type="number" min="1" placeholder="—"></label>
+            <label class="field wide">Character concept<textarea name="concept" rows="3" maxlength="400" placeholder="A disgraced court mage searching for a way home…"></textarea></label>
+          </section>
+          <section class="panel stats-panel"><div class="panel-head"><span class="step">02</span><div><h2>Stats</h2><p>Temporary and potential values</p></div></div><div class="stat-header"><span>STAT</span><span>TEMP</span><span>POT</span></div><div id="stats-list" class="stats-list"></div><p class="field-note">Enter values from your chosen generation method. Racial and profession modifiers are in the core rules.</p></section>
+          <section class="panel skills-panel"><div class="panel-head"><span class="step">03</span><div><h2>Skills & gear</h2><p>What they know and carry</p></div></div><label class="field wide">Training packages<input name="training" maxlength="120" placeholder="e.g. Woodsman, Weapon Master"></label><label class="field wide">Armor type<select name="armor"><option>— Choose armor —</option><option>Plate · AT 20</option><option>Plate · AT 19</option><option>Plate · AT 18</option><option>Chain · AT 17</option><option>Chain · AT 16</option><option>Chain · AT 15</option><option>Chain · AT 14</option><option>Chain · AT 13</option><option>Rigid leather · AT 12</option><option>Rigid leather · AT 11</option><option>Rigid leather · AT 10</option><option>Soft leather · AT 9</option><option>Soft leather · AT 8</option><option>Soft leather · AT 7</option><option>Soft leather · AT 6</option><option>Soft leather · AT 5</option><option>No armor · AT 4</option><option>No armor · AT 3</option><option>No armor · AT 2</option><option>No armor · AT 1</option></select></label>
+            <div class="field wide"><div class="field-label-row"><span class="field-label">Common skills</span><button type="button" id="add-skill" class="text-button">＋ Add skill</button></div><div id="skills-list" class="skills-list"></div></div>
+            <label class="field wide">Equipment & notes<textarea name="notes" rows="4" maxlength="1200" placeholder="Weapons, gear, allies, reminders…"></textarea></label>
+          </section>
+          <aside class="quick-panel"><p class="eyebrow">AT THE TABLE</p><h2>Need an attack table?</h2><p>Find the right table by weapon or spell, then keep the reference open alongside your character.</p><button type="button" class="button button-light" id="open-tables">Browse attack tables <span>↗</span></button><div class="quick-rule"></div><p class="small-note">Your characters stay in this browser. Use Print sheet to save a copy as PDF.</p></aside>
+        </div>
+      </form>
+    </section>
+
+    <section id="tables-view" class="view">
+      <div class="table-intro"><div><p class="eyebrow">APPENDIX A-10.9</p><h1>The attack tables</h1><p>Select a table to view the original page from your core rules. Use the browser zoom controls to read the grid.</p></div><div class="page-stamp">CORE<br>RULES <span>↗</span></div></div>
+      <div class="table-layout"><aside class="table-sidebar"><label class="field">Find a table<input id="table-search" type="search" placeholder="Weapon, spell…"></label><div id="table-list" class="table-list"></div></aside><div class="pdf-panel"><div class="pdf-toolbar"><div><span class="pdf-label">NOW VIEWING</span><strong id="table-current">One-handed concussion</strong></div><span id="page-number" class="page-number">PDF PAGE 221</span><a id="open-pdf" class="text-button" target="_blank" rel="noopener">Open page ↗</a></div><iframe id="pdf-frame" title="Selected Rolemaster attack table" src="Rolemaster%20FRP%20-%20CORE%20Rules%20-%20OCR.pdf#page=221&zoom=page-width"></iframe></div></div>
+      <p class="table-footnote">The embedded reference uses the PDF already in this folder. If your browser does not display PDFs inline, use “Open page”.</p>
+    </section>
+  </main>
+  <footer><span>ROLEMASTER FIELD BOOK</span><span>Made for the long road ahead <b>✳</b></span></footer>
+  <script src="app.js"></script>
+</body>
+</html>
