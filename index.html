@@ -15,6 +15,7 @@
     <nav aria-label="Main navigation">
       <button class="nav-link active" data-view="home">Characters <span id="character-count">0</span></button>
       <button class="nav-link" data-view="tables">Tables</button>
+      <button class="nav-link" data-view="raw">Raw JSON</button>
     </nav>
     <span class="edition">FRP · 2ND EDITION</span>
   </header>
@@ -67,6 +68,11 @@
       </section>
       <div class="table-layout"><aside class="table-sidebar"><label class="field">Find a table<input id="table-search" type="search" placeholder="Weapon, spell, stat…"></label><div id="table-list" class="table-list"></div><p id="table-count" class="table-count">65 tables from the core rules</p></aside><section class="table-card"><div class="table-toolbar"><div><span class="pdf-label">BOOK TABLE</span><h2 id="table-current">Loading tables…</h2><span id="table-code" class="table-code"></span></div><div class="lookup-controls"><label class="field">Modified roll<input id="table-roll" type="number" min="1" max="300" value="100"></label><label class="field" id="column-select-field">Target armor<select id="table-column"></select></label></div></div><div class="lookup-result" id="lookup-result" aria-live="polite"></div><div class="table-scroll"><table id="attack-grid" class="attack-grid"></table></div><div id="table-source" class="table-source" hidden></div><div id="table-note" class="table-note">Damage and critical severity appear together, for example <b>12E</b> means 12 hits and an E critical.</div></section></div>
       <p class="table-footnote">65 indexed tables and charts are transcribed as individual JSON source files. UM means unmodified roll; F indicates a fumble or spell failure.</p>
+    </section>
+
+    <section id="raw-view" class="view">
+      <div class="table-intro"><div><p class="eyebrow">SOURCE DATA · JSON</p><h1>Raw table files</h1><p>Inspect the JSON used by the table browser. Select a file to see its complete contents.</p></div><div class="page-stamp">JSON<br>FILES <span>✳</span></div></div>
+      <div class="raw-layout"><aside class="table-sidebar"><label class="field">Find a file<input id="raw-search" type="search" placeholder="Table name or code…"></label><div id="raw-file-list" class="table-list"></div><p id="raw-file-count" class="table-count"></p></aside><section class="raw-card"><header class="raw-toolbar"><div><span class="pdf-label">JSON SOURCE FILE</span><h2 id="raw-file-title">Choose a file</h2><span id="raw-file-code" class="table-code"></span></div><a id="raw-download" class="text-button" href="#" download hidden>Download JSON ↓</a></header><pre id="raw-json-content" class="raw-json-content" aria-live="polite">Select a file from the list to inspect its raw data.</pre></section></div>
     </section>
   </main>
   <footer><span>ROLEMASTER FIELD BOOK</span><span>Made for the long road ahead <b>✳</b></span></footer>
