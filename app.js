@@ -162,7 +162,7 @@
         select.innerHTML = detail.columns.map((column, index) => `<option value="${index}">${esc(column.group)} · ${esc(column.label)}</option>`).join('');
         $('#column-select-field').firstChild.textContent = detail.code === 'A-10.9.11' ? 'Target' : 'Target armor';
         $('.table-scroll').hidden = false; $('.lookup-controls').hidden = false; $('#lookup-result').hidden = false; $('#table-source').hidden = true;
-        $('.table-scroll').innerHTML = `<details class="full-attack-table"><summary>Show the complete attack table</summary><div class="table-scroll-inner"><table id="attack-grid" class="attack-grid"></table></div></details>`;
+        $('.table-scroll').innerHTML = `<details class="full-attack-table" open><summary>Full attack table</summary><div class="table-scroll-inner"><table id="attack-grid" class="attack-grid"></table></div></details>`;
         renderGrid(); updateLookup();
         $('#table-note').textContent = 'Hits and criticals are shown together (for example, 12E).';
       } else if (detail.categories && detail.professions) {
