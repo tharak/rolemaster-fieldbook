@@ -6,7 +6,6 @@
   let activeRawFile = null;
   const tableCache = new Map();
   let developmentRules = null;
-  let diceHistory = [];
   const realmByProfession = {Fighter:'Choose at table',Thief:'Choose at table',Rogue:'Choose at table',Cleric:'Channeling',Magician:'Essence',Mentalist:'Mentalism',Ranger:'Channeling',Dabbler:'Essence',Bard:'Mentalism'};
   const $ = (selector, root = document) => root.querySelector(selector);
   const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
@@ -145,7 +144,6 @@
     activeTable = reference;
     $('#table-current').textContent = reference.title;
     $('#table-code').textContent = `${reference.code} · CORE PAGE${reference.printedPages.length > 1 ? 'S' : ''} ${reference.printedPages.join(', ')}`;
-    $('#apply-result').hidden = true;
     $$('.table-choice').forEach(button => button.classList.toggle('active', button.dataset.code === reference.code));
     $('#table-source').hidden = false;
     $('#table-source').innerHTML = '<p class="table-load-error">Loading table data…</p>';
@@ -166,11 +164,11 @@
         $('.table-scroll').hidden = false; $('.lookup-controls').hidden = false; $('#lookup-result').hidden = false; $('#table-source').hidden = true;
         $('.table-scroll').innerHTML = `<details class="full-attack-table"><summary>Show the complete attack table</summary><div class="table-scroll-inner"><table id="attack-grid" class="attack-grid"></table></div></details>`;
         renderGrid(); updateLookup();
-        $('#table-note').textContent = 'Damage and critical severity appear together, for example 12E means 12 hits and an E critical. UM rows depend on the unmodified die result.';
+        $('#table-note').textContent = 'Hits and criticals are shown together (for example, 12E).';
       } else if (detail.categories && detail.professions) {
         $('.table-scroll').hidden = false; $('#table-source').hidden = true;
         $('#attack-grid').innerHTML = `<thead><tr><th>Skill category</th>${detail.professions.map(profession => `<th>${esc(profession)}</th>`).join('')}</tr></thead><tbody>${Object.entries(detail.categories).map(([category, costs]) => `<tr><th scope="row">${esc(category)}</th>${detail.professions.map(profession => `<td>${costs[profession] ? costs[profession].join('/') : '—'}</td>`).join('')}</tr>`).join('')}</tbody>`;
-        $('#table-note').textContent = 'Rank costs are listed by rank in order; a dash means the profession cannot develop that category under the standard cost table.';
+        $('#table-note').textContent = 'Rank costs by profession. A dash means unavailable.';
       } else renderSource(detail);
     } catch {
       if (activeTable.code === reference.code) $('#table-source').innerHTML = '<p class="table-load-error">Could not load this table file. Reload the page to try again.</p>';
@@ -180,7 +178,7 @@
     $('.table-scroll').hidden = true;
     $('#table-source').hidden = false;
     $('#table-source').innerHTML = (table.sourcePages || []).map(page => `<section class="source-page"><div class="source-page-head"><span>${esc(table.code)}</span><span>CORE PAGE ${page.printedPage}</span></div><div class="source-lines">${page.lines.map(line => line.cells?.length > 1 ? `<p>${line.cells.map(cell => `<span>${esc(cell)}</span>`).join('')}</p>` : `<p>${esc(line.text.trim())}</p>`).filter(line => !line.includes('<p></p>')).join('')}</div></section>`).join('');
-    $('#table-note').textContent = 'Transcribed from the book text layer and reflowed to fit the page. Multi-page tables include each referenced page.';
+    $('#table-note').textContent = '';
   }
   function renderGrid() {
     if (!activeTable?.columns || !activeTable?.rows) return;
@@ -270,57 +268,6 @@
       if (activeRawFile?.file === file.file) $('#raw-json-content').textContent = 'Could not load this JSON file. Reload the page to try again.';
     }
   }
-  function die(sides) {
-    if (!window.crypto?.getRandomValues) return Math.floor(Math.random() * sides) + 1;
-    const bucket = new Uint32Array(1);
-    const range = 0x100000000;
-    const limit = Math.floor(range / sides) * sides;
-    do { window.crypto.getRandomValues(bucket); } while (bucket[0] >= limit);
-    return (bucket[0] % sides) + 1;
-  }
-  function rollDice() {
-    const mode = $('#roll-mode').value;
-    let dice = [];
-    let total = 0;
-    let direction = 0;
-    let title = '';
-    if (mode === 'pool') {
-      const count = Math.min(20, Math.max(1, Number($('#pool-count').value) || 1));
-      const sides = Math.min(100, Math.max(2, Number($('#pool-sides').value) || 6));
-      dice = Array.from({length: count}, () => die(sides));
-      total = dice.reduce((sum, value) => sum + value, 0);
-      title = `${count}d${sides}`;
-    } else if (mode === 'd10' || mode === 'd5' || mode === 'd8') {
-      const sides = Number(mode.slice(1)); dice = [die(sides)]; total = dice[0]; title = mode;
-    } else {
-      const first = die(100);
-      dice = [first]; total = first;
-      const highEligible = mode === 'open' || mode === 'high';
-      const lowEligible = mode === 'open' || mode === 'low';
-      if (highEligible && first >= 96) direction = 1;
-      else if (lowEligible && first <= 5) direction = -1;
-      if (direction !== 0) {
-        let continueRolling = true;
-        while (continueRolling && dice.length < 50) {
-          const next = die(100); dice.push(next); total += direction * next;
-          continueRolling = next >= 96;
-        }
-      }
-      title = mode === 'open' ? 'Open-ended d100' : mode === 'high' ? 'High open-ended d100' : mode === 'low' ? 'Low open-ended d100' : 'Plain d100';
-    }
-    const chain = dice.map((value, index) => {
-      if (!index || mode === 'pool') return String(value);
-      return `${direction > 0 ? '+' : '−'} ${value}`;
-    }).join(' ');
-    $('#result-face').textContent = String(dice[0]).padStart(2, mode.includes('d100') || ['open','high','low','plain'].includes(mode) ? '0' : ' ');
-    $('#result-label').textContent = title.toUpperCase();
-    $('#result-total').textContent = `Result ${total}`;
-    $('#result-breakdown').textContent = dice.length > 1 ? `Dice: ${chain}` : mode === 'pool' ? `Dice: ${dice.join(', ')}` : `Single roll: ${dice[0]}`;
-    $('#apply-result').hidden = !activeTable?.rows || !['open', 'high', 'low', 'plain'].includes(mode);
-    $('#apply-result').dataset.result = String(total);
-    diceHistory.unshift({title, total, dice}); diceHistory = diceHistory.slice(0, 4);
-    $('#roll-history').innerHTML = diceHistory.map(item => `<li><span>${esc(item.title)}</span><strong>${item.total}</strong></li>`).join('');
-  }
   async function loadReferenceData() {
     try {
       const [tableResponse, costResponse] = await Promise.all([fetch('tables/index.json'), fetch('tables/T-2.8.json')]);
@@ -344,7 +291,6 @@
   makeStats(); renderRoster(); loadReferenceData();
   $$('.nav-link').forEach(button => button.addEventListener('click', () => showView(button.dataset.view)));
   $('#new-character').addEventListener('click', newCharacter);
-  $('#empty-create').addEventListener('click', newCharacter);
   $('#back-roster').addEventListener('click', () => { saveCurrent(); renderRoster(); showView('home'); });
   $('#open-tables').addEventListener('click', () => showView('tables'));
   $('#add-skill').addEventListener('click', () => { skillRow(); $('[name="skill-name"]', $('#skills-list').lastElementChild).focus(); });
@@ -366,7 +312,4 @@
   $('#raw-search').addEventListener('input', event => renderRawFiles(event.target.value));
   $('#table-roll').addEventListener('input', updateLookup);
   $('#table-column').addEventListener('change', updateLookup);
-  $('#roll-mode').addEventListener('change', event => { $('#pool-controls').hidden = event.target.value !== 'pool'; });
-  $('#roll-dice').addEventListener('click', rollDice);
-  $('#apply-result').addEventListener('click', event => { $('#table-roll').value = event.currentTarget.dataset.result; updateLookup(); });
 })();
