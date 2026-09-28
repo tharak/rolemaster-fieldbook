@@ -54,13 +54,17 @@ for (const [code, title, printedPages] of definitions) {
     return {
       printedPage,
       pdfPage,
-      lines: lines.map(line => ({ text: line, cells: line.trim().split(/\s{2,}/).filter(Boolean) }))
+      lines: lines.map(line => ({ text: line.replace(/ {2,}/g, ' '), cells: line.trim().split(/\s{2,}/).filter(Boolean) }))
     };
   });
   const record = { code, title, printedPages, file, sourcePages };
   if (code.startsWith('A-10.9.')) {
     const extracted = JSON.parse(readFileSync(new URL(`./${file}`, dir), 'utf8'));
     Object.assign(record, { columns: extracted.columns, rows: extracted.rows });
+  }
+  if (code.startsWith('A-10.10.')) {
+    const extracted = JSON.parse(readFileSync(new URL(`./${file}`, dir), 'utf8'));
+    Object.assign(record, { kind: extracted.kind, columns: extracted.columns, rows: extracted.rows });
   }
   if (code === 'T-2.8') {
     const development = JSON.parse(readFileSync(new URL('../tables/T-2.8.json', import.meta.url), 'utf8'));

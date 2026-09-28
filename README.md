@@ -12,11 +12,11 @@ Serve this folder with any static web server and open its root URL. Browser stor
 2. In the repository, open **Settings → Pages**.
 3. Under **Build and deployment**, choose **Deploy from a branch**, select the branch containing these files and the `/ (root)` folder, then save.
 
-The character roster is stored in browser local storage. It is available in the same browser and on the same device where each character was created. The Tables page lists 65 tables and charts; each has a separate JSON source file in `tables/`. Attack tables are structured for roll and armor lookup; the other tables preserve their source page text and spacing. The page never opens the PDF viewer.
+The character roster is stored in browser local storage. It is available in the same browser and on the same device where each character was created. The Tables page lists 65 tables and charts; each has a separate JSON source file in `tables/`. Attack tables support roll and armor lookup, and critical tables support roll and critical type lookup. Other tables preserve their source page text. The page never opens the PDF viewer.
 
 ## Table source files
 
-Each file in `tables/` is one table or chart. `tables/index.json` provides the searchable page index. To regenerate the extracted data from the included PDF, install Poppler's `pdftotext` and run `node scripts/extract-development-costs.mjs`, `node scripts/extract-attack-tables.mjs`, and `node scripts/extract-book-tables.mjs` in that order.
+Each file in `tables/` is one table or chart. `tables/index.json` provides the searchable page index. To regenerate the extracted data from the included PDF, install Poppler's `pdftotext` and run `node scripts/extract-development-costs.mjs`, `node scripts/extract-attack-tables.mjs`, `python3 scripts/extract-critical-tables.py`, and `node scripts/extract-book-tables.mjs` in that order.
 
 ## Current scope
 

@@ -158,9 +158,22 @@
       }
       if (activeTable.code !== reference.code) return;
       activeTable = detail;
-      if (detail.columns && detail.rows) {
+      if (detail.kind === 'critical') {
+        const select = $('#table-column');
+        select.innerHTML = detail.columns.map((column, index) => `<option value="${index}">${esc(column.group === 'Critical severity' || column.group === 'Weapon' ? column.label : `${column.group} · ${column.label}`)}</option>`).join('');
+        $('#roll-label').textContent = 'Critical roll';
+        $('#table-roll').max = detail.code.endsWith('.7') || detail.code.endsWith('.8') || detail.code.endsWith('.9') ? '999' : '100';
+        if (Number($('#table-roll').value) > Number($('#table-roll').max)) $('#table-roll').value = $('#table-roll').max;
+        $('#column-select-field').firstChild.textContent = 'Critical type';
+        $('.table-scroll').hidden = false; $('.lookup-controls').hidden = false; $('#lookup-result').hidden = false; $('#table-source').hidden = true;
+        $('.table-scroll').innerHTML = '<details class="full-critical-table" open><summary>Full critical table</summary><div class="table-scroll-inner"><table id="attack-grid" class="critical-grid"></table></div></details>';
+        renderCriticalGrid(); updateCriticalLookup();
+        $('#table-note').textContent = 'H = hits · π = must parry · ∏ = no parry · ∑ = stunned · ∫ = bleed per round. A number before a symbol gives its amount or duration.';
+      } else if (detail.columns && detail.rows) {
         const select = $('#table-column');
         select.innerHTML = detail.columns.map((column, index) => `<option value="${index}">${esc(column.group)} · ${esc(column.label)}</option>`).join('');
+        $('#roll-label').textContent = 'Modified roll';
+        $('#table-roll').max = '300';
         $('#column-select-field').firstChild.textContent = detail.code === 'A-10.9.11' ? 'Target' : 'Target armor';
         $('.table-scroll').hidden = false; $('.lookup-controls').hidden = false; $('#lookup-result').hidden = false; $('#table-source').hidden = true;
         $('.table-scroll').innerHTML = `<details class="full-attack-table" open><summary>Full attack table</summary><div class="table-scroll-inner"><table id="attack-grid" class="attack-grid"></table></div></details>`;
@@ -203,6 +216,28 @@
       return `${section}<tr class="attack-row${unmodified}" data-row="${rowIndex}"><th scope="row">${row.unmodified ? 'UM ' : ''}${esc(row.roll)}</th>${values}</tr>`;
     }).join('');
     $('#attack-grid').innerHTML = `<thead><tr><th rowspan="2" class="roll-heading">Modified<br>roll</th>${headerGroups}</tr><tr>${columnHeaders}</tr></thead><tbody>${body}</tbody>`;
+  }
+  function renderCriticalGrid() {
+    const columns = activeTable.columns.map(column => `<th scope="col">${esc(column.group === 'Critical severity' || column.group === 'Weapon' ? column.label : `${column.group} · ${column.label}`)}</th>`).join('');
+    const rows = activeTable.rows.map((row, rowIndex) => `<tr class="critical-row" data-row="${rowIndex}"><th scope="row">${esc(row.roll)}</th>${row.cells.map((cell, columnIndex) => `<td data-column="${columnIndex}"><p>${esc(cell.description)}</p><span class="critical-effect">${esc(cell.effect || '—')}</span></td>`).join('')}</tr>`).join('');
+    $('#attack-grid').innerHTML = `<thead><tr><th scope="col">Roll</th>${columns}</tr></thead><tbody>${rows}</tbody>`;
+  }
+  function updateCriticalLookup() {
+    if (activeTable?.kind !== 'critical') return;
+    const roll = Math.max(1, Number($('#table-roll').value) || 1);
+    const columnIndex = Number($('#table-column').value) || 0;
+    const row = activeTable.rows.find(item => {
+      const [start, end] = item.roll.split('-');
+      return roll >= Number.parseInt(start, 10) && roll <= (end ? Number.parseInt(end, 10) : item.roll.endsWith('+') ? Infinity : Number.parseInt(start, 10));
+    }) || activeTable.rows[activeTable.rows.length - 1];
+    const column = activeTable.columns[columnIndex];
+    const cell = row.cells[columnIndex];
+    $('#lookup-result').innerHTML = `<div class="critical-lookup"><div class="critical-lookup-heading"><span>ROLL ${esc(roll)}${row.roll === String(roll) ? '' : ` · ${esc(row.roll)}`}</span><strong>${esc(column.group === 'Critical severity' || column.group === 'Weapon' ? column.label : `${column.group} · ${column.label}`)}</strong></div><p>${esc(cell.description)}</p><div class="critical-lookup-effect">${esc(cell.effect || '—')}</div></div>`;
+    $$('.critical-row', $('#attack-grid')).forEach(element => {
+      const selected = Number(element.dataset.row) === activeTable.rows.indexOf(row);
+      element.classList.toggle('selected-row', selected);
+      $$('td', element).forEach((tableCell, index) => tableCell.classList.toggle('selected-cell', selected && index === columnIndex));
+    });
   }
   function rowContainsModifiedRoll(row, roll) {
     if (row.unmodified) return false;
@@ -346,6 +381,6 @@
   });
   $('#table-search').addEventListener('input', event => renderTables(event.target.value));
   $('#raw-search').addEventListener('input', event => renderRawFiles(event.target.value));
-  $('#table-roll').addEventListener('input', updateLookup);
-  $('#table-column').addEventListener('change', updateLookup);
+  $('#table-roll').addEventListener('input', () => activeTable?.kind === 'critical' ? updateCriticalLookup() : updateLookup());
+  $('#table-column').addEventListener('change', () => activeTable?.kind === 'critical' ? updateCriticalLookup() : updateLookup());
 })();
