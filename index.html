@@ -5,9 +5,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#171a16">
   <meta name="description" content="Create and keep Rolemaster FRP characters, and jump to the attack tables at the table.">
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
   <title>Rolemaster Fieldbook</title>
   <link rel="stylesheet" href="styles.css">
   <link rel="stylesheet" href="enhancements.css">
+  <link rel="stylesheet" href="refresh.css">
 </head>
 <body>
   <header class="topbar">
@@ -22,9 +24,22 @@
 
   <main>
     <section id="home-view" class="view active">
-      <div class="section-heading"><h2>Characters</h2><button id="new-character" class="button button-dark">＋ Create character</button></div>
+      <div class="home-hero">
+        <div class="hero-copy">
+          <p class="eyebrow">THE ROLEMASTER FRP COMPANION</p>
+          <h1>Your campaign,<br><em>within reach.</em></h1>
+          <p>Keep your characters close and find the rule you need while the story keeps moving.</p>
+          <div class="hero-actions">
+            <button id="hero-new-character" class="button button-light">Create a character <span aria-hidden="true">↗</span></button>
+            <button id="hero-open-tables" class="hero-text-button">Browse the tables <span aria-hidden="true">→</span></button>
+          </div>
+        </div>
+        <div class="hero-book" aria-hidden="true"><div class="book-top"><span>FIELD NOTES</span><span>FRP / 02</span></div><div class="book-emblem">✦</div><div class="book-title">Rules at hand.<br>Stories ahead.</div><div class="book-bottom">CHARACTERS · TABLES · ADVENTURE</div></div>
+      </div>
+      <div class="home-shortcuts" aria-label="Quick links"><button id="shortcut-attacks" class="shortcut"><span class="shortcut-icon">⚔</span><span><strong>Attack tables</strong><small>Find a result quickly</small></span><span aria-hidden="true">↗</span></button><button id="shortcut-reference" class="shortcut"><span class="shortcut-icon">⌕</span><span><strong>Rules reference</strong><small>Browse 65 tables &amp; charts</small></span><span aria-hidden="true">↗</span></button><button id="shortcut-json" class="shortcut"><span class="shortcut-icon">{ }</span><span><strong>Source files</strong><small>Explore the raw JSON</small></span><span aria-hidden="true">↗</span></button></div>
+      <div class="section-heading"><div><p class="eyebrow">YOUR ROSTER</p><h2>Characters</h2><p class="section-subtitle">Your sheets are saved in this browser as you work.</p></div><button id="new-character" class="button button-dark">＋ New character</button></div>
       <div id="roster" class="roster"></div>
-      <div class="empty-state" id="empty-state"><h3>No characters yet</h3></div>
+      <div class="empty-state" id="empty-state"><div class="empty-symbol" aria-hidden="true">✦</div><div><p class="eyebrow">A STORY BEGINS HERE</p><h3>No characters yet</h3><p>Create your first character to start a roster for this browser.</p></div><button id="empty-new-character" class="button button-dark">Create your first character <span aria-hidden="true">→</span></button></div>
     </section>
 
     <section id="editor-view" class="view">
@@ -45,7 +60,7 @@
             <label class="field wide">Character concept<textarea name="concept" rows="3" maxlength="400" placeholder="A disgraced court mage searching for a way home…"></textarea></label>
           </section>
           <section class="panel stats-panel"><div class="panel-head"><span class="step">02</span><div><h2>Stats</h2><p>Temporary and potential values</p></div></div><div class="stat-header"><span>STAT</span><span>TEMP</span><span>POT</span></div><div id="stats-list" class="stats-list"></div></section>
-          <section class="panel development-panel"><div class="panel-head"><span class="step">03</span><div><h2>Development points</h2></div></div><div class="dp-summary"><div><span>AVAILABLE</span><strong id="dp-available">—</strong><small>Ag + Co + Me + Re + SD ÷ 5</small></div><div><span>SPENT ON SKILLS</span><strong id="dp-spent">0</strong></div><div><span>REMAINING</span><strong id="dp-remaining">—</strong></div></div></section>
+          <section class="panel development-panel"><div class="panel-head"><span class="step">03</span><div><h2>Development points</h2></div></div><div class="dp-summary"><div><span>AVAILABLE</span><strong id="dp-available">—</strong><small>(Ag + Co + Me + Re + SD) ÷ 5</small></div><div><span>SPENT ON SKILLS</span><strong id="dp-spent">0</strong></div><div><span>REMAINING</span><strong id="dp-remaining">—</strong></div></div></section>
           <section class="panel skills-panel"><div class="panel-head"><span class="step">04</span><div><h2>Skills & gear</h2><p>Spend this level’s points on skills</p></div></div><label class="field wide">Training packages<input name="training" maxlength="120" placeholder="e.g. Woodsman, Weapon Master"></label><label class="field wide">Armor type<select name="armor"><option>— Choose armor —</option><option>Plate · AT 20</option><option>Plate · AT 19</option><option>Plate · AT 18</option><option>Chain · AT 17</option><option>Chain · AT 16</option><option>Chain · AT 15</option><option>Chain · AT 14</option><option>Chain · AT 13</option><option>Rigid leather · AT 12</option><option>Rigid leather · AT 11</option><option>Rigid leather · AT 10</option><option>Soft leather · AT 9</option><option>Soft leather · AT 8</option><option>Soft leather · AT 7</option><option>Soft leather · AT 6</option><option>Soft leather · AT 5</option><option>No armor · AT 4</option><option>No armor · AT 3</option><option>No armor · AT 2</option><option>No armor · AT 1</option></select></label>
             <div class="field wide"><div class="field-label-row"><span class="field-label">Skill investments</span><button type="button" id="add-skill" class="text-button">＋ Add skill</button></div><div class="skills-head"><span>SKILL</span><span>CATEGORY</span><span>START</span><span>RANKS</span><span>DP</span><span></span></div><div id="skills-list" class="skills-list"></div></div>
             <label class="field wide">Equipment & notes<textarea name="notes" rows="4" maxlength="1200" placeholder="Weapons, gear, allies, reminders…"></textarea></label>
@@ -56,12 +71,13 @@
     </section>
 
     <section id="tables-view" class="view">
-      <div class="table-intro"><h1>Tables &amp; charts</h1></div>
+      <div class="table-intro"><div><p class="eyebrow">THE REFERENCE DESK</p><h1>Tables &amp; charts</h1><p>Find the number you need, then get back to the game.</p></div></div>
+      <div class="table-filters" role="group" aria-label="Filter tables"><button class="filter-chip active" data-group="all" aria-pressed="true">All tables</button><button class="filter-chip" data-group="attacks" aria-pressed="false">Attacks</button><button class="filter-chip" data-group="criticals" aria-pressed="false">Criticals</button><button class="filter-chip" data-group="character" aria-pressed="false">Character</button><button class="filter-chip" data-group="play" aria-pressed="false">At the table</button></div>
       <div class="table-layout"><aside class="table-sidebar"><label class="field">Find a table<input id="table-search" type="search" placeholder="Weapon, spell, stat…"></label><div id="table-list" class="table-list"></div><p id="table-count" class="table-count">65 tables from the core rules</p></aside><section class="table-card"><div class="table-toolbar"><div><span class="pdf-label">BOOK TABLE</span><h2 id="table-current">Loading tables…</h2><span id="table-code" class="table-code"></span></div><div class="lookup-controls"><label class="field">Modified roll<input id="table-roll" type="number" min="1" max="300" value="100"></label><label class="field" id="column-select-field">Target armor<select id="table-column"></select></label></div></div><div class="lookup-result" id="lookup-result" aria-live="polite"></div><div class="table-scroll"><table id="attack-grid" class="attack-grid"></table></div><div id="table-source" class="table-source" hidden></div><div id="table-note" class="table-note"></div></section></div>
     </section>
 
     <section id="raw-view" class="view">
-      <div class="table-intro"><h1>JSON files</h1></div>
+      <div class="table-intro"><div><p class="eyebrow">THE SOURCE LIBRARY</p><h1>JSON files</h1><p>Browse and download the data behind every reference table.</p></div></div>
       <div class="raw-layout"><aside class="table-sidebar"><label class="field">Find a file<input id="raw-search" type="search" placeholder="Table name or code…"></label><div id="raw-file-list" class="table-list"></div><p id="raw-file-count" class="table-count"></p></aside><section class="raw-card"><header class="raw-toolbar"><div><span class="pdf-label">JSON SOURCE FILE</span><h2 id="raw-file-title">Choose a file</h2><span id="raw-file-code" class="table-code"></span></div><a id="raw-download" class="text-button" href="#" download hidden>Download JSON ↓</a></header><pre id="raw-json-content" class="raw-json-content" aria-live="polite">Select a file.</pre></section></div>
     </section>
   </main>

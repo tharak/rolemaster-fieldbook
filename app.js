@@ -13,6 +13,7 @@
   let characters = readCharacters();
   let currentId = null;
   let isNew = false;
+  let activeTableGroup = 'all';
 
   function readCharacters() {
     try { const data = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); return Array.isArray(data) ? data : []; }
@@ -230,9 +231,25 @@
   }
   function renderTables(filter = '') {
     const needle = filter.trim().toLowerCase();
-    const shown = tables.filter(table => `${table.title} ${table.code}`.toLowerCase().includes(needle));
+    const shown = tables.filter(table => {
+      const matchesSearch = `${table.title} ${table.code}`.toLowerCase().includes(needle);
+      const group = table.code.startsWith('A-10.9') ? 'attacks' : table.code.startsWith('A-10.10') ? 'criticals' : /^T-[12]\./.test(table.code) || table.code === 'chart-special-progression' ? 'character' : 'play';
+      return matchesSearch && (activeTableGroup === 'all' || activeTableGroup === group);
+    });
     $('#table-list').innerHTML = shown.map(table => `<button class="table-choice" data-code="${table.code}"><span>${esc(table.title)}</span><span>${table.code}</span></button>`).join('');
     $('#table-count').textContent = `${shown.length} of ${tables.length} tables and charts`;
+    if (!shown.length) {
+      $('#table-list').innerHTML = '<p class="table-list-empty">No tables match this search.</p>';
+      activeTable = null;
+      $('#table-current').textContent = 'No matching table';
+      $('#table-code').textContent = '';
+      $('.lookup-controls').hidden = true;
+      $('#lookup-result').hidden = true;
+      $('.table-scroll').hidden = true;
+      $('#table-source').hidden = false;
+      $('#table-source').innerHTML = '<p class="table-list-empty">Try another search or category.</p>';
+      $('#table-note').textContent = '';
+    }
     $$('.table-choice').forEach(button => button.addEventListener('click', () => chooseTable(tables.find(table => table.code === button.dataset.code))));
     if (shown.length && !shown.some(table => table.code === activeTable?.code)) chooseTable(shown[0]);
     else $$('.table-choice').forEach(button => button.classList.toggle('active', button.dataset.code === activeTable?.code));
@@ -289,8 +306,27 @@
   }
 
   makeStats(); renderRoster(); loadReferenceData();
+  function openTableGroup(group) {
+    activeTableGroup = group;
+    $$('.filter-chip').forEach(button => {
+      const active = button.dataset.group === group;
+      button.classList.toggle('active', active);
+      button.setAttribute('aria-pressed', String(active));
+    });
+    $('#table-search').value = '';
+    renderTables();
+    showView('tables');
+  }
   $$('.nav-link').forEach(button => button.addEventListener('click', () => showView(button.dataset.view)));
+  $('.brand').addEventListener('click', event => { event.preventDefault(); showView('home'); });
   $('#new-character').addEventListener('click', newCharacter);
+  $('#hero-new-character').addEventListener('click', newCharacter);
+  $('#empty-new-character').addEventListener('click', newCharacter);
+  $('#hero-open-tables').addEventListener('click', () => openTableGroup('all'));
+  $('#shortcut-attacks').addEventListener('click', () => openTableGroup('attacks'));
+  $('#shortcut-reference').addEventListener('click', () => openTableGroup('all'));
+  $('#shortcut-json').addEventListener('click', () => showView('raw'));
+  $$('.filter-chip').forEach(button => button.addEventListener('click', () => openTableGroup(button.dataset.group)));
   $('#back-roster').addEventListener('click', () => { saveCurrent(); renderRoster(); showView('home'); });
   $('#open-tables').addEventListener('click', () => showView('tables'));
   $('#add-skill').addEventListener('click', () => { skillRow(); $('[name="skill-name"]', $('#skills-list').lastElementChild).focus(); });

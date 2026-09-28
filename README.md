@@ -1,6 +1,6 @@
 # Rolemaster Fieldbook
 
-A static Rolemaster FRP companion for character creation, dice rolls, and table lookup. It runs directly in a browser and can be hosted from the root of a GitHub Pages repository.
+A static Rolemaster FRP companion for character creation and table lookup. It runs directly in a browser and can be hosted from the root of a GitHub Pages repository.
 
 ## Run locally
 
