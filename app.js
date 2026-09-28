@@ -191,7 +191,7 @@
   function renderSource(table) {
     $('.table-scroll').hidden = true;
     $('#table-source').hidden = false;
-    $('#table-source').innerHTML = (table.sourcePages || []).map(page => `<section class="source-page"><div class="source-page-head"><span>${esc(table.code)}</span><span>CORE PAGE ${page.printedPage}</span></div><div class="source-lines">${page.lines.map(line => line.cells?.length > 1 ? `<p>${line.cells.map(cell => `<span>${esc(cell)}</span>`).join('')}</p>` : `<p>${esc(line.text.trim())}</p>`).filter(line => !line.includes('<p></p>')).join('')}</div></section>`).join('');
+    $('#table-source').innerHTML = (table.tablePages || []).map(page => `<section class="source-page"><div class="source-page-head"><span>${esc(table.code)}</span><span>CORE PAGE ${page.printedPage}</span></div><pre>${esc(page.text)}</pre></section>`).join('');
     $('#table-note').textContent = '';
   }
   function renderGrid() {

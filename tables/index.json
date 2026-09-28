@@ -1,1 +1,525 @@
-[{"code":"T-1.1","title":"Race Abilities","printedPages":[13],"file":"T-1.1.json"},{"code":"T-1.2","title":"Stat Assignment","printedPages":[16],"file":"T-1.2.json"},{"code":"T-1.3","title":"Potential Stat","printedPages":[17],"file":"T-1.3.json"},{"code":"T-1.4","title":"Profession","printedPages":[15],"file":"T-1.4.json"},{"code":"T-1.5","title":"Background Options","printedPages":[21],"file":"T-1.5.json"},{"code":"T-1.6","title":"Adolescence Rank","printedPages":[19],"file":"T-1.6.json"},{"code":"T-1.7","title":"Random Role Trait","printedPages":[29],"file":"T-1.7.json"},{"code":"T-2.1","title":"Basic Stat Bonus","printedPages":[17],"file":"T-2.1.json"},{"code":"T-2.2","title":"Skill Bonus","printedPages":[31],"file":"T-2.2.json"},{"code":"T-2.3","title":"Stat Gain","printedPages":[25,37],"file":"T-2.3.json"},{"code":"T-2.4","title":"Spell List Development Point Costs","printedPages":[103,127],"file":"T-2.4.json"},{"code":"T-2.5","title":"Skill Summary","printedPages":[27],"file":"T-2.5.json"},{"code":"T-2.6","title":"Experience Point","printedPages":[36],"file":"T-2.6.json"},{"code":"T-2.7","title":"Training Package Development Point Costs","printedPages":[25],"file":"T-2.7.json"},{"code":"T-2.8","title":"Standard Skill Category Development Point Costs","printedPages":[23],"file":"T-2.8.json"},{"code":"chart-special-progression","title":"Special Progression Based on Race","printedPages":[85,102],"file":"chart-special-progression.json"},{"code":"T-3.1","title":"Battle Round Sequence","printedPages":[40],"file":"T-3.1.json"},{"code":"T-3.2","title":"Common Actions","printedPages":[39],"file":"T-3.2.json"},{"code":"T-3.3","title":"Armor","printedPages":[35,104,213],"file":"T-3.3.json"},{"code":"T-3.4","title":"Resistance Roll","printedPages":[52,230],"file":"T-3.4.json"},{"code":"T-3.5","title":"Offensive Capabilities","printedPages":[211],"file":"T-3.5.json"},{"code":"T-3.6","title":"Defensive Capabilities","printedPages":[214],"file":"T-3.6.json"},{"code":"chart-stride","title":"Stride Chart","printedPages":[35],"file":"chart-stride.json"},{"code":"chart-pace","title":"Pace Chart","printedPages":[51,57],"file":"chart-pace.json"},{"code":"chart-pace-limitation","title":"Pace Limitation Chart","printedPages":[56],"file":"chart-pace-limitation.json"},{"code":"chart-encumbrance","title":"Encumbrance Chart","printedPages":[56],"file":"chart-encumbrance.json"},{"code":"chart-exhaustion","title":"Exhaustion Charts","printedPages":[57],"file":"chart-exhaustion.json"},{"code":"T-4.1","title":"Moving Maneuver","printedPages":[49],"file":"T-4.1.json"},{"code":"T-4.2","title":"Standard Moving Maneuver Modifications","printedPages":[50],"file":"T-4.2.json"},{"code":"T-4.3","title":"Static Maneuver","printedPages":[45],"file":"T-4.3.json"},{"code":"T-4.4","title":"Standard Static Maneuver Modifications","printedPages":[45],"file":"T-4.4.json"},{"code":"T-4.5","title":"Spell Casting Static Maneuver","printedPages":[46],"file":"T-4.5.json"},{"code":"T-4.6","title":"Spell Casting Modifications","printedPages":[47],"file":"T-4.6.json"},{"code":"T-4.7","title":"Language Rank","printedPages":[115],"file":"T-4.7.json"},{"code":"T-5.1","title":"Encounter","printedPages":[68],"file":"T-5.1.json"},{"code":"T-5.2","title":"Strategic Movement Rate","printedPages":[67],"file":"T-5.2.json"},{"code":"T-5.3","title":"Magic Item Pricing","printedPages":[81],"file":"T-5.3.json"},{"code":"T-5.4","title":"Healing Recovery","printedPages":[75],"file":"T-5.4.json"},{"code":"T-5.5","title":"Race Healing Factors","printedPages":[78],"file":"T-5.5.json"},{"code":"T-5.6","title":"Mental Stat Loss","printedPages":[78],"file":"T-5.6.json"},{"code":"T-5.7","title":"Experience Point Charts","printedPages":[71,72,73],"file":"T-5.7.json"},{"code":"T-5.8","title":"Master Character","printedPages":[61],"file":"T-5.8.json"},{"code":"chart-animal-monster","title":"Animal & Monster Statistics Charts","printedPages":[150],"file":"chart-animal-monster.json"},{"code":"A-10.9.1","title":"One-handed Concussion Weapon Attack","printedPages":[220],"file":"A-10.9.1.json"},{"code":"A-10.9.2","title":"One-handed Edged Weapon Attack","printedPages":[221],"file":"A-10.9.2.json"},{"code":"A-10.9.3","title":"Two-handed Weapon Attack","printedPages":[222],"file":"A-10.9.3.json"},{"code":"A-10.9.4","title":"Missile Weapon Attack","printedPages":[223],"file":"A-10.9.4.json"},{"code":"A-10.9.5","title":"Pole Arm Weapon Attack","printedPages":[224],"file":"A-10.9.5.json"},{"code":"A-10.9.6","title":"Thrown Weapon Attack","printedPages":[225],"file":"A-10.9.6.json"},{"code":"A-10.9.7","title":"Tooth & Claw Attack","printedPages":[226],"file":"A-10.9.7.json"},{"code":"A-10.9.8","title":"Bash & Grapple Attack","printedPages":[227],"file":"A-10.9.8.json"},{"code":"A-10.9.9","title":"Bolt Spell Attack","printedPages":[228],"file":"A-10.9.9.json"},{"code":"A-10.9.10","title":"Ball Spell Attack","printedPages":[229],"file":"A-10.9.10.json"},{"code":"A-10.9.11","title":"Basic Spell Attack","printedPages":[230],"file":"A-10.9.11.json"},{"code":"A-10.10.1","title":"Cold Critical Strike","printedPages":[231],"file":"A-10.10.1.json"},{"code":"A-10.10.2","title":"Heat Critical Strike","printedPages":[232],"file":"A-10.10.2.json"},{"code":"A-10.10.3","title":"Krush Critical Strike","printedPages":[233],"file":"A-10.10.3.json"},{"code":"A-10.10.4","title":"Puncture Critical Strike","printedPages":[234],"file":"A-10.10.4.json"},{"code":"A-10.10.5","title":"Slash Critical Strike","printedPages":[235],"file":"A-10.10.5.json"},{"code":"A-10.10.6","title":"Unbalance Critical Strike","printedPages":[236],"file":"A-10.10.6.json"},{"code":"A-10.10.7","title":"Large Creature Critical Strike","printedPages":[237],"file":"A-10.10.7.json"},{"code":"A-10.10.8","title":"Super Large Creature Critical Strike","printedPages":[238],"file":"A-10.10.8.json"},{"code":"A-10.10.9","title":"Spells Against Creatures Critical Strike","printedPages":[239],"file":"A-10.10.9.json"},{"code":"A-10.11.1","title":"Weapon Fumble","printedPages":[240],"file":"A-10.11.1.json"},{"code":"A-10.11.2","title":"Spell Failure","printedPages":[241],"file":"A-10.11.2.json"}]
+[
+  {
+    "code": "T-1.1",
+    "title": "Race Abilities",
+    "printedPages": [
+      13
+    ],
+    "file": "T-1.1.json"
+  },
+  {
+    "code": "T-1.2",
+    "title": "Stat Assignment",
+    "printedPages": [
+      16
+    ],
+    "file": "T-1.2.json"
+  },
+  {
+    "code": "T-1.3",
+    "title": "Potential Stat",
+    "printedPages": [
+      17
+    ],
+    "file": "T-1.3.json"
+  },
+  {
+    "code": "T-1.4",
+    "title": "Profession",
+    "printedPages": [
+      15
+    ],
+    "file": "T-1.4.json"
+  },
+  {
+    "code": "T-1.5",
+    "title": "Background Options",
+    "printedPages": [
+      21
+    ],
+    "file": "T-1.5.json"
+  },
+  {
+    "code": "T-1.6",
+    "title": "Adolescence Rank",
+    "printedPages": [
+      19
+    ],
+    "file": "T-1.6.json"
+  },
+  {
+    "code": "T-1.7",
+    "title": "Random Role Trait",
+    "printedPages": [
+      29
+    ],
+    "file": "T-1.7.json"
+  },
+  {
+    "code": "T-2.1",
+    "title": "Basic Stat Bonus",
+    "printedPages": [
+      17
+    ],
+    "file": "T-2.1.json"
+  },
+  {
+    "code": "T-2.2",
+    "title": "Skill Bonus",
+    "printedPages": [
+      31
+    ],
+    "file": "T-2.2.json"
+  },
+  {
+    "code": "T-2.3",
+    "title": "Stat Gain",
+    "printedPages": [
+      37
+    ],
+    "file": "T-2.3.json"
+  },
+  {
+    "code": "T-2.4",
+    "title": "Spell List Development Point Costs",
+    "printedPages": [
+      103
+    ],
+    "file": "T-2.4.json"
+  },
+  {
+    "code": "T-2.5",
+    "title": "Skill Summary",
+    "printedPages": [
+      27
+    ],
+    "file": "T-2.5.json"
+  },
+  {
+    "code": "T-2.6",
+    "title": "Experience Point",
+    "printedPages": [
+      36
+    ],
+    "file": "T-2.6.json"
+  },
+  {
+    "code": "T-2.7",
+    "title": "Training Package Development Point Costs",
+    "printedPages": [
+      25
+    ],
+    "file": "T-2.7.json"
+  },
+  {
+    "code": "T-2.8",
+    "title": "Standard Skill Category Development Point Costs",
+    "printedPages": [
+      23
+    ],
+    "file": "T-2.8.json"
+  },
+  {
+    "code": "chart-special-progression",
+    "title": "Special Progression Based on Race",
+    "printedPages": [
+      85
+    ],
+    "file": "chart-special-progression.json"
+  },
+  {
+    "code": "T-3.1",
+    "title": "Battle Round Sequence",
+    "printedPages": [
+      40
+    ],
+    "file": "T-3.1.json"
+  },
+  {
+    "code": "T-3.2",
+    "title": "Common Actions",
+    "printedPages": [
+      39
+    ],
+    "file": "T-3.2.json"
+  },
+  {
+    "code": "T-3.3",
+    "title": "Armor",
+    "printedPages": [
+      213
+    ],
+    "file": "T-3.3.json"
+  },
+  {
+    "code": "T-3.4",
+    "title": "Resistance Roll",
+    "printedPages": [
+      230
+    ],
+    "file": "T-3.4.json"
+  },
+  {
+    "code": "T-3.5",
+    "title": "Offensive Capabilities",
+    "printedPages": [
+      211
+    ],
+    "file": "T-3.5.json"
+  },
+  {
+    "code": "T-3.6",
+    "title": "Defensive Capabilities",
+    "printedPages": [
+      214
+    ],
+    "file": "T-3.6.json"
+  },
+  {
+    "code": "chart-stride",
+    "title": "Stride Chart",
+    "printedPages": [
+      35
+    ],
+    "file": "chart-stride.json"
+  },
+  {
+    "code": "chart-pace",
+    "title": "Pace Chart",
+    "printedPages": [
+      57
+    ],
+    "file": "chart-pace.json"
+  },
+  {
+    "code": "chart-pace-limitation",
+    "title": "Pace Limitation Chart",
+    "printedPages": [
+      56
+    ],
+    "file": "chart-pace-limitation.json"
+  },
+  {
+    "code": "chart-encumbrance",
+    "title": "Encumbrance Chart",
+    "printedPages": [
+      56
+    ],
+    "file": "chart-encumbrance.json"
+  },
+  {
+    "code": "chart-exhaustion",
+    "title": "Exhaustion Charts",
+    "printedPages": [
+      57
+    ],
+    "file": "chart-exhaustion.json"
+  },
+  {
+    "code": "T-4.1",
+    "title": "Moving Maneuver",
+    "printedPages": [
+      49
+    ],
+    "file": "T-4.1.json"
+  },
+  {
+    "code": "T-4.2",
+    "title": "Standard Moving Maneuver Modifications",
+    "printedPages": [
+      50
+    ],
+    "file": "T-4.2.json"
+  },
+  {
+    "code": "T-4.3",
+    "title": "Static Maneuver",
+    "printedPages": [
+      45
+    ],
+    "file": "T-4.3.json"
+  },
+  {
+    "code": "T-4.4",
+    "title": "Standard Static Maneuver Modifications",
+    "printedPages": [
+      45
+    ],
+    "file": "T-4.4.json"
+  },
+  {
+    "code": "T-4.5",
+    "title": "Spell Casting Static Maneuver",
+    "printedPages": [
+      46
+    ],
+    "file": "T-4.5.json"
+  },
+  {
+    "code": "T-4.6",
+    "title": "Spell Casting Modifications",
+    "printedPages": [
+      47
+    ],
+    "file": "T-4.6.json"
+  },
+  {
+    "code": "T-4.7",
+    "title": "Language Rank",
+    "printedPages": [
+      115
+    ],
+    "file": "T-4.7.json"
+  },
+  {
+    "code": "T-5.1",
+    "title": "Encounter",
+    "printedPages": [
+      68
+    ],
+    "file": "T-5.1.json"
+  },
+  {
+    "code": "T-5.2",
+    "title": "Strategic Movement Rate",
+    "printedPages": [
+      67
+    ],
+    "file": "T-5.2.json"
+  },
+  {
+    "code": "T-5.3",
+    "title": "Magic Item Pricing",
+    "printedPages": [
+      81
+    ],
+    "file": "T-5.3.json"
+  },
+  {
+    "code": "T-5.4",
+    "title": "Healing Recovery",
+    "printedPages": [
+      76
+    ],
+    "file": "T-5.4.json"
+  },
+  {
+    "code": "T-5.5",
+    "title": "Race Healing Factors",
+    "printedPages": [
+      78
+    ],
+    "file": "T-5.5.json"
+  },
+  {
+    "code": "T-5.6",
+    "title": "Mental Stat Loss",
+    "printedPages": [
+      78
+    ],
+    "file": "T-5.6.json"
+  },
+  {
+    "code": "T-5.7",
+    "title": "Experience Point Charts",
+    "printedPages": [
+      71,
+      72,
+      73
+    ],
+    "file": "T-5.7.json"
+  },
+  {
+    "code": "T-5.8",
+    "title": "Master Character",
+    "printedPages": [
+      61
+    ],
+    "file": "T-5.8.json"
+  },
+  {
+    "code": "chart-animal-monster",
+    "title": "Animal & Monster Statistics Charts",
+    "printedPages": [
+      150,
+      151
+    ],
+    "file": "chart-animal-monster.json"
+  },
+  {
+    "code": "A-10.9.1",
+    "title": "One-handed Concussion Weapon Attack",
+    "printedPages": [
+      220
+    ],
+    "file": "A-10.9.1.json"
+  },
+  {
+    "code": "A-10.9.2",
+    "title": "One-handed Edged Weapon Attack",
+    "printedPages": [
+      221
+    ],
+    "file": "A-10.9.2.json"
+  },
+  {
+    "code": "A-10.9.3",
+    "title": "Two-handed Weapon Attack",
+    "printedPages": [
+      222
+    ],
+    "file": "A-10.9.3.json"
+  },
+  {
+    "code": "A-10.9.4",
+    "title": "Missile Weapon Attack",
+    "printedPages": [
+      223
+    ],
+    "file": "A-10.9.4.json"
+  },
+  {
+    "code": "A-10.9.5",
+    "title": "Pole Arm Weapon Attack",
+    "printedPages": [
+      224
+    ],
+    "file": "A-10.9.5.json"
+  },
+  {
+    "code": "A-10.9.6",
+    "title": "Thrown Weapon Attack",
+    "printedPages": [
+      225
+    ],
+    "file": "A-10.9.6.json"
+  },
+  {
+    "code": "A-10.9.7",
+    "title": "Tooth & Claw Attack",
+    "printedPages": [
+      226
+    ],
+    "file": "A-10.9.7.json"
+  },
+  {
+    "code": "A-10.9.8",
+    "title": "Bash & Grapple Attack",
+    "printedPages": [
+      227
+    ],
+    "file": "A-10.9.8.json"
+  },
+  {
+    "code": "A-10.9.9",
+    "title": "Bolt Spell Attack",
+    "printedPages": [
+      228
+    ],
+    "file": "A-10.9.9.json"
+  },
+  {
+    "code": "A-10.9.10",
+    "title": "Ball Spell Attack",
+    "printedPages": [
+      229
+    ],
+    "file": "A-10.9.10.json"
+  },
+  {
+    "code": "A-10.9.11",
+    "title": "Basic Spell Attack",
+    "printedPages": [
+      230
+    ],
+    "file": "A-10.9.11.json"
+  },
+  {
+    "code": "A-10.10.1",
+    "title": "Cold Critical Strike",
+    "printedPages": [
+      231
+    ],
+    "file": "A-10.10.1.json"
+  },
+  {
+    "code": "A-10.10.2",
+    "title": "Heat Critical Strike",
+    "printedPages": [
+      232
+    ],
+    "file": "A-10.10.2.json"
+  },
+  {
+    "code": "A-10.10.3",
+    "title": "Krush Critical Strike",
+    "printedPages": [
+      233
+    ],
+    "file": "A-10.10.3.json"
+  },
+  {
+    "code": "A-10.10.4",
+    "title": "Puncture Critical Strike",
+    "printedPages": [
+      234
+    ],
+    "file": "A-10.10.4.json"
+  },
+  {
+    "code": "A-10.10.5",
+    "title": "Slash Critical Strike",
+    "printedPages": [
+      235
+    ],
+    "file": "A-10.10.5.json"
+  },
+  {
+    "code": "A-10.10.6",
+    "title": "Unbalance Critical Strike",
+    "printedPages": [
+      236
+    ],
+    "file": "A-10.10.6.json"
+  },
+  {
+    "code": "A-10.10.7",
+    "title": "Large Creature Critical Strike",
+    "printedPages": [
+      237
+    ],
+    "file": "A-10.10.7.json"
+  },
+  {
+    "code": "A-10.10.8",
+    "title": "Super Large Creature Critical Strike",
+    "printedPages": [
+      238
+    ],
+    "file": "A-10.10.8.json"
+  },
+  {
+    "code": "A-10.10.9",
+    "title": "Spells Against Creatures Critical Strike",
+    "printedPages": [
+      239
+    ],
+    "file": "A-10.10.9.json"
+  },
+  {
+    "code": "A-10.11.1",
+    "title": "Weapon Fumble",
+    "printedPages": [
+      240
+    ],
+    "file": "A-10.11.1.json"
+  },
+  {
+    "code": "A-10.11.2",
+    "title": "Spell Failure",
+    "printedPages": [
+      241
+    ],
+    "file": "A-10.11.2.json"
+  }
+]
