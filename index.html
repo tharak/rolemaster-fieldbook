@@ -139,6 +139,7 @@
             <h2>Commonly used equipment</h2>
             <div class="ruled-labels"><span>Item</span><span>Location · Weight · Description</span></div>
             <textarea class="ruled-textarea" name="notes" rows="6" maxlength="1200" aria-label="Commonly used equipment"></textarea>
+            <div id="background-rewards-summary" class="language-picker-note"></div>
           </section>
           <section class="record-bottom">
             <div><label class="sheet-field">Hits (maximum)<input name="hits" type="number" min="0"></label></div>
@@ -148,6 +149,7 @@
         </div>
         <div hidden>
           <input name="backgroundOptions" type="hidden">
+          <input name="backgroundDetails" type="hidden" value="{}">
           <input name="weaponCostAssignments" type="hidden" value="{}">
           <input name="otherDp" type="hidden" value="0">
           <input name="apprenticeshipDpBase" type="hidden">
@@ -201,8 +203,11 @@
       <dialog id="background-picker" aria-labelledby="background-picker-title">
         <div class="language-picker-head"><div><h2 id="background-picker-title">Background options</h2><p id="background-picker-subtitle"></p></div><button type="button" id="close-background-picker" aria-label="Close background options">×</button></div>
         <div class="language-picker-budget"><strong id="background-picker-remaining"></strong><span id="background-picker-used"></span></div>
-        <p class="language-picker-note">Choose options from T-1.5. Items and money can be rolled for one option or chosen for two. Record the result and any bonus target below.</p>
+        <p class="language-picker-note">Choose options from T-1.5, then set each target or result below. Rolled results are saved with your character.</p>
         <div id="background-picker-list" class="background-picker-list"></div>
+        <div id="background-option-details"></div>
+        <details class="apprenticeship-add"><summary>Add a specific skill for a background bonus</summary><div id="background-skill-category-options" class="choice-strip"></div><label class="hobby-search">Skill name<input id="background-skill-name" type="text" maxlength="60" placeholder="Specific skill"></label><button type="button" id="background-add-skill" class="creation-pick-button">Add skill</button></details>
+        <p id="background-option-message" class="language-picker-note" role="status"></p>
         <p id="background-race-note" class="language-picker-note"></p>
         <label class="background-picker-notes">Chosen or rolled details<textarea id="background-picker-notes" rows="3" placeholder="Item, money, extra language, or special bonus target"></textarea></label>
         <p id="background-legacy-note" class="language-picker-note" hidden></p>

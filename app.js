@@ -303,6 +303,31 @@
     ['rolledMoney','Roll for extra money',1,'Roll on T-1.5.'],
     ['chosenMoney','Choose extra money',2,'Choose an amount from T-1.5 with your GM.']
   ];
+  const backgroundExtraLanguages = {
+    'Common Man':[['High-speech',8,8],['Small-speech',8,8],['Hill-speech',8,8]],
+    'High Man':[['High-elvish',8,8],['Hill-speech',8,8],['Plains-speech',8,8],['North-speech',8,8],['Wood-speech',8,8]],
+    'Wood Elf':[['High-speech',8,8],['South-speech',6,6],['Black-speech',6,6]],
+    Dwarf:[['High-speech',5,5],['South-speech',4,4],['North-speech',5,5]],
+    Halfling:[['Hill-speech',4,4],['Wood-speech',6,6],['Orcish',2,2],['Elvish',8,8]]
+  };
+  const backgroundMoney = [[2,1],[5,2],[15,5],[25,10],[35,15],[45,20],[55,30],[65,35],[70,40],[75,50],[80,60],[85,70],[90,80],[94,100],[97,125],[99,150],[100,200]];
+  const backgroundItems = [
+    [5,'01–05',['+1 spell adder','One special bread, poison, or herb']],
+    [10,'06–10',['+1 spell adder','Two +5 non-magic items']],
+    [20,'11–20',['+1 spell adder','One +10 non-magic item']],
+    [30,'21–30',['+1 spell adder','Two +5 magic items']],
+    [65,'31–65',['+1 spell adder','One +10 magic item']],
+    [66,'66',['+3 spell adder','Loyal domesticated animal','One +20 non-magic item']],
+    [75,'67–75',['Daily III spell item','+2 spell adder','Three +5 non-magic items','Three doses of a level 1–5 potion']],
+    [80,'76–80',['Daily III spell item','+2 spell adder','One +15 non-magic item','Three doses of a level 1–5 potion']],
+    [85,'81–85',['Daily IV spell item','+2 spell adder','Three +5 magic items','Five doses of a level 1–5 potion']],
+    [90,'86–90',['Daily IV spell item','+2 spell adder','One +15 magic item','Five doses of a level 1–5 potion']],
+    [95,'91–95',['+3 spell adder','Two +10 magic items','Two Daily III spell items']],
+    [97,'96–97',['+3 spell adder','One +20 magic item','Daily IV spell item']],
+    [98,'98',['+3 spell adder','Daily VI spell item','Three +10 magic items']],
+    [99,'99',['+3 spell adder','Daily VII spell item','Two +20 magic items']],
+    [100,'100',['+3 spell adder','Daily VIII spell item','Loyal unusual creature']]
+  ];
   const raceBackgroundNotes = {
     'Common Man':'Extra languages: High-speech, Small-speech, Hill-speech. Money: silver and bronze pieces.',
     'High Man':'Extra languages: High-elvish, Hill-speech, Plains-speech, North-speech, Wood-speech. Money: gold pieces.',
@@ -352,7 +377,7 @@
   function makeStats(stats = {}) {
     $('#stats-list').innerHTML = statNames.map((name, index) => {
       const value = stats[name] || {};
-      return `<div class="stat-row"><span>${name}</span><input aria-label="${name} temporary stat" name="stat-temp-${index}" type="number" min="20" max="100" value="${esc(value.temp ?? '')}" placeholder="—"><input aria-label="${name} potential stat" name="stat-pot-${index}" type="number" min="20" max="101" value="${esc(value.pot ?? '')}" placeholder="—"><input aria-label="${name} basic bonus" name="stat-basic-${index}" type="number" value="${esc(value.basic ?? '')}" placeholder="—" readonly><input aria-label="${name} racial bonus" name="stat-racial-${index}" type="number" value="${esc(value.racial ?? '')}" placeholder="—" readonly><input aria-label="${name} special bonus" name="stat-special-${index}" type="number" value="${esc(value.special ?? '')}" placeholder="—"><input aria-label="${name} total bonus" name="stat-total-${index}" type="number" value="${esc(value.total ?? '')}" placeholder="—" readonly></div>`;
+      return `<div class="stat-row"><span>${name}</span><input aria-label="${name} temporary stat" name="stat-temp-${index}" type="number" min="1" max="100" value="${esc(value.temp ?? '')}" placeholder="—"><input aria-label="${name} potential stat" name="stat-pot-${index}" type="number" min="20" max="101" value="${esc(value.pot ?? '')}" placeholder="—"><input aria-label="${name} basic bonus" name="stat-basic-${index}" type="number" value="${esc(value.basic ?? '')}" placeholder="—" readonly><input aria-label="${name} racial bonus" name="stat-racial-${index}" type="number" value="${esc(value.racial ?? '')}" placeholder="—" readonly><input aria-label="${name} special bonus" name="stat-special-${index}" type="number" value="${esc(value.special ?? '')}" placeholder="—"><input aria-label="${name} total bonus" name="stat-total-${index}" type="number" value="${esc(value.total ?? '')}" placeholder="—" readonly></div>`;
     }).join('');
   }
   function makeResistances() {
@@ -464,6 +489,7 @@
       row.dataset.raceBase = String(Number(saved[row.dataset.category]?.raceBase) || 0);
       row.dataset.hobbySpent = String(Number(saved[row.dataset.category]?.hobbySpent) || 0);
       row.dataset.packageBase = String(Number(saved[row.dataset.category]?.packageBase) || 0);
+      row.dataset.backgroundSpecialBase = String(Number(saved[row.dataset.category]?.backgroundSpecialBase) || 0);
       if ($('[name="record-buy"]', row)) {
         if (!developmentRules && saved[row.dataset.category]?.buy) row.dataset.pendingBuy = saved[row.dataset.category].buy;
         updateSkillBuyOptions(row, Number(saved[row.dataset.category]?.buy) || 0);
@@ -520,6 +546,9 @@
     if (skill.languageSpent) row.dataset.languageSpent = skill.languageSpent;
     if (skill.hobbySpent) row.dataset.hobbySpent = skill.hobbySpent;
     if (skill.packageBase) row.dataset.packageBase = skill.packageBase;
+    if (skill.backgroundLanguageBase) row.dataset.backgroundLanguageBase = skill.backgroundLanguageBase;
+    if (skill.backgroundSpecialBase) row.dataset.backgroundSpecialBase = skill.backgroundSpecialBase;
+    if (skill.backgroundItemBase) row.dataset.backgroundItemBase = skill.backgroundItemBase;
     if (skill.skillClass) row.dataset.skillClass = skill.skillClass;
     const choice = skill.raceGrant?.startsWith('weapon:') || skill.raceGrant === 'race:open-spell-list';
     row.innerHTML = `<div class="rank-title"><label>Skill<input ${choice ? 'type="hidden"' : 'type="text"'} aria-label="Skill name" name="skill-name" maxlength="60" placeholder="Skill name" value="${esc(skill.name || '')}"></label>${choice ? `<button type="button" class="choose-skill" aria-haspopup="dialog">${esc(skill.name || 'Choose skill')} ▾</button>` : ''}<button type="button" class="change-skill-category" aria-label="Change category for ${esc(skill.name || 'skill')}">${esc(category)}</button></div><label>Before<input aria-label="Ranks before this level" name="skill-start" type="number" min="0" max="99" value="${esc(skill.start ?? skill.ranks ?? 0)}"></label><label>Buy<select aria-label="Ranks purchased this level" name="skill-buy"></select></label><label>Item<input aria-label="Item bonus" name="skill-item" type="number" value="${esc(skill.item ?? 0)}"></label><label>Special<input aria-label="Skill special bonus" name="skill-special" type="number" value="${esc(skill.special ?? 0)}"></label><output class="rank-cost"></output><button type="button" class="remove-skill" aria-label="Remove skill">×</button><div class="bonus-breakdown skill-bonus"></div>`;
@@ -1099,18 +1128,24 @@
   function buyStatGain(index, source = '', grantId = '') {
     if (!source && ($('#dp-remaining').textContent === '—' || Number($('#dp-remaining').textContent) < 8)) return;
     if (source) {
-      if (!readTrainingSelections().includes(source)) return;
-      const rule = packageStatGrantRules(source).find(([id]) => id === grantId);
-      if (!rule?.[2].includes(statNames[index])) return;
       const history = readStatGainHistory();
-      if (history.some(entry => entry.source === source && (entry.grantId === grantId || source === 'Adventurer' && entry.stat === statNames[index]))) return;
+      if (source.startsWith('background:')) {
+        const option = Number(source.slice('background:'.length));
+        if (!Number.isInteger(option) || option < 0 || option >= (Number(readBackgroundSelections().extraStatRolls) || 0)) return;
+        if (history.some(entry => entry.source === source && entry.stat === statNames[index])) return;
+      } else {
+        if (!readTrainingSelections().includes(source)) return;
+        const rule = packageStatGrantRules(source).find(([id]) => id === grantId);
+        if (!rule?.[2].includes(statNames[index])) return;
+        if (history.some(entry => entry.source === source && (entry.grantId === grantId || source === 'Adventurer' && entry.stat === statNames[index]))) return;
+      }
     }
     const temp = form.elements.namedItem(`stat-temp-${index}`);
     const pot = form.elements.namedItem(`stat-pot-${index}`);
     const before = Number(temp.value);
     const potential = Number(pot.value);
     if (!Number.isInteger(before) || !Number.isInteger(potential) || potential < before) return;
-    if (!form.elements.apprenticeshipDpBase.value) form.elements.apprenticeshipDpBase.value = $('#dp-available').textContent;
+    if (!source.startsWith('background:') && !form.elements.apprenticeshipDpBase.value) form.elements.apprenticeshipDpBase.value = $('#dp-available').textContent;
     const dice = [Math.floor(Math.random() * 10) + 1, Math.floor(Math.random() * 10) + 1];
     const [first, second] = dice;
     const difference = potential - before;
@@ -1125,6 +1160,112 @@
     form.elements.statGainHistory.value = JSON.stringify(history);
     updateDevelopment();
     saveCurrent();
+    if ($('#background-picker').open) renderBackgroundOptionDetails();
+  }
+  function readBackgroundDetails() {
+    try {
+      const value = JSON.parse(form.elements.backgroundDetails.value || '{}');
+      return value && typeof value === 'object' && !Array.isArray(value) ? value : {};
+    } catch { return {}; }
+  }
+  function writeBackgroundDetails(details) { form.elements.backgroundDetails.value = JSON.stringify(details); }
+  function backgroundEntry(details, key, index) { return details[key]?.[index] || {}; }
+  function backgroundItemTier(roll) { return backgroundItems.find(([maximum]) => Number(roll) <= maximum); }
+  function backgroundItemChoices(tier) {
+    const choices = tier?.[2] || [];
+    return form.elements.race.value === 'Halfling' ? choices.filter(choice => !/spell adder|Daily |potion/i.test(choice)) : choices;
+  }
+  function backgroundMoneyAmount(roll) { return backgroundMoney.find(([maximum]) => Number(roll) <= maximum)?.[1] || 0; }
+  function backgroundSkillCandidates(allowAll = false) {
+    const results = new Map();
+    Object.entries(a4Skills).forEach(([category, names]) => {
+      if (!allowAll && !['standard','combined'].includes(skillCategoryRules[category]?.[1] || 'standard')) return;
+      names.split('|').filter(name => name && !name.endsWith('*')).forEach(name => results.set(`${category}:${name}`, {category, name}));
+    });
+    $$('.skill-row', $('#skills-list')).forEach(row => {
+      const category = row.dataset.category;
+      const name = $('[name="skill-name"]', row).value;
+      if (name && !name.startsWith('Choose ') && (allowAll || ['standard','combined'].includes(skillCategoryRules[category]?.[1] || 'standard'))) results.set(`${category}:${name}`, {category, name});
+    });
+    return [...results.values()].sort((a, b) => a.name.localeCompare(b.name));
+  }
+  function applyBackgroundEffects() {
+    const details = readBackgroundDetails();
+    const selected = readBackgroundSelections();
+    const languageRanks = new Map(), skillSpecial = new Map(), skillItem = new Map(), categorySpecial = new Map();
+    const add = (map, key, amount) => map.set(key, (map.get(key) || 0) + amount);
+    for (let index = 0; index < (Number(selected.extraLanguages) || 0); index++) {
+      Object.entries(backgroundEntry(details, 'extraLanguages', index).allocations || {}).forEach(([name, ranks]) => {
+        if (name.endsWith(' (spoken)') || name.endsWith(' (written)')) add(languageRanks, `Communications:${name}`, Math.max(0, Number(ranks) || 0));
+      });
+    }
+    for (let index = 0; index < (Number(selected.skillBonus) || 0); index++) {
+      const target = backgroundEntry(details, 'skillBonus', index).target;
+      if (target) add(skillSpecial, target, 10);
+    }
+    for (let index = 0; index < (Number(selected.categoryBonus) || 0); index++) {
+      const target = backgroundEntry(details, 'categoryBonus', index).target;
+      if (skillCategoryRules[target]) add(categorySpecial, target, 5);
+    }
+    for (const key of ['rolledItem','chosenItem']) for (let index = 0; index < (Number(selected[key]) || 0); index++) {
+      const entry = backgroundEntry(details, key, index);
+      if (!backgroundItemChoices(backgroundItems[Number(entry.tier)]).includes(entry.choice)) continue;
+      (entry.effects || []).forEach(effect => {
+        if (effect.target && Number.isFinite(Number(effect.bonus))) add(skillItem, effect.target, Number(effect.bonus));
+      });
+    }
+    skillItem.forEach((amount, key) => skillItem.set(key, Math.min(30, amount)));
+    $$('.category-record-row').forEach(row => {
+      const field = $('[name="record-special"]', row);
+      const previous = Number(row.dataset.backgroundSpecialBase) || 0;
+      const next = categorySpecial.get(row.dataset.category) || 0;
+      field.value = String((Number(field.value) || 0) - previous + next);
+      row.dataset.backgroundSpecialBase = String(next);
+    });
+    const pending = new Set([...languageRanks.keys(), ...skillSpecial.keys(), ...skillItem.keys()]);
+    $$('.skill-row', $('#skills-list')).forEach(row => {
+      const key = `${row.dataset.category}:${$('[name="skill-name"]', row).value}`;
+      for (const [fieldName, datasetName, source] of [['skill-start','backgroundLanguageBase',languageRanks],['skill-special','backgroundSpecialBase',skillSpecial],['skill-item','backgroundItemBase',skillItem]]) {
+        const field = $(`[name="${fieldName}"]`, row);
+        const previous = Number(row.dataset[datasetName]) || 0;
+        const next = source.get(key) || 0;
+        field.value = String((Number(field.value) || 0) - previous + next);
+        row.dataset[datasetName] = String(next);
+      }
+      pending.delete(key);
+    });
+    pending.forEach(key => {
+      const separator = key.indexOf(':');
+      const category = key.slice(0, separator), name = key.slice(separator + 1);
+      if (!skillCategoryRules[category] || !name) return;
+      const row = skillRow({category, name});
+      const ranks = languageRanks.get(key) || 0, special = skillSpecial.get(key) || 0, item = skillItem.get(key) || 0;
+      $('[name="skill-start"]', row).value = String(ranks);
+      $('[name="skill-special"]', row).value = String(special);
+      $('[name="skill-item"]', row).value = String(item);
+      row.dataset.backgroundLanguageBase = String(ranks);
+      row.dataset.backgroundSpecialBase = String(special);
+      row.dataset.backgroundItemBase = String(item);
+    });
+  }
+  function renderBackgroundRewardsSummary() {
+    const details = readBackgroundDetails();
+    const selections = readBackgroundSelections();
+    const rewards = [];
+    let spellAdder = 0;
+    for (const key of ['rolledMoney','chosenMoney']) for (let index = 0; index < (Number(selections[key]) || 0); index++) {
+      const amount = Number(backgroundEntry(details, key, index).amount) || 0;
+      if (amount) rewards.push(`${amount} gp extra money`);
+    }
+    for (const key of ['rolledItem','chosenItem']) for (let index = 0; index < (Number(selections[key]) || 0); index++) {
+      const entry = backgroundEntry(details, key, index);
+      if (entry.choice && backgroundItemChoices(backgroundItems[Number(entry.tier)]).includes(entry.choice)) {
+        rewards.push(entry.description ? `${entry.choice}: ${entry.description}` : entry.choice);
+        spellAdder += Number(/\+(\d+) spell adder/.exec(entry.choice)?.[1]) || 0;
+      }
+    }
+    if (spellAdder) rewards.push(`Spell adder +${Math.min(3, spellAdder)} total`);
+    $('#background-rewards-summary').textContent = rewards.length ? `Background rewards: ${rewards.join(' · ')}` : '';
   }
   function readBackgroundSelections() {
     try {
@@ -1134,6 +1275,24 @@
   }
   function backgroundSelectionCost(selections) {
     return backgroundChoices.reduce((sum, [key, , cost]) => sum + Math.max(0, Number(selections[key]) || 0) * cost, 0);
+  }
+  function pendingBackgroundChoices() {
+    const selected = readBackgroundSelections(), details = readBackgroundDetails(), history = readStatGainHistory();
+    let pending = 0;
+    for (const [key] of backgroundChoices) for (let index = 0; index < (Number(selected[key]) || 0); index++) {
+      const entry = backgroundEntry(details, key, index);
+      if (key === 'extraLanguages') {
+        const allocations = entry.allocations || {};
+        if (Object.values(allocations).reduce((sum, value) => sum + (Number(value) || 0), 0) !== 20) pending++;
+      } else if (key === 'extraStatRolls') {
+        pending += statNames.filter(name => !history.some(item => item.source === `background:${index}` && item.stat === name)).length;
+      } else if (key === 'skillBonus' || key === 'categoryBonus') {
+        if (!entry.target) pending++;
+      } else if (key === 'rolledMoney' || key === 'chosenMoney') {
+        if (!entry.amount) pending++;
+      } else if (!entry.choice || !entry.description || !backgroundItemChoices(backgroundItems[Number(entry.tier)]).includes(entry.choice)) pending++;
+    }
+    return pending;
   }
   function updateBackgroundPickerBudget() {
     const limit = raceAllowances[form.elements.race.value]?.[2] || 0;
@@ -1157,6 +1316,54 @@
       input.closest('.background-choice').classList.toggle('is-over-limit', current > max);
     });
   }
+  function backgroundTargetPicker(key, index, selected, effectIndex = -1) {
+    const categories = Object.keys(skillCategoryRules).filter(category => ['standard','combined'].includes(skillCategoryRules[category][1] || 'standard'));
+    const options = key === 'categoryBonus' ? categories.map(category => [category, category])
+      : backgroundSkillCandidates(key === 'rolledItem' || key === 'chosenItem').map(({category, name}) => [`${category}:${name}`, `${name} · ${category}`]);
+    const effect = effectIndex < 0 ? '' : ` data-background-effect="${effectIndex}"`;
+    return `<div class="background-target-picker"><strong>${selected ? esc(options.find(([value]) => value === selected)?.[1] || selected) : 'Choose a target'}</strong><input type="search" data-background-target-search placeholder="Find a ${key === 'categoryBonus' ? 'category' : 'skill'}" aria-label="Find bonus target"><div class="choice-strip">${options.map(([value, label]) => `<button type="button" data-background-target="${esc(value)}" data-background-key="${key}" data-background-index="${index}"${effect} data-search="${esc(label.toLowerCase())}" aria-pressed="${value === selected}">${esc(label)}</button>`).join('')}</div></div>`;
+  }
+  function renderBackgroundOptionDetails() {
+    const selected = readBackgroundSelections();
+    const details = readBackgroundDetails();
+    const history = readStatGainHistory();
+    const sections = [];
+    for (const [key, label] of backgroundChoices) for (let index = 0; index < (Number(selected[key]) || 0); index++) {
+      const entry = backgroundEntry(details, key, index);
+      let body = '';
+      if (key === 'extraLanguages') {
+        const allocations = entry.allocations || {};
+        const used = Object.values(allocations).reduce((sum, value) => sum + (Number(value) || 0), 0);
+        body = `<p>${used} of 20 ranks allocated. Spoken and written are separate skills.</p><div class="background-language-list">${(backgroundExtraLanguages[form.elements.race.value] || []).map(([language, spoken, written]) => `<div><strong>${esc(language)}</strong>${[['spoken',spoken],['written',written]].map(([mode, cap]) => {
+          const name = `${language} (${mode})`;
+          const row = findSkillRow('Communications', name);
+          const current = Number(allocations[name]) || 0;
+          const total = Number($('[name="skill-start"]', row)?.value) || 0;
+          return `<label>${mode}<input type="number" inputmode="numeric" min="0" max="${cap}" value="${current}" data-background-language="${esc(name)}" data-background-index="${index}" aria-label="${esc(name)} background ranks"><small>${total} total · max ${cap}</small></label>`;
+        }).join('')}</div>`).join('')}</div>`;
+      } else if (key === 'extraStatRolls') {
+        body = `<p>One free stat gain roll for each stat.</p><div class="background-stat-list">${statNames.map((name, statIndex) => {
+          const used = history.find(item => item.source === `background:${index}` && item.stat === name);
+          const temp = Number(form.elements.namedItem(`stat-temp-${statIndex}`).value), pot = Number(form.elements.namedItem(`stat-pot-${statIndex}`).value);
+          return `<div><span>${esc(name)} · ${temp} / ${pot || '—'}</span>${used ? `<strong>${used.dice.join('+')} → ${used.after}</strong><button type="button" data-background-undo-stat="${statIndex}" data-background-index="${index}">Undo</button>` : `<button type="button" data-background-stat="${statIndex}" data-background-index="${index}"${temp >= 1 && pot >= temp ? '' : ' disabled'}>Roll 2d10</button>`}</div>`;
+        }).join('')}</div>`;
+      } else if (key === 'skillBonus' || key === 'categoryBonus') {
+        body = `<p>${key === 'skillBonus' ? '+10 to one skill' : '+5 to one skill category'}. Each target can receive this background bonus once.</p>${backgroundTargetPicker(key, index, entry.target || '')}`;
+      } else if (key === 'rolledMoney' || key === 'chosenMoney') {
+        body = key === 'rolledMoney'
+          ? `<div class="background-roll-result">${entry.roll ? `Rolled ${entry.roll}: ${entry.amount} gp` : `<button type="button" data-background-roll="money" data-background-index="${index}">Roll d100 for money</button>`}</div>`
+          : `<p>Choose a T-1.5 amount with your GM.</p><div class="choice-strip">${backgroundMoney.map(([, amount]) => `<button type="button" data-background-money="${amount}" data-background-index="${index}" aria-pressed="${Number(entry.amount) === amount}">${amount} gp</button>`).join('')}</div>`;
+      } else {
+        const tier = entry.tier === undefined ? null : backgroundItems[Number(entry.tier)];
+        body = key === 'rolledItem'
+          ? `<div class="background-roll-result">${entry.roll ? `Rolled ${entry.roll} · ${esc(tier?.[1] || '')}` : `<button type="button" data-background-roll="item" data-background-index="${index}">Roll d100 for an item</button>`}</div>`
+          : `<p>Choose a T-1.5 result with your GM.</p><div class="choice-strip">${backgroundItems.map(([maximum, range], tierIndex) => `<button type="button" data-background-item-tier="${tierIndex}" data-background-index="${index}" aria-pressed="${Number(entry.tier) === tierIndex}">${esc(range)}</button>`).join('')}</div>`;
+        if (tier) body += `<p>Choose one result from ${esc(tier[1])}.</p><div class="choice-strip">${backgroundItemChoices(tier).map(choice => `<button type="button" data-background-item-choice="${esc(choice)}" data-background-key="${key}" data-background-index="${index}" aria-pressed="${entry.choice === choice}">${esc(choice)}</button>`).join('')}</div><label class="background-picker-notes">Item description<input type="text" data-background-item-description data-background-key="${key}" data-background-index="${index}" value="${esc(entry.description || '')}" placeholder="GM approved item or companion"></label><div class="background-item-effects"><strong>Item bonuses to skills</strong>${(entry.effects || []).map((effect, effectIndex) => `<div class="background-item-effect">${backgroundTargetPicker(key, index, effect.target || '', effectIndex)}<label>Bonus<input type="number" data-background-item-bonus data-background-key="${key}" data-background-index="${index}" data-background-effect="${effectIndex}" value="${Number(effect.bonus) || 0}"></label><button type="button" data-background-remove-effect data-background-key="${key}" data-background-index="${index}" data-background-effect="${effectIndex}">Remove</button></div>`).join('')}<button type="button" data-background-add-effect data-background-key="${key}" data-background-index="${index}">Add skill bonus</button></div>`;
+      }
+      sections.push(`<section class="background-option-card"><h3>${esc(label)}${(Number(selected[key]) || 0) > 1 ? ` ${index + 1}` : ''}</h3>${body}</section>`);
+    }
+    $('#background-option-details').innerHTML = sections.join('');
+  }
   function renderBackgroundPicker() {
     const race = form.elements.race.value;
     const selections = readBackgroundSelections();
@@ -1164,6 +1371,8 @@
     $('#background-race-note').textContent = raceBackgroundNotes[race] || '';
     $('#background-picker-list').innerHTML = backgroundChoices.map(([key, label, cost, detail]) => `<label class="background-choice"><span><strong>${esc(label)}</strong><small>${esc(detail)}</small></span><b>${cost} ${cost === 1 ? 'option' : 'options'} each</b><input type="number" inputmode="numeric" min="0" max="99" value="${Math.max(0, Number(selections[key]) || 0)}" data-background-choice="${key}" data-cost="${cost}" aria-label="${esc(label)} count"></label>`).join('');
     $('#background-picker-notes').value = form.elements.backgroundOptions.value;
+    $('#background-skill-category-options').innerHTML = Object.keys(skillCategoryRules).map((category, index) => `<label class="choice-tile"><input type="radio" name="backgroundSkillCategory" value="${esc(category)}"${index === 0 ? ' checked' : ''}><span>${esc(category)}</span></label>`).join('');
+    renderBackgroundOptionDetails();
     updateBackgroundLimits(); updateBackgroundPickerBudget();
   }
   function updateBackgroundSelection(input) {
@@ -1173,11 +1382,31 @@
     const previous = Math.max(0, Number(selections[key]) || 0);
     const requested = Number(input.value);
     const next = Math.max(0, Math.min(Number.isInteger(requested) ? requested : 0, Number(input.max)));
+    if (key === 'extraStatRolls' && readStatGainHistory().some(entry => entry.source?.startsWith('background:') && Number(entry.source.slice(11)) >= next)) {
+      $('#background-option-message').textContent = 'Undo the affected stat gain rolls before removing this option.';
+      input.value = String(previous);
+      return;
+    }
     if (next) selections[key] = next; else delete selections[key];
+    const details = readBackgroundDetails();
+    if (Array.isArray(details[key])) details[key] = details[key].slice(0, next);
+    writeBackgroundDetails(details);
     form.elements.backgroundSelections.value = JSON.stringify(selections);
     form.elements.backgroundUsed.value = String((Number(form.elements.backgroundUsed.value) || 0) + (next - previous) * cost);
     input.value = String(next);
-    updateBackgroundLimits(); updateBackgroundPickerBudget(); saveCurrent();
+    $('#background-option-message').textContent = '';
+    updateBackgroundLimits(); updateBackgroundPickerBudget(); saveCurrent(); renderBackgroundOptionDetails();
+  }
+  function changeBackgroundEntry(key, index, change) {
+    if (!backgroundChoices.some(choice => choice[0] === key) || index < 0 || index >= (Number(readBackgroundSelections()[key]) || 0)) return;
+    const details = readBackgroundDetails();
+    details[key] ||= [];
+    details[key][index] ||= {};
+    change(details[key][index], details);
+    writeBackgroundDetails(details);
+    $('#background-option-message').textContent = '';
+    saveCurrent();
+    renderBackgroundOptionDetails();
   }
   function renderSkillTree(character = {}) {
     $('#skills-list').innerHTML = '';
@@ -1300,6 +1529,7 @@
   }
   function updateDevelopment() {
     if (!$('#dp-available')) return;
+    applyBackgroundEffects();
     updateRuleBonuses();
     const developmentIndices = [0, 1, 2, 3, 4];
     const values = developmentIndices.map(index => Number(form.elements.namedItem(`stat-temp-${index}`).value));
@@ -1374,6 +1604,7 @@
     const remaining = hasStats ? available - spent : null;
     $('#dp-remaining').textContent = remaining === null ? '—' : String(remaining);
     $('#dp-remaining').classList.toggle('over-budget', remaining !== null && remaining < 0);
+    renderBackgroundRewardsSummary();
     updateSheetHints();
     updateApprenticeshipBudget();
   }
@@ -1425,7 +1656,7 @@
       const total = form.elements.namedItem(`stat-total-${index}`);
       raceField.value = String(racial[index]);
       const value = Number(temporary);
-      basic.value = temporary !== '' && Number.isInteger(value) && value >= 20 && value <= 100 ? String(basicStatBonus(value)) : '';
+      basic.value = temporary !== '' && Number.isInteger(value) && value >= 1 && value <= 100 ? String(basicStatBonus(value)) : '';
       total.value = basic.value ? String(Number(basic.value) + racial[index] + (Number(special.value) || 0)) : '';
       return total.value === '' ? null : Number(total.value);
     });
@@ -1530,7 +1761,8 @@
     if (overHobbyLimit) steps.push(`<li><button type="button" class="creation-step-button" data-open-hobby-picker>Review ${overHobbyLimit} hobby allocation${overHobbyLimit === 1 ? '' : 's'} above the ${esc(form.elements.profession.value)} limit.</button></li>`);
     const pendingPackages = pendingTrainingChoices();
     if (pendingPackages) steps.push(`<li><button type="button" class="creation-step-button" data-open-apprenticeship-picker>Finish ${pendingPackages} training package choice${pendingPackages === 1 ? '' : 's'}.</button></li>`);
-    if (Number(form.elements.backgroundUsed.value) > 0 && !form.elements.backgroundOptions.value.trim()) steps.push('<li><button type="button" class="creation-step-button" data-open-background-picker>Record chosen background option details.</button></li>');
+    const pendingBackground = pendingBackgroundChoices();
+    if (pendingBackground) steps.push(`<li><button type="button" class="creation-step-button" data-open-background-picker>Finish ${pendingBackground} background result${pendingBackground === 1 ? '' : 's'}.</button></li>`);
     const dpRemaining = Number($('#dp-remaining').textContent);
     if ($('#dp-remaining').textContent !== '—' && dpRemaining !== 0) steps.push(`<li><button type="button" class="creation-step-button" data-open-apprenticeship-picker>${dpRemaining > 0 ? `Spend ${dpRemaining}` : `Review ${-dpRemaining}`} development points.</button></li>`);
     $('#creation-steps').innerHTML = steps.length ? steps.join('') : '<li class="is-complete">Creation choices recorded.</li>';
@@ -1563,6 +1795,9 @@
       languageSpent: Number(row.dataset.languageSpent) || 0,
       hobbySpent: Number(row.dataset.hobbySpent) || 0,
       packageBase: Number(row.dataset.packageBase) || 0,
+      backgroundLanguageBase: Number(row.dataset.backgroundLanguageBase) || 0,
+      backgroundSpecialBase: Number(row.dataset.backgroundSpecialBase) || 0,
+      backgroundItemBase: Number(row.dataset.backgroundItemBase) || 0,
       skillClass: row.dataset.skillClass || 'auto',
       ranks: (Number($('[name="skill-start"]', row).value) || 0) + developedSkillRanks(row, Number(row.dataset.pendingBuy || $('[name="skill-buy"]', row).value) || 0)
     })).filter(skill => skill.name || Number(skill.start) || Number(skill.buy));
@@ -1575,8 +1810,9 @@
       const raceBase = Number(row.dataset.raceBase) || 0;
       const hobbySpent = Number(row.dataset.hobbySpent) || 0;
       const packageBase = Number(row.dataset.packageBase) || 0;
-      return visibleCategories.has(row.dataset.category) || Number(start) || Number(buy) || Number(special) || Number(special2) || raceBase || hobbySpent || packageBase
-        ? [[row.dataset.category, {start, buy, special, special2, raceBase, hobbySpent, packageBase}]] : [];
+      const backgroundSpecialBase = Number(row.dataset.backgroundSpecialBase) || 0;
+      return visibleCategories.has(row.dataset.category) || Number(start) || Number(buy) || Number(special) || Number(special2) || raceBase || hobbySpent || packageBase || backgroundSpecialBase
+        ? [[row.dataset.category, {start, buy, special, special2, raceBase, hobbySpent, packageBase, backgroundSpecialBase}]] : [];
     }));
     ['skill-name','skill-start','skill-buy','skill-item','skill-special','record-start','record-buy','record-special','record-special2','a4-start','a4-buy','a4-item','a4-special'].forEach(key => delete data[key]);
     data.stats = Object.fromEntries(statNames.map((name, index) => [name, Object.fromEntries(['temp','pot','basic','racial','special','total'].map(part => [part, data[`stat-${part}-${index}`] || '']))]));
@@ -2003,6 +2239,118 @@
   });
   $('#close-background-picker').addEventListener('click', () => $('#background-picker').close());
   $('#background-picker-list').addEventListener('change', event => { if (event.target.matches('input[data-background-choice]')) updateBackgroundSelection(event.target); });
+  $('#background-add-skill').addEventListener('click', () => {
+    const category = $('#background-skill-category-options input:checked')?.value;
+    const name = $('#background-skill-name').value.trim();
+    if (!category || !name || name.startsWith('Choose ')) {
+      $('#background-option-message').textContent = 'Choose a category and enter a skill name.';
+      return;
+    }
+    if (!findSkillRow(category, name)) skillRow({category, name});
+    $('#background-skill-name').value = '';
+    $('#background-option-message').textContent = `${name} is available as a bonus target.`;
+    saveCurrent(); renderBackgroundOptionDetails();
+  });
+  $('#background-option-details').addEventListener('input', event => {
+    if (!event.target.matches('input[data-background-target-search]')) return;
+    const term = event.target.value.trim().toLowerCase();
+    $$('button[data-background-target]', event.target.closest('.background-target-picker')).forEach(button => { button.hidden = !button.dataset.search.includes(term); });
+  });
+  $('#background-option-details').addEventListener('click', event => {
+    const button = event.target.closest('button');
+    if (!button) return;
+    const index = Number(button.dataset.backgroundIndex);
+    const key = button.dataset.backgroundKey;
+    if (button.hasAttribute('data-background-undo-stat')) {
+      const statIndex = Number(button.dataset.backgroundUndoStat);
+      const history = readStatGainHistory();
+      const position = history.findIndex(item => item.source === `background:${index}` && item.stat === statNames[statIndex]);
+      if (position < 0) return;
+      if (history.slice(position + 1).some(item => item.stat === statNames[statIndex])) {
+        $('#background-option-message').textContent = 'Undo later rolls for this stat first.';
+        return;
+      }
+      form.elements.namedItem(`stat-temp-${statIndex}`).value = String(history[position].before);
+      history.splice(position, 1);
+      form.elements.statGainHistory.value = JSON.stringify(history);
+      saveCurrent(); renderBackgroundOptionDetails();
+    } else if (button.hasAttribute('data-background-stat')) {
+      buyStatGain(Number(button.dataset.backgroundStat), `background:${index}`, `stat:${button.dataset.backgroundStat}`);
+    } else if (button.hasAttribute('data-background-target')) {
+      const target = button.dataset.backgroundTarget;
+      if (key === 'skillBonus' || key === 'categoryBonus') {
+        const details = readBackgroundDetails();
+        if ((details[key] || []).some((entry, position) => position !== index && entry?.target === target)) {
+          $('#background-option-message').textContent = 'That target already has this background bonus.';
+          return;
+        }
+      }
+      changeBackgroundEntry(key, index, entry => {
+        if (button.hasAttribute('data-background-effect')) entry.effects[Number(button.dataset.backgroundEffect)].target = target;
+        else entry.target = target;
+      });
+    } else if (button.dataset.backgroundRoll === 'money') {
+      changeBackgroundEntry('rolledMoney', index, entry => {
+        if (entry.roll) return;
+        entry.roll = Math.floor(Math.random() * 100) + 1;
+        entry.amount = backgroundMoneyAmount(entry.roll);
+      });
+    } else if (button.dataset.backgroundRoll === 'item') {
+      changeBackgroundEntry('rolledItem', index, entry => {
+        if (entry.roll) return;
+        entry.roll = Math.floor(Math.random() * 100) + 1;
+        entry.tier = backgroundItems.indexOf(backgroundItemTier(entry.roll));
+      });
+    } else if (button.hasAttribute('data-background-money')) {
+      changeBackgroundEntry('chosenMoney', index, entry => { entry.amount = Number(button.dataset.backgroundMoney); });
+    } else if (button.hasAttribute('data-background-item-tier')) {
+      changeBackgroundEntry('chosenItem', index, entry => {
+        entry.tier = Number(button.dataset.backgroundItemTier);
+        entry.choice = ''; entry.description = ''; entry.effects = [];
+      });
+    } else if (button.hasAttribute('data-background-item-choice')) {
+      changeBackgroundEntry(key, index, entry => {
+        entry.choice = button.dataset.backgroundItemChoice;
+        entry.description = ''; entry.effects = [];
+      });
+    } else if (button.hasAttribute('data-background-add-effect')) {
+      changeBackgroundEntry(key, index, entry => {
+        entry.effects ||= [];
+        entry.effects.push({target:'', bonus:Number(/\+(\d+)/.exec(entry.choice || '')?.[1]) || 0});
+      });
+    } else if (button.hasAttribute('data-background-remove-effect')) {
+      changeBackgroundEntry(key, index, entry => { entry.effects?.splice(Number(button.dataset.backgroundEffect), 1); });
+    }
+  });
+  $('#background-option-details').addEventListener('change', event => {
+    const input = event.target;
+    const index = Number(input.dataset.backgroundIndex);
+    if (input.hasAttribute('data-background-language')) {
+      const name = input.dataset.backgroundLanguage;
+      const language = (backgroundExtraLanguages[form.elements.race.value] || []).find(([label]) => name.startsWith(`${label} (`));
+      if (!language) return;
+      const cap = name.endsWith('(spoken)') ? language[1] : language[2];
+      const details = readBackgroundDetails();
+      const entry = backgroundEntry(details, 'extraLanguages', index);
+      const allocations = entry.allocations || {};
+      const previous = Number(allocations[name]) || 0;
+      const used = Object.values(allocations).reduce((sum, value) => sum + (Number(value) || 0), 0);
+      const row = findSkillRow('Communications', name);
+      const currentTotal = Number($('[name="skill-start"]', row)?.value) || 0;
+      const requested = Number(input.value);
+      const next = Math.max(0, Math.min(Number.isInteger(requested) ? requested : 0, 20 - used + previous, cap - currentTotal + previous));
+      changeBackgroundEntry('extraLanguages', index, item => {
+        item.allocations ||= {};
+        if (next) item.allocations[name] = next; else delete item.allocations[name];
+      });
+    } else if (input.hasAttribute('data-background-item-description')) {
+      changeBackgroundEntry(input.dataset.backgroundKey, index, entry => { entry.description = input.value.trim(); });
+    } else if (input.hasAttribute('data-background-item-bonus')) {
+      changeBackgroundEntry(input.dataset.backgroundKey, index, entry => {
+        entry.effects[Number(input.dataset.backgroundEffect)].bonus = Math.max(0, Math.min(30, Math.round(Number(input.value) || 0)));
+      });
+    }
+  });
   $('#background-picker-notes').addEventListener('input', event => { form.elements.backgroundOptions.value = event.target.value; saveCurrent(); });
   $('#background-legacy-note').addEventListener('click', event => {
     if (event.target.id !== 'reset-unassigned-background') return;
@@ -2031,7 +2379,11 @@
   form.addEventListener('change', event => {
     showEditedCategory(event.target);
     syncA4SkillToTree(event.target);
-    if (event.target.name === 'race') applyRaceAdolescence(event.target.value);
+    if (event.target.name === 'race') {
+      applyRaceAdolescence(event.target.value);
+      const details = readBackgroundDetails();
+      if (details.extraLanguages) { details.extraLanguages = []; writeBackgroundDetails(details); }
+    }
     if (event.target.name === 'profession') {
       const realm = realmByProfession[event.target.value];
       form.elements.realm.value = realm === 'Choose at table' ? 'None' : realm || 'None';
