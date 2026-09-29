@@ -5,6 +5,7 @@
   let activeTable = null;
   const tableCache = new Map();
   let developmentRules = null;
+  let trainingPackages = [];
   const realmByProfession = {Fighter:'Choose at table',Thief:'Choose at table',Rogue:'Choose at table',Cleric:'Channeling',Magician:'Essence',Mentalist:'Mentalism',Ranger:'Channeling',Dabbler:'Essence',Bard:'Mentalism'};
   const $ = (selector, root = document) => root.querySelector(selector);
   const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
@@ -36,6 +37,54 @@
     'Weapon • Pole Arms':['St/Ag/St'], 'Weapon • Thrown':['Ag/St/Ag']
   };
   const weaponCategories = Object.keys(skillCategoryRules).filter(category => category.startsWith('Weapon •'));
+  const meleeWeaponCategories = ['Weapon • 1-H Concussion','Weapon • 1-H Edged','Weapon • 2-Handed','Weapon • Pole Arms'];
+  const specialSkillClasses = {
+    Dwarf: {everyman:['Caving','Leather-crafts','Metal-crafts','Mining','Stone-crafts'], restricted:['Swimming']},
+    'Wood Elf': {everyman:['Music','Trickery']},
+    Halfling: {everyman:['Horticulture']},
+    Fighter: {everyman:['Leadership','Frenzy','Boxing','Tackling','Situational Awareness (Combat)']},
+    Thief: {everyman:['Duping','Operating Equipment'], occupational:['Lock Lore']},
+    Rogue: {everyman:['Duping','Lock Lore']},
+    Magician: {everyman:['Time Sense','Meditation']},
+    Cleric: {everyman:['Time Sense','Meditation'], occupational:['Religion','Divination']},
+    Mentalist: {everyman:['Lie Perception','Time Sense','Seduction']},
+    Dabbler: {everyman:['Sense Ambush','Time Sense','Detect Traps','Locate Hidden'], occupational:['Lock Lore']},
+    Bard: {everyman:['Time Sense']}
+  };
+  function skillClass(row) {
+    if (row?.dataset.skillClass && row.dataset.skillClass !== 'auto') return row.dataset.skillClass;
+    const name = $('[name="skill-name"]', row)?.value || '';
+    const matches = entry => entry === name || (entry === 'Divination' && name.startsWith('Divination ('));
+    const classes = [specialSkillClasses[form.elements.race.value], specialSkillClasses[form.elements.profession.value]];
+    if (classes.some(group => group?.occupational?.some(matches))) return 'occupational';
+    if (classes.some(group => group?.restricted?.some(matches))) return 'restricted';
+    if (classes.some(group => group?.everyman?.some(matches))) return 'everyman';
+    if (form.elements.race.value === 'Wood Elf' && (name.startsWith('Play Instrument') || name.startsWith('Wood-crafts'))) return 'everyman';
+    if (form.elements.race.value === 'Dwarf' && name.startsWith('Survival (underground')) return 'everyman';
+    if (form.elements.race.value === 'Halfling' && name.startsWith('Caving (Halfling-holes')) return 'everyman';
+    if (form.elements.profession.value === 'Fighter' && name.startsWith('Situational Awareness') && name.includes('Combat')) return 'everyman';
+    return 'standard';
+  }
+  function developedSkillRanks(row, buy = Number($('[name="skill-buy"]', row)?.value) || 0) {
+    const kind = skillClass(row);
+    return kind === 'occupational' ? buy * 3 : kind === 'everyman' ? buy * 2 : kind === 'restricted' ? Math.floor(buy / 2) : buy;
+  }
+  const packageChoiceRules = {
+    Adventurer:[['weapon-category','category',weaponCategories,1,1],['weapon-skill','skill','@weapon-category',1,1]],
+    'Amateur Mage':[['open-lists','skill','Spells • Own Realm Open Lists',3,3],['magical-lore','skill','Lore • Magical',2,1],['technical-lore','skill','Lore • Technical',1,1]],
+    'Animal Friend':[['environmental','skill','Outdoor • Environmental',2,2],['animal','skill','Outdoor • Animal',4,3]],
+    Burglar:[['mechanics','skill','Subterfuge • Mechanics',2,2],['gymnastics','skill','Athletic • Gymnastics',1,1],['weapon-category','category',weaponCategories,1,1],['weapon-skill','skill','@weapon-category',1,1]],
+    'City Guard':[['weapon-category','category',weaponCategories,2,1],['weapon-skill','skill','@weapon-category',2,1]],
+    Herbalist:[['environmental','skill','Outdoor • Environmental',1,1]],
+    Hunter:[['missile','skill','Weapon • Missile',1,1],['environmental','skill','Outdoor • Environmental',2,2]],
+    Knight:[['melee-category','category',meleeWeaponCategories,2,1],['melee-skill','skill','@melee-category',2,1],['maneuver','skill','Combat Maneuvers',1,1]],
+    Loremaster:[['general','skill','Lore • General',6,3],['technical','skill','Lore • Technical',1,1],['obscure','skill','Lore • Obscure',1,1],['magical','skill','Lore • Magical',3,2]],
+    Merchant:[['language','skill','Communications',3,3],['vocation','skill','Technical/Trade • Vocational',1,1]],
+    Performer:[['active','skill','Artistic • Active',3,1],['gymnastics','skill','Athletic • Gymnastics',1,1],['language','skill','Communications',5,5],['influence','skill','Influence',2,2]],
+    Scout:[['environmental','skill','Outdoor • Environmental',3,3],['animal','skill','Outdoor • Animal',2,2],['weapon-category','category',weaponCategories,1,1],['weapon-skill','skill','@weapon-category',1,1]],
+    Soldier:[['weapon-category','category',weaponCategories,2,1],['weapon-skill','skill','@weapon-category',2,1],['light-armor','skill','Armor • Light',2,1]],
+    Traveller:[['environmental','skill','Outdoor • Environmental',1,1]]
+  };
   function weaponCostAssignments() {
     let saved;
     try { saved = JSON.parse(form.elements.weaponCostAssignments.value || '{}'); } catch { saved = {}; }
@@ -51,6 +100,46 @@
   function categoryCosts(category, profession = form.elements.profession.value) {
     const source = category.startsWith('Weapon •') ? weaponCostAssignments()[category] : category;
     return developmentRules?.categories?.[source]?.[profession] || null;
+  }
+  function spellDevelopmentOrder() {
+    let order = [];
+    try { order = JSON.parse(form.elements.spellDevelopmentOrder.value || '[]'); } catch { /* Use current rows. */ }
+    if (!Array.isArray(order)) order = [];
+    const active = $$('.skill-row', $('#skills-list')).filter(row => row.dataset.category.startsWith('Spells •') && Number($('[name="skill-buy"]', row)?.value) > 0)
+      .map(row => `${row.dataset.category}:${$('[name="skill-name"]', row).value}`);
+    return [...new Set(order.filter(key => active.includes(key)).concat(active))];
+  }
+  function spellListMultiplier(category, name) {
+    if (!category.startsWith('Spells •')) return 1;
+    const order = spellDevelopmentOrder();
+    const position = order.indexOf(`${category}:${name}`);
+    const index = position < 0 ? order.length : position;
+    return index < 5 ? 1 : index < 10 ? 2 : 4;
+  }
+  function spellListCosts(category, start, profession, multiplier) {
+    if (!category.startsWith('Spells • Own Realm')) return categoryCosts(category, profession);
+    const pure = ['Cleric','Magician','Mentalist'].includes(profession);
+    const semi = ['Ranger','Dabbler','Bard'].includes(profession);
+    const kind = category.includes('Open Lists') ? 'open' : category.includes('Closed Lists') ? 'closed' : 'base';
+    const tier = rank => {
+      if (kind === 'base') return categoryCosts(category, profession);
+      if (rank <= 5) return categoryCosts(category, profession);
+      const band = rank <= 10 ? 0 : rank <= 15 ? 1 : rank <= 20 ? 2 : 3;
+      if (pure) return kind === 'open' ? (band === 3 ? [6,6,6] : [4,4,4]) : (band === 3 ? [8,8] : [4,4,4]);
+      if (semi) return kind === 'open' ? [[8,8],[12],[18],[25]][band] : [[12],[25],[40],[60]][band];
+      const costs = kind === 'open' ? {Fighter:[50,75,100,125],Thief:[36,54,72,90],Rogue:[30,45,60,75]}
+        : {Fighter:[80,120,160,200],Thief:[70,105,140,175],Rogue:[50,75,100,125]};
+      return costs[profession] ? [costs[profession][band]] : null;
+    };
+    const first = tier(start + 1);
+    if (!first) return null;
+    const result = [];
+    for (let index = 0; index < first.length; index++) {
+      const current = tier(start + index + 1);
+      if (!current || index >= current.length) break;
+      result.push(current[index] * multiplier);
+    }
+    return result;
   }
   // Appendix A-4 skill names. A trailing * marks a skill developed separately for each instance.
   const a4Skills = {
@@ -283,10 +372,11 @@
         $('[name="a4-start"]', row).value = start;
         $('[name="a4-item"]', row).value = item;
         $('[name="a4-special"]', row).value = special;
-        $('.a4-start-text', row).textContent = start;
+        const developed = tree ? developedSkillRanks(tree) : 0;
+        $('.a4-start-text', row).textContent = String((Number(start) || 0) + developed);
         $('.a4-item-text', row).textContent = item;
         $('.a4-special-text', row).textContent = special;
-        const ranks = (Number(start) || 0) + (Number(buy.value) || 0);
+        const ranks = (Number(start) || 0) + developed;
         const rank = rankBonus(ranks, skillCategoryRules[category][1] || 'standard');
         const record = $$('.category-record-row').find(item => item.dataset.category === category);
         const categoryBonus = $('.record-total', record).textContent;
@@ -317,6 +407,7 @@
     $$('.category-record-row').forEach(row => {
       row.dataset.raceBase = String(Number(saved[row.dataset.category]?.raceBase) || 0);
       row.dataset.hobbySpent = String(Number(saved[row.dataset.category]?.hobbySpent) || 0);
+      row.dataset.packageBase = String(Number(saved[row.dataset.category]?.packageBase) || 0);
       if ($('[name="record-buy"]', row)) {
         if (!developmentRules && saved[row.dataset.category]?.buy) row.dataset.pendingBuy = saved[row.dataset.category].buy;
         updateSkillBuyOptions(row, Number(saved[row.dataset.category]?.buy) || 0);
@@ -372,6 +463,8 @@
     if (skill.raceBase) row.dataset.raceBase = skill.raceBase;
     if (skill.languageSpent) row.dataset.languageSpent = skill.languageSpent;
     if (skill.hobbySpent) row.dataset.hobbySpent = skill.hobbySpent;
+    if (skill.packageBase) row.dataset.packageBase = skill.packageBase;
+    if (skill.skillClass) row.dataset.skillClass = skill.skillClass;
     const choice = skill.raceGrant?.startsWith('weapon:') || skill.raceGrant === 'race:open-spell-list';
     row.innerHTML = `<div class="rank-title"><label>Skill<input ${choice ? 'type="hidden"' : 'type="text"'} aria-label="Skill name" name="skill-name" maxlength="60" placeholder="Skill name" value="${esc(skill.name || '')}"></label>${choice ? `<button type="button" class="choose-skill" aria-haspopup="dialog">${esc(skill.name || 'Choose skill')} ▾</button>` : ''}<button type="button" class="change-skill-category" aria-label="Change category for ${esc(skill.name || 'skill')}">${esc(category)}</button></div><label>Before<input aria-label="Ranks before this level" name="skill-start" type="number" min="0" max="99" value="${esc(skill.start ?? skill.ranks ?? 0)}"></label><label>Buy<select aria-label="Ranks purchased this level" name="skill-buy"></select></label><label>Item<input aria-label="Item bonus" name="skill-item" type="number" value="${esc(skill.item ?? 0)}"></label><label>Special<input aria-label="Skill special bonus" name="skill-special" type="number" value="${esc(skill.special ?? 0)}"></label><output class="rank-cost"></output><button type="button" class="remove-skill" aria-label="Remove skill">×</button><div class="bonus-breakdown skill-bonus"></div>`;
     $('.category-skills', parent).append(row);
@@ -527,10 +620,11 @@
     const costs = categoryCosts(category) || [];
     return costs.filter(cost => cost < 40).length;
   }
-  function hobbySkillOptions() {
+  function hobbySkillOptions(allowAll = false) {
     const options = new Map();
     const add = (category, name) => {
-      if (!name || name.startsWith('Choose ') || (!hobbyRankLimit(category) && !Number(findSkillRow(category, name)?.dataset.hobbySpent))) return;
+      if (!name || name.startsWith('Choose ')) return;
+      if (allowAll ? !categoryCosts(category) : !hobbyRankLimit(category) && !Number(findSkillRow(category, name)?.dataset.hobbySpent)) return;
       options.set(`${category}:${name}`, {category, name});
     };
     Object.entries(a4Skills).forEach(([category, names]) => names.split('|').filter(name => name && !name.endsWith('*')).forEach(name => add(category, name)));
@@ -647,6 +741,334 @@
     updateHobbyLimits();
     updateHobbyVisibility();
     updateDevelopment(); updateHobbyPickerBudget(); saveCurrent();
+  }
+  function apprenticeshipChoiceMarkup(kind, category, name = '') {
+    const row = kind === 'category'
+      ? $$('.category-record-row').find(item => item.dataset.category === category)
+      : findSkillRow(category, name);
+    const buy = row && $(`[name="${kind === 'category' ? 'record-buy' : 'skill-buy'}"]`, row);
+    const current = Number(buy?.value) || 0;
+    const costs = (kind === 'skill' && category.startsWith('Spells •')
+      ? row ? costForSkill(row) : spellListCosts(category, 0, form.elements.profession.value, spellListMultiplier(category, name))
+      : categoryCosts(category)) || [];
+    const base = row ? Number($(`[name="${kind === 'category' ? 'record-start' : 'skill-start'}"]`, row)?.value) || 0 : 0;
+    const label = kind === 'category' ? category : name;
+    const spent = costs.slice(0, current).reduce((sum, cost) => sum + cost, 0);
+    const classification = kind === 'skill' && current ? `<select data-skill-class="${esc(name)}" data-category="${esc(category)}" aria-label="${esc(name)} skill classification">${['auto','standard','everyman','occupational','restricted'].map(value => `<option value="${value}"${(row?.dataset.skillClass || 'auto') === value ? ' selected' : ''}>${value === 'auto' ? `Auto: ${skillClass(row)}` : value}</option>`).join('')}</select>` : '';
+    return `<label class="hobby-choice${classification ? ' apprenticeship-classified' : ''}" data-search="${esc(`${category} ${name}`.toLowerCase())}"><span><strong>${esc(label)}</strong>${kind === 'skill' ? `<small>${esc(category)}</small>` : '<small>Skill category</small>'}</span><input type="number" inputmode="numeric" min="0" max="${costs.length}" value="${current}" data-kind="${kind}" data-category="${esc(category)}" data-name="${esc(name)}" aria-label="${esc(label)} apprenticeship ranks">${classification}<em>${base} prior · ${costs.join('/')} DP · ${spent} spent</em></label>`;
+  }
+  function updateApprenticeshipVisibility() {
+    const term = $('#apprenticeship-search').value.trim().toLowerCase();
+    const hideSkills = $('#hide-zero-apprenticeship-skills').getAttribute('aria-pressed') === 'true';
+    const hideCategories = $('#hide-zero-apprenticeship-categories').getAttribute('aria-pressed') === 'true';
+    let shown = 0;
+    $$('.hobby-choice-group', $('#apprenticeship-picker-list')).forEach(group => {
+      const isSkill = group.dataset.kind === 'skill';
+      let groupShown = 0;
+      $$('.hobby-choice', group).forEach(choice => {
+        const input = $('input[data-kind]', choice);
+        const row = isSkill ? findSkillRow(input.dataset.category, input.dataset.name) : $$('.category-record-row').find(item => item.dataset.category === input.dataset.category);
+        const start = row ? Number($(`[name="${isSkill ? 'skill-start' : 'record-start'}"]`, row)?.value) || 0 : 0;
+        const visible = choice.dataset.search.includes(term) && (!(isSkill ? hideSkills : hideCategories) || start + Number(input.value) > 0);
+        choice.hidden = !visible;
+        if (visible) groupShown++;
+      });
+      group.hidden = !groupShown;
+      shown += groupShown;
+    });
+    $('#apprenticeship-picker-empty').hidden = shown > 0;
+  }
+  function renderApprenticeshipPicker() {
+    const categories = Object.entries(skillCategoryRules).filter(([category, rule]) => (!rule[1] || rule[1] === 'standard') && categoryCosts(category));
+    const skills = hobbySkillOptions(true);
+    $('#apprenticeship-picker-subtitle').textContent = `${form.elements.profession.value} · Section 6.0`;
+    $('#apprenticeship-picker-list').innerHTML = developmentRules
+      ? `<section class="hobby-choice-group" data-kind="category"><h3>Skill categories</h3>${categories.map(([category]) => apprenticeshipChoiceMarkup('category', category)).join('')}</section><section class="hobby-choice-group" data-kind="skill"><h3>Skills</h3>${skills.map(({category, name}) => apprenticeshipChoiceMarkup('skill', category, name)).join('')}</section>`
+      : '<p class="language-picker-note">Development costs are loading. Try again in a moment.</p>';
+    updateApprenticeshipVisibility();
+    updateApprenticeshipBudget();
+  }
+  function updateApprenticeshipBudget() {
+    const available = $('#dp-available').textContent;
+    const spent = Number($('#dp-spent').textContent) || 0;
+    const remaining = $('#dp-remaining').textContent;
+    $('#apprenticeship-remaining').textContent = remaining === '—' ? '—' : `${remaining} DP left`;
+    $('#apprenticeship-spent-label').textContent = `${spent} DP spent`;
+    $('#apprenticeship-picker-remaining').textContent = remaining === '—' ? 'Set temporary stats first' : `${remaining} DP left`;
+    $('#apprenticeship-picker-used').textContent = `${spent} of ${available} DP spent`;
+    $$('#apprenticeship-picker-list input[data-kind]').forEach(input => {
+      const category = input.dataset.category;
+      const kind = input.dataset.kind;
+      const row = kind === 'skill' ? findSkillRow(category, input.dataset.name) : null;
+      const costs = (kind === 'skill' && category.startsWith('Spells •')
+        ? row ? costForSkill(row) : spellListCosts(category, 0, form.elements.profession.value, spellListMultiplier(category, input.dataset.name))
+        : categoryCosts(category)) || [];
+      const current = Number(input.value) || 0;
+      const currentCost = costs.slice(0, current).reduce((sum, cost) => sum + cost, 0);
+      const budget = available === '—' ? 0 : Number(available) - spent + currentCost;
+      let max = 0;
+      let cost = 0;
+      for (const next of costs) { if (cost + next > budget) break; cost += next; max++; }
+      input.max = String(Math.max(current, max));
+      input.disabled = available === '—';
+    });
+    if ($('#apprenticeship-picker').open) renderApprenticeshipStatGains();
+  }
+  function updateApprenticeshipAllocation(input) {
+    const kind = input.dataset.kind;
+    const category = input.dataset.category;
+    const name = input.dataset.name;
+    let row = kind === 'category' ? $$('.category-record-row').find(item => item.dataset.category === category) : findSkillRow(category, name);
+    const priorSpellOrder = kind === 'skill' && category.startsWith('Spells •') ? spellDevelopmentOrder() : null;
+    const requested = Number(input.value);
+    const next = Math.max(0, Math.min(Number.isInteger(requested) ? requested : 0, Number(input.max)));
+    if (next && !form.elements.apprenticeshipDpBase.value && $('#dp-available').textContent !== '—') form.elements.apprenticeshipDpBase.value = $('#dp-available').textContent;
+    if (!row && next) row = skillRow({category, name});
+    if (row) updateSkillBuyOptions(row, next);
+    if (priorSpellOrder) {
+      const key = `${category}:${name}`;
+      form.elements.spellDevelopmentOrder.value = JSON.stringify(next ? priorSpellOrder.includes(key) ? priorSpellOrder : [...priorSpellOrder, key] : priorSpellOrder.filter(item => item !== key));
+    }
+    updateDevelopment();
+    renderApprenticeshipPicker();
+    renderTrainingPackages();
+    saveCurrent();
+  }
+  function readStatGainHistory() {
+    try {
+      const history = JSON.parse(form.elements.statGainHistory.value || '[]');
+      return Array.isArray(history) ? history : [];
+    } catch { return []; }
+  }
+  function packageStatGrantRules(name) {
+    if (name === 'Adventurer') return [['choice-1','Choose one stat',statNames],['choice-2','Choose another stat',statNames]];
+    if (name === 'Animal Friend') return [['empathy','Empathy',['Empathy']]];
+    if (name === 'Amateur Mage') {
+      const realmStat = {Channeling:'Intuition', Essence:'Empathy', Mentalism:'Presence'}[form.elements.realm.value];
+      return [['realm','Realm stat',realmStat ? [realmStat] : []],['memory','Memory',['Memory']]];
+    }
+    if (name === 'Hunter') return [['constitution','Constitution',['Constitution']]];
+    if (name === 'Knight') return [['strength','Strength',['Strength']],['discipline','Self Discipline',['Self Discipline']]];
+    return [];
+  }
+  function readTrainingSelections() {
+    try {
+      const names = JSON.parse(form.elements.trainingSelections.value || '[]');
+      return Array.isArray(names) ? names.filter(name => typeof name === 'string') : [];
+    } catch { return []; }
+  }
+  function readTrainingChoices() {
+    try {
+      const choices = JSON.parse(form.elements.trainingChoiceSelections.value || '{}');
+      return choices && typeof choices === 'object' && !Array.isArray(choices) ? choices : {};
+    } catch { return {}; }
+  }
+  function packageChoiceCategory(packName, rule, choices) {
+    const source = rule[2];
+    if (typeof source === 'string' && source.startsWith('@')) return choices[packName]?.[source.slice(1)] || '';
+    return source;
+  }
+  function packageSkillOptions(category, languageOnly = false) {
+    const names = new Set((a4Skills[category] || '').split('|').filter(name => name && !name.endsWith('*')));
+    $$('.skill-row', $('#skills-list')).filter(row => row.dataset.category === category).forEach(row => {
+      const name = $('[name="skill-name"]', row).value;
+      if (name && !name.startsWith('Choose ')) names.add(name);
+    });
+    (raceWeaponChoices[form.elements.race.value]?.[category] || []).forEach(name => names.add(name));
+    if (category === 'Spells • Own Realm Open Lists') (openSpellLists[form.elements.realm.value] || []).forEach(name => names.add(name));
+    if (languageOnly) return [...names].filter(name => /\((spoken|written)\)$/.test(name)).sort();
+    return [...names].sort();
+  }
+  function renderPackageChoices(pack, choices) {
+    const rules = packageChoiceRules[pack.name] || [];
+    return rules.map(([id, kind, source, ranks, maxDistinct]) => {
+      const label = pack.choices[rules.findIndex(rule => rule[0] === id)] || `${ranks} rank${ranks === 1 ? '' : 's'}`;
+      if (kind === 'category') {
+        const selected = choices[pack.name]?.[id] || '';
+        return `<div class="package-grant-choice"><strong>${esc(label)}</strong><div class="choice-strip">${source.map(category => `<button type="button" data-package-category="${esc(category)}" data-package="${esc(pack.name)}" data-rule="${esc(id)}" aria-pressed="${selected === category}">${esc(category.replace('Weapon • ', ''))}</button>`).join('')}</div></div>`;
+      }
+      const category = packageChoiceCategory(pack.name, [id, kind, source, ranks, maxDistinct], choices);
+      if (!category) return `<div class="package-grant-choice"><strong>${esc(label)}</strong><p>Choose the related category first.</p></div>`;
+      const selected = choices[pack.name]?.[id] || {};
+      const options = packageSkillOptions(category, id === 'language');
+      const used = Object.values(selected).reduce((sum, value) => sum + (Number(value) || 0), 0);
+      return `<div class="package-grant-choice"><strong>${esc(label)}</strong><small>${used} of ${ranks} ranks assigned · up to ${maxDistinct} skills</small><div class="package-grant-skills">${options.map(name => `<label><span>${esc(name)}</span><input type="number" inputmode="numeric" min="0" max="${ranks}" value="${Number(selected[name]) || 0}" data-package-skill="${esc(name)}" data-package="${esc(pack.name)}" data-rule="${esc(id)}" aria-label="${esc(name)} package ranks"></label>`).join('') || '<p>Add a specific skill above, then choose it here.</p>'}</div></div>`;
+    }).join('');
+  }
+  function trainingPackageCost() {
+    const professionIndex = developmentRules?.professions?.indexOf(form.elements.profession.value) ?? -1;
+    return readTrainingSelections().reduce((sum, name) => {
+      const cost = trainingPackages.find(pack => pack.name === name)?.costs[professionIndex];
+      return sum + (Number(cost) || 0);
+    }, 0);
+  }
+  function pendingTrainingChoices() {
+    const choices = readTrainingChoices();
+    const history = readStatGainHistory();
+    return readTrainingSelections().reduce((pending, name) => {
+      const ranks = (packageChoiceRules[name] || []).filter(([id, kind, source, total]) => {
+        const selected = choices[name]?.[id];
+        return kind === 'category' ? !source.includes(selected)
+          : !selected || Object.values(selected).reduce((sum, value) => sum + (Number(value) || 0), 0) < total;
+      }).length;
+      const rolls = packageStatGrantRules(name).filter(([id]) => !history.some(entry => entry.source === name && entry.grantId === id)).length;
+      return pending + ranks + rolls;
+    }, 0);
+  }
+  function applyTrainingGrants() {
+    const categories = new Map();
+    const skills = new Map();
+    const choices = readTrainingChoices();
+    readTrainingSelections().forEach(name => {
+      const pack = trainingPackages.find(item => item.name === name);
+      if (!pack) return;
+      Object.entries(pack.categories).forEach(([category, ranks]) => categories.set(category, (categories.get(category) || 0) + ranks));
+      pack.skills.forEach(([category, skill, ranks]) => {
+        const key = `${category}:${skill}`;
+        skills.set(key, {category, name:skill, ranks:(skills.get(key)?.ranks || 0) + ranks});
+      });
+      (packageChoiceRules[name] || []).forEach(rule => {
+        const [id, kind, source, ranks, maxDistinct] = rule;
+        const selected = choices[name]?.[id];
+        if (kind === 'category') {
+          if (source.includes(selected)) categories.set(selected, (categories.get(selected) || 0) + ranks);
+          return;
+        }
+        const category = packageChoiceCategory(name, rule, choices);
+        if (!category || !selected || typeof selected !== 'object') return;
+        let used = 0;
+        Object.entries(selected).slice(0, maxDistinct).forEach(([skill, count]) => {
+          const amount = Math.max(0, Math.min(Number(count) || 0, ranks - used));
+          if (!amount) return;
+          used += amount;
+          const key = `${category}:${skill}`;
+          skills.set(key, {category, name:skill, ranks:(skills.get(key)?.ranks || 0) + amount});
+        });
+      });
+    });
+    $$('.category-record-row').forEach(row => {
+      const field = $('[name="record-start"]', row);
+      if (!field) return;
+      const previous = Number(row.dataset.packageBase) || 0;
+      const next = categories.get(row.dataset.category) || 0;
+      const base = Math.max(0, (Number(field.value) || 0) - previous);
+      const applied = Math.max(0, Math.min(next, 10 - base));
+      field.value = String(base + applied);
+      row.dataset.packageBase = String(applied);
+      if (applied) categoryRow(row.dataset.category);
+    });
+    $$('.skill-row', $('#skills-list')).forEach(row => {
+      const previous = Number(row.dataset.packageBase) || 0;
+      const key = `${row.dataset.category}:${$('[name="skill-name"]', row).value}`;
+      const next = skills.get(key)?.ranks || 0;
+      const field = $('[name="skill-start"]', row);
+      const base = Math.max(0, (Number(field.value) || 0) - previous);
+      const applied = Math.max(0, Math.min(next, 10 - base));
+      field.value = String(base + applied);
+      row.dataset.packageBase = String(applied);
+      skills.delete(key);
+    });
+    skills.forEach(({category, name, ranks}) => skillRow({category, name, start:Math.min(10, ranks), packageBase:Math.min(10, ranks)}));
+    updateDevelopment();
+  }
+  function renderTrainingPackages() {
+    const selected = readTrainingSelections();
+    const professionIndex = developmentRules?.professions?.indexOf(form.elements.profession.value) ?? -1;
+    const months = selected.reduce((total, name) => total + (trainingPackages.find(pack => pack.name === name)?.months || 0), 0);
+    $('#training-duration').textContent = months ? `${months} months of training` : '';
+    $('#apprenticeship-package-list').innerHTML = trainingPackages.map(pack => {
+      const active = selected.includes(pack.name);
+      const fixed = Object.entries(pack.categories).filter(([, ranks]) => ranks).map(([category, ranks]) => `${category} +${ranks}`)
+        .concat(pack.skills.map(([category, name, ranks]) => `${name} (${category}) +${ranks}`));
+      return `<div class="apprenticeship-package"><button type="button" data-package="${esc(pack.name)}" aria-pressed="${active}"><strong>${esc(pack.name)} <small>${pack.type === 'L' ? 'Lifestyle' : 'Vocational'}</small></strong><span>${pack.costs[professionIndex] ?? '—'} DP · ${pack.months} months</span></button>${active ? `<p>Fixed grants: ${esc(fixed.join(' · ') || 'none')}</p>${renderPackageChoices(pack, readTrainingChoices())}<p>Stat gains: ${esc(pack.statGains)}</p><details><summary>Starting money and special items</summary><p>Starting money: ${esc(pack.startingMoney)}</p><ul>${pack.specialItems.map(([item, chance]) => `<li>${esc(item)} · ${chance}% chance</li>`).join('')}</ul></details>` : ''}</div>`;
+    }).join('');
+  }
+  function toggleTrainingPackage(name) {
+    const pack = trainingPackages.find(item => item.name === name);
+    if (!pack) return;
+    let selected = readTrainingSelections();
+    if (selected.includes(name)) {
+      if (readStatGainHistory().some(entry => entry.source === name)) {
+        $('#apprenticeship-package-message').textContent = 'Undo this package’s stat gain rolls before removing it.';
+        return;
+      }
+      selected = selected.filter(item => item !== name);
+    }
+    else {
+      const displaced = pack.type === 'L' ? selected.filter(item => trainingPackages.find(other => other.name === item)?.type === 'L') : [];
+      if (displaced.some(item => readStatGainHistory().some(entry => entry.source === item))) {
+        $('#apprenticeship-package-message').textContent = 'Undo the current lifestyle package’s stat gain rolls before replacing it.';
+        return;
+      }
+      const refund = displaced.reduce((sum, item) => sum + (trainingPackages.find(other => other.name === item)?.costs[developmentRules.professions.indexOf(form.elements.profession.value)] || 0), 0);
+      if ($('#dp-remaining').textContent === '—' || Number($('#dp-remaining').textContent) + refund < pack.costs[developmentRules.professions.indexOf(form.elements.profession.value)]) {
+        $('#apprenticeship-package-message').textContent = 'Not enough development points for this package.';
+        return;
+      }
+      selected = selected.filter(item => !displaced.includes(item));
+      selected.push(name);
+    }
+    if (selected.length && !form.elements.apprenticeshipDpBase.value && $('#dp-available').textContent !== '—') form.elements.apprenticeshipDpBase.value = $('#dp-available').textContent;
+    form.elements.trainingSelections.value = JSON.stringify(selected);
+    form.elements.training.value = selected.join(', ');
+    $('#apprenticeship-package-message').textContent = '';
+    applyTrainingGrants();
+    renderTrainingPackages();
+    renderApprenticeshipPicker();
+    saveCurrent();
+  }
+  function initialStatValue(index) {
+    const name = statNames[index];
+    const first = readStatGainHistory().find(entry => entry.stat === name);
+    return first ? Number(first.before) : Number(form.elements.namedItem(`stat-temp-${index}`).value) || 0;
+  }
+  function renderApprenticeshipStatGains() {
+    const available = Number($('#dp-remaining').textContent);
+    const canBuy = $('#dp-remaining').textContent !== '—' && available >= 8;
+    const history = readStatGainHistory();
+    const freeRolls = readTrainingSelections().flatMap(packageName => packageStatGrantRules(packageName).map(([id, label, options]) => {
+      const used = history.find(entry => entry.source === packageName && entry.grantId === id);
+      const taken = packageName === 'Adventurer' ? history.filter(entry => entry.source === packageName).map(entry => entry.stat) : [];
+      return `<div class="package-free-roll"><strong>${esc(packageName)} · ${esc(label)}</strong>${used ? `<span>Used for ${esc(used.stat)}</span>` : `<div class="choice-strip">${options.filter(name => !taken.includes(name)).map(name => `<button type="button" data-free-package="${esc(packageName)}" data-free-grant="${esc(id)}" data-stat-index="${statNames.indexOf(name)}"${Number(form.elements.namedItem(`stat-pot-${statNames.indexOf(name)}`).value) >= Number(form.elements.namedItem(`stat-temp-${statNames.indexOf(name)}`).value) && Number(form.elements.namedItem(`stat-temp-${statNames.indexOf(name)}`).value) >= 1 ? '' : ' disabled'}>${esc(name)}</button>`).join('') || '<span>Choose a realm of power first.</span>'}</div>`}</div>`;
+    })).join('');
+    $('#apprenticeship-stat-list').innerHTML = freeRolls + statNames.map((name, index) => {
+      const current = Number(form.elements.namedItem(`stat-temp-${index}`).value) || 0;
+      const potential = Number(form.elements.namedItem(`stat-pot-${index}`).value) || 0;
+      return `<div class="apprenticeship-stat-row"><span>${esc(name)} <small>${current} / ${potential || '—'}</small></span><button type="button" data-stat-index="${index}"${canBuy && potential >= current && current >= 1 ? '' : ' disabled'}>Buy & roll · 8 DP</button></div>`;
+    }).join('');
+    $('#apprenticeship-stat-history').innerHTML = history.length
+      ? `Recent rolls: ${history.slice(-4).map(entry => `${esc(entry.stat)} ${entry.before} → ${entry.after} (${entry.dice.join('+')}${entry.source ? `, ${esc(entry.source)}` : ', 8 DP'})`).join(' · ')} <button type="button" id="undo-stat-gain">Undo last roll</button>`
+      : 'No extra stat gain rolls purchased.';
+  }
+  function buyStatGain(index, source = '', grantId = '') {
+    if (!source && ($('#dp-remaining').textContent === '—' || Number($('#dp-remaining').textContent) < 8)) return;
+    if (source) {
+      if (!readTrainingSelections().includes(source)) return;
+      const rule = packageStatGrantRules(source).find(([id]) => id === grantId);
+      if (!rule?.[2].includes(statNames[index])) return;
+      const history = readStatGainHistory();
+      if (history.some(entry => entry.source === source && (entry.grantId === grantId || source === 'Adventurer' && entry.stat === statNames[index]))) return;
+    }
+    const temp = form.elements.namedItem(`stat-temp-${index}`);
+    const pot = form.elements.namedItem(`stat-pot-${index}`);
+    const before = Number(temp.value);
+    const potential = Number(pot.value);
+    if (!Number.isInteger(before) || !Number.isInteger(potential) || potential < before) return;
+    if (!form.elements.apprenticeshipDpBase.value) form.elements.apprenticeshipDpBase.value = $('#dp-available').textContent;
+    const dice = [Math.floor(Math.random() * 10) + 1, Math.floor(Math.random() * 10) + 1];
+    const [first, second] = dice;
+    const difference = potential - before;
+    const change = first === second && first <= 5 ? -first
+      : first === second ? first + second
+      : difference <= 0 ? 0 : difference <= 10 ? Math.min(first, second)
+      : difference <= 20 ? Math.max(first, second) : first + second;
+    const after = Math.max(1, Math.min(potential, before + change));
+    temp.value = String(after);
+    const history = readStatGainHistory();
+    history.push({stat:statNames[index], before, after, dice, cost:source ? 0 : 8, source, grantId});
+    form.elements.statGainHistory.value = JSON.stringify(history);
+    updateDevelopment();
+    saveCurrent();
   }
   function readBackgroundSelections() {
     try {
@@ -799,8 +1221,12 @@
     $('[name="skill-special"]', tree).value = $('[name="a4-special"]', row).value;
   }
   function costForSkill(row, profession) {
+    profession ||= form.elements.profession.value;
     const category = row.dataset.category;
-    return categoryCosts(category, profession);
+    if (!row.classList.contains('skill-row') || !category.startsWith('Spells •')) return categoryCosts(category, profession);
+    const name = $('[name="skill-name"]', row).value;
+    const start = Number($('[name="skill-start"]', row).value) || 0;
+    return spellListCosts(category, start, profession, spellListMultiplier(category, name));
   }
   function updateSkillBuyOptions(row, preferred) {
     const costs = costForSkill(row, form.elements.profession.value);
@@ -822,7 +1248,9 @@
     const developmentIndices = [0, 1, 2, 3, 4];
     const values = developmentIndices.map(index => Number(form.elements.namedItem(`stat-temp-${index}`).value));
     const hasStats = values.every(value => Number.isFinite(value) && value >= 1 && value <= 101);
-    const available = hasStats ? Math.round(values.reduce((sum, value) => sum + value, 0) / 5) : null;
+    const frozen = Number(form.elements.apprenticeshipDpBase.value);
+    const available = form.elements.apprenticeshipDpBase.value && Number.isFinite(frozen) ? frozen
+      : hasStats ? Math.round(values.reduce((sum, value) => sum + value, 0) / 5) : null;
     if (hasStats) $('#dp-available').textContent = String(available); else $('#dp-available').textContent = '—';
     const profession = form.elements.profession.value;
     let spent = 0;
@@ -833,7 +1261,7 @@
       const cost = costs ? costs.slice(0, ranks).reduce((sum, value) => sum + value, 0) : 0;
       const start = Number($('[name="skill-start"]', row).value) || 0;
       spent += cost;
-      $('.rank-cost', row).textContent = `${cost} DP · ${start + ranks} ranks`;
+      $('.rank-cost', row).textContent = `${cost} DP · ${start + developedSkillRanks(row, ranks)} ranks`;
     });
     $$('.category-record-row').forEach(record => {
       const category = record.dataset.category;
@@ -854,7 +1282,7 @@
       const total = stat === null ? null : rank + stat + professionBonus + special + special2;
       const stats = rule[0] === 'realm' ? ({Channeling:'In',Essence:'Em',Mentalism:'Pr'}[form.elements.realm.value] || 'Realm') : rule[0];
       if (buy) {
-        $('.record-start-text', record).textContent = $('[name="record-start"]', record).value;
+        $('.record-start-text', record).textContent = String((Number($('[name="record-start"]', record).value) || 0) + (Number(buy.value) || 0));
       }
       $('.record-special-text', record).textContent = String(special);
       $('.record-special2-text', record).textContent = String(special2);
@@ -869,7 +1297,7 @@
       $('.category-row-summary', row).textContent = `${categoryRanks} ranks · ${total ?? '—'} bonus`;
       $('.category-bonus', row.parentElement).innerHTML = `<span>Rank ${rank} + stat ${stat ?? '—'} + profession ${professionBonus} + specials ${special + special2}</span><strong>Category ${total ?? '—'}</strong>`;
       $$('.skill-row', row.parentElement).forEach(skill => {
-        const skillRanks = (Number($('[name="skill-start"]', skill).value) || 0) + (Number($('[name="skill-buy"]', skill).value) || 0);
+        const skillRanks = (Number($('[name="skill-start"]', skill).value) || 0) + developedSkillRanks(skill);
         const skillRank = rankBonus(skillRanks, rule[1] || 'standard');
         const item = Number($('[name="skill-item"]', skill).value) || 0;
         const skillSpecial = Number($('[name="skill-special"]', skill).value) || 0;
@@ -882,11 +1310,16 @@
       $('.group-profession-bonus', group).textContent = bonus ? `+${bonus} profession` : '';
     });
     spent += Number(form.elements.otherDp.value) || 0;
+    spent += readStatGainHistory().reduce((sum, entry) => sum + (Number(entry.cost) || 0), 0);
+    spent += trainingPackageCost();
+    const trainingMonths = readTrainingSelections().reduce((sum, name) => sum + (trainingPackages.find(pack => pack.name === name)?.months || 0), 0);
+    $('#training-duration').textContent = trainingMonths ? `${trainingMonths} months of training` : '';
     $('#dp-spent').textContent = String(spent);
     const remaining = hasStats ? available - spent : null;
     $('#dp-remaining').textContent = remaining === null ? '—' : String(remaining);
     $('#dp-remaining').classList.toggle('over-budget', remaining !== null && remaining < 0);
     updateSheetHints();
+    updateApprenticeshipBudget();
   }
   function statCost(value) { return value <= 90 ? value : 90 + (value - 90) ** 2; }
   function applyProfessionStatDefaults() {
@@ -974,7 +1407,7 @@
     $('#fixed-stat-pool').setAttribute('aria-pressed', String(mode === '660'));
     $('#stat-pool-print-addend').textContent = mode === '660' ? '60' : mode === 'roll' && validRoll ? String(roll) : '—';
     $('#stat-pool-total').textContent = budget === null ? '—' : String(budget);
-    const values = statNames.map((_, index) => Number(form.elements.namedItem(`stat-temp-${index}`).value) || 0);
+    const values = statNames.map((_, index) => initialStatValue(index));
     const spent = values.reduce((sum, value) => sum + statCost(value), 0);
     const remaining = budget === null ? 'Choose a stat pool.' : `${spent} of ${budget} points assigned · ${budget - spent} remaining`;
     $('#stat-budget').textContent = remaining;
@@ -1039,9 +1472,11 @@
     }
     const overHobbyLimit = hobbyOverLimitCount();
     if (overHobbyLimit) steps.push(`<li><button type="button" class="creation-step-button" data-open-hobby-picker>Review ${overHobbyLimit} hobby allocation${overHobbyLimit === 1 ? '' : 's'} above the ${esc(form.elements.profession.value)} limit.</button></li>`);
+    const pendingPackages = pendingTrainingChoices();
+    if (pendingPackages) steps.push(`<li><button type="button" class="creation-step-button" data-open-apprenticeship-picker>Finish ${pendingPackages} training package choice${pendingPackages === 1 ? '' : 's'}.</button></li>`);
     if (Number(form.elements.backgroundUsed.value) > 0 && !form.elements.backgroundOptions.value.trim()) steps.push('<li><button type="button" class="creation-step-button" data-open-background-picker>Record chosen background option details.</button></li>');
     const dpRemaining = Number($('#dp-remaining').textContent);
-    if ($('#dp-remaining').textContent !== '—' && dpRemaining !== 0) addStep(`${dpRemaining > 0 ? `Spend ${dpRemaining}` : `Review ${-dpRemaining}`} development points.`, 'creation-category-sheet');
+    if ($('#dp-remaining').textContent !== '—' && dpRemaining !== 0) steps.push(`<li><button type="button" class="creation-step-button" data-open-apprenticeship-picker>${dpRemaining > 0 ? `Spend ${dpRemaining}` : `Review ${-dpRemaining}`} development points.</button></li>`);
     $('#creation-steps').innerHTML = steps.length ? steps.join('') : '<li class="is-complete">Creation choices recorded.</li>';
   }
   function showView(name) {
@@ -1071,7 +1506,9 @@
       raceBase: Number(row.dataset.raceBase) || 0,
       languageSpent: Number(row.dataset.languageSpent) || 0,
       hobbySpent: Number(row.dataset.hobbySpent) || 0,
-      ranks: (Number($('[name="skill-start"]', row).value) || 0) + (Number(row.dataset.pendingBuy || $('[name="skill-buy"]', row).value) || 0)
+      packageBase: Number(row.dataset.packageBase) || 0,
+      skillClass: row.dataset.skillClass || 'auto',
+      ranks: (Number($('[name="skill-start"]', row).value) || 0) + developedSkillRanks(row, Number(row.dataset.pendingBuy || $('[name="skill-buy"]', row).value) || 0)
     })).filter(skill => skill.name || Number(skill.start) || Number(skill.buy));
     const visibleCategories = new Set($$('.category-row', $('#skills-list')).map(row => row.dataset.category));
     data.categoryRanks = Object.fromEntries($$('.category-record-row').flatMap(row => {
@@ -1081,8 +1518,9 @@
       const special2 = $('[name="record-special2"]', row).value;
       const raceBase = Number(row.dataset.raceBase) || 0;
       const hobbySpent = Number(row.dataset.hobbySpent) || 0;
-      return visibleCategories.has(row.dataset.category) || Number(start) || Number(buy) || Number(special) || Number(special2) || raceBase || hobbySpent
-        ? [[row.dataset.category, {start, buy, special, special2, raceBase, hobbySpent}]] : [];
+      const packageBase = Number(row.dataset.packageBase) || 0;
+      return visibleCategories.has(row.dataset.category) || Number(start) || Number(buy) || Number(special) || Number(special2) || raceBase || hobbySpent || packageBase
+        ? [[row.dataset.category, {start, buy, special, special2, raceBase, hobbySpent, packageBase}]] : [];
     }));
     ['skill-name','skill-start','skill-buy','skill-item','skill-special','record-start','record-buy','record-special','record-special2','a4-start','a4-buy','a4-item','a4-special'].forEach(key => delete data[key]);
     data.stats = Object.fromEntries(statNames.map((name, index) => [name, Object.fromEntries(['temp','pot','basic','racial','special','total'].map(part => [part, data[`stat-${part}-${index}`] || '']))]));
@@ -1287,10 +1725,11 @@
   }
   async function loadReferenceData() {
     try {
-      const [tableResponse, costResponse] = await Promise.all([fetch('tables/index.json'), fetch('tables/T-2.8.json')]);
-      if (!tableResponse.ok || !costResponse.ok) throw new Error('Reference files could not be loaded');
+      const [tableResponse, costResponse, packageResponse] = await Promise.all([fetch('tables/index.json'), fetch('tables/T-2.8.json'), fetch('tables/apprenticeship-packages.json')]);
+      if (!tableResponse.ok || !costResponse.ok || !packageResponse.ok) throw new Error('Reference files could not be loaded');
       tables = await tableResponse.json();
       developmentRules = await costResponse.json();
+      trainingPackages = await packageResponse.json();
       const draft = formData();
       renderCategoryRecord(draft);
       renderSkillTree(draft);
@@ -1360,13 +1799,24 @@
   $('#hide-zero-groups').addEventListener('change', updateA4Visibility);
   const openLanguagePicker = () => { renderLanguagePicker(); $('#language-picker').showModal(); };
   const openHobbyPicker = () => { renderHobbyPicker(); $('#hobby-picker').showModal(); };
+  const openApprenticeshipPicker = () => {
+    $('#apprenticeship-search').value = '';
+    $('#apprenticeship-add-message').textContent = '';
+    $('#apprenticeship-category-options').innerHTML = Object.keys(skillCategoryRules).map((category, index) => `<label class="choice-tile"><input type="radio" name="apprenticeshipCategory" value="${esc(category)}"${index === 0 ? ' checked' : ''}><span>${esc(category)}</span></label>`).join('');
+    renderApprenticeshipPicker();
+    $('#apprenticeship-picker').showModal();
+    renderApprenticeshipStatGains();
+    renderTrainingPackages();
+  };
   const openBackgroundPicker = () => { renderBackgroundPicker(); $('#background-picker').showModal(); };
   $('#open-language-picker').addEventListener('click', openLanguagePicker);
   $('#open-hobby-picker').addEventListener('click', openHobbyPicker);
+  $('#open-apprenticeship-picker').addEventListener('click', openApprenticeshipPicker);
   $('#open-background-picker').addEventListener('click', openBackgroundPicker);
   $('#creation-steps').addEventListener('click', event => {
     if (event.target.closest('[data-open-language-picker]')) openLanguagePicker();
     if (event.target.closest('[data-open-hobby-picker]')) openHobbyPicker();
+    if (event.target.closest('[data-open-apprenticeship-picker]')) openApprenticeshipPicker();
     if (event.target.closest('[data-open-background-picker]')) openBackgroundPicker();
     if (event.target.closest('[data-open-race-weapons]')) $('#open-race-weapons').click();
     if (event.target.closest('[data-open-spell-choice]')) {
@@ -1382,6 +1832,98 @@
     renderLanguagePicker(); saveCurrent();
   });
   $('#close-hobby-picker').addEventListener('click', () => $('#hobby-picker').close());
+  $('#close-apprenticeship-picker').addEventListener('click', () => $('#apprenticeship-picker').close());
+  $('#apprenticeship-search').addEventListener('input', updateApprenticeshipVisibility);
+  for (const id of ['hide-zero-apprenticeship-skills','hide-zero-apprenticeship-categories']) {
+    $(`#${id}`).addEventListener('click', event => {
+      const button = event.currentTarget;
+      button.setAttribute('aria-pressed', String(button.getAttribute('aria-pressed') !== 'true'));
+      updateApprenticeshipVisibility();
+    });
+  }
+  $('#apprenticeship-picker-list').addEventListener('change', event => { if (event.target.matches('input[data-kind]')) updateApprenticeshipAllocation(event.target); });
+  $('#apprenticeship-picker-list').addEventListener('change', event => {
+    const select = event.target.closest('select[data-skill-class]');
+    if (!select) return;
+    const row = findSkillRow(select.dataset.category, select.dataset.skillClass);
+    if (!row) return;
+    row.dataset.skillClass = select.value;
+    updateDevelopment();
+    renderApprenticeshipPicker();
+    saveCurrent();
+  });
+  $('#apprenticeship-package-list').addEventListener('click', event => {
+    const categoryButton = event.target.closest('button[data-package-category]');
+    if (categoryButton) {
+      const name = categoryButton.dataset.package;
+      const id = categoryButton.dataset.rule;
+      const choices = readTrainingChoices();
+      choices[name] ||= {};
+      const next = choices[name][id] === categoryButton.dataset.packageCategory ? '' : categoryButton.dataset.packageCategory;
+      choices[name][id] = next;
+      (packageChoiceRules[name] || []).filter(rule => rule[2] === `@${id}`).forEach(rule => { delete choices[name][rule[0]]; });
+      form.elements.trainingChoiceSelections.value = JSON.stringify(choices);
+      applyTrainingGrants(); renderTrainingPackages(); saveCurrent();
+      return;
+    }
+    const button = event.target.closest('button[data-package]');
+    if (button) toggleTrainingPackage(button.dataset.package);
+  });
+  $('#apprenticeship-package-list').addEventListener('change', event => {
+    const input = event.target.closest('input[data-package-skill]');
+    if (!input) return;
+    const name = input.dataset.package;
+    const id = input.dataset.rule;
+    const rule = (packageChoiceRules[name] || []).find(item => item[0] === id);
+    if (!rule) return;
+    const choices = readTrainingChoices();
+    choices[name] ||= {};
+    const selected = choices[name][id] && typeof choices[name][id] === 'object' ? choices[name][id] : {};
+    const previous = Number(selected[input.dataset.packageSkill]) || 0;
+    const used = Object.values(selected).reduce((sum, value) => sum + (Number(value) || 0), 0);
+    const distinct = Object.values(selected).filter(value => Number(value) > 0).length;
+    const requested = Number(input.value);
+    const next = Math.max(0, Math.min(Number.isInteger(requested) ? requested : 0, rule[3] - used + previous));
+    if (next && !previous && distinct >= rule[4]) selected[input.dataset.packageSkill] = 0;
+    else if (next) selected[input.dataset.packageSkill] = next;
+    else delete selected[input.dataset.packageSkill];
+    choices[name][id] = selected;
+    form.elements.trainingChoiceSelections.value = JSON.stringify(choices);
+    applyTrainingGrants(); renderTrainingPackages(); saveCurrent();
+  });
+  $('#apprenticeship-stat-list').addEventListener('click', event => {
+    const button = event.target.closest('button[data-stat-index]');
+    if (button) buyStatGain(Number(button.dataset.statIndex), button.dataset.freePackage || '', button.dataset.freeGrant || '');
+  });
+  $('#apprenticeship-stat-history').addEventListener('click', event => {
+    if (event.target.id !== 'undo-stat-gain') return;
+    const history = readStatGainHistory();
+    const last = history.pop();
+    if (!last) return;
+    form.elements.namedItem(`stat-temp-${statNames.indexOf(last.stat)}`).value = String(last.before);
+    form.elements.statGainHistory.value = JSON.stringify(history);
+    updateDevelopment();
+    saveCurrent();
+  });
+  $('#apprenticeship-add-skill').addEventListener('click', () => {
+    const category = $('#apprenticeship-category-options input:checked')?.value;
+    const name = $('#apprenticeship-skill-name').value.trim();
+    if (!category || !name || name.startsWith('Choose ')) {
+      $('#apprenticeship-add-message').textContent = 'Choose a category and enter a skill name.';
+      return;
+    }
+    if (!categoryCosts(category)) {
+      $('#apprenticeship-add-message').textContent = `${category} is unavailable to ${form.elements.profession.value}.`;
+      return;
+    }
+    if (!findSkillRow(category, name)) skillRow({category, name});
+    $('#apprenticeship-add-message').textContent = `${name} is available in the skill list below.`;
+    $('#apprenticeship-skill-name').value = '';
+    updateDevelopment();
+    renderApprenticeshipPicker();
+    renderTrainingPackages();
+    saveCurrent();
+  });
   $('#hobby-search').addEventListener('input', updateHobbyVisibility);
   for (const id of ['hide-zero-hobby-skills','hide-zero-hobby-categories']) {
     $(`#${id}`).addEventListener('click', event => {

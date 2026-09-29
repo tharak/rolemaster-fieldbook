@@ -1,0 +1,1179 @@
+[
+  {
+    "name": "Adventurer",
+    "type": "L",
+    "months": 24,
+    "costs": [
+      29,
+      29,
+      29,
+      34,
+      32,
+      31,
+      29,
+      29,
+      29
+    ],
+    "categories": {
+      "Athletic • Gymnastics": 2,
+      "Athletic • Endurance": 2,
+      "Awareness • Searching": 2,
+      "Power Awareness": 1,
+      "Technical/Trade • General": 1
+    },
+    "skills": [
+      [
+        "Body Development",
+        "Body Development",
+        1
+      ],
+      [
+        "Athletic • Gymnastics",
+        "Climbing",
+        1
+      ],
+      [
+        "Athletic • Endurance",
+        "Swimming",
+        1
+      ],
+      [
+        "Awareness • Perceptions",
+        "Alertness",
+        2
+      ],
+      [
+        "Awareness • Searching",
+        "Observation",
+        1
+      ],
+      [
+        "Power Awareness",
+        "Attunement",
+        1
+      ],
+      [
+        "Technical/Trade • General",
+        "First Aid",
+        1
+      ]
+    ],
+    "choices": [
+      "1 Weapon/Attack category rank and 1 rank in a weapon or attack skill"
+    ],
+    "statGains": "two different stats",
+    "startingMoney": "normal plus d10 (open-ended)",
+    "specialItems": [
+      [
+        "Weapon (+10 non-magic)",
+        30
+      ],
+      [
+        "Armor (+10 non-magic)",
+        30
+      ],
+      [
+        "Other Equipment (+5 non-magic)",
+        30
+      ],
+      [
+        "Spell Adder (+1) or Daily I Item (1st level spell)",
+        30
+      ],
+      [
+        "Choice of weapon or armor (+5 non-magic)",
+        100
+      ]
+    ]
+  },
+  {
+    "name": "Amateur Mage",
+    "type": "L",
+    "months": 53,
+    "costs": [
+      43,
+      37,
+      36,
+      24,
+      26,
+      26,
+      31,
+      29,
+      29
+    ],
+    "categories": {
+      "Lore • Magical": 2,
+      "Lore • Technical": 1,
+      "Power Awareness": 2
+    },
+    "skills": [
+      [
+        "Power Awareness",
+        "Attunement",
+        1
+      ],
+      [
+        "Power Awareness",
+        "Read Runes",
+        1
+      ]
+    ],
+    "choices": [
+      "3 ranks across up to 3 open spell lists",
+      "2 ranks in one Lore • Magical skill",
+      "1 rank in one Lore • Technical skill"
+    ],
+    "statGains": "one realm stat and Memory",
+    "startingMoney": "normal",
+    "specialItems": [
+      [
+        "Spell adder (+2)",
+        50
+      ],
+      [
+        "Daily II item (casting a 3rd level spell)",
+        50
+      ],
+      [
+        "Daily I item (casting a 5th level spell)",
+        40
+      ],
+      [
+        "Spell multiplier (x2)",
+        10
+      ],
+      [
+        "Spell adder (+1)",
+        100
+      ]
+    ]
+  },
+  {
+    "name": "Animal Friend",
+    "type": "L",
+    "months": 102,
+    "costs": [
+      26,
+      26,
+      24,
+      33,
+      31,
+      33,
+      22,
+      28,
+      28
+    ],
+    "categories": {
+      "Outdoor • Environmental": 2,
+      "Outdoor • Animal": 4,
+      "Lore • General": 4,
+      "Awareness • Searching": 2,
+      "Subterfuge • Stealth": 2
+    },
+    "skills": [
+      [
+        "Lore • General",
+        "Fauna Lore",
+        2
+      ],
+      [
+        "Lore • General",
+        "Flora Lore",
+        1
+      ],
+      [
+        "Lore • General",
+        "Own Region Lore",
+        1
+      ],
+      [
+        "Awareness • Searching",
+        "Reading Tracks",
+        1
+      ],
+      [
+        "Awareness • Searching",
+        "Tracking",
+        1
+      ],
+      [
+        "Subterfuge • Stealth",
+        "Stalking",
+        1
+      ],
+      [
+        "Subterfuge • Stealth",
+        "Hiding",
+        1
+      ]
+    ],
+    "choices": [
+      "2 ranks across up to 2 Outdoor • Environmental skills",
+      "4 ranks across up to 3 Outdoor • Animal skills"
+    ],
+    "statGains": "Empathy",
+    "startingMoney": "normal",
+    "specialItems": [
+      [
+        "Wolf friend",
+        20
+      ],
+      [
+        "Wild cat friend",
+        30
+      ],
+      [
+        "Raccoon friend",
+        40
+      ],
+      [
+        "Ferret friend",
+        40
+      ],
+      [
+        "Owl friend",
+        40
+      ],
+      [
+        "Pigeon friend",
+        50
+      ],
+      [
+        "Snake friend",
+        30
+      ],
+      [
+        "Normal dog friend (mutt)",
+        100
+      ]
+    ]
+  },
+  {
+    "name": "Burglar",
+    "type": "V",
+    "months": 33,
+    "costs": [
+      21,
+      16,
+      19,
+      31,
+      30,
+      29,
+      26,
+      22,
+      25
+    ],
+    "categories": {
+      "Subterfuge • Mechanics": 2,
+      "Athletic • Gymnastics": 2,
+      "Lore • General": 2,
+      "Lore • Technical": 2
+    },
+    "skills": [
+      [
+        "Athletic • Gymnastics",
+        "Climbing",
+        1
+      ],
+      [
+        "Lore • General",
+        "Culture Lore (specific city)",
+        1
+      ],
+      [
+        "Lore • General",
+        "Heraldry",
+        1
+      ],
+      [
+        "Lore • Technical",
+        "Lock Lore",
+        2
+      ]
+    ],
+    "choices": [
+      "2 ranks across up to 2 Subterfuge • Mechanics skills",
+      "1 rank in one Athletic • Gymnastics skill",
+      "1 Weapon/Attack category rank and 1 rank in its skill"
+    ],
+    "statGains": "none",
+    "startingMoney": "normal plus d10 (open-ended)",
+    "specialItems": [
+      [
+        "Stolen jewelry (worth 10d10 sp)",
+        50
+      ],
+      [
+        "Stolen gems (worth 10d10 sp)",
+        50
+      ],
+      [
+        "Stolen piece of art (worth 10d10 sp)",
+        50
+      ],
+      [
+        "Lockpick kit (+10 non-magic)",
+        30
+      ],
+      [
+        "Disarm trap kit (+10 non-magic)",
+        30
+      ],
+      [
+        "Reliable fencing contacts",
+        20
+      ],
+      [
+        "Lockpicks and disarm trap kit (+5 non-magic)",
+        100
+      ]
+    ]
+  },
+  {
+    "name": "City Guard",
+    "type": "V",
+    "months": 25,
+    "costs": [
+      15,
+      17,
+      16,
+      31,
+      28,
+      29,
+      20,
+      20,
+      21
+    ],
+    "categories": {
+      "Urban": 1,
+      "Awareness • Searching": 1,
+      "Lore • General": 1,
+      "Technical/Trade • General": 1
+    },
+    "skills": [
+      [
+        "Body Development",
+        "Body Development",
+        1
+      ],
+      [
+        "Urban",
+        "Streetwise",
+        1
+      ],
+      [
+        "Awareness • Searching",
+        "Observation",
+        1
+      ],
+      [
+        "Lore • General",
+        "Heraldry",
+        1
+      ],
+      [
+        "Technical/Trade • General",
+        "First Aid",
+        1
+      ]
+    ],
+    "choices": [
+      "2 ranks in a GM assigned Weapon category and 2 ranks in one weapon skill"
+    ],
+    "statGains": "none",
+    "startingMoney": "normal plus d10",
+    "specialItems": [
+      [
+        "Useful city contacts",
+        20
+      ],
+      [
+        "Useful underworld contacts",
+        20
+      ],
+      [
+        "Promotion",
+        50
+      ],
+      [
+        "Promotion",
+        40
+      ],
+      [
+        "Promotion",
+        30
+      ],
+      [
+        "Weapon (+10 non-magic)",
+        10
+      ],
+      [
+        "Weapon (+5 non-magic)",
+        100
+      ]
+    ]
+  },
+  {
+    "name": "Doctor",
+    "type": "V",
+    "months": 18,
+    "costs": [
+      23,
+      23,
+      23,
+      23,
+      23,
+      23,
+      23,
+      23,
+      23
+    ],
+    "categories": {},
+    "skills": [
+      [
+        "Technical/Trade • Professional",
+        "Diagnostics",
+        3
+      ],
+      [
+        "Technical/Trade • Professional",
+        "Second Aid",
+        3
+      ],
+      [
+        "Technical/Trade • General",
+        "First Aid",
+        1
+      ],
+      [
+        "Technical/Trade • General",
+        "Using Prepared Herbs",
+        1
+      ]
+    ],
+    "choices": [],
+    "statGains": "none",
+    "startingMoney": "normal",
+    "specialItems": [
+      [
+        "2d10 Concussion Repair herbs",
+        50
+      ],
+      [
+        "d10 Poison antidotes",
+        30
+      ],
+      [
+        "d10 Burn/Exposure herbs",
+        30
+      ],
+      [
+        "d10 Circulatory Repair herbs",
+        30
+      ],
+      [
+        "d10 General Purpose herbs",
+        30
+      ],
+      [
+        "Superior medical kit (+15 non-magical)",
+        30
+      ],
+      [
+        "Medical kit (+5 non-magical)",
+        100
+      ]
+    ]
+  },
+  {
+    "name": "Herbalist",
+    "type": "V",
+    "months": 33,
+    "costs": [
+      23,
+      23,
+      23,
+      26,
+      23,
+      23,
+      20,
+      23,
+      23
+    ],
+    "categories": {
+      "Lore • General": 2,
+      "Outdoor • Environmental": 4
+    },
+    "skills": [
+      [
+        "Crafts",
+        "Horticulture",
+        2
+      ],
+      [
+        "Lore • General",
+        "Flora Lore",
+        2
+      ],
+      [
+        "Outdoor • Environmental",
+        "Foraging",
+        3
+      ],
+      [
+        "Technical/Trade • General",
+        "Using Prepared Herbs",
+        2
+      ]
+    ],
+    "choices": [
+      "1 rank in one Outdoor • Environmental skill"
+    ],
+    "statGains": "none",
+    "startingMoney": "normal plus d10 (open-ended)",
+    "specialItems": [
+      [
+        "3 Poison antidotes",
+        50
+      ],
+      [
+        "4 Bone Repair herbs",
+        50
+      ],
+      [
+        "10 Burn/Exposure herbs",
+        50
+      ],
+      [
+        "2 Circulatory Repair herbs",
+        50
+      ],
+      [
+        "10 Concussion Repair herbs",
+        50
+      ],
+      [
+        "d10 General Purpose herbs",
+        50
+      ],
+      [
+        "1 Life Preservation herbs",
+        50
+      ],
+      [
+        "5 Muscle/Cartilage Repair herbs",
+        50
+      ],
+      [
+        "3 Nerve Repair herbs",
+        50
+      ],
+      [
+        "4 Organ Repair herbs",
+        50
+      ],
+      [
+        "d10 Intoxicant herbs",
+        30
+      ],
+      [
+        "d10 Poison herbs",
+        30
+      ],
+      [
+        "d10 Concussion Repair herbs",
+        100
+      ]
+    ]
+  },
+  {
+    "name": "Hunter",
+    "type": "L",
+    "months": 18,
+    "costs": [
+      29,
+      27,
+      27,
+      36,
+      32,
+      35,
+      25,
+      29,
+      30
+    ],
+    "categories": {
+      "Weapon • Missile": 1,
+      "Outdoor • Environmental": 4,
+      "Lore • General": 3,
+      "Awareness • Searching": 4,
+      "Subterfuge • Stealth": 2
+    },
+    "skills": [
+      [
+        "Outdoor • Environmental",
+        "Hunting",
+        2
+      ],
+      [
+        "Lore • General",
+        "Fauna Lore",
+        2
+      ],
+      [
+        "Lore • General",
+        "Flora Lore",
+        1
+      ],
+      [
+        "Crafts",
+        "Skinning",
+        1
+      ],
+      [
+        "Awareness • Searching",
+        "Reading Tracks",
+        2
+      ],
+      [
+        "Awareness • Searching",
+        "Tracking",
+        2
+      ],
+      [
+        "Subterfuge • Stealth",
+        "Hiding",
+        1
+      ],
+      [
+        "Subterfuge • Stealth",
+        "Stalking",
+        1
+      ]
+    ],
+    "choices": [
+      "1 rank in one Weapon • Missile skill",
+      "2 ranks across 2 Outdoor • Environmental skills"
+    ],
+    "statGains": "Constitution",
+    "startingMoney": "normal plus d10 (open-ended)",
+    "specialItems": [
+      [
+        "d10 Animal Pelts (d10 sps each)",
+        50
+      ],
+      [
+        "d10 Animal Pelts (d10 sps each)",
+        50
+      ],
+      [
+        "d10 Animal Pelts (d10 sps each)",
+        50
+      ],
+      [
+        "Good set of traps (+15 non-magic)",
+        30
+      ],
+      [
+        "Reliable buyer for animal pelts",
+        30
+      ],
+      [
+        "Traps (+10 non-magic)",
+        100
+      ]
+    ]
+  },
+  {
+    "name": "Knight",
+    "type": "L",
+    "months": 69,
+    "costs": [
+      25,
+      29,
+      28,
+      46,
+      40,
+      40,
+      31,
+      36,
+      32
+    ],
+    "categories": {
+      "Armor • Heavy": 2,
+      "Lore • General": 2,
+      "Outdoor • Animal": 1
+    },
+    "skills": [
+      [
+        "Armor • Heavy",
+        "Plate",
+        2
+      ],
+      [
+        "Combat Maneuvers",
+        "Mounted Combat",
+        2
+      ],
+      [
+        "Lore • General",
+        "Heraldry",
+        2
+      ],
+      [
+        "Outdoor • Animal",
+        "Riding (horse)",
+        2
+      ]
+    ],
+    "choices": [
+      "2 ranks in one Melee Weapon category and 2 ranks in one skill there",
+      "1 rank in one Combat Maneuvers skill"
+    ],
+    "statGains": "Strength and Self Discipline",
+    "startingMoney": "normal",
+    "specialItems": [
+      [
+        "Warhorse (+10 to Riding, Mounted Combat)",
+        30
+      ],
+      [
+        "Warhorse (+5 Riding, Mounted Combat)",
+        30
+      ],
+      [
+        "Warhorse",
+        30
+      ],
+      [
+        "Weapon (+10 non-magic)",
+        40
+      ],
+      [
+        "Armor (+10 non-magic)",
+        40
+      ],
+      [
+        "Shield (+10 non-magic)",
+        50
+      ],
+      [
+        "Weapon (+5 non-magic)",
+        30
+      ],
+      [
+        "Armor (+5 non-magic)",
+        30
+      ],
+      [
+        "Shield (+5 non-magic)",
+        40
+      ],
+      [
+        "Riding horse (+5 Riding)",
+        100
+      ]
+    ]
+  },
+  {
+    "name": "Loremaster",
+    "type": "V",
+    "months": 40,
+    "costs": [
+      29,
+      28,
+      26,
+      19,
+      20,
+      20,
+      24,
+      20,
+      18
+    ],
+    "categories": {
+      "Lore • General": 6,
+      "Lore • Technical": 1,
+      "Lore • Obscure": 1,
+      "Lore • Magical": 3
+    },
+    "skills": [],
+    "choices": [
+      "6 ranks across up to 3 Lore • General skills",
+      "1 rank in one Lore • Technical skill",
+      "1 rank in one Lore • Obscure skill",
+      "3 ranks across up to 2 Lore • Magical skills"
+    ],
+    "statGains": "none",
+    "startingMoney": "normal",
+    "specialItems": [
+      [
+        "Book (+20 to a specific lore skill)",
+        50
+      ],
+      [
+        "Book (+15 to a specific lore skill)",
+        40
+      ],
+      [
+        "Book (+10 to a lore category)",
+        30
+      ],
+      [
+        "1-5 books (+5 to specific lore skills)",
+        10
+      ],
+      [
+        "Book (+5 to a lore category)",
+        100
+      ]
+    ]
+  },
+  {
+    "name": "Merchant",
+    "type": "V",
+    "months": 23,
+    "costs": [
+      25,
+      25,
+      25,
+      20,
+      20,
+      20,
+      24,
+      21,
+      21
+    ],
+    "categories": {
+      "Communications": 3,
+      "Science/Analytic • Basic": 1
+    },
+    "skills": [
+      [
+        "Science/Analytic • Basic",
+        "Basic Math",
+        1
+      ],
+      [
+        "Technical/Trade • Vocational",
+        "Appraisal",
+        2
+      ]
+    ],
+    "choices": [
+      "3 ranks across up to 3 language skills",
+      "1 rank in one Technical/Trade • Vocational skill"
+    ],
+    "statGains": "none",
+    "startingMoney": "normal plus d10 (open-ended)",
+    "specialItems": [
+      [
+        "Close friends with a merchant",
+        40
+      ],
+      [
+        "Close friends with a merchant",
+        40
+      ],
+      [
+        "Close friends with a merchant",
+        40
+      ],
+      [
+        "Merchant’s scale and weights",
+        30
+      ],
+      [
+        "Trade goods (10d10 sp)",
+        30
+      ],
+      [
+        "Trade goods (10d10 sp)",
+        30
+      ],
+      [
+        "Trade goods (d10 sp)",
+        100
+      ]
+    ]
+  },
+  {
+    "name": "Performer",
+    "type": "V",
+    "months": 40,
+    "costs": [
+      28,
+      28,
+      28,
+      26,
+      26,
+      26,
+      28,
+      25,
+      16
+    ],
+    "categories": {
+      "Artistic • Active": 3,
+      "Athletic • Gymnastics": 1,
+      "Communications": 5,
+      "Influence": 2
+    },
+    "skills": [],
+    "choices": [
+      "3 ranks in one Artistic • Active skill",
+      "1 rank in one Athletic • Gymnastics skill",
+      "5 ranks across up to 5 language skills",
+      "2 ranks across up to 2 Influence skills"
+    ],
+    "statGains": "none",
+    "startingMoney": "normal plus d10 (open-ended)",
+    "specialItems": [
+      [
+        "Disguise kit (+15 non-magic)",
+        50
+      ],
+      [
+        "Performance props (+10 non-magic)",
+        50
+      ],
+      [
+        "Close friends with a tavern owner",
+        40
+      ],
+      [
+        "Close friends with a tavern owner",
+        40
+      ],
+      [
+        "Close friends with a famous performer",
+        20
+      ],
+      [
+        "Make-up kit (+5 non-magic)",
+        100
+      ]
+    ]
+  },
+  {
+    "name": "Scout",
+    "type": "V",
+    "months": 33,
+    "costs": [
+      21,
+      20,
+      19,
+      31,
+      28,
+      30,
+      16,
+      25,
+      25
+    ],
+    "categories": {
+      "Outdoor • Environmental": 3,
+      "Outdoor • Animal": 2,
+      "Awareness • Searching": 4
+    },
+    "skills": [
+      [
+        "Awareness • Searching",
+        "Observation",
+        2
+      ],
+      [
+        "Awareness • Searching",
+        "Reading Tracks",
+        1
+      ],
+      [
+        "Awareness • Searching",
+        "Tracking",
+        1
+      ]
+    ],
+    "choices": [
+      "3 ranks across up to 3 Outdoor • Environmental skills",
+      "2 ranks across up to 2 Outdoor • Animal skills",
+      "1 rank in one Weapon category and 1 rank in its skill"
+    ],
+    "statGains": "none",
+    "startingMoney": "normal plus d10 (open-ended)",
+    "specialItems": [
+      [
+        "1 detailed map of a region",
+        40
+      ],
+      [
+        "d10 sketchy maps of several regions",
+        40
+      ],
+      [
+        "Good riding beast (+10 Riding)",
+        30
+      ],
+      [
+        "Missile weapon (+5 non-magic)",
+        20
+      ],
+      [
+        "Riding beast (GM’s discretion)",
+        100
+      ]
+    ]
+  },
+  {
+    "name": "Soldier",
+    "type": "V",
+    "months": 26,
+    "costs": [
+      15,
+      22,
+      19,
+      37,
+      29,
+      31,
+      23,
+      28,
+      25
+    ],
+    "categories": {
+      "Armor • Light": 2,
+      "Lore • General": 1
+    },
+    "skills": [
+      [
+        "Lore • General",
+        "Heraldry",
+        1
+      ],
+      [
+        "Body Development",
+        "Body Development",
+        2
+      ],
+      [
+        "Technical/Trade • Vocational",
+        "Tactics",
+        1
+      ]
+    ],
+    "choices": [
+      "2 ranks in one Weapon category and 2 ranks in one skill there",
+      "2 ranks in one Armor • Light skill"
+    ],
+    "statGains": "none",
+    "startingMoney": "normal plus d10 (open-ended)",
+    "specialItems": [
+      [
+        "Melee Weapon (+10 non-magic)",
+        30
+      ],
+      [
+        "Missile Weapon (+10 non-magic)",
+        30
+      ],
+      [
+        "Shield (+10 non-magic)",
+        40
+      ],
+      [
+        "Helm (+10 non-magic)",
+        50
+      ],
+      [
+        "Armor (+10 non-magic)",
+        40
+      ],
+      [
+        "Friends with a ranking officer",
+        20
+      ],
+      [
+        "Promotion",
+        20
+      ],
+      [
+        "Promotion",
+        20
+      ],
+      [
+        "Promotion",
+        20
+      ],
+      [
+        "Promotion",
+        20
+      ],
+      [
+        "Promotion",
+        20
+      ],
+      [
+        "Melee Weapon (+5 non-magic)",
+        100
+      ]
+    ]
+  },
+  {
+    "name": "Traveller",
+    "type": "V",
+    "months": 18,
+    "costs": [
+      13,
+      12,
+      10,
+      20,
+      18,
+      20,
+      10,
+      14,
+      14
+    ],
+    "categories": {
+      "Athletic • Gymnastics": 1,
+      "Athletic • Endurance": 1,
+      "Awareness • Searching": 1,
+      "Outdoor • Environmental": 1,
+      "Outdoor • Animal": 1
+    },
+    "skills": [
+      [
+        "Athletic • Gymnastics",
+        "Climbing",
+        1
+      ],
+      [
+        "Athletic • Endurance",
+        "Swimming",
+        1
+      ],
+      [
+        "Awareness • Searching",
+        "Observation",
+        1
+      ],
+      [
+        "Outdoor • Animal",
+        "Riding (horse)",
+        1
+      ]
+    ],
+    "choices": [
+      "1 rank in one Outdoor • Environmental skill"
+    ],
+    "statGains": "none",
+    "startingMoney": "normal",
+    "specialItems": [
+      [
+        "Weather-resistant clothing",
+        80
+      ],
+      [
+        "Riding beast (GM’s discretion)",
+        30
+      ],
+      [
+        "Simple map of the local region",
+        100
+      ]
+    ]
+  }
+]

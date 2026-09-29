@@ -460,8 +460,8 @@ input::placeholder, textarea::placeholder { color: #82998a; opacity: 1; }
 .creation-pick-button { margin-top: 8px; padding: 5px 8px; border: 1px solid #729279; border-radius: 4px; background: #294735; color: #e9f5eb; font: 11px var(--sans); cursor: pointer; }
 .creation-pick-button:hover, .creation-pick-button:focus-visible { background: #376c4a; }
 .creation-step-button { padding: 0; border: 0; background: none; color: var(--accent-text); text-align: left; text-decoration: underline; text-underline-offset: 2px; font: inherit; cursor: pointer; }
-#language-picker, #hobby-picker, #skill-choice-dialog, #race-weapons-picker, #background-picker { width: min(680px, calc(100vw - 24px)); max-height: min(85vh, 820px); padding: 0 16px 18px; border: 2px solid #729279; border-radius: 8px; background: var(--card); color: var(--ink); box-shadow: 0 18px 60px #0008; }
-#language-picker::backdrop, #hobby-picker::backdrop, #skill-choice-dialog::backdrop, #race-weapons-picker::backdrop, #background-picker::backdrop { background: #08160fcc; }
+#language-picker, #hobby-picker, #apprenticeship-picker, #skill-choice-dialog, #race-weapons-picker, #background-picker { width: min(680px, calc(100vw - 24px)); max-height: min(85vh, 820px); padding: 0 16px 18px; border: 2px solid #729279; border-radius: 8px; background: var(--card); color: var(--ink); box-shadow: 0 18px 60px #0008; }
+#language-picker::backdrop, #hobby-picker::backdrop, #apprenticeship-picker::backdrop, #skill-choice-dialog::backdrop, #race-weapons-picker::backdrop, #background-picker::backdrop { background: #08160fcc; }
 .language-picker-head { position: sticky; top: 0; z-index: 1; display: flex; justify-content: space-between; gap: 16px; align-items: start; margin: 0 -16px 14px; padding: 14px 16px; background: #294735; color: #e9f5eb; }
 .language-picker-head h2 { margin: 0; font: 700 18px Georgia, serif; }
 .language-picker-head p { margin: 4px 0 0; color: #b6cbb9; font: 11px var(--sans); }
@@ -492,6 +492,40 @@ input::placeholder, textarea::placeholder { color: #82998a; opacity: 1; }
 .hobby-choice input { width: 62px; padding: 6px; border: 1px solid #729279; border-radius: 4px; background: var(--input); color: var(--ink); text-align: center; font: 12px var(--mono); }
 .hobby-choice.is-over-limit { border-left: 3px solid #d69082; }
 .hobby-choice.is-over-limit em { color: #ffb1a7; }
+.apprenticeship-classified select { grid-column: 3; max-width: 150px; padding: 6px; border: 1px solid #729279; border-radius: 4px; background: var(--input); color: var(--ink); font: 10px var(--sans); }
+.apprenticeship-classified em { grid-column: 1 / -1; }
+.apprenticeship-add { margin: 10px 0 14px; padding: 8px; border: 1px solid var(--line); border-radius: 5px; }
+.apprenticeship-add summary { color: var(--accent-text); font: 700 11px var(--sans); cursor: pointer; }
+.apprenticeship-add .choice-strip { margin: 10px 0; }
+.apprenticeship-add .hobby-search { margin-bottom: 8px; }
+.apprenticeship-stat-gains { margin: 10px 0 14px; padding: 8px; border: 1px solid var(--line); border-radius: 5px; }
+.apprenticeship-stat-gains summary { color: var(--accent-text); font: 700 11px var(--sans); cursor: pointer; }
+.apprenticeship-stat-row { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 6px 0; border-bottom: 1px solid var(--line); font: 11px var(--sans); }
+.apprenticeship-stat-row small { color: var(--muted); font: 10px var(--mono); }
+.apprenticeship-stat-row button { padding: 5px 8px; border: 1px solid #729279; border-radius: 4px; background: var(--input); color: var(--ink); font: 10px var(--sans); cursor: pointer; }
+.apprenticeship-stat-row button:disabled { opacity: .45; cursor: default; }
+.package-free-roll { padding: 7px 0; border-bottom: 1px solid var(--line); }
+.package-free-roll strong, .package-free-roll span { display: block; font: 10px var(--sans); }
+.package-free-roll span { color: var(--muted); }
+.package-free-roll .choice-strip { margin-top: 6px; }
+.package-free-roll button { flex: 0 0 auto; padding: 6px 8px; border: 1px solid #729279; border-radius: 4px; background: var(--input); color: var(--ink); font: 10px var(--sans); cursor: pointer; }
+.apprenticeship-packages { margin: 10px 0 14px; padding: 8px; border: 1px solid var(--line); border-radius: 5px; }
+.apprenticeship-packages summary { color: var(--accent-text); font: 700 11px var(--sans); cursor: pointer; }
+.apprenticeship-package { padding: 6px 0; border-bottom: 1px solid var(--line); }
+.apprenticeship-package > button { display: flex; justify-content: space-between; align-items: center; gap: 10px; width: 100%; padding: 8px; border: 1px solid #729279; border-radius: 4px; background: var(--input); color: var(--ink); text-align: left; font: 11px var(--sans); cursor: pointer; }
+.apprenticeship-package > button[aria-pressed="true"] { background: #376c4a; color: #fff; }
+.apprenticeship-package small { color: var(--muted); font: 9px var(--mono); }
+.apprenticeship-package > button[aria-pressed="true"] small { color: #d4e5d7; }
+.apprenticeship-package p { margin: 5px 8px; color: var(--muted); font: 10px/1.4 var(--sans); }
+.package-grant-choice { margin: 8px; padding: 7px; border: 1px solid var(--line); border-radius: 4px; }
+.package-grant-choice > strong, .package-grant-choice > small { display: block; font: 10px/1.4 var(--sans); }
+.package-grant-choice > small { color: var(--muted); }
+.package-grant-choice .choice-strip { margin-top: 7px; }
+.package-grant-choice .choice-strip button { flex: 0 0 auto; padding: 7px 9px; border: 1px solid #729279; border-radius: 4px; background: var(--input); color: var(--ink); font: 10px var(--sans); cursor: pointer; }
+.package-grant-choice .choice-strip button[aria-pressed="true"] { background: #376c4a; color: #fff; }
+.package-grant-skills { max-height: 170px; overflow: auto; margin-top: 6px; }
+.package-grant-skills label { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 4px 0; border-top: 1px solid var(--line); font: 10px var(--sans); }
+.package-grant-skills input { width: 55px; padding: 5px; border: 1px solid #729279; border-radius: 4px; background: var(--input); color: var(--ink); text-align: center; font: 11px var(--mono); }
 .skill-choice-dialog-list { display: flex; flex-wrap: wrap; gap: 7px; padding-bottom: 3px; }
 .skill-choice-dialog-list button { padding: 9px 11px; border: 1px solid #729279; border-radius: 5px; background: var(--input); color: var(--ink); font: 12px var(--sans); cursor: pointer; }
 .skill-choice-dialog-list button:hover, .skill-choice-dialog-list button:focus-visible, .skill-choice-dialog-list button[aria-pressed="true"] { border-color: #a6dfb8; background: #376c4a; color: #fff; }
@@ -512,5 +546,5 @@ input::placeholder, textarea::placeholder { color: #82998a; opacity: 1; }
 .background-picker-notes { display: block; color: var(--muted); font: 11px var(--sans); }
 .background-picker-notes textarea { display: block; width: 100%; margin-top: 5px; padding: 8px; border: 1px solid #729279; border-radius: 4px; background: var(--input); color: var(--ink); font: 12px/1.5 var(--sans); resize: vertical; }
 @media (max-width: 700px) { .creation-pools { grid-template-columns: repeat(2, minmax(0, 1fr)); } .creation-next ul { grid-template-columns: 1fr; } }
-@media (max-width: 480px) { .language-choice { grid-template-columns: 1fr 1fr; } .language-choice strong { grid-column: 1 / -1; } .hobby-choice { grid-template-columns: minmax(0, 1fr) 62px; } .hobby-choice em { grid-column: 1 / -1; } .background-choice { grid-template-columns: minmax(0, 1fr) 60px; } .background-choice b { grid-column: 1; grid-row: 2; } .background-choice input { grid-column: 2; grid-row: 1 / 3; } }
-@media print { #language-picker, #hobby-picker, #skill-choice-dialog, #race-weapons-picker, #background-picker, .creation-pick-button, .creation-step-button { display: none !important; } }
+@media (max-width: 480px) { .language-choice { grid-template-columns: 1fr 1fr; } .language-choice strong { grid-column: 1 / -1; } .hobby-choice { grid-template-columns: minmax(0, 1fr) 62px; } .hobby-choice em { grid-column: 1 / -1; } .apprenticeship-classified select { grid-column: 1 / -1; max-width: 100%; } .background-choice { grid-template-columns: minmax(0, 1fr) 60px; } .background-choice b { grid-column: 1; grid-row: 2; } .background-choice input { grid-column: 2; grid-row: 1 / 3; } }
+@media print { #language-picker, #hobby-picker, #apprenticeship-picker, #skill-choice-dialog, #race-weapons-picker, #background-picker, .creation-pick-button, .creation-step-button { display: none !important; } }

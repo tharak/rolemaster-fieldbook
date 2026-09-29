@@ -66,7 +66,7 @@
                   <label class="choice-tile"><input type="radio" name="profession" value="Bard"><span>Bard</span></label>
                 </div>
               </fieldset>
-              <label class="sheet-field full">Training packages<input name="training" maxlength="120"></label>
+              <label class="sheet-field full">Training packages<input name="training" maxlength="120" readonly placeholder="Choose during apprenticeship"><small id="training-duration"></small></label>
               <fieldset class="sheet-choice-field full">
                 <legend>Realm of power</legend>
                 <div class="choice-strip">
@@ -92,6 +92,7 @@
               <div class="creation-pool"><span>Language ranks · T-1.6</span><output id="language-remaining"></output><small id="language-spent-label"></small><button type="button" id="open-language-picker" class="creation-pick-button">Choose languages</button><input name="languageUsed" type="hidden" value="0"></div>
               <div class="creation-pool"><span>Hobby ranks · T-1.6</span><output id="hobby-remaining"></output><small id="hobby-spent-label"></small><button type="button" id="open-hobby-picker" class="creation-pick-button">Choose hobbies</button><input name="hobbyUsed" type="hidden" value="0"></div>
               <div class="creation-pool"><span>Background options · T-1.6</span><output id="background-remaining"></output><small id="background-spent-label"></small><button type="button" id="open-background-picker" class="creation-pick-button">Choose options</button><input name="backgroundUsed" type="hidden" value="0"><input name="backgroundSelections" type="hidden" value="{}"></div>
+              <div class="creation-pool"><span>Apprenticeship · 6.0</span><output id="apprenticeship-remaining">—</output><small id="apprenticeship-spent-label">0 DP spent</small><button type="button" id="open-apprenticeship-picker" class="creation-pick-button">Spend development points</button></div>
             </div>
             <div class="creation-next"><strong>Remaining steps</strong><ul id="creation-steps"></ul></div>
             <label class="sheet-field creation-notes">Adolescence choices & languages<input name="adolescence" maxlength="300" placeholder="Notes on selected weapons, hobbies and languages"></label>
@@ -149,6 +150,11 @@
           <input name="backgroundOptions" type="hidden">
           <input name="weaponCostAssignments" type="hidden" value="{}">
           <input name="otherDp" type="hidden" value="0">
+          <input name="apprenticeshipDpBase" type="hidden">
+          <input name="statGainHistory" type="hidden" value="[]">
+          <input name="trainingSelections" type="hidden" value="[]">
+          <input name="trainingChoiceSelections" type="hidden" value="{}">
+          <input name="spellDevelopmentOrder" type="hidden" value="[]">
           <div id="skill-category-picker" hidden><div id="skill-category-options"></div><button type="button" id="cancel-skill-category">Cancel</button></div>
           <div id="skills-list"></div>
         </div>
@@ -169,6 +175,18 @@
         <div id="hobby-picker-list" class="hobby-picker-list"></div>
         <p id="hobby-picker-empty" class="language-picker-note" hidden>No matching ranks. Change the search or filters to show more choices.</p>
         <p id="hobby-legacy-note" class="language-picker-note" hidden></p>
+      </dialog>
+      <dialog id="apprenticeship-picker" aria-labelledby="apprenticeship-picker-title">
+        <div class="language-picker-head"><div><h2 id="apprenticeship-picker-title">Apprenticeship development</h2><p id="apprenticeship-picker-subtitle">Section 6.0 · One level of development</p></div><button type="button" id="close-apprenticeship-picker" aria-label="Close apprenticeship development">×</button></div>
+        <div class="language-picker-budget"><strong id="apprenticeship-picker-remaining">—</strong><span id="apprenticeship-picker-used"></span></div>
+        <p class="language-picker-note">Buy ranks with development points. Each skill and category uses its profession cost, and each cost entry allows one rank this level. Ranks from adolescence and hobbies stay separate. Spell lists use T-2.4 costs and count toward the 5-list multiplier in the order you first buy them.</p>
+        <details class="apprenticeship-packages"><summary>Training packages · 6.3</summary><p class="language-picker-note">Choose at most one lifestyle package. Vocational packages may be combined. Package costs share this DP pool.</p><div id="apprenticeship-package-list"></div><p id="apprenticeship-package-message" class="language-picker-note" role="status"></p></details>
+        <label class="hobby-search">Find a skill or category<input id="apprenticeship-search" type="search" placeholder="Search choices"></label>
+        <div class="hobby-filters" role="group" aria-label="Apprenticeship filters"><button type="button" id="hide-zero-apprenticeship-skills" aria-pressed="false">Hide 0-rank skills</button><button type="button" id="hide-zero-apprenticeship-categories" aria-pressed="false">Hide 0-rank categories</button></div>
+        <details class="apprenticeship-add"><summary>Add a specific skill</summary><div id="apprenticeship-category-options" class="choice-strip"></div><label class="hobby-search">Skill name<input id="apprenticeship-skill-name" type="text" maxlength="60" placeholder="Specific skill"></label><button type="button" id="apprenticeship-add-skill" class="creation-pick-button">Add skill</button><p id="apprenticeship-add-message" class="language-picker-note" role="status"></p></details>
+        <details class="apprenticeship-stat-gains"><summary>Extra stat gain rolls · 8 DP each</summary><p class="language-picker-note">Roll 2d10 for a chosen stat. The result changes its temporary value, up to its potential.</p><div id="apprenticeship-stat-list"></div><div id="apprenticeship-stat-history" class="language-picker-note"></div></details>
+        <div id="apprenticeship-picker-list" class="hobby-picker-list"></div>
+        <p id="apprenticeship-picker-empty" class="language-picker-note" hidden>No matching choices.</p>
       </dialog>
       <dialog id="skill-choice-dialog" aria-labelledby="skill-choice-title">
         <div class="language-picker-head"><div><h2 id="skill-choice-title">Choose a racial weapon</h2><p id="skill-choice-subtitle"></p></div><button type="button" id="close-skill-choice" aria-label="Close skill picker">×</button></div>
