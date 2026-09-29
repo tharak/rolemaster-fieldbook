@@ -106,7 +106,24 @@
     const bonuses = professionSkillBonuses[form.elements.profession.value] || {};
     return bonuses[category] ?? bonuses[categoryGroup(category)] ?? 0;
   }
-  function categoryRow(category, values = {}) {
+  function renderCategoryRecord(character = {}) {
+    const saved = character.categoryRanks || {};
+    $('#category-record-list').innerHTML = Object.entries(skillCategoryRules).map(([category, rule]) => {
+      const values = saved[category] || {};
+      const standard = !rule[1] || rule[1] === 'standard';
+      const rankFields = standard
+        ? `<input name="record-start" aria-label="${esc(category)} ranks before this level" type="number" min="0" max="99" value="${esc(values.start ?? 0)}"><select name="record-buy" aria-label="${esc(category)} new ranks"></select>`
+        : '<span class="not-applicable">n/a</span><span class="not-applicable">n/a</span>';
+      return `<div class="category-record-row" data-category="${esc(category)}"><strong>${esc(category)}</strong><output class="record-stats"></output><output class="record-cost"></output>${rankFields}<output class="record-rank"></output><output class="record-stat"></output><output class="record-profession"></output><input name="record-special" aria-label="${esc(category)} first special bonus" type="number" value="${esc(values.special ?? 0)}"><input name="record-special2" aria-label="${esc(category)} second special bonus" type="number" value="${esc(values.special2 ?? 0)}"><output class="record-total"></output></div>`;
+    }).join('');
+    $$('.category-record-row').forEach(row => {
+      if ($('[name="record-buy"]', row)) {
+        if (!developmentRules && saved[row.dataset.category]?.buy) row.dataset.pendingBuy = saved[row.dataset.category].buy;
+        updateSkillBuyOptions(row, Number(saved[row.dataset.category]?.buy) || 0);
+      }
+    });
+  }
+  function categoryRow(category) {
     const existing = $$('.category-row', $('#skills-list')).find(row => row.dataset.category === category);
     if (existing) return existing;
     const group = categoryGroup(category);
@@ -121,18 +138,21 @@
       parent = branch;
     }
     const branch = document.createElement('section'); branch.className = 'skill-category';
-    branch.innerHTML = `<div class="category-row rank-row"><div class="rank-title"><strong>${esc(group ? category.slice(group.length + 3) : category)}</strong><small>Category</small></div><label>Before<input name="skill-start" aria-label="${esc(category)} category ranks before this level" type="number" min="0" max="99" value="${esc(values.start ?? 0)}"></label><label>Buy<select name="skill-buy" aria-label="${esc(category)} category ranks purchased this level"></select></label><label>Special<input name="category-special" aria-label="${esc(category)} category special bonus" type="number" value="${esc(values.special ?? 0)}"></label><output class="rank-cost"></output><button type="button" class="add-category-skill" aria-label="Add skill to ${esc(category)}">＋ Skill</button><button type="button" class="remove-category" aria-label="Remove ${esc(category)} category">×</button></div><div class="bonus-breakdown category-bonus"></div><div class="category-skills"></div>`;
+    branch.innerHTML = `<div class="category-row"><strong>${esc(group ? category.slice(group.length + 3) : category)} <small>Category</small></strong><output class="category-row-summary"></output><button type="button" class="add-category-skill" aria-label="Add skill to ${esc(category)}">＋ Skill</button><button type="button" class="remove-category" aria-label="Remove ${esc(category)} category">×</button></div><div class="bonus-breakdown category-bonus"></div><div class="category-skills"></div>`;
     parent.append(branch);
     const row = $('.category-row', branch); row.dataset.category = category;
-    if (!developmentRules && values.buy) row.dataset.pendingBuy = values.buy;
     $('.add-category-skill', row).addEventListener('click', () => { const skill = skillRow({category}); $('[name="skill-name"]', skill).focus(); updateDevelopment(); saveCurrent(); });
     $('.remove-category', row).addEventListener('click', () => {
       if ($('.skill-row', branch)) return;
+      const record = $$('.category-record-row').find(item => item.dataset.category === category);
+      if (record) {
+        for (const name of ['record-start','record-special','record-special2']) { const field = $(`[name="${name}"]`, record); if (field) field.value = '0'; }
+        const buy = $('[name="record-buy"]', record); if (buy) buy.value = '0';
+      }
       branch.remove();
       if (group && !$('.skill-category', parent)) parent.remove();
       updateDevelopment(); saveCurrent();
     });
-    updateSkillBuyOptions(row, Number(values.buy) || 0);
     return row;
   }
   function skillRow(skill = {}) {
@@ -149,7 +169,7 @@
   }
   function renderSkillTree(character = {}) {
     $('#skills-list').innerHTML = '';
-    Object.entries(character.categoryRanks || {}).filter(([category]) => skillCategoryRules[category]).forEach(([category, values]) => categoryRow(category, values));
+    Object.keys(character.categoryRanks || {}).filter(category => skillCategoryRules[category]).forEach(categoryRow);
     (character.skills || []).forEach(skillRow);
     updateDevelopment();
   }
@@ -163,13 +183,18 @@
     picker.scrollIntoView({block:'nearest'});
     $('button[data-category]', picker)?.focus();
   }
+  function showEditedCategory(target) {
+    const row = target.closest('.category-record-row');
+    if (!row) return;
+    if (['record-start','record-buy','record-special','record-special2'].some(name => Number($(`[name="${name}"]`, row)?.value) || 0)) categoryRow(row.dataset.category);
+  }
   function costForSkill(row, profession) {
     const category = row.dataset.category;
     return developmentRules?.categories?.[category]?.[profession] || null;
   }
   function updateSkillBuyOptions(row, preferred) {
     const costs = costForSkill(row, form.elements.profession.value);
-    const buy = $('[name="skill-buy"]', row);
+    const buy = $('[name="skill-buy"]', row) || $('[name="record-buy"]', row);
     const max = costs?.length || 0;
     const previous = Math.min(preferred ?? (Number(buy.value) || Number(row.dataset.pendingBuy) || 0), max);
     buy.innerHTML = Array.from({length: max + 1}, (_, rank) => `<option value="${rank}">${rank}</option>`).join('');
@@ -197,18 +222,34 @@
       spent += cost;
       $('.rank-cost', row).textContent = `${cost} DP · ${start + ranks} ranks`;
     });
-    $$('.category-row', $('#skills-list')).forEach(row => {
-      $('.remove-category', row).disabled = !!$('.skill-row', row.parentElement);
-      const category = row.dataset.category;
+    $$('.category-record-row').forEach(record => {
+      const category = record.dataset.category;
       const rule = skillCategoryRules[category];
-      const categoryRanks = (Number($('[name="skill-start"]', row).value) || 0) + (Number($('[name="skill-buy"]', row).value) || 0);
+      const costs = costForSkill(record, profession);
+      $('.record-cost', record).textContent = costs ? costs.join('/') : '—';
+      const buy = $('[name="record-buy"]', record);
+      if (buy) {
+        updateSkillBuyOptions(record);
+        spent += costs ? costs.slice(0, Number(buy.value) || 0).reduce((sum, value) => sum + value, 0) : 0;
+      }
+      const categoryRanks = buy ? (Number($('[name="record-start"]', record).value) || 0) + (Number(buy.value) || 0) : 0;
       const rank = rule[1] && rule[1] !== 'standard' ? 0 : rankBonus(categoryRanks, 'category');
       const stat = categoryStatBonus(category);
       const professionBonus = categoryProfessionBonus(category);
-      const special = Number($('[name="category-special"]', row).value) || 0;
-      const total = stat === null ? null : rank + stat + professionBonus + special;
-      row.dataset.bonus = total === null ? '' : String(total);
-      $('.category-bonus', row.parentElement).innerHTML = `<span>Rank ${rank} + stat ${stat ?? '—'} + profession ${professionBonus} + special ${special}</span><strong>Category ${total ?? '—'}</strong>`;
+      const special = Number($('[name="record-special"]', record).value) || 0;
+      const special2 = Number($('[name="record-special2"]', record).value) || 0;
+      const total = stat === null ? null : rank + stat + professionBonus + special + special2;
+      const stats = rule[0] === 'realm' ? ({Channeling:'In',Essence:'Em',Mentalism:'Pr'}[form.elements.realm.value] || 'Realm') : rule[0];
+      $('.record-stats', record).textContent = stats;
+      $('.record-rank', record).textContent = String(rank);
+      $('.record-stat', record).textContent = stat ?? '—';
+      $('.record-profession', record).textContent = String(professionBonus);
+      $('.record-total', record).textContent = total ?? '—';
+      const row = $$('.category-row', $('#skills-list')).find(item => item.dataset.category === category);
+      if (!row) return;
+      $('.remove-category', row).disabled = !!$('.skill-row', row.parentElement);
+      $('.category-row-summary', row).textContent = `${categoryRanks} ranks · ${total ?? '—'} bonus`;
+      $('.category-bonus', row.parentElement).innerHTML = `<span>Rank ${rank} + stat ${stat ?? '—'} + profession ${professionBonus} + specials ${special + special2}</span><strong>Category ${total ?? '—'}</strong>`;
       $$('.skill-row', row.parentElement).forEach(skill => {
         const skillRanks = (Number($('[name="skill-start"]', skill).value) || 0) + (Number($('[name="skill-buy"]', skill).value) || 0);
         const skillRank = rankBonus(skillRanks, rule[1] || 'standard');
@@ -366,17 +407,21 @@
       name: $('[name="skill-name"]', row).value,
       category: row.dataset.category,
       start: $('[name="skill-start"]', row).value,
-      buy: $('[name="skill-buy"]', row).value || row.dataset.pendingBuy || '0',
+      buy: row.dataset.pendingBuy || $('[name="skill-buy"]', row).value || '0',
       item: $('[name="skill-item"]', row).value,
       special: $('[name="skill-special"]', row).value,
-      ranks: (Number($('[name="skill-start"]', row).value) || 0) + (Number($('[name="skill-buy"]', row).value || row.dataset.pendingBuy) || 0)
+      ranks: (Number($('[name="skill-start"]', row).value) || 0) + (Number(row.dataset.pendingBuy || $('[name="skill-buy"]', row).value) || 0)
     })).filter(skill => skill.name || Number(skill.start) || Number(skill.buy));
-    data.categoryRanks = Object.fromEntries($$('.category-row', $('#skills-list')).map(row => [row.dataset.category, {
-      start: $('[name="skill-start"]', row).value,
-      buy: $('[name="skill-buy"]', row).value || row.dataset.pendingBuy || '0',
-      special: $('[name="category-special"]', row).value
-    }]));
-    ['skill-name','skill-start','skill-buy','skill-item','skill-special','category-special'].forEach(key => delete data[key]);
+    const visibleCategories = new Set($$('.category-row', $('#skills-list')).map(row => row.dataset.category));
+    data.categoryRanks = Object.fromEntries($$('.category-record-row').flatMap(row => {
+      const start = $('[name="record-start"]', row)?.value || '0';
+      const buy = row.dataset.pendingBuy || $('[name="record-buy"]', row)?.value || '0';
+      const special = $('[name="record-special"]', row).value;
+      const special2 = $('[name="record-special2"]', row).value;
+      return visibleCategories.has(row.dataset.category) || Number(start) || Number(buy) || Number(special) || Number(special2)
+        ? [[row.dataset.category, {start, buy, special, special2}]] : [];
+    }));
+    ['skill-name','skill-start','skill-buy','skill-item','skill-special','record-start','record-buy','record-special','record-special2'].forEach(key => delete data[key]);
     data.stats = Object.fromEntries(statNames.map((name, index) => [name, Object.fromEntries(['temp','pot','basic','racial','special','total'].map(part => [part, data[`stat-${part}-${index}`] || '']))]));
     Object.keys(data).filter(key => /^stat-(temp|pot|basic|racial|special|total)-\d+$/.test(key)).forEach(key => delete data[key]);
     return data;
@@ -388,6 +433,7 @@
       if (field && typeof value !== 'object') field.value = key === 'realm' && value === 'Choose at table' ? 'None' : value;
     }
     makeStats(character.stats || {});
+    renderCategoryRecord(character);
     renderSkillTree(character);
     updateDevelopment();
   }
@@ -581,7 +627,9 @@
       if (!tableResponse.ok || !costResponse.ok) throw new Error('Reference files could not be loaded');
       tables = await tableResponse.json();
       developmentRules = await costResponse.json();
-      renderSkillTree(formData());
+      const draft = formData();
+      renderCategoryRecord(draft);
+      renderSkillTree(draft);
       renderTables();
       updateDevelopment();
     } catch (error) {
@@ -643,9 +691,11 @@
   form.addEventListener('input', event => {
     const match = /^stat-temp-(\d+)$/.exec(event.target.name || '');
     if (match) updatePotentialStat(Number(match[1]), form.elements.potentialMethod.value === 'roll' ? rolledPotential : fixedPotential);
+    showEditedCategory(event.target);
     saveCurrent();
   });
   form.addEventListener('change', event => {
+    showEditedCategory(event.target);
     if (event.target.name === 'profession') {
       const realm = realmByProfession[event.target.value];
       form.elements.realm.value = realm === 'Choose at table' ? 'None' : realm || 'None';
