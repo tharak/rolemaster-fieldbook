@@ -20,4 +20,4 @@ Each file in `tables/` is one table or chart. `tables/index.json` provides the s
 
 ## Current scope
 
-The sheet calculates the apprenticeship development point budget from the five development stats and applies profession-specific skill development costs as ranks are assigned. Experience points remain the advancement currency for levels; development points are spent on skills. Training package and extra stat gain purchases still need to be recorded with the GM.
+Character creation follows the Core Rules sequence: concept and initial choices, stats, adolescence, background options, apprenticeship, role, and final preparation. Each step links to its relevant table. The stats step tracks assignment points and can apply the fixed potential stat option. The apprenticeship step calculates development points from the five development stats and applies profession-specific skill costs; training packages and extra stat gain costs can be entered as other DP spent. Characters save automatically in this browser, including the current step.

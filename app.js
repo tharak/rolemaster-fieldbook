@@ -12,6 +12,18 @@
   let characters = readCharacters();
   let currentId = null;
   let activeTableGroup = 'all';
+  let currentStep = 0;
+  const steps = [
+    ['Concept & choices', 'Choose your character concept, race, profession and realm of power. · Core pp. 12–15'],
+    ['Stats', 'Assign temporary stats, then determine potential stats. · Core pp. 16–17'],
+    ['Adolescence', 'Record your race’s starting ranks, hobby ranks and languages. · Core pp. 18–19'],
+    ['Background options', 'Choose the options granted by your race. · Core pp. 20–21'],
+    ['Apprenticeship', 'Spend one level of development points. · Core pp. 22–27'],
+    ['Character role', 'Choose role traits, appearance and background. · Core pp. 28–29'],
+    ['Final preparation', 'Finish bonuses, equipment and game values. · Core pp. 30–35']
+  ];
+  const primeStats = {Fighter:['Strength','Constitution'], Thief:['Agility','Quickness'], Rogue:['Agility','Strength'], Cleric:['Intuition','Memory'], Magician:['Empathy','Reasoning'], Mentalist:['Presence','Self Discipline'], Ranger:['Intuition','Constitution'], Dabbler:['Empathy','Agility'], Bard:['Presence','Memory']};
+  const raceAllowances = {'Common Man':[12,8,6], 'High Man':[10,12,4], 'Wood Elf':[10,12,4], Dwarf:[12,8,5], Halfling:[12,6,5]};
 
   function readCharacters() {
     try { const data = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); return Array.isArray(data) ? data : []; }
@@ -22,20 +34,21 @@
   function makeStats(stats = {}) {
     $('#stats-list').innerHTML = statNames.map((name, index) => {
       const value = stats[name] || {};
-      return `<div class="stat-row"><span>${name}</span><input aria-label="${name} temporary stat" name="stat-temp-${index}" type="number" min="1" max="101" value="${esc(value.temp ?? '')}" placeholder="—"><input aria-label="${name} potential stat" name="stat-pot-${index}" type="number" min="1" max="101" value="${esc(value.pot ?? '')}" placeholder="—"></div>`;
+      return `<div class="stat-row"><span>${name}</span><input aria-label="${name} temporary stat" name="stat-temp-${index}" type="number" min="20" max="100" value="${esc(value.temp ?? '')}" placeholder="—"><input aria-label="${name} potential stat" name="stat-pot-${index}" type="number" min="20" max="101" value="${esc(value.pot ?? '')}" placeholder="—"></div>`;
     }).join('');
   }
   function skillRow(skill = {}) {
     const row = document.createElement('div'); row.className = 'skill-row';
     const categories = Object.keys(developmentRules?.categories || {});
     const categoryOptions = categories.map(category => `<option value="${esc(category)}" ${skill.category === category ? 'selected' : ''}>${esc(category)}</option>`).join('');
-    row.innerHTML = `<input aria-label="Skill name" name="skill-name" maxlength="60" placeholder="Skill name" value="${esc(skill.name || '')}"><select aria-label="Skill category" name="skill-category">${categoryOptions}</select><input aria-label="Ranks before this level" name="skill-start" type="number" min="0" max="99" placeholder="0" value="${esc(skill.start ?? skill.ranks ?? 0)}"><select aria-label="Ranks purchased this level" name="skill-buy"></select><span class="skill-dp-cost">0 DP</span><button type="button" class="remove-skill" aria-label="Remove skill">×</button>`;
+    row.innerHTML = `<label class="skill-cell"><small>Skill</small><input aria-label="Skill name" name="skill-name" maxlength="60" placeholder="Skill name" value="${esc(skill.name || '')}"></label><label class="skill-cell"><small>Category</small><select aria-label="Skill category" name="skill-category">${categoryOptions}</select></label><label class="skill-cell"><small>Before</small><input aria-label="Ranks before this level" name="skill-start" type="number" min="0" max="99" placeholder="0" value="${esc(skill.start ?? skill.ranks ?? 0)}"></label><label class="skill-cell"><small>Buy</small><select aria-label="Ranks purchased this level" name="skill-buy"></select></label><span class="skill-dp-cost">0 DP</span><button type="button" class="remove-skill" aria-label="Remove skill">×</button>`;
     const category = $('[name="skill-category"]', row);
     if (skill.category && categories.includes(skill.category)) category.value = skill.category;
-    $('[name="skill-buy"]', row).value = String(skill.buy || 0);
+    if (!developmentRules && skill.buy) row.dataset.pendingBuy = skill.buy;
+    if (!developmentRules && skill.category) row.dataset.pendingCategory = skill.category;
     $('.remove-skill', row).addEventListener('click', () => { row.remove(); updateDevelopment(); saveCurrent(); });
     $('#skills-list').append(row);
-    updateSkillBuyOptions(row);
+    updateSkillBuyOptions(row, Number(skill.buy) || 0);
     category.addEventListener('change', () => { updateSkillBuyOptions(row); updateDevelopment(); saveCurrent(); });
     $('[name="skill-buy"]', row).addEventListener('change', () => { updateDevelopment(); saveCurrent(); });
     $('[name="skill-start"]', row).addEventListener('input', () => { updateDevelopment(); saveCurrent(); });
@@ -45,14 +58,15 @@
     const category = $('[name="skill-category"]', row).value;
     return developmentRules?.categories?.[category]?.[profession] || null;
   }
-  function updateSkillBuyOptions(row) {
+  function updateSkillBuyOptions(row, preferred) {
     const costs = costForSkill(row, form.elements.profession.value);
     const buy = $('[name="skill-buy"]', row);
     const max = costs?.length || 0;
-    const previous = Math.min(Number(buy.value) || 0, max);
+    const previous = Math.min(preferred ?? (Number(buy.value) || Number(row.dataset.pendingBuy) || 0), max);
     buy.innerHTML = Array.from({length: max + 1}, (_, rank) => `<option value="${rank}">${rank}</option>`).join('');
     buy.value = String(previous);
     buy.disabled = !max;
+    if (max) delete row.dataset.pendingBuy;
     row.classList.toggle('unavailable', !max);
   }
   function updateDevelopment() {
@@ -72,15 +86,56 @@
       spent += cost;
       $('.skill-dp-cost', row).textContent = `${cost} DP · ${start + ranks} total`;
     });
+    spent += Number(form.elements.otherDp.value) || 0;
     $('#dp-spent').textContent = String(spent);
     const remaining = hasStats ? available - spent : null;
     $('#dp-remaining').textContent = remaining === null ? '—' : String(remaining);
     $('#dp-remaining').classList.toggle('over-budget', remaining !== null && remaining < 0);
-    $$('.skill-row', $('#skills-list')).forEach(updateSkillBuyOptions);
+    $$('.skill-row', $('#skills-list')).forEach(row => updateSkillBuyOptions(row));
+    updateCreationHints();
+  }
+  function statCost(value) { return value <= 90 ? value : 90 + (value - 90) ** 2; }
+  function fixedPotential(value) {
+    const bands = [[24,44],[34,39],[44,33],[54,28],[64,22],[74,17],[84,11],[91,6],[92,5],[94,4],[96,3],[98,2],[100,1]];
+    return Math.min(101, value + (bands.find(([high]) => value <= high)?.[1] || 0));
+  }
+  function updateCreationHints() {
+    const mode = form.elements.statPoolMode.value;
+    $('#stat-roll-field').hidden = mode !== 'roll';
+    const roll = Number(form.elements.statRoll.value);
+    const budget = mode === 'roll' ? (roll >= 10 && roll <= 100 ? 600 + roll : null) : 660;
+    const values = statNames.map((_, index) => Number(form.elements.namedItem(`stat-temp-${index}`).value) || 0);
+    const spent = values.reduce((sum, value) => sum + statCost(value), 0);
+    const remaining = budget === null ? 'Enter your 10d10 total' : `${spent} of ${budget} points assigned · ${budget - spent} remaining`;
+    $('#stat-budget').textContent = remaining;
+    $('#stat-budget').classList.toggle('over-budget', budget !== null && spent > budget);
+    const primes = primeStats[form.elements.profession.value] || [];
+    const missing = primes.filter(name => values[statNames.indexOf(name)] < 90);
+    $('#prime-stats').textContent = `Prime stats: ${primes.join(' and ')} · each must be at least 90${missing.length ? ` (${missing.join(', ')} below 90)` : ''}`;
+    const [hobby, language, background] = raceAllowances[form.elements.race.value] || [0,0,0];
+    $('#racial-summary').innerHTML = `<span><strong>${hobby}</strong> hobby ranks</span><span><strong>${language}</strong> extra language ranks</span><span><strong>${background}</strong> background options</span>`;
+    $('#background-allowance').textContent = `${form.elements.race.value} receives ${background} background options. Record each choice and its cost.`;
+    for (const [name, limit] of [['hobbyUsed',hobby],['languageUsed',language],['backgroundUsed',background]]) {
+      const field = form.elements[name];
+      field.classList.toggle('over-budget', Number(field.value) > limit);
+    }
+  }
+  function setStep(step) {
+    currentStep = Math.max(0, Math.min(steps.length - 1, step));
+    $$('.creation-step').forEach((section, index) => { section.hidden = index !== currentStep; });
+    $$('.creation-step-link').forEach((button, index) => { button.classList.toggle('active', index === currentStep); button.setAttribute('aria-current', index === currentStep ? 'step' : 'false'); });
+    $('#step-count').textContent = `Step ${currentStep + 1} of ${steps.length}`;
+    $('#step-title').textContent = steps[currentStep][0];
+    $('#step-description').textContent = steps[currentStep][1];
+    $('#previous-step').hidden = currentStep === 0;
+    $('#next-step').textContent = currentStep === steps.length - 1 ? 'All characters →' : 'Next step →';
+    updateCreationHints();
+    window.scrollTo({top: 0, behavior: 'smooth'});
   }
   function showView(name) {
     $$('.view').forEach(view => view.classList.toggle('active', view.id === `${name}-view`));
     $$('.nav-link').forEach(button => button.classList.toggle('active', button.dataset.view === name));
+    if (name !== 'tables') $('#return-to-character').hidden = true;
     window.scrollTo({top: 0, behavior: 'smooth'});
   }
   function renderRoster() {
@@ -96,10 +151,10 @@
     const data = Object.fromEntries(new FormData(form).entries());
     data.skills = $$('.skill-row', $('#skills-list')).map(row => ({
       name: $('[name="skill-name"]', row).value,
-      category: $('[name="skill-category"]', row).value,
+      category: $('[name="skill-category"]', row).value || row.dataset.pendingCategory || '',
       start: $('[name="skill-start"]', row).value,
-      buy: $('[name="skill-buy"]', row).value,
-      ranks: (Number($('[name="skill-start"]', row).value) || 0) + (Number($('[name="skill-buy"]', row).value) || 0)
+      buy: $('[name="skill-buy"]', row).value || row.dataset.pendingBuy || '0',
+      ranks: (Number($('[name="skill-start"]', row).value) || 0) + (Number($('[name="skill-buy"]', row).value || row.dataset.pendingBuy) || 0)
     })).filter(skill => skill.name || Number(skill.start) || Number(skill.buy));
     data.stats = Object.fromEntries(statNames.map((name, index) => [name, {temp: data[`stat-temp-${index}`] || '', pot: data[`stat-pot-${index}`] || ''}]));
     Object.keys(data).filter(key => key.startsWith('stat-temp-') || key.startsWith('stat-pot-')).forEach(key => delete data[key]);
@@ -107,7 +162,6 @@
   }
   function fillForm(character = {}) {
     form.reset();
-    $('.optional-fields').open = ['player', 'campaign', 'age', 'concept'].some(key => Boolean(character[key]));
     for (const [key, value] of Object.entries(character)) {
       const field = form.elements.namedItem(key);
       if (field && typeof value !== 'object') field.value = value;
@@ -118,6 +172,7 @@
     if (!character.skills?.length) skillRow();
     updateDevelopment();
     $('#editor-heading').textContent = character.name || 'New character';
+    setStep(Number(character.creationStep) || 0);
   }
   function openCharacter(id) {
     const character = characters.find(item => item.id === id); if (!character) return;
@@ -132,6 +187,7 @@
     if (!currentId) return;
     updateDevelopment();
     const data = formData();
+    data.creationStep = currentStep;
     $('#editor-heading').textContent = data.name || 'New character';
     if (!data.name.trim()) return;
     const previous = characters.findIndex(item => item.id === currentId);
@@ -294,7 +350,7 @@
       if (!tableResponse.ok || !costResponse.ok) throw new Error('Reference files could not be loaded');
       tables = await tableResponse.json();
       developmentRules = await costResponse.json();
-      const savedSkills = $$('.skill-row', $('#skills-list')).map(row => ({name: $('[name="skill-name"]', row).value, category: $('[name="skill-category"]', row).value, start: $('[name="skill-start"]', row).value, buy: $('[name="skill-buy"]', row).value}));
+      const savedSkills = $$('.skill-row', $('#skills-list')).map(row => ({name: $('[name="skill-name"]', row).value, category: $('[name="skill-category"]', row).value || row.dataset.pendingCategory, start: $('[name="skill-start"]', row).value, buy: $('[name="skill-buy"]', row).value || row.dataset.pendingBuy}));
       $('#skills-list').innerHTML = '';
       savedSkills.forEach(skillRow);
       renderTables();
@@ -304,6 +360,8 @@
     }
   }
   makeStats(); renderRoster(); loadReferenceData();
+  $('#creation-steps').innerHTML = steps.map(([title], index) => `<button type="button" class="creation-step-link" data-step-index="${index}"><span>${index + 1}</span>${title}</button>`).join('');
+  setStep(0);
   function openTableGroup(group) {
     activeTableGroup = group;
     $$('.filter-chip').forEach(button => {
@@ -322,11 +380,34 @@
   $$('.filter-chip').forEach(button => button.addEventListener('click', () => openTableGroup(button.dataset.group)));
   $('#back-roster').addEventListener('click', () => { saveCurrent(); renderRoster(); showView('home'); });
   $('#add-skill').addEventListener('click', () => { skillRow(); $('[name="skill-name"]', $('#skills-list').lastElementChild).focus(); });
+  $('#fixed-potentials').addEventListener('click', () => {
+    statNames.forEach((_, index) => {
+      const temporary = Number(form.elements.namedItem(`stat-temp-${index}`).value);
+      if (temporary >= 20 && temporary <= 100) form.elements.namedItem(`stat-pot-${index}`).value = String(fixedPotential(temporary));
+    });
+    saveCurrent();
+  });
+  $$('.creation-step-link').forEach(button => button.addEventListener('click', () => { setStep(Number(button.dataset.stepIndex)); saveCurrent(); }));
+  $('#previous-step').addEventListener('click', () => { setStep(currentStep - 1); saveCurrent(); });
+  $('#next-step').addEventListener('click', () => {
+    if (currentStep === 0 && !form.elements.name.value.trim()) { form.elements.name.focus(); form.elements.name.reportValidity(); return; }
+    if (currentStep === steps.length - 1) { saveCurrent(); renderRoster(); showView('home'); return; }
+    setStep(currentStep + 1); saveCurrent();
+  });
+  $$('[data-open-table]').forEach(button => button.addEventListener('click', () => {
+    const reference = tables.find(table => table.code === button.dataset.openTable);
+    if (!reference) return;
+    activeTableGroup = 'character';
+    $$('.filter-chip').forEach(chip => { const active = chip.dataset.group === 'character'; chip.classList.toggle('active', active); chip.setAttribute('aria-pressed', String(active)); });
+    $('#table-search').value = '';
+    renderTables(); chooseTable(reference); showView('tables'); $('#return-to-character').hidden = false;
+  }));
+  $('#return-to-character').addEventListener('click', () => showView('editor'));
   form.addEventListener('submit', event => event.preventDefault());
   form.addEventListener('input', saveCurrent);
   form.addEventListener('change', event => {
     if (event.target.name === 'profession') form.elements.realm.value = realmByProfession[event.target.value] || 'Choose at table';
-    if (event.target.name === 'profession') $$('.skill-row', $('#skills-list')).forEach(updateSkillBuyOptions);
+    if (event.target.name === 'profession') $$('.skill-row', $('#skills-list')).forEach(row => updateSkillBuyOptions(row));
     updateDevelopment();
     saveCurrent();
   });
