@@ -170,6 +170,25 @@
             <div class="category-record-scroll"><table class="category-record-table"><colgroup><col class="category-name-col"><col class="category-total-col"><col class="category-stats-col"><col class="category-cost-col"><col span="6"></colgroup><thead><tr class="category-record-head"><th scope="col">Skill category</th><th scope="col">Total bonus</th><th scope="col">Stats</th><th scope="col">Dev cost</th><th scope="col">Ranks</th><th scope="col">Rank bonus</th><th scope="col">Stat bonus</th><th scope="col">Prof. bonus</th><th scope="col">Special 1</th><th scope="col">Special 2</th></tr></thead><tbody id="category-record-list"></tbody></table></div>
             <div class="dp-summary"><div><span>DP available</span><strong id="dp-available">—</strong></div><div><span>Spent</span><strong id="dp-spent">0</strong></div><div><span>Remaining</span><strong id="dp-remaining">—</strong></div></div>
           </section>
+          <section class="record-section record-final" id="final-preparation">
+            <h2>Final character preparation <span>8.0</span></h2>
+            <div class="final-overview"><p id="final-level-age"></p><p>Stat, skill category, and skill bonuses are totaled above.</p></div>
+            <h3>Starting outfit · 8.3</h3>
+            <p class="sheet-hint" id="final-money"></p>
+            <div class="final-outfit-grid">
+              <div><strong>Choose up to two normal weapons</strong><p class="sheet-hint">Each weapon needs at least one rank in its skill.</p><div id="final-weapon-options" class="choice-strip"></div></div>
+              <div><strong>Choose one suit of armor</strong><p class="sheet-hint">Choose an armor type for your highest ranked armor skill.</p><div id="final-armor-options" class="choice-strip"></div></div>
+            </div>
+            <p class="sheet-hint">Also included: clothes, cloak, boots, scabbards, weapon belt, belt pouch, and normal personal effects.</p>
+            <label class="sheet-field final-purchases">Purchased equipment and supplies · Appendix A-7<textarea name="outfitPurchases" rows="3" maxlength="1200" placeholder="Record purchases and remaining money"></textarea></label>
+            <h3>Combat and recovery · 8.4</h3>
+            <div class="final-metrics"><div><span>Hits max.</span><strong id="final-hits">—</strong></div><div><span>Power points max.</span><strong id="final-pp">—</strong></div><div><span>Armor type</span><strong id="final-at">—</strong></div><div><span>Normal DB</span><strong id="final-db">—</strong></div><div><span>Moving maneuver</span><strong id="final-mmp">—</strong></div><div><span>Base movement</span><strong id="final-move">—</strong></div><div><span>Missile penalty</span><strong id="final-missile">—</strong></div><div><span>Weight penalty</span><strong id="final-weight-penalty">—</strong></div></div>
+            <div class="final-modifiers"><label class="sheet-field">Shield DB<input name="dbShield" type="number" value="0"></label><label class="sheet-field">Magic DB<input name="dbMagic" type="number" value="0"></label><label class="sheet-field">Special DB<input name="dbSpecial" type="number" value="0"></label><label class="sheet-field">Carried load (lb)<input name="carriedWeight" type="number" min="0" step="0.1" placeholder="Without clothes or armor"></label></div>
+            <p class="sheet-hint" id="final-defense-detail"></p>
+            <p class="sheet-hint" id="final-load-detail"></p>
+            <p class="sheet-hint" id="final-recovery"></p>
+            <p class="sheet-hint" id="final-known-spells"></p>
+          </section>
           <section class="record-section">
             <h2>Commonly used attacks</h2>
             <div class="ruled-labels"><span>Attack / weapon</span><span>Ranks · Bonus · Fumble · Range</span></div>
@@ -179,13 +198,14 @@
             <h2>Commonly used equipment</h2>
             <div class="ruled-labels"><span>Item</span><span>Location · Weight · Description</span></div>
             <textarea class="ruled-textarea" name="notes" rows="6" maxlength="1200" aria-label="Commonly used equipment"></textarea>
+            <div id="starting-outfit-summary" class="language-picker-note"></div>
             <div id="background-rewards-summary" class="language-picker-note"></div>
             <div id="training-rewards-summary" class="language-picker-note"></div>
           </section>
           <section class="record-bottom">
-            <div><label class="sheet-field">Hits (maximum)<input name="hits" type="number" min="0"></label></div>
+            <div><label class="sheet-field">Hits (maximum)<input name="hits" type="number" min="0" readonly></label></div>
             <div><h2>Miscellaneous information</h2><label class="sheet-field">Bonuses<textarea name="bonuses" rows="3" maxlength="1200"></textarea></label><label class="sheet-field">Spells & spell lists<textarea name="spells" rows="3" maxlength="800"></textarea></label></div>
-            <div><label class="sheet-field">Power points (max.)<input name="powerPoints" type="number" min="0"></label></div>
+            <div><label class="sheet-field">Power points (max.)<input name="powerPoints" type="number" min="0" readonly></label></div>
           </section>
         </div>
         <div hidden>
@@ -200,6 +220,8 @@
           <input name="trainingChoiceSelections" type="hidden" value="{}">
           <input name="trainingBenefits" type="hidden" value="{}">
           <input name="favoriteSkills" type="hidden" value="[]">
+          <input name="startingWeapons" type="hidden" value="[]">
+          <input name="startingArmor" type="hidden" value="">
           <input name="spellDevelopmentOrder" type="hidden" value="[]">
           <div id="skill-category-picker" hidden><div id="skill-category-options"></div><button type="button" id="cancel-skill-category">Cancel</button></div>
           <div id="skills-list"></div>

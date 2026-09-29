@@ -368,6 +368,13 @@
     Dwarf:{source:'A-1.4', heights:[57,53], weights:[150,135], age:[16,300], builds:['Short and stocky','Strong-limbed'], skin:['Fair','Ruddy'], hair:['Black','Red','Dark brown'], eyes:[], demeanor:['Sober','Quiet','Possessive','Suspicious','Pugnacious','Introspective']},
     Halfling:{source:'A-1.5', heights:[41,39], weights:[54,51], age:[30,100], builds:['Small and pudgy','Small and stout'], skin:['Brown'], hair:['Brown'], eyes:[], demeanor:['Cheery','Conservative','Unassuming','Peaceful']}
   };
+  const armorTypes = {
+    5:[0,0,0,0], 6:[0,-20,5,0], 7:[-10,-40,15,10], 8:[-15,-50,15,15],
+    9:[-5,-50,0,0], 10:[-10,-70,10,5], 11:[-15,-90,20,15], 12:[-15,-110,30,15],
+    13:[-10,-70,0,5], 14:[-15,-90,10,10], 15:[-25,-120,20,20], 16:[-25,-130,20,20],
+    17:[-15,-90,0,10], 18:[-20,-110,10,20], 19:[-35,-150,30,30], 20:[-45,-165,40,40]
+  };
+  const armorSkillTypes = {'Soft Leather':[5,6,7,8], 'Rigid Leather':[9,10,11,12], Chain:[13,14,15,16], Plate:[17,18,19,20]};
   // Weapon choices from the outfitting lists in the matching A-1 race entries.
   const raceWeaponChoices = {
     'Common Man':{'Weapon • 1-H Edged':['Dagger','Handaxe','Throwing dagger'],'Weapon • Missile':['Sling'],'Weapon • Pole Arms':['Fishing spear'],'Weapon • Thrown':['Dagger','Handaxe','Throwing dagger','Fishing spear']},
@@ -1762,6 +1769,124 @@
     if (max) delete row.dataset.pendingBuy;
     row.classList.toggle('unavailable', !max);
   }
+  function rankedCharacterSkills() {
+    return $$('.skill-row', $('#skills-list')).map(row => ({
+      category:row.dataset.category,
+      name:$('[name="skill-name"]', row).value,
+      ranks:(Number($('[name="skill-start"]', row).value) || 0) + developedSkillRanks(row, Number(row.dataset.pendingBuy ?? $('[name="skill-buy"]', row).value) || 0)
+    })).filter(skill => skill.name && !skill.name.startsWith('Choose '));
+  }
+  function skillTotalBonus(category, name) {
+    const row = $$('.a4-skill-row[data-skill]').find(item => item.dataset.category === category && item.dataset.skill === name);
+    const value = row ? $('.a4-total', row).textContent : '—';
+    return value !== '—' && Number.isFinite(Number(value)) ? Number(value) : null;
+  }
+  function readStartingWeapons() {
+    try {
+      const values = JSON.parse(form.elements.startingWeapons.value || '[]');
+      return Array.isArray(values) ? values.filter(value => typeof value === 'string').slice(0, 2) : [];
+    } catch { return []; }
+  }
+  function readStartingArmor() {
+    try {
+      const value = JSON.parse(form.elements.startingArmor.value || 'null');
+      return Array.isArray(value) && value.length === 2 ? value : null;
+    } catch { return null; }
+  }
+  function strideBonus(heightText) {
+    const match = /^(\d+)'\s*(\d{1,2})(?:")?$/.exec(heightText.trim());
+    if (!match) return null;
+    const inches = Number(match[1]) * 12 + Number(match[2]);
+    if (Number(match[2]) >= 12 || inches < 22 || inches > 99) return null;
+    return [[94,20],[88,15],[82,10],[76,5],[70,0],[64,-5],[58,-10],[52,-15],[46,-20],[40,-25],[34,-30],[28,-35],[22,-40]].find(([minimum]) => inches >= minimum)[1];
+  }
+  function updateStartingOutfit(skills) {
+    const weaponSkills = skills.filter(skill => skill.category.startsWith('Weapon •') && skill.ranks >= 1);
+    const weaponKeys = new Set(weaponSkills.map(skill => favoriteSkillKey(skill.category, skill.name)));
+    const weapons = readStartingWeapons().filter(key => weaponKeys.has(key));
+    form.elements.startingWeapons.value = JSON.stringify(weapons);
+    const weaponStrip = $('#final-weapon-options'), weaponScroll = weaponStrip.scrollLeft;
+    weaponStrip.innerHTML = weaponSkills.length ? weaponSkills.map(skill => {
+      const key = favoriteSkillKey(skill.category, skill.name);
+      return `<button type="button" data-starting-weapon="${esc(key)}" aria-pressed="${weapons.includes(key)}"${weapons.length >= 2 && !weapons.includes(key) ? ' disabled' : ''}>${esc(skill.name)} · ${esc(skill.category.replace('Weapon • ', ''))}</button>`;
+    }).join('') : '<span class="sheet-hint">Develop a weapon skill to choose starting weapons.</span>';
+    weaponStrip.scrollLeft = weaponScroll;
+    const armorSkills = skills.filter(skill => skill.category.startsWith('Armor •') && armorSkillTypes[skill.name] && skill.ranks >= 1);
+    const highestRanks = Math.max(0, ...armorSkills.map(skill => skill.ranks));
+    const options = armorSkills.filter(skill => skill.ranks === highestRanks).flatMap(skill => armorSkillTypes[skill.name].map(type => [skill.name, type]));
+    const chosen = readStartingArmor();
+    const armor = options.some(([name, type]) => chosen?.[0] === name && chosen?.[1] === type) ? chosen : null;
+    form.elements.startingArmor.value = armor ? JSON.stringify(armor) : '';
+    const armorStrip = $('#final-armor-options'), armorScroll = armorStrip.scrollLeft;
+    armorStrip.innerHTML = `<button type="button" data-starting-armor="" aria-pressed="${!armor}">No armor</button>` + (options.length ? options.map(([name, type]) => `<button type="button" data-starting-armor="${esc(JSON.stringify([name,type]))}" aria-pressed="${armor?.[0] === name && armor?.[1] === type}">${esc(name)} · AT ${type}</button>`).join('') : '<span class="sheet-hint">Develop an armor skill for a starting suit.</span>');
+    armorStrip.scrollLeft = armorScroll;
+    const months = readTrainingSelections().reduce((sum, name) => sum + (trainingPackages.find(pack => pack.name === name)?.months || 0), 0);
+    const minimumAge = Math.max(16 + Math.ceil(months / 12), form.elements.race.value === 'Halfling' ? 30 : 16);
+    const age = Number(form.elements.roleAge.value);
+    const lifespanMaximum = {'Common Man':80, 'High Man':300, Dwarf:400, Halfling:110}[form.elements.race.value];
+    const ageProblem = form.elements.roleAge.value && (age < minimumAge ? `age ${age} is below the minimum` : lifespanMaximum && age > lifespanMaximum ? `age ${age} exceeds the race’s usual lifespan` : '');
+    $('#final-level-age').textContent = `Starting level 1 · 10,000 XP · minimum age ${minimumAge}${months ? ` (${months} training months)` : ''}${ageProblem ? ` · ${ageProblem}` : ''}.`;
+    $('#final-level-age').classList.toggle('over-budget', !!ageProblem);
+    const details = readBackgroundDetails(), selections = readBackgroundSelections();
+    let extraGold = 0;
+    for (const key of ['rolledMoney','chosenMoney']) for (let index = 0; index < (Number(selections[key]) || 0); index++) extraGold += Number(backgroundEntry(details, key, index).amount) || 0;
+    const benefits = readTrainingBenefits();
+    const trainingMoney = readTrainingSelections().flatMap(name => benefits[name]?.money ? [`${name} +${benefits[name].money.total} in the race’s starting-money unit`] : []);
+    $('#final-money').textContent = `Starting money: 2 gp or race equivalent${extraGold ? ` + ${extraGold} gp from background` : ''}${trainingMoney.length ? ` · training: ${trainingMoney.join('; ')}` : ''}.`;
+    $('#starting-outfit-summary').textContent = `Starting outfit: ${weapons.length ? weapons.map(key => JSON.parse(key)[1]).join(', ') : 'no weapons chosen'} · ${armor ? `${armor[0]} (AT ${armor[1]})` : 'no armor chosen'} · clothes, cloak, boots, scabbards, weapon belt, belt pouch, personal effects.`;
+    return armor;
+  }
+  function updateFinalMetrics(skills, armor) {
+    const hits = skillTotalBonus('Body Development', 'Body Development');
+    const pp = form.elements.realm.value === 'None' ? 0 : skillTotalBonus('Power Point Development', 'Power Point Development');
+    form.elements.hits.value = hits === null ? '' : String(Math.max(0, hits));
+    form.elements.powerPoints.value = pp === null ? '' : String(Math.max(0, pp));
+    $('#final-hits').textContent = form.elements.hits.value || '—';
+    $('#final-pp').textContent = form.elements.powerPoints.value || '—';
+    $('#final-at').textContent = armor ? String(armor[1]) : '1';
+    const qu = form.elements.namedItem('stat-total-8').value;
+    const quicknessBonus = qu === '' ? null : 3 * Number(qu);
+    const armorStats = armor ? armorTypes[armor[1]] : [0,0,0,0];
+    const adjustedQuickness = quicknessBonus === null ? null : quicknessBonus > 0 ? Math.max(0, quicknessBonus - armorStats[3]) : quicknessBonus;
+    const shield = Number(form.elements.dbShield.value) || 0, magic = Number(form.elements.dbMagic.value) || 0, special = Number(form.elements.dbSpecial.value) || 0;
+    $('#final-db').textContent = adjustedQuickness === null ? '—' : String(adjustedQuickness + shield + magic + special);
+    $('#final-defense-detail').textContent = `DB: 3 × Quickness ${quicknessBonus ?? '—'}${armor ? `, armor Quickness penalty ${armorStats[3]}` : ''}, shield ${shield}, magic ${magic}, special ${special}. Armor penalty only reduces a positive Quickness contribution.`;
+    const armorCategory = armor?.[0] === 'Chain' ? 'Armor • Medium' : armor?.[0] === 'Plate' ? 'Armor • Heavy' : 'Armor • Light';
+    const armorBonus = armor ? skillTotalBonus(armorCategory, armor[0]) : 0;
+    const baseMmp = armorBonus === null ? null : Math.min(armorStats[0], armorStats[1] + armorBonus);
+    $('#final-mmp').textContent = baseMmp === null ? '—' : String(baseMmp);
+    $('#final-missile').textContent = armorStats[2] ? `−${armorStats[2]}` : '0';
+    const stride = strideBonus(form.elements.roleHeight.value);
+    const baseMovement = quicknessBonus === null || stride === null ? null : 50 + quicknessBonus + stride;
+    $('#final-move').textContent = baseMovement === null ? '—' : `${baseMovement}′`;
+    const bodyWeight = Number.parseFloat(form.elements.roleWeight.value);
+    const carriedText = form.elements.carriedWeight.value;
+    const carried = Number(carriedText);
+    const strengthText = form.elements.namedItem('stat-total-9').value;
+    if (carriedText !== '' && carried >= 0 && bodyWeight > 0 && strengthText !== '') {
+      const allowance = bodyWeight / 10;
+      const unitsOver = Math.max(0, Math.ceil(carried / allowance - 1e-9) - 1);
+      const encumbrance = -8 * unitsOver;
+      const penalty = Math.min(0, encumbrance - armorStats[3] + 3 * Number(strengthText));
+      $('#final-weight-penalty').textContent = String(penalty);
+      $('#final-load-detail').textContent = `Weight allowance ${allowance.toFixed(1)} lb · encumbrance ${encumbrance} · with load: movement ${baseMovement === null ? '—' : `${baseMovement + penalty}′`}, moving maneuver ${baseMmp === null ? '—' : baseMmp + penalty}.`;
+    } else {
+      $('#final-weight-penalty').textContent = '—';
+      $('#final-load-detail').textContent = 'Enter carried load to calculate the optional weight penalty. Exclude clothes and worn armor.';
+    }
+    const co = form.elements.namedItem('stat-total-1').value;
+    const realmStatIndex = {Channeling:6, Essence:5, Mentalism:7}[form.elements.realm.value];
+    const realmStat = realmStatIndex === undefined ? '' : form.elements.namedItem(`stat-total-${realmStatIndex}`).value;
+    $('#final-recovery').textContent = `Hits recovery: 1 per 3 hr active${co !== '' ? ` · ${Math.max(0, Math.ceil(Number(co) / 2))} per hr resting · ${Math.max(0, 2 * Number(co))} per 3 hr sleeping` : ''}. ${form.elements.realm.value === 'None' ? 'No power point recovery without a realm.' : `Power point recovery: 1 per 3 hr active${realmStat !== '' ? ` · ${Math.max(0, Math.ceil(Number(realmStat) / 2))} per hr resting` : ''}${pp !== null ? ` · ${Math.ceil(Math.max(0, pp) / 2)} per 3 hr sleeping` : ''}.`}`;
+    const spellLists = skills.filter(skill => skill.category.startsWith('Spells • Own Realm') && skill.ranks >= 1);
+    $('#final-known-spells').textContent = spellLists.length ? `Known spell lists: ${spellLists.map(skill => `${skill.name} (spells through level ${skill.ranks})`).join(' · ')}. Record individual spell names below.` : 'Known spells: develop ranks in a spell list to know its spells through that level.';
+  }
+  function updateFinalPreparation() {
+    if (!developmentRules) return;
+    const skills = rankedCharacterSkills();
+    const armor = updateStartingOutfit(skills);
+    updateFinalMetrics(skills, armor);
+  }
   function updateDevelopment() {
     if (!$('#dp-available')) return;
     applyBackgroundEffects();
@@ -1826,6 +1951,7 @@
       });
     });
     updateA4SkillRows();
+    updateFinalPreparation();
     $$('.skill-group', $('#skills-list')).forEach(group => {
       const bonus = (professionSkillBonuses[profession] || {})[group.dataset.group] || 0;
       $('.group-profession-bonus', group).textContent = bonus ? `+${bonus} profession` : '';
@@ -2677,6 +2803,21 @@
     saveCurrent();
   });
   $('#randomize-physical').addEventListener('click', () => { randomizePhysicalDetails(); saveCurrent(); });
+  $('#final-weapon-options').addEventListener('click', event => {
+    const button = event.target.closest('button[data-starting-weapon]');
+    if (!button) return;
+    const key = button.dataset.startingWeapon;
+    const weapons = readStartingWeapons();
+    const next = weapons.includes(key) ? weapons.filter(value => value !== key) : weapons.length < 2 ? [...weapons, key] : weapons;
+    form.elements.startingWeapons.value = JSON.stringify(next);
+    saveCurrent();
+  });
+  $('#final-armor-options').addEventListener('click', event => {
+    const button = event.target.closest('button[data-starting-armor]');
+    if (!button) return;
+    form.elements.startingArmor.value = button.dataset.startingArmor;
+    saveCurrent();
+  });
   form.addEventListener('submit', event => event.preventDefault());
   form.addEventListener('input', event => {
     const match = /^stat-temp-(\d+)$/.exec(event.target.name || '');
