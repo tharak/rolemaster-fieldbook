@@ -299,6 +299,7 @@ input::placeholder, textarea::placeholder { color: #82998a; opacity: 1; }
 .pool-roll-view:focus-visible { outline: 2px solid #c5f0cf; outline-offset: 2px; }
 #stat-pool-total { min-width: 2ch; color: var(--accent-text); font: 700 17px var(--mono); }
 #stat-pool-print-addend { display: none; }
+.potential-actions { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 12px; }
 .record-stats .stat-header, .record-stats .stat-row { display: grid; grid-template-columns: minmax(125px, 1.7fr) repeat(6, minmax(54px, .7fr)); gap: 5px; align-items: center; min-width: 620px; }
 .record-stats .stat-header { padding: 0 0 6px; border-color: var(--line); color: #bfd4c3; text-transform: uppercase; text-align: center; font: 9px var(--mono); }
 .record-stats .stat-header span:first-child { text-align: left; }

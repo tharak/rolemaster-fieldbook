@@ -107,6 +107,33 @@
     updateSheetHints();
   }
   function statCost(value) { return value <= 90 ? value : 90 + (value - 90) ** 2; }
+  function applyProfessionStatDefaults() {
+    const primes = primeStats[form.elements.profession.value] || [];
+    statNames.forEach((name, index) => {
+      form.elements.namedItem(`stat-temp-${index}`).value = primes.includes(name) ? '90' : '20';
+      form.elements.namedItem(`stat-pot-${index}`).value = '';
+    });
+  }
+  function fixedPotential(value) {
+    const bands = [[24,44],[34,39],[44,33],[54,28],[64,22],[74,17],[84,11],[91,6],[92,5],[94,4],[96,3],[98,2],[100,1]];
+    return Math.min(101, value + bands.find(([high]) => value <= high)[1]);
+  }
+  function rolledPotential(value) {
+    const bands = [[24,20,8],[34,30,7],[44,40,6],[54,50,5],[64,60,4],[74,70,3],[84,80,2],[91,90,1]];
+    const band = bands.find(([high]) => value <= high);
+    const [base, dice, sides] = band ? [band[1], band[2], 10] : [value - 1, 1, value === 100 ? 2 : 101 - value];
+    const result = base + Array.from({length: dice}, () => Math.floor(Math.random() * sides) + 1).reduce((sum, roll) => sum + roll, 0);
+    return Math.max(value, result);
+  }
+  function setPotentialStats(calculate) {
+    statNames.forEach((_, index) => {
+      const temporary = Number(form.elements.namedItem(`stat-temp-${index}`).value);
+      if (Number.isInteger(temporary) && temporary >= 20 && temporary <= 100) {
+        form.elements.namedItem(`stat-pot-${index}`).value = String(calculate(temporary));
+      }
+    });
+    saveCurrent();
+  }
   function basicStatBonus(value) {
     if (value === 100) return 10;
     if (value >= 90) return 5 + Math.floor((value - 90) / 2);
@@ -251,6 +278,7 @@
   function newCharacter() {
     currentId = crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random()}`;
     fillForm({realm:'None'});
+    applyProfessionStatDefaults();
     ensureStatRoll();
     form.elements.statPoolMode.value = 'roll';
     updateDevelopment(); showView('editor'); revealSelectedChoices();
@@ -458,12 +486,15 @@
     form.elements.statPoolMode.value = '660';
     saveCurrent();
   });
+  $('#roll-potentials').addEventListener('click', () => setPotentialStats(rolledPotential));
+  $('#fixed-potentials').addEventListener('click', () => setPotentialStats(fixedPotential));
   form.addEventListener('submit', event => event.preventDefault());
   form.addEventListener('input', saveCurrent);
   form.addEventListener('change', event => {
     if (event.target.name === 'profession') {
       const realm = realmByProfession[event.target.value];
       form.elements.realm.value = realm === 'Choose at table' ? 'None' : realm || 'None';
+      applyProfessionStatDefaults();
     }
     if (event.target.name === 'realm' && realmByProfession[form.elements.profession.value] !== 'Choose at table') form.elements.realm.value = realmByProfession[form.elements.profession.value];
     if (event.target.name === 'profession') $$('.skill-row', $('#skills-list')).forEach(row => updateSkillBuyOptions(row));
