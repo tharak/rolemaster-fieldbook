@@ -3,7 +3,6 @@
   const statNames = ['Agility', 'Constitution', 'Memory', 'Reasoning', 'Self Discipline', 'Empathy', 'Intuition', 'Presence', 'Quickness', 'Strength'];
   let tables = [];
   let activeTable = null;
-  let activeRawFile = null;
   const tableCache = new Map();
   let developmentRules = null;
   const realmByProfession = {Fighter:'Choose at table',Thief:'Choose at table',Rogue:'Choose at table',Cleric:'Channeling',Magician:'Essence',Mentalist:'Mentalism',Ranger:'Channeling',Dabbler:'Essence',Bard:'Mentalism'};
@@ -12,7 +11,6 @@
   const form = $('#character-form');
   let characters = readCharacters();
   let currentId = null;
-  let isNew = false;
   let activeTableGroup = 'all';
 
   function readCharacters() {
@@ -109,6 +107,7 @@
   }
   function fillForm(character = {}) {
     form.reset();
+    $('.optional-fields').open = ['player', 'campaign', 'age', 'concept'].some(key => Boolean(character[key]));
     for (const [key, value] of Object.entries(character)) {
       const field = form.elements.namedItem(key);
       if (field && typeof value !== 'object') field.value = value;
@@ -122,11 +121,11 @@
   }
   function openCharacter(id) {
     const character = characters.find(item => item.id === id); if (!character) return;
-    currentId = id; isNew = false; fillForm(character); showView('editor');
+    currentId = id; fillForm(character); showView('editor');
   }
   function newCharacter() {
     currentId = crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random()}`;
-    isNew = true; fillForm({realm:'Choose at table'}); $('#editor-heading').textContent = 'New character'; showView('editor');
+    fillForm({realm:'Choose at table'}); $('#editor-heading').textContent = 'New character'; showView('editor');
     $('input[name="name"]').focus();
   }
   function saveCurrent() {
@@ -138,7 +137,7 @@
     const previous = characters.findIndex(item => item.id === currentId);
     const saved = {id: currentId, ...data};
     if (previous < 0) characters.unshift(saved); else characters[previous] = saved;
-    writeCharacters(); renderRoster(); isNew = false;
+    writeCharacters(); renderRoster();
   }
   async function chooseTable(reference) {
     if (!reference) return;
@@ -289,37 +288,6 @@
     if (shown.length && !shown.some(table => table.code === activeTable?.code)) chooseTable(shown[0]);
     else $$('.table-choice').forEach(button => button.classList.toggle('active', button.dataset.code === activeTable?.code));
   }
-  function renderRawFiles(filter = '') {
-    const files = [{code:'CATALOG', title:'Table catalog manifest', file:'index.json'}, ...tables];
-    const needle = filter.trim().toLowerCase();
-    const shown = files.filter(file => `${file.title} ${file.code} ${file.file}`.toLowerCase().includes(needle));
-    $('#raw-file-list').innerHTML = shown.map(file => `<button class="table-choice${activeRawFile?.file === file.file ? ' active' : ''}" data-file="${esc(file.file)}"><span>${esc(file.title)}</span><span>${esc(file.code)}</span></button>`).join('');
-    $('#raw-file-count').textContent = `${shown.length} of ${files.length} JSON files`;
-    $$('.table-choice', $('#raw-file-list')).forEach(button => button.addEventListener('click', () => loadRawFile(files.find(file => file.file === button.dataset.file))));
-    if (shown.length && !shown.some(file => file.file === activeRawFile?.file)) loadRawFile(shown[0]);
-  }
-  async function loadRawFile(file) {
-    if (!file) return;
-    activeRawFile = file;
-    $$('.table-choice', $('#raw-file-list')).forEach(button => button.classList.toggle('active', button.dataset.file === file.file));
-    $('#raw-file-title').textContent = file.title;
-    $('#raw-file-code').textContent = `${file.code} · tables/${file.file}`;
-    $('#raw-json-content').textContent = 'Loading JSON…';
-    $('#raw-download').hidden = true;
-    try {
-      const response = await fetch(`tables/${encodeURIComponent(file.file)}`);
-      if (!response.ok) throw new Error('File unavailable');
-      const data = await response.json();
-      if (activeRawFile?.file !== file.file) return;
-      const text = JSON.stringify(data, null, 2);
-      $('#raw-json-content').textContent = text;
-      $('#raw-download').href = `tables/${encodeURIComponent(file.file)}`;
-      $('#raw-download').download = file.file;
-      $('#raw-download').hidden = false;
-    } catch {
-      if (activeRawFile?.file === file.file) $('#raw-json-content').textContent = 'Could not load this JSON file. Reload the page to try again.';
-    }
-  }
   async function loadReferenceData() {
     try {
       const [tableResponse, costResponse] = await Promise.all([fetch('tables/index.json'), fetch('tables/T-2.8.json')]);
@@ -330,16 +298,11 @@
       $('#skills-list').innerHTML = '';
       savedSkills.forEach(skillRow);
       renderTables();
-      renderRawFiles();
       updateDevelopment();
     } catch (error) {
       $('#table-list').innerHTML = '<p class="table-load-error">Table data could not be loaded. Serve this folder over HTTP and reload.</p>';
     }
   }
-  function notify(message) {
-    const toast = document.createElement('div'); toast.className = 'toast'; toast.textContent = message; document.body.append(toast); setTimeout(() => toast.remove(), 1900);
-  }
-
   makeStats(); renderRoster(); loadReferenceData();
   function openTableGroup(group) {
     activeTableGroup = group;
@@ -353,17 +316,11 @@
     showView('tables');
   }
   $$('.nav-link').forEach(button => button.addEventListener('click', () => showView(button.dataset.view)));
-  $('.brand').addEventListener('click', event => { event.preventDefault(); showView('home'); });
+  $('.brand').addEventListener('click', event => { event.preventDefault(); showView('tables'); });
   $('#new-character').addEventListener('click', newCharacter);
-  $('#hero-new-character').addEventListener('click', newCharacter);
   $('#empty-new-character').addEventListener('click', newCharacter);
-  $('#hero-open-tables').addEventListener('click', () => openTableGroup('all'));
-  $('#shortcut-attacks').addEventListener('click', () => openTableGroup('attacks'));
-  $('#shortcut-reference').addEventListener('click', () => openTableGroup('all'));
-  $('#shortcut-json').addEventListener('click', () => showView('raw'));
   $$('.filter-chip').forEach(button => button.addEventListener('click', () => openTableGroup(button.dataset.group)));
   $('#back-roster').addEventListener('click', () => { saveCurrent(); renderRoster(); showView('home'); });
-  $('#open-tables').addEventListener('click', () => showView('tables'));
   $('#add-skill').addEventListener('click', () => { skillRow(); $('[name="skill-name"]', $('#skills-list').lastElementChild).focus(); });
   form.addEventListener('submit', event => event.preventDefault());
   form.addEventListener('input', saveCurrent);
@@ -380,7 +337,6 @@
     if (window.confirm(`Delete ${character.name}?`)) { characters = characters.filter(item => item.id !== currentId); writeCharacters(); renderRoster(); currentId = null; showView('home'); }
   });
   $('#table-search').addEventListener('input', event => renderTables(event.target.value));
-  $('#raw-search').addEventListener('input', event => renderRawFiles(event.target.value));
   $('#table-roll').addEventListener('input', () => activeTable?.kind === 'critical' ? updateCriticalLookup() : updateLookup());
   $('#table-column').addEventListener('change', () => activeTable?.kind === 'critical' ? updateCriticalLookup() : updateLookup());
 })();
