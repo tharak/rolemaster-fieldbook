@@ -409,8 +409,8 @@
         const row = languageSkillRow(`${language} (${mode})`);
         const spent = Number(row?.dataset.languageSpent) || 0;
         const current = row ? Number($('[name="skill-start"]', row).value) || 0 : 0;
-        const maxExtra = Math.max(0, cap - (current - spent));
-        return `<label>${mode === 'spoken' ? 'Spoken' : 'Written'}<input type="number" inputmode="numeric" min="0" max="${maxExtra}" value="${spent}" data-language="${esc(language)}" data-mode="${mode}" aria-label="${esc(language)} ${mode} extra ranks"><small>${current} / ${cap} ranks</small></label>`;
+        const base = Math.max(0, current - spent);
+        return `<label>${mode === 'spoken' ? 'Spoken' : 'Written'}<input type="number" inputmode="numeric" min="${base}" max="${Math.max(base, cap)}" value="${current}" data-language="${esc(language)}" data-mode="${mode}" aria-label="${esc(language)} ${mode} total ranks"><small>Base ${base} · max ${cap}</small></label>`;
       }).join('');
       return `<div class="language-choice"><strong>${esc(language)}</strong>${fields}</div>`;
     }).join('');
@@ -425,9 +425,10 @@
     const current = row ? Number($('[name="skill-start"]', row).value) || 0 : 0;
     const limit = raceAllowances[form.elements.race.value]?.[1] || 0;
     const used = Number(form.elements.languageUsed.value) || 0;
-    const maxExtra = Number(input.max);
+    const base = Math.max(0, current - previous);
+    const maxExtra = Math.max(0, Number(input.max) - base);
     const requested = Number(input.value);
-    const next = Math.max(0, Math.min(Number.isInteger(requested) ? requested : 0, maxExtra, limit - used + previous));
+    const next = Math.max(0, Math.min(Number.isInteger(requested) ? requested - base : 0, maxExtra, limit - used + previous));
     if (!row && next) row = skillRow({category:'Communications', name, start:next, languageSpent:next});
     else if (row) {
       $('[name="skill-start"]', row).value = String(Math.max(0, current - previous + next));
@@ -435,8 +436,7 @@
       if (!next && !Number($('[name="skill-start"]', row).value) && !Number($('[name="skill-buy"]', row).value) && !Number($('[name="skill-item"]', row).value) && !Number($('[name="skill-special"]', row).value) && !row.dataset.raceGrant) row.remove();
     }
     form.elements.languageUsed.value = String(used - previous + next);
-    input.value = String(next);
-    input.nextElementSibling.textContent = `${(current - previous) + next} / ${maxExtra + (current - previous)} ranks`;
+    input.value = String(base + next);
     updateDevelopment();
     updateLanguagePickerBudget();
     saveCurrent();
@@ -1094,7 +1094,7 @@
   $('#open-language-picker').addEventListener('click', openLanguagePicker);
   $('#creation-steps').addEventListener('click', event => { if (event.target.closest('[data-open-language-picker]')) openLanguagePicker(); });
   $('#close-language-picker').addEventListener('click', () => $('#language-picker').close());
-  $('#language-picker-list').addEventListener('input', event => { if (event.target.matches('input[data-language]')) updateLanguageAllocation(event.target); });
+  $('#language-picker-list').addEventListener('change', event => { if (event.target.matches('input[data-language]')) updateLanguageAllocation(event.target); });
   $('#language-legacy-note').addEventListener('click', event => {
     if (event.target.id !== 'reset-unassigned-languages') return;
     form.elements.languageUsed.value = String($$('.skill-row[data-language-spent]', $('#skills-list')).reduce((sum, row) => sum + (Number(row.dataset.languageSpent) || 0), 0));
