@@ -121,16 +121,25 @@
           <div class="record-column record-right">
             <section class="record-section record-stats">
               <h2>Stats & bonuses</h2>
+              <div class="stat-pool-panel">
+                <fieldset class="sheet-choice-field stat-pool-field">
+                  <legend>Stat pool</legend>
+                  <div class="stat-pool-choices">
+                    <span class="stat-pool-base">600 +</span>
+                    <label class="choice-tile"><input type="radio" name="statPoolMode" value="roll" checked><span>Roll 10d10</span></label>
+                    <label class="choice-tile"><input type="radio" name="statPoolMode" value="660"><span>Fixed 60</span></label>
+                  </div>
+                </fieldset>
+                <div class="stat-tools">
+                  <label class="sheet-field" id="stat-roll-field" hidden>10d10 total<input name="statRoll" type="number" min="10" max="100"></label>
+                  <input name="statDice" type="hidden">
+                  <button type="button" id="roll-stat-pool" class="sheet-action">Roll dice</button>
+                  <span id="stat-budget">Enter your 10d10 total</span>
+                </div>
+                <p class="sheet-hint" id="stat-dice" aria-live="polite"></p>
+              </div>
               <div class="stat-header"><span>Stat</span><span>Temp</span><span>Pot</span><span>Basic</span><span>Racial</span><span>Special</span><span>Total</span></div>
               <div id="stats-list" class="stats-list"></div>
-              <div class="stat-tools">
-                <label class="sheet-field">Stat pool<select name="statPoolMode"><option value="roll">600 + 10d10</option><option value="660">Fixed · 660</option></select></label>
-                <label class="sheet-field" id="stat-roll-field" hidden>10d10 total<input name="statRoll" type="number" min="10" max="100"></label>
-                <input name="statDice" type="hidden">
-                <button type="button" id="roll-stat-pool" class="sheet-action">Roll 10d10</button>
-                <span id="stat-budget">0 of 660 points assigned</span>
-              </div>
-              <p class="sheet-hint" id="stat-dice" aria-live="polite"></p>
               <p class="sheet-hint" id="prime-stats"></p>
               <p class="sheet-hint" id="creation-checks" aria-live="polite"></p>
             </section>
