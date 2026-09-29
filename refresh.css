@@ -255,8 +255,23 @@ input::placeholder, textarea::placeholder { color: #82998a; opacity: 1; }
 .record-header .sheet-field:nth-child(4), .record-header .sheet-field:nth-child(5), .record-header .sheet-field:nth-child(6) { border-top: 1px solid var(--line); }
 .record-body { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 3px; background: #729279; }
 .record-body > .record-section, .record-body > .record-bottom { min-width: 0; background: var(--card); border-bottom: 0; }
-.record-character, .record-creation, .record-stats, .record-category-sheet, .record-skills, .record-bottom { grid-column: 1 / -1; }
+.record-character, .record-creation, .record-stats, .record-role, .record-category-sheet, .record-skills, .record-bottom { grid-column: 1 / -1; }
 .record-resistance[hidden] { display: none; }
+.record-role h2 span { margin-left: 6px; color: #b6d2b6; font: 10px var(--mono); }
+.role-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin-top: 12px; }
+.role-panel { min-width: 0; padding: 12px; border: 1px solid var(--line); border-radius: 6px; background: var(--input); }
+.role-panel h3, .role-subheading { margin: 0; color: var(--ink); font: 700 12px var(--sans); }
+.role-panel-heading { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.role-panel .creation-pick-button { margin: 0; }
+.role-panel .sheet-field { margin-top: 10px; }
+.role-appearance-score { display: flex; align-items: end; gap: 10px; }
+.role-appearance-score .sheet-field { flex: 1; min-width: 0; }
+.role-appearance-score .creation-pick-button { flex: none; margin-bottom: 1px; }
+.role-subheading { margin: 18px 0 10px; }
+.role-physical-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px 14px; }
+.role-background { margin-top: 14px; }
+@media (max-width: 700px) { .role-grid { grid-template-columns: 1fr; } .role-physical-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 390px) { .role-appearance-score { flex-wrap: wrap; } }
 .record-section { padding: 0 16px 16px; border-bottom: 3px solid #729279; }
 .record-section h2, .record-bottom h2 { margin: 0 -16px 13px; padding: 9px 16px; background: #294735; color: #ecf4ec; font: 700 13px/1.2 Georgia, serif; font-variant: small-caps; letter-spacing: .08em; text-transform: none; }
 .record-section-title { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin: 0 -16px 10px; padding: 0 16px; background: #294735; }

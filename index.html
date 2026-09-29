@@ -124,6 +124,44 @@
             <div class="creation-next"><strong>Remaining steps</strong><ul id="creation-steps"></ul></div>
             <label class="sheet-field creation-notes">Adolescence choices & languages<input name="adolescence" maxlength="300" placeholder="Notes on selected weapons, hobbies and languages"></label>
           </section>
+          <section class="record-section record-role" id="character-role">
+            <h2>Your character’s role <span>7.0 · T-1.7</span></h2>
+            <p class="sheet-hint">Choose traits that fit your character, or roll for ideas. Traits may change during play.</p>
+            <div class="role-grid">
+              <div class="role-panel">
+                <div class="role-panel-heading"><h3>Personality</h3><button type="button" class="creation-pick-button" data-roll-role="personality">Roll trait</button></div>
+                <label class="sheet-field">Traits<textarea name="rolePersonality" rows="2" maxlength="500" placeholder="e.g. Idealistic, devout, stoic"></textarea></label>
+              </div>
+              <div class="role-panel">
+                <div class="role-panel-heading"><h3>Motivation</h3><button type="button" class="creation-pick-button" data-roll-role="motivation">Roll motivation</button></div>
+                <label class="sheet-field">Goals and motives<textarea name="roleMotivation" rows="2" maxlength="500" placeholder="What drives this character?"></textarea></label>
+              </div>
+              <div class="role-panel">
+                <div class="role-panel-heading"><h3>Alignment</h3><button type="button" class="creation-pick-button" data-roll-role="alignment">Roll trait</button></div>
+                <label class="sheet-field">Causes and principles<textarea name="roleAlignment" rows="2" maxlength="500" placeholder="e.g. Laws and principles"></textarea></label>
+              </div>
+              <div class="role-panel">
+                <h3>Appearance</h3>
+                <div class="role-appearance-score"><label class="sheet-field">Potential Appearance<input name="appearancePotential" type="number" min="1" max="100" readonly placeholder="—"></label><label class="sheet-field">Temporary Appearance<input name="appearanceTemp" type="number" min="1" max="100" placeholder="—"></label><button type="button" id="roll-appearance" class="creation-pick-button">Roll 5d10</button></div>
+                <input name="appearanceDice" type="hidden">
+                <input name="roleRollSummaryText" type="hidden">
+                <p class="sheet-hint" id="appearance-roll-summary">Potential Presence − 25 + 5d10, limited to 1–100. Temporary Appearance usually matches while well groomed and dressed.</p>
+              </div>
+            </div>
+            <p class="sheet-hint" id="role-roll-summary" aria-live="polite"></p>
+            <h3 class="role-subheading">Physical details</h3>
+            <div class="role-physical-grid">
+              <label class="sheet-field">Demeanor<input name="roleDemeanor" maxlength="80" placeholder="e.g. calm, proud, stern"></label>
+              <label class="sheet-field">Gender<input name="roleGender" maxlength="60"></label>
+              <label class="sheet-field">Age<input name="roleAge" type="number" min="0" max="999"></label>
+              <label class="sheet-field">Height<input name="roleHeight" maxlength="50"></label>
+              <label class="sheet-field">Weight<input name="roleWeight" maxlength="50"></label>
+              <label class="sheet-field">Skin<input name="roleSkin" maxlength="60"></label>
+              <label class="sheet-field">Hair<input name="roleHair" maxlength="60"></label>
+              <label class="sheet-field">Eyes<input name="roleEyes" maxlength="60"></label>
+            </div>
+            <label class="sheet-field role-background">Background and history<textarea name="roleHistory" rows="3" maxlength="2000" placeholder="Family, home, important events, and connections"></textarea></label>
+          </section>
           <section class="record-section record-category-sheet" id="creation-category-sheet">
             <div class="record-section-title"><h2>Skill Category Record Sheet <span>T-6.2</span></h2><div class="record-filters"><label class="hide-zero-control"><input type="checkbox" id="hide-zero-skills"> Hide skills with 0 rank</label><label class="hide-zero-control"><input type="checkbox" id="hide-zero-groups"> Hide groups with 0 ranks</label></div></div>
             <div class="category-record-scroll"><table class="category-record-table"><colgroup><col class="category-name-col"><col class="category-total-col"><col class="category-stats-col"><col class="category-cost-col"><col span="6"></colgroup><thead><tr class="category-record-head"><th scope="col">Skill category</th><th scope="col">Total bonus</th><th scope="col">Stats</th><th scope="col">Dev cost</th><th scope="col">Ranks</th><th scope="col">Rank bonus</th><th scope="col">Stat bonus</th><th scope="col">Prof. bonus</th><th scope="col">Special 1</th><th scope="col">Special 2</th></tr></thead><tbody id="category-record-list"></tbody></table></div>

@@ -16,6 +16,31 @@
   let skillCategoryPickerTarget = null;
   let skillChoiceTarget = null;
   const primeStats = {Fighter:['Strength','Constitution'], Thief:['Agility','Quickness'], Rogue:['Agility','Strength'], Cleric:['Intuition','Memory'], Magician:['Empathy','Reasoning'], Mentalist:['Presence','Self Discipline'], Ranger:['Intuition','Constitution'], Dabbler:['Empathy','Agility'], Bard:['Presence','Memory']};
+  // The ends of each range in the Core Rules role trait table T-1.7.
+  const personalityRanges = [
+    ['Serious','Joyous'],['Kind','Cruel'],['Restrained','Indulgent'],['Cooperative','Obstinate'],
+    ['Protective','Overbearing'],['Open-minded','Reactionary'],['Friendly','Antagonistic'],['Cautious','Reckless'],
+    ['Confident','Nervous'],['Outgoing','Introvert'],['Peaceful','Belligerent'],['Humble','Arrogant'],
+    ['Laid back','Ambitious'],['Courteous','Rude'],['Forgiving','Vengeful'],['Generous','Greedy'],
+    ['Honest','Dishonest'],['Honorable','Dishonorable'],['Loyal','Disloyal'],['Lawful','Chaotic'],
+    ['Principled','Immoral'],['Devout','Impious'],['Idealistic','Cynical'],['Trusting','Paranoid'],
+    ['Curious','Incurious'],['Attentive','Absentminded'],['Chaste','Licentious'],['Quiet','Loud'],
+    ['Brave','Cowardly'],['Calm','Excitable'],['Even-tempered','Hot-headed'],['Stoic','Complaining'],
+    ['Sociable','Antisocial'],['Optimistic','Pessimistic'],['Creative','Uncreative'],['Tolerant','Intolerant'],
+    ['Messy','Perfectionist'],['Understanding','Jealous'],['Dependent','Independent']
+  ];
+  const motivationRanges = [
+    'Destroy…','Hate and work against…','Hate…','Dislike…','Seek revenge against…',
+    'Preserve…','Protect…','Serve…','Promote…','Rebuild or restart…',
+    'Fanatic about…','Compulsive about…','Fear of…','Acquire something for someone…','Acquire personal power, knowledge, or wealth…',
+    'Acquire and maintain personal honor','Seek adventure, thrills, and excitement','Pursue self-interest','Heroism','Make the world a better place'
+  ];
+  const alignmentRanges = [
+    ['Good','Evil'],['Law and government','Anarchy'],['Government','Opposing government'],
+    ['Laws and principles','Opportunism'],['Religion','Atheism'],['Religion','Opposing religion'],
+    ['Free enterprise','Cartels and monopolies'],['Free enterprise','Socialism'],['Asceticism','Hedonism'],
+    ['Altruism','Egoism'],['Spiritual','Materialist'],['Metaphorical','Literal']
+  ];
   // Category stats and rank progressions from Core Rules T-2.5.
   const skillCategoryRules = {
     'Armor • Heavy':['St/Ag/St'], 'Armor • Light':['Ag/St/Ag'], 'Armor • Medium':['St/Ag/St'],
@@ -957,6 +982,50 @@
   function writeTrainingBenefits(value) { form.elements.trainingBenefits.value = JSON.stringify(value); }
   function rollD10() { return Math.floor(Math.random() * 10) + 1; }
   function rollD100() { return Math.floor(Math.random() * 100) + 1; }
+  function rollRoleRange(kind) {
+    const limit = kind === 'personality' ? 78 : 72;
+    const ranges = kind === 'personality' ? personalityRanges : alignmentRanges;
+    const width = kind === 'personality' ? 2 : 6;
+    const firstRolls = [];
+    let modifier = 0;
+    let first;
+    do {
+      first = rollD100();
+      firstRolls.push(first);
+      if (first > limit) modifier += first <= (kind === 'personality' ? 89 : 86) ? -20 : 20;
+    } while (first > limit);
+    const [left, right] = ranges[Math.floor((first - 1) / width)];
+    const second = rollD100();
+    const position = Math.max(1, Math.min(100, second + modifier));
+    const trait = position <= 33 ? left : position >= 68 ? right : `Between ${left.toLowerCase()} and ${right.toLowerCase()}`;
+    return {trait, summary:`T-1.7 ${kind}: ${firstRolls.join(' → ')}; position ${second}${modifier ? ` ${modifier > 0 ? '+' : '−'} ${Math.abs(modifier)}` : ''} = ${position} · ${left} ↔ ${right}`};
+  }
+  function rollRoleTrait(kind) {
+    const field = form.elements[`role${kind[0].toUpperCase()}${kind.slice(1)}`];
+    const result = kind === 'motivation'
+      ? (() => { const roll = rollD100(); return {trait:motivationRanges[Math.floor((roll - 1) / 5)], summary:`T-1.7 motivation: ${roll}`}; })()
+      : rollRoleRange(kind);
+    field.value = [field.value.trim(), result.trait].filter(Boolean).join('; ').slice(0, field.maxLength);
+    form.elements.roleRollSummaryText.value = result.summary;
+    $('#role-roll-summary').textContent = result.summary;
+    saveCurrent();
+  }
+  function appearanceDice() {
+    const dice = form.elements.appearanceDice.value.split(',').map(Number);
+    return dice.length === 5 && dice.every(value => Number.isInteger(value) && value >= 1 && value <= 10) ? dice : null;
+  }
+  function updateAppearance() {
+    const dice = appearanceDice();
+    const presence = form.elements.namedItem('stat-pot-7').value;
+    const previous = form.elements.appearancePotential.value;
+    const potential = dice && presence !== '' ? Math.max(1, Math.min(100, Number(presence) - 25 + dice.reduce((sum, value) => sum + value, 0))) : null;
+    form.elements.appearancePotential.value = potential ?? '';
+    if (form.elements.appearanceTemp.value === '' || form.elements.appearanceTemp.value === previous) form.elements.appearanceTemp.value = potential ?? '';
+    $('#appearance-roll-summary').textContent = dice
+      ? `Potential Presence ${presence || '—'} − 25 + (${dice.join(' + ')}) = ${potential ?? '—'}${potential !== null ? ' (limited to 1–100)' : ''}. Temporary Appearance usually matches while well groomed and dressed.`
+      : 'Potential Presence − 25 + 5d10, limited to 1–100. Temporary Appearance usually matches while well groomed and dressed.';
+    $('#role-roll-summary').textContent = form.elements.roleRollSummaryText.value;
+  }
   function rollOpenEndedD10() {
     const rolls = [];
     let roll;
@@ -1789,6 +1858,7 @@
   }
   function updateSheetHints() {
     updateRuleBonuses();
+    updateAppearance();
     $('#roll-potentials').setAttribute('aria-pressed', String(form.elements.potentialMethod.value === 'roll'));
     $('#fixed-potentials').setAttribute('aria-pressed', String(form.elements.potentialMethod.value === 'fixed'));
     const mode = form.elements.statPoolMode.value;
@@ -2520,6 +2590,15 @@
   });
   $('#roll-potentials').addEventListener('click', () => { setPotentialStats(rolledPotential, 'roll'); saveCurrent(); });
   $('#fixed-potentials').addEventListener('click', () => { setPotentialStats(fixedPotential, 'fixed'); saveCurrent(); });
+  $('#character-role').addEventListener('click', event => {
+    const kind = event.target.closest('button[data-roll-role]')?.dataset.rollRole;
+    if (kind) rollRoleTrait(kind);
+  });
+  $('#roll-appearance').addEventListener('click', () => {
+    form.elements.appearanceDice.value = Array.from({length:5}, rollD10).join(',');
+    form.elements.appearanceTemp.value = '';
+    saveCurrent();
+  });
   form.addEventListener('submit', event => event.preventDefault());
   form.addEventListener('input', event => {
     const match = /^stat-temp-(\d+)$/.exec(event.target.name || '');
