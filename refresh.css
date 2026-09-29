@@ -478,6 +478,9 @@ input::placeholder, textarea::placeholder { color: #82998a; opacity: 1; }
 .language-picker-note button { padding: 0; border: 0; background: none; color: var(--accent-text); text-decoration: underline; cursor: pointer; }
 .hobby-search { display: block; margin-bottom: 12px; color: var(--muted); font: 11px var(--sans); }
 .hobby-search input { display: block; width: 100%; margin-top: 4px; padding: 8px; border: 1px solid #729279; border-radius: 4px; background: var(--input); color: var(--ink); font: 12px var(--sans); }
+.hobby-filters { display: flex; flex-wrap: wrap; gap: 7px; margin-bottom: 10px; }
+.hobby-filters button { padding: 7px 10px; border: 1px solid #729279; border-radius: 5px; background: var(--input); color: var(--ink); font: 11px var(--sans); cursor: pointer; }
+.hobby-filters button[aria-pressed="true"] { border-color: #a6dfb8; background: #376c4a; color: #fff; }
 .hobby-picker-list h3 { margin: 16px 0 7px; color: #b6cbb9; font: 700 12px var(--sans); }
 .hobby-choice { display: grid; grid-template-columns: minmax(0, 1fr) 62px auto; align-items: center; gap: 8px; padding: 8px; border-bottom: 1px solid var(--line); }
 .hobby-choice span { min-width: 0; }

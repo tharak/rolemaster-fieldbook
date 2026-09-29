@@ -488,10 +488,29 @@
     const categories = Object.entries(skillCategoryRules).filter(([category, rule]) => (!rule[1] || rule[1] === 'standard') && hobbyRankLimit(category));
     const skills = hobbySkillOptions();
     $('#hobby-picker-list').innerHTML = developmentRules
-      ? `<h3>Skill categories</h3>${categories.map(([category]) => hobbyChoiceMarkup('category', category)).join('')}<h3>Skills</h3>${skills.map(({category, name}) => hobbyChoiceMarkup('skill', category, name)).join('')}`
+      ? `<section class="hobby-choice-group" data-kind="category"><h3>Skill categories</h3>${categories.map(([category]) => hobbyChoiceMarkup('category', category)).join('')}</section><section class="hobby-choice-group" data-kind="skill"><h3>Skills</h3>${skills.map(({category, name}) => hobbyChoiceMarkup('skill', category, name)).join('')}</section>`
       : '<p>Skill costs are loading. Try again in a moment.</p>';
     $('#hobby-search').value = '';
+    updateHobbyVisibility();
     updateHobbyPickerBudget();
+  }
+  function updateHobbyVisibility() {
+    const term = $('#hobby-search').value.trim().toLowerCase();
+    const hideSkills = $('#hide-zero-hobby-skills').getAttribute('aria-pressed') === 'true';
+    const hideCategories = $('#hide-zero-hobby-categories').getAttribute('aria-pressed') === 'true';
+    const groups = $$('.hobby-choice-group', $('#hobby-picker-list'));
+    let totalVisible = 0;
+    groups.forEach(group => {
+      let visible = 0;
+      $$('.hobby-choice', group).forEach(row => {
+        const zero = (Number($('input[data-kind]', row).value) || 0) === 0;
+        row.hidden = (!!term && !row.dataset.search.includes(term)) || (zero && (group.dataset.kind === 'skill' ? hideSkills : hideCategories));
+        if (!row.hidden) visible++;
+      });
+      group.hidden = !visible;
+      totalVisible += visible;
+    });
+    $('#hobby-picker-empty').hidden = !groups.length || totalVisible > 0;
   }
   function updateHobbyAllocation(input) {
     const kind = input.dataset.kind;
@@ -515,6 +534,7 @@
     }
     form.elements.hobbyUsed.value = String(used - previous + next);
     input.value = String(base + next);
+    updateHobbyVisibility();
     updateDevelopment(); updateHobbyPickerBudget(); saveCurrent();
   }
   function renderSkillTree(character = {}) {
@@ -1195,10 +1215,14 @@
     renderLanguagePicker(); saveCurrent();
   });
   $('#close-hobby-picker').addEventListener('click', () => $('#hobby-picker').close());
-  $('#hobby-search').addEventListener('input', event => {
-    const term = event.target.value.trim().toLowerCase();
-    $$('.hobby-choice', $('#hobby-picker-list')).forEach(row => { row.hidden = !!term && !row.dataset.search.includes(term); });
-  });
+  $('#hobby-search').addEventListener('input', updateHobbyVisibility);
+  for (const id of ['hide-zero-hobby-skills','hide-zero-hobby-categories']) {
+    $(`#${id}`).addEventListener('click', event => {
+      const button = event.currentTarget;
+      button.setAttribute('aria-pressed', String(button.getAttribute('aria-pressed') !== 'true'));
+      updateHobbyVisibility();
+    });
+  }
   $('#hobby-picker-list').addEventListener('change', event => { if (event.target.matches('input[data-kind]')) updateHobbyAllocation(event.target); });
   $('#hobby-legacy-note').addEventListener('click', event => {
     if (event.target.id !== 'reset-unassigned-hobbies') return;

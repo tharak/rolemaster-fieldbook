@@ -199,7 +199,9 @@
         <div class="language-picker-budget"><strong id="hobby-picker-remaining"></strong><span id="hobby-picker-used"></span></div>
         <p class="language-picker-note">Spend ranks on skills or skill categories. A choice may receive only as many ranks as your profession can develop in one level, and its development cost must be below 40. Add any specific skill missing here in Commonly used skills, then reopen this picker.</p>
         <label class="hobby-search">Find a skill or category<input id="hobby-search" type="search" placeholder="Search choices"></label>
+        <div class="hobby-filters" role="group" aria-label="Hobby rank filters"><button type="button" id="hide-zero-hobby-skills" aria-pressed="false">Hide 0-rank skills</button><button type="button" id="hide-zero-hobby-categories" aria-pressed="false">Hide 0-rank categories</button></div>
         <div id="hobby-picker-list" class="hobby-picker-list"></div>
+        <p id="hobby-picker-empty" class="language-picker-note" hidden>No matching ranks. Change the search or filters to show more choices.</p>
         <p id="hobby-legacy-note" class="language-picker-note" hidden></p>
       </dialog>
       <dialog id="skill-choice-dialog" aria-labelledby="skill-choice-title">
