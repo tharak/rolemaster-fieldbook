@@ -139,10 +139,6 @@
       $(`#rr-total-${key}`).textContent = stat === null ? '—' : String(rr[raceIndex] + stat + other);
     });
   }
-  function fixedPotential(value) {
-    const bands = [[24,44],[34,39],[44,33],[54,28],[64,22],[74,17],[84,11],[91,6],[92,5],[94,4],[96,3],[98,2],[100,1]];
-    return Math.min(101, value + (bands.find(([high]) => value <= high)?.[1] || 0));
-  }
   function rollStatPool() {
     const dice = Array.from({length: 10}, () => Math.floor(Math.random() * 10) + 1);
     form.elements.statRoll.value = String(dice.reduce((sum, value) => sum + value, 0));
@@ -201,7 +197,6 @@
   function showView(name) {
     $$('.view').forEach(view => view.classList.toggle('active', view.id === `${name}-view`));
     $$('.nav-link').forEach(button => button.classList.toggle('active', button.dataset.view === name));
-    if (name !== 'tables') $('#return-to-character').hidden = true;
     window.scrollTo({top: 0, behavior: 'smooth'});
   }
   function renderRoster() {
@@ -230,7 +225,7 @@
     form.reset();
     for (const [key, value] of Object.entries(character)) {
       const field = form.elements.namedItem(key);
-      if (field && typeof value !== 'object') field.value = value;
+      if (field && typeof value !== 'object') field.value = key === 'realm' && value === 'Choose at table' ? 'None' : value;
     }
     makeStats(character.stats || {});
     $('#skills-list').innerHTML = '';
@@ -255,7 +250,7 @@
   }
   function newCharacter() {
     currentId = crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random()}`;
-    fillForm({realm:'Choose at table'});
+    fillForm({realm:'None'});
     ensureStatRoll();
     form.elements.statPoolMode.value = 'roll';
     updateDevelopment(); showView('editor'); revealSelectedChoices();
@@ -454,13 +449,6 @@
   $$('.filter-chip').forEach(button => button.addEventListener('click', () => openTableGroup(button.dataset.group)));
   $('#back-roster').addEventListener('click', () => { saveCurrent(); renderRoster(); showView('home'); });
   $('#add-skill').addEventListener('click', () => { skillRow(); $('[name="skill-name"]', $('#skills-list').lastElementChild).focus(); });
-  $('#fixed-potentials').addEventListener('click', () => {
-    statNames.forEach((_, index) => {
-      const temporary = Number(form.elements.namedItem(`stat-temp-${index}`).value);
-      if (temporary >= 20 && temporary <= 100) form.elements.namedItem(`stat-pot-${index}`).value = String(fixedPotential(temporary));
-    });
-    saveCurrent();
-  });
   $('#rolled-stat-pool').addEventListener('click', () => {
     rollStatPool();
     form.elements.statPoolMode.value = 'roll';
@@ -470,19 +458,13 @@
     form.elements.statPoolMode.value = '660';
     saveCurrent();
   });
-  $$('[data-open-table]').forEach(button => button.addEventListener('click', () => {
-    const reference = tables.find(table => table.code === button.dataset.openTable);
-    if (!reference) return;
-    activeTableGroup = 'character';
-    $$('.filter-chip').forEach(chip => { const active = chip.dataset.group === 'character'; chip.classList.toggle('active', active); chip.setAttribute('aria-pressed', String(active)); });
-    $('#table-search').value = '';
-    renderTables(); chooseTable(reference); showView('tables'); $('#return-to-character').hidden = false;
-  }));
-  $('#return-to-character').addEventListener('click', () => showView('editor'));
   form.addEventListener('submit', event => event.preventDefault());
   form.addEventListener('input', saveCurrent);
   form.addEventListener('change', event => {
-    if (event.target.name === 'profession') form.elements.realm.value = realmByProfession[event.target.value] || 'Choose at table';
+    if (event.target.name === 'profession') {
+      const realm = realmByProfession[event.target.value];
+      form.elements.realm.value = realm === 'Choose at table' ? 'None' : realm || 'None';
+    }
     if (event.target.name === 'realm' && realmByProfession[form.elements.profession.value] !== 'Choose at table') form.elements.realm.value = realmByProfession[form.elements.profession.value];
     if (event.target.name === 'profession') $$('.skill-row', $('#skills-list')).forEach(row => updateSkillBuyOptions(row));
     updateDevelopment();

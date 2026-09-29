@@ -75,7 +75,6 @@
                     <label class="choice-tile"><input type="radio" name="realm" value="Essence"><span>Essence</span></label>
                     <label class="choice-tile"><input type="radio" name="realm" value="Channeling"><span>Channeling</span></label>
                     <label class="choice-tile"><input type="radio" name="realm" value="Mentalism"><span>Mentalism</span></label>
-                    <label class="choice-tile"><input type="radio" name="realm" value="Choose at table"><span>Choose at table</span></label>
                   </div>
                 </fieldset>
               </div>
@@ -175,12 +174,11 @@
             </section>
           </div>
         </div>
-        <div class="record-references"><button type="button" id="fixed-potentials">Use fixed potential option</button><button type="button" data-open-table="T-1.1">Race abilities</button><button type="button" data-open-table="T-1.2">Stat costs</button><button type="button" data-open-table="T-1.3">Potential stats</button><button type="button" data-open-table="T-2.8">Development costs</button></div>
       </form>
     </section>
 
     <section id="tables-view" class="view">
-      <div class="table-intro"><div><h1>Tables</h1><p>Search by name or table number.</p></div><button id="return-to-character" class="button button-quiet" hidden>← Back to character</button></div>
+      <div class="table-intro"><div><h1>Tables</h1><p>Search by name or table number.</p></div></div>
       <div class="table-filters" role="group" aria-label="Filter tables"><button class="filter-chip active" data-group="all" aria-pressed="true">All tables</button><button class="filter-chip" data-group="attacks" aria-pressed="false">Attacks</button><button class="filter-chip" data-group="criticals" aria-pressed="false">Criticals</button><button class="filter-chip" data-group="character" aria-pressed="false">Character</button><button class="filter-chip" data-group="play" aria-pressed="false">At the table</button></div>
       <div class="table-layout"><aside class="table-sidebar"><label class="field">Find a table<input id="table-search" type="search" placeholder="Weapon, spell, stat…"></label><p id="table-count" class="table-count">Loading tables…</p><div id="table-list" class="table-list"></div></aside><section class="table-card"><div class="table-toolbar"><div><h2 id="table-current">Loading tables…</h2><span id="table-code" class="table-code"></span></div><div class="lookup-controls"><label class="field"><span id="roll-label">Modified roll</span><input id="table-roll" type="number" min="1" max="300" value="100"></label><label class="field" id="column-select-field">Target armor<select id="table-column"></select></label></div></div><div class="lookup-result" id="lookup-result" aria-live="polite"></div><div class="table-scroll"><table id="attack-grid" class="attack-grid"></table></div><div id="table-source" class="table-source" hidden></div><div id="table-note" class="table-note"></div></section></div>
     </section>
