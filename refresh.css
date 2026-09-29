@@ -370,7 +370,10 @@ input::placeholder, textarea::placeholder { color: #82998a; opacity: 1; }
 .record-skills .remove-skill { align-self: center; }
 .record-skills .rank-row.unavailable { opacity: .65; }
 .record-category-sheet { padding-top: 0; }
+.record-category-sheet .record-section-title { flex-wrap: wrap; padding-bottom: 7px; }
 .record-category-sheet h2 span { margin-left: 6px; color: #b6d2b6; font: 10px var(--mono); }
+.hide-zero-control { display: inline-flex; align-items: center; gap: 6px; color: #e5f4e8; font: 10px var(--sans); cursor: pointer; }
+.hide-zero-control input { accent-color: #a6dfb8; }
 .category-record-scroll { overflow-x: auto; }
 .category-record-table { width: 100%; min-width: 950px; table-layout: fixed; border-collapse: collapse; font: 10px var(--mono); }
 .category-name-col { width: 24%; }
@@ -385,6 +388,18 @@ input::placeholder, textarea::placeholder { color: #82998a; opacity: 1; }
 .category-record-row .record-total { font-weight: 700; color: var(--accent-text); }
 .category-record-row input, .category-record-row select { width: 100%; min-width: 0; height: 25px; padding: 2px; border: 1px solid var(--line); border-radius: 3px; background: var(--input); color: var(--ink); text-align: center; font: 10px var(--mono); }
 .category-record-row .not-applicable { color: var(--muted); }
+.a4-skill-container > td { padding: 2px 8px 8px; background: color-mix(in srgb, var(--soft) 25%, var(--card)); }
+.a4-skill-head, .a4-skill-row { display: grid; grid-template-columns: minmax(190px, 2fr) repeat(7, minmax(55px, .65fr)); align-items: center; gap: 5px; padding: 4px 0; }
+.a4-skill-head { color: var(--muted); font: 9px var(--mono); border-bottom: 1px solid var(--line); }
+.a4-skill-head span:not(:first-child), .a4-skill-row > :not(:first-child) { text-align: center; }
+.a4-skill-row { border-bottom: 1px solid var(--line); color: var(--ink); font: 10px var(--mono); }
+.a4-skill-row > strong { padding-left: 14px; font: 600 10px var(--sans); text-align: left; }
+.a4-skill-row > strong small { color: var(--muted); font-weight: 400; }
+.a4-skill-row output { display: block; }
+.a4-skill-row .a4-total { color: var(--accent-text); font-weight: 700; }
+.a4-skill-row input, .a4-skill-row select { width: 100%; min-width: 0; height: 25px; padding: 2px; border: 1px solid var(--line); border-radius: 3px; background: var(--input); color: var(--ink); text-align: center; font: 10px var(--mono); }
+.a4-template button { grid-column: 2/-1; justify-self: start; border: 0; background: none; color: var(--accent-text); font: 10px var(--sans); cursor: pointer; }
+.a4-skill-row[hidden], .a4-skill-container[hidden] { display: none !important; }
 @media (max-width: 700px) { .category-record-table th:first-child { position: sticky; left: 0; z-index: 2; background: var(--card); } .category-record-head th:first-child { z-index: 3; } }
 @media (max-width: 700px) {
   .record-skills .rank-row { display: flex; flex-wrap: wrap; align-items: end; gap: 6px; }
@@ -395,7 +410,7 @@ input::placeholder, textarea::placeholder { color: #82998a; opacity: 1; }
   .record-skills .skill-row { padding-left: 9px; }
 }
 @media print {
-  .skill-category-picker, .record-skills .add-category-skill, .record-skills .change-skill-category, .record-skills .remove-skill, .record-skills .remove-category { display: none !important; }
+  .skill-category-picker, .hide-zero-control, .a4-template button, .record-skills .add-category-skill, .record-skills .change-skill-category, .record-skills .remove-skill, .record-skills .remove-category { display: none !important; }
   .skill-group, .skill-category { break-inside: avoid; }
   .record-skills .rank-row input, .record-skills .rank-row select { color: #111 !important; background: #fff !important; }
   .record-category-sheet { break-before: page; }
@@ -403,6 +418,7 @@ input::placeholder, textarea::placeholder { color: #82998a; opacity: 1; }
   .category-record-table th, .category-record-table td { padding: 2px; }
   .category-record-head th { position: static; font-size: 7px; }
   .category-record-row input, .category-record-row select { color: #111 !important; background: #fff !important; }
+  .a4-skill-row input, .a4-skill-row select { color: #111 !important; background: #fff !important; }
 }
 
 /* Character creation rules */

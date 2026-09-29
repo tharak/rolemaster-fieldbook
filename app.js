@@ -34,6 +34,50 @@
     'Weapon • 2-Handed':['St/Ag/St'], 'Weapon • Missile':['Ag/St/Ag'], 'Weapon • Missile Artillery':['In/Ag/Re'],
     'Weapon • Pole Arms':['St/Ag/St'], 'Weapon • Thrown':['Ag/St/Ag']
   };
+  // Appendix A-4 skill names. A trailing * marks a skill developed separately for each instance.
+  const a4Skills = {
+    'Armor • Heavy':'Plate',
+    'Armor • Light':'Soft Leather|Rigid Leather',
+    'Armor • Medium':'Chain',
+    'Artistic • Active':'Acting|Dancing|Mimery|Mimicry|Play Instrument*|Poetic Improvisation|Singing|Tale Telling|Ventriloquism',
+    'Artistic • Passive':'Music|Painting|Poetry|Sculpting',
+    'Athletic • Brawn':'Athletic Games (Brawn)*|Jumping|Weight-lifting',
+    'Athletic • Endurance':'Athletic Games (Endurance)*|Distance Running|Rowing|Scaling|Sprinting|Swimming',
+    'Athletic • Gymnastics':'Acrobatics|Athletic Games (Gymnastics)*|Climbing|Contortions|Diving|Flying/Gliding|Juggling|Tumbling',
+    'Awareness • Perceptions':'Alertness|Sense Ambush',
+    'Awareness • Searching':'Detect Traps|Lie Perception|Locate Hidden|Observation|Poison Perception|Reading Tracks|Surveillance|Tracking',
+    'Awareness • Senses':'Direction Sense|Sense Awareness*|Situational Awareness*|Time Sense',
+    'Body Development':'Body Development',
+    'Combat Maneuvers':'Mounted Combat|Quickdraw|Swashbuckling|Two-weapon Combat',
+    Communications:'Language (spoken)*|Language (written)*|Lip Reading|Signaling',
+    Crafts:'Cooking|Leather-crafts|Metal-crafts|Rope Mastery|Stone-crafts|Wood-crafts|Other craft*',
+    'Directed Spells':'Directed attack*',
+    Influence:'Bribery|Diplomacy|Duping|Interrogation|Leadership|Public Speaking|Seduction|Trading',
+    'Lore • General':'Fauna Lore|Flora Lore|Heraldry|History*|Philosophy|Race Lore*|Region Lore*|Religion',
+    'Lore • Magical':'Artifact Lore|Spell Lore|Undead Lore',
+    'Lore • Obscure':'Demon/Devil Lore|Dragon Lore|Faerie Lore|Xeno-Lores*',
+    'Lore • Technical':'Herb Lore|Lock Lore|Metal Lore|Poison Lore|Stone Lore|Trading Lore',
+    'Martial Arts • Striking':'Boxing|Tackling',
+    'Outdoor • Animal':'Animal Handling*|Animal Training*|Driving*|Riding*',
+    'Outdoor • Environmental':'Caving|Foraging|Hunting|Star-gazing|Survival*|Weather Watching',
+    'Power Awareness':'Attunement|Read Runes',
+    'Power Point Development':'Power Point Development',
+    'Science/Analytic • Basic':'Basic Math|Research',
+    'Science/Analytic • Specialized':'Advanced Math|Alchemy|Anthropology|Other specialized science*',
+    'Self Control':'Frenzy|Meditation|Mnemonics|Stun Removal',
+    'Spells • Own Realm Closed Lists':'Spell list*',
+    'Spells • Own Realm Open Lists':'Spell list*',
+    'Spells • Own Realm Own Base Lists':'Spell list*',
+    'Subterfuge • Attack':'Ambush|Silent Attack',
+    'Subterfuge • Mechanics':'Camouflage|Disarming Traps|Disguise|Picking Locks|Setting Traps|Using/Removing Poison',
+    'Subterfuge • Stealth':'Hiding|Picking Pockets|Stalking|Trickery',
+    'Technical/Trade • General':'Begging|First Aid|Gambling|Mapping|Operating Equipment|Orienteering|Sailing|Tactical Games|Using Prepared Herbs',
+    'Technical/Trade • Professional':'Diagnostics*|Engineering|Mechanition|Mining|Second Aid',
+    'Technical/Trade • Vocational':'Administration|Appraisal|Boat Pilot|Evaluate Armor|Evaluate Metal|Evaluate Stone|Evaluate Weapon|Navigation|Tactics*',
+    Urban:'Contacting|Mingling|Scrounging|Streetwise',
+    'Weapon • 1-H Concussion':'Weapon*', 'Weapon • 1-H Edged':'Weapon*', 'Weapon • 2-Handed':'Weapon*',
+    'Weapon • Missile':'Weapon*', 'Weapon • Missile Artillery':'Weapon*', 'Weapon • Pole Arms':'Weapon*', 'Weapon • Thrown':'Weapon*'
+  };
   const statAbbreviations = {Ag:0,Co:1,Me:2,Re:3,SD:4,Em:5,In:6,Pr:7,Qu:8,St:9};
   // Profession bonuses for categories and groups of categories from T-1.4.
   const professionSkillBonuses = {
@@ -106,15 +150,74 @@
     const bonuses = professionSkillBonuses[form.elements.profession.value] || {};
     return bonuses[category] ?? bonuses[categoryGroup(category)] ?? 0;
   }
+  function catalogNames(category) { return (a4Skills[category] || '').split('|').filter(Boolean); }
+  function a4SkillRow(category, name, skill = {}, extra = false) {
+    if (!extra && name.endsWith('*')) {
+      const label = name.slice(0, -1);
+      return `<div class="a4-skill-row a4-template is-zero-rank" data-category="${esc(category)}"><strong>${esc(label)} <small>each instance separately</small></strong><button type="button" class="add-skill-variant" data-category="${esc(category)}" data-template="${esc(label)}">＋ Add specific skill</button></div>`;
+    }
+    return `<div class="a4-skill-row${extra ? ' a4-extra' : ''}" data-category="${esc(category)}" data-skill="${esc(name)}"><strong>${esc(name)}</strong><input name="a4-start" aria-label="${esc(name)} ranks before this level" type="number" min="0" max="99" value="${esc(skill.start ?? skill.ranks ?? 0)}"><select name="a4-buy" aria-label="${esc(name)} new ranks"></select><output class="a4-rank">—</output><output class="a4-category">—</output><input name="a4-item" aria-label="${esc(name)} item bonus" type="number" value="${esc(skill.item ?? 0)}"><input name="a4-special" aria-label="${esc(name)} special bonus" type="number" value="${esc(skill.special ?? 0)}"><output class="a4-total">—</output></div>`;
+  }
+  function updateA4Visibility() {
+    const hide = $('#hide-zero-skills').checked;
+    $$('.a4-skill-container').forEach(container => {
+      let shown = 0;
+      $$('.a4-skill-row', container).forEach(row => {
+        row.hidden = hide && row.classList.contains('is-zero-rank');
+        if (!row.hidden) shown++;
+      });
+      container.hidden = !shown;
+    });
+  }
+  function updateA4SkillRows() {
+    $$('.a4-skill-container').forEach(container => {
+      const category = container.dataset.category;
+      const fixed = new Set(catalogNames(category).filter(name => !name.endsWith('*')));
+      const active = $$('.skill-row', $('#skills-list')).filter(row => row.dataset.category === category && $('[name="skill-name"]', row).value);
+      const extraNames = new Set(active.map(row => $('[name="skill-name"]', row).value).filter(name => !fixed.has(name)));
+      $$('.a4-extra', container).forEach(row => { if (!extraNames.has(row.dataset.skill)) row.remove(); });
+      extraNames.forEach(name => {
+        if (!$$('.a4-extra', container).some(row => row.dataset.skill === name)) {
+          $('.a4-skill-list', container).insertAdjacentHTML('beforeend', a4SkillRow(category, name, {}, true));
+        }
+      });
+      $$('.a4-skill-row:not(.a4-template)', container).forEach(row => {
+        const tree = active.find(skill => $('[name="skill-name"]', skill).value === row.dataset.skill);
+        const buy = $('[name="a4-buy"]', row);
+        updateSkillBuyOptions(row, tree ? Number($('[name="skill-buy"]', tree).value) || 0 : 0);
+        const start = tree ? $('[name="skill-start"]', tree).value : '0';
+        const item = tree ? $('[name="skill-item"]', tree).value : '0';
+        const special = tree ? $('[name="skill-special"]', tree).value : '0';
+        $('[name="a4-start"]', row).value = start;
+        $('[name="a4-item"]', row).value = item;
+        $('[name="a4-special"]', row).value = special;
+        const ranks = (Number(start) || 0) + (Number(buy.value) || 0);
+        const rank = rankBonus(ranks, skillCategoryRules[category][1] || 'standard');
+        const record = $$('.category-record-row').find(item => item.dataset.category === category);
+        const categoryBonus = $('.record-total', record).textContent;
+        $('.a4-rank', row).textContent = String(rank);
+        $('.a4-category', row).textContent = categoryBonus;
+        $('.a4-total', row).textContent = categoryBonus === '—' ? '—' : String(rank + Number(categoryBonus) + Number(item || 0) + Number(special || 0));
+        row.classList.toggle('is-zero-rank', ranks === 0);
+      });
+    });
+    updateA4Visibility();
+  }
   function renderCategoryRecord(character = {}) {
     const saved = character.categoryRanks || {};
+    const skills = character.skills || [];
     $('#category-record-list').innerHTML = Object.entries(skillCategoryRules).map(([category, rule]) => {
       const values = saved[category] || {};
       const standard = !rule[1] || rule[1] === 'standard';
       const rankFields = standard
         ? `<td><input name="record-start" aria-label="${esc(category)} ranks before this level" type="number" min="0" max="99" value="${esc(values.start ?? 0)}"></td><td><select name="record-buy" aria-label="${esc(category)} new ranks"></select></td>`
         : '<td class="not-applicable">n/a</td><td class="not-applicable">n/a</td>';
-      return `<tr class="category-record-row" data-category="${esc(category)}"><th scope="row">${esc(category)}</th><td><output class="record-stats"></output></td><td><output class="record-cost"></output></td>${rankFields}<td><output class="record-rank"></output></td><td><output class="record-stat"></output></td><td><output class="record-profession"></output></td><td><input name="record-special" aria-label="${esc(category)} first special bonus" type="number" value="${esc(values.special ?? 0)}"></td><td><input name="record-special2" aria-label="${esc(category)} second special bonus" type="number" value="${esc(values.special2 ?? 0)}"></td><td><output class="record-total"></output></td></tr>`;
+      const names = catalogNames(category);
+      const listed = new Set(names.filter(name => !name.endsWith('*')));
+      const categorySkills = skills.filter(skill => skill.category === category && skill.name);
+      const rows = names.map(name => a4SkillRow(category, name, categorySkills.find(skill => skill.name === name))).join('')
+        + categorySkills.filter(skill => !listed.has(skill.name)).map(skill => a4SkillRow(category, skill.name, skill, true)).join('');
+      return `<tr class="category-record-row" data-category="${esc(category)}"><th scope="row">${esc(category)}</th><td><output class="record-stats"></output></td><td><output class="record-cost"></output></td>${rankFields}<td><output class="record-rank"></output></td><td><output class="record-stat"></output></td><td><output class="record-profession"></output></td><td><input name="record-special" aria-label="${esc(category)} first special bonus" type="number" value="${esc(values.special ?? 0)}"></td><td><input name="record-special2" aria-label="${esc(category)} second special bonus" type="number" value="${esc(values.special2 ?? 0)}"></td><td><output class="record-total"></output></td></tr><tr class="a4-skill-container" data-category="${esc(category)}"><td colspan="11"><div class="a4-skill-head"><span>Appendix A-4 skills</span><span>Ranks</span><span>New</span><span>Rank bonus</span><span>Category</span><span>Item</span><span>Special</span><span>Total</span></div><div class="a4-skill-list">${rows}</div></td></tr>`;
     }).join('');
     $$('.category-record-row').forEach(row => {
       if ($('[name="record-buy"]', row)) {
@@ -122,6 +225,12 @@
         updateSkillBuyOptions(row, Number(saved[row.dataset.category]?.buy) || 0);
       }
     });
+    $$('.a4-skill-row:not(.a4-template)').forEach(row => {
+      const savedSkill = skills.find(skill => skill.category === row.dataset.category && skill.name === row.dataset.skill);
+      if (!developmentRules && savedSkill?.buy) row.dataset.pendingBuy = savedSkill.buy;
+      updateSkillBuyOptions(row, Number(savedSkill?.buy) || 0);
+    });
+    updateA4Visibility();
   }
   function categoryRow(category) {
     const existing = $$('.category-row', $('#skills-list')).find(row => row.dataset.category === category);
@@ -188,16 +297,31 @@
     if (!row) return;
     if (['record-start','record-buy','record-special','record-special2'].some(name => Number($(`[name="${name}"]`, row)?.value) || 0)) categoryRow(row.dataset.category);
   }
+  function syncA4SkillToTree(target) {
+    const row = target.closest('.a4-skill-row[data-skill]');
+    if (!row) return;
+    const category = row.dataset.category;
+    const name = row.dataset.skill;
+    let tree = $$('.skill-row', $('#skills-list')).find(skill => skill.dataset.category === category && $('[name="skill-name"]', skill).value === name);
+    if (!tree) tree = skillRow({category, name});
+    $('[name="skill-start"]', tree).value = $('[name="a4-start"]', row).value;
+    updateSkillBuyOptions(tree, Number($('[name="a4-buy"]', row).value) || 0);
+    $('[name="skill-item"]', tree).value = $('[name="a4-item"]', row).value;
+    $('[name="skill-special"]', tree).value = $('[name="a4-special"]', row).value;
+  }
   function costForSkill(row, profession) {
     const category = row.dataset.category;
     return developmentRules?.categories?.[category]?.[profession] || null;
   }
   function updateSkillBuyOptions(row, preferred) {
     const costs = costForSkill(row, form.elements.profession.value);
-    const buy = $('[name="skill-buy"]', row) || $('[name="record-buy"]', row);
+    const buy = $('[name="skill-buy"]', row) || $('[name="record-buy"]', row) || $('[name="a4-buy"]', row);
     const max = costs?.length || 0;
     const previous = Math.min(preferred ?? (Number(buy.value) || Number(row.dataset.pendingBuy) || 0), max);
-    buy.innerHTML = Array.from({length: max + 1}, (_, rank) => `<option value="${rank}">${rank}</option>`).join('');
+    if (row.dataset.buyMax !== String(max)) {
+      buy.innerHTML = Array.from({length: max + 1}, (_, rank) => `<option value="${rank}">${rank}</option>`).join('');
+      row.dataset.buyMax = String(max);
+    }
     buy.value = String(previous);
     buy.disabled = !max;
     if (max) delete row.dataset.pendingBuy;
@@ -258,6 +382,7 @@
         $('.skill-bonus', skill).innerHTML = `<span>Rank ${skillRank} + category ${total ?? '—'} + item ${item} + special ${skillSpecial}</span><strong>Skill ${total === null ? '—' : skillRank + total + item + skillSpecial}</strong>`;
       });
     });
+    updateA4SkillRows();
     $$('.skill-group', $('#skills-list')).forEach(group => {
       const bonus = (professionSkillBonuses[profession] || {})[group.dataset.group] || 0;
       $('.group-profession-bonus', group).textContent = bonus ? `+${bonus} profession` : '';
@@ -421,7 +546,7 @@
       return visibleCategories.has(row.dataset.category) || Number(start) || Number(buy) || Number(special) || Number(special2)
         ? [[row.dataset.category, {start, buy, special, special2}]] : [];
     }));
-    ['skill-name','skill-start','skill-buy','skill-item','skill-special','record-start','record-buy','record-special','record-special2'].forEach(key => delete data[key]);
+    ['skill-name','skill-start','skill-buy','skill-item','skill-special','record-start','record-buy','record-special','record-special2','a4-start','a4-buy','a4-item','a4-special'].forEach(key => delete data[key]);
     data.stats = Object.fromEntries(statNames.map((name, index) => [name, Object.fromEntries(['temp','pot','basic','racial','special','total'].map(part => [part, data[`stat-${part}-${index}`] || '']))]));
     Object.keys(data).filter(key => /^stat-(temp|pot|basic|racial|special|total)-\d+$/.test(key)).forEach(key => delete data[key]);
     return data;
@@ -676,6 +801,17 @@
     skillCategoryPickerTarget = null;
     updateDevelopment(); saveCurrent();
   });
+  $('#category-record-list').addEventListener('click', event => {
+    const button = event.target.closest('.add-skill-variant');
+    if (!button) return;
+    const row = skillRow({category:button.dataset.category});
+    const input = $('[name="skill-name"]', row);
+    input.placeholder = `${button.dataset.template}: specify`;
+    input.scrollIntoView({block:'center'});
+    input.focus();
+    updateDevelopment();
+  });
+  $('#hide-zero-skills').addEventListener('change', updateA4Visibility);
   $('#rolled-stat-pool').addEventListener('click', () => {
     rollStatPool();
     form.elements.statPoolMode.value = 'roll';
@@ -692,10 +828,12 @@
     const match = /^stat-temp-(\d+)$/.exec(event.target.name || '');
     if (match) updatePotentialStat(Number(match[1]), form.elements.potentialMethod.value === 'roll' ? rolledPotential : fixedPotential);
     showEditedCategory(event.target);
+    syncA4SkillToTree(event.target);
     saveCurrent();
   });
   form.addEventListener('change', event => {
     showEditedCategory(event.target);
+    syncA4SkillToTree(event.target);
     if (event.target.name === 'profession') {
       const realm = realmByProfession[event.target.value];
       form.elements.realm.value = realm === 'Choose at table' ? 'None' : realm || 'None';
