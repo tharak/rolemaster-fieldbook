@@ -360,6 +360,14 @@
     Dwarf:'Extra languages: High-speech, South-speech, North-speech. Spell items may contain only Channeling spells.',
     Halfling:'Extra languages: Hill-speech, Wood-speech, Orcish, Elvish. Spell adders and items that cast spells are unavailable.'
   };
+  // Appendix A-1 race descriptions give averages and typical traits, not dice tables.
+  const racePhysicalProfiles = {
+    'Common Man':{source:'A-1.1', heights:[70,64], weights:[160,125], age:[16,60], builds:['Medium','Lean','Broad'], skin:['Fair','Tan','Olive'], hair:['Black','Dark brown','Brown','Blond','Red','Grey'], eyes:['Brown','Hazel','Blue','Green','Grey'], demeanor:['Practical','Hard-working','Quiet','Loyal','Shy']},
+    'High Man':{source:'A-1.2', heights:[77,70], weights:[225,150], age:[16,200], builds:['Tall and strong'], skin:['Fair'], hair:['Black','Dark brown'], eyes:['Grey','Hazel','Blue','Green'], demeanor:['Noble','Confident','Impatient','Proud','Haughty']},
+    'Wood Elf':{source:'A-1.3', heights:[72,69], weights:[150,125], age:[16,500], builds:['Slight and slender'], skin:['Ruddy'], hair:['Sandy'], eyes:['Blue','Green'], demeanor:['Fun-loving','Guarded','Mirthful'], immortal:true},
+    Dwarf:{source:'A-1.4', heights:[57,53], weights:[150,135], age:[16,300], builds:['Short and stocky','Strong-limbed'], skin:['Fair','Ruddy'], hair:['Black','Red','Dark brown'], eyes:[], demeanor:['Sober','Quiet','Possessive','Suspicious','Pugnacious','Introspective']},
+    Halfling:{source:'A-1.5', heights:[41,39], weights:[54,51], age:[30,100], builds:['Small and pudgy','Small and stout'], skin:['Brown'], hair:['Brown'], eyes:[], demeanor:['Cheery','Conservative','Unassuming','Peaceful']}
+  };
   // Weapon choices from the outfitting lists in the matching A-1 race entries.
   const raceWeaponChoices = {
     'Common Man':{'Weapon • 1-H Edged':['Dagger','Handaxe','Throwing dagger'],'Weapon • Missile':['Sling'],'Weapon • Pole Arms':['Fishing spear'],'Weapon • Thrown':['Dagger','Handaxe','Throwing dagger','Fishing spear']},
@@ -432,31 +440,41 @@
     return bonuses[category] ?? bonuses[categoryGroup(category)] ?? 0;
   }
   function catalogNames(category) { return (a4Skills[category] || '').split('|').filter(Boolean); }
-  function a4SkillRow(category, name, skill = {}, extra = false) {
+  function favoriteSkillKey(category, name) { return JSON.stringify([category, name]); }
+  function readFavoriteSkills() {
+    try {
+      const keys = JSON.parse(form.elements.favoriteSkills.value || '[]');
+      return new Set(Array.isArray(keys) ? keys.filter(key => typeof key === 'string') : []);
+    } catch { return new Set(); }
+  }
+  function a4SkillRow(category, name, skill = {}, extra = false, favorites = readFavoriteSkills()) {
     if (!extra && name.endsWith('*')) {
       const label = name.slice(0, -1);
       return `<div class="a4-skill-row a4-template is-zero-rank" data-category="${esc(category)}"><strong>${esc(label)} <small>each instance separately</small></strong><span class="a4-template-note">Specific skills appear when chosen</span></div>`;
     }
-    return `<div class="a4-skill-row${extra ? ' a4-extra' : ''}" data-category="${esc(category)}" data-skill="${esc(name)}"><strong>${esc(name)}</strong><output class="a4-total">—</output><output class="a4-start-text">0</output><input name="a4-start" type="hidden" value="${esc(skill.start ?? skill.ranks ?? 0)}"><select name="a4-buy" hidden></select><output class="a4-rank">—</output><output class="a4-category">—</output><output class="a4-item-text">0</output><input name="a4-item" type="hidden" value="${esc(skill.item ?? 0)}"><output class="a4-special-text">0</output><input name="a4-special" type="hidden" value="${esc(skill.special ?? 0)}"></div>`;
+    const favorite = favorites.has(favoriteSkillKey(category, name));
+    return `<div class="a4-skill-row${extra ? ' a4-extra' : ''}" data-category="${esc(category)}" data-skill="${esc(name)}"><div class="a4-skill-title"><button type="button" class="favorite-skill" aria-label="${favorite ? 'Remove' : 'Add'} ${esc(name)} ${favorite ? 'from' : 'to'} favorites" aria-pressed="${favorite}" title="${favorite ? 'Remove from favorites' : 'Add to favorites'}">${favorite ? '★' : '☆'}</button><strong>${esc(name)}</strong></div><output class="a4-total">—</output><output class="a4-start-text">0</output><input name="a4-start" type="hidden" value="${esc(skill.start ?? skill.ranks ?? 0)}"><select name="a4-buy" hidden></select><output class="a4-rank">—</output><output class="a4-category">—</output><output class="a4-item-text">0</output><input name="a4-item" type="hidden" value="${esc(skill.item ?? 0)}"><output class="a4-special-text">0</output><input name="a4-special" type="hidden" value="${esc(skill.special ?? 0)}"></div>`;
   }
   function updateA4Visibility() {
     const hideSkills = $('#hide-zero-skills').checked;
     const hideGroups = $('#hide-zero-groups').checked;
+    const hideNonFavorites = $('#hide-non-favorites').checked;
     $$('.a4-skill-container').forEach(container => {
       const category = container.previousElementSibling;
       const categoryRanks = Number($('[name="record-start"]', category)?.value || 0) + Number($('[name="record-buy"]', category)?.value || 0);
       const skillRows = $$('.a4-skill-row', container);
       const emptyGroup = categoryRanks === 0 && skillRows.every(row => row.classList.contains('is-zero-rank'));
-      category.hidden = hideGroups && emptyGroup;
       let shown = 0;
       skillRows.forEach(row => {
-        row.hidden = hideSkills && row.classList.contains('is-zero-rank');
+        row.hidden = (hideSkills && row.classList.contains('is-zero-rank')) || (hideNonFavorites && !row.querySelector('.favorite-skill[aria-pressed="true"]'));
         if (!row.hidden) shown++;
       });
+      category.hidden = (hideGroups && emptyGroup) || (hideNonFavorites && !shown);
       container.hidden = category.hidden || !shown;
     });
   }
   function updateA4SkillRows() {
+    const favorites = readFavoriteSkills();
     $$('.a4-skill-container').forEach(container => {
       const category = container.dataset.category;
       const fixed = new Set(catalogNames(category).filter(name => !name.endsWith('*')));
@@ -465,7 +483,7 @@
       $$('.a4-extra', container).forEach(row => { if (!extraNames.has(row.dataset.skill)) row.remove(); });
       extraNames.forEach(name => {
         if (!$$('.a4-extra', container).some(row => row.dataset.skill === name)) {
-          $('.a4-skill-list', container).insertAdjacentHTML('beforeend', a4SkillRow(category, name, {}, true));
+          $('.a4-skill-list', container).insertAdjacentHTML('beforeend', a4SkillRow(category, name, {}, true, favorites));
         }
       });
       $$('.a4-skill-row:not(.a4-template)', container).forEach(row => {
@@ -497,6 +515,7 @@
   function renderCategoryRecord(character = {}) {
     const saved = character.categoryRanks || {};
     const skills = character.skills || [];
+    const favorites = readFavoriteSkills();
     $('#category-record-list').innerHTML = Object.entries(skillCategoryRules).map(([category, rule]) => {
       const values = saved[category] || {};
       const standard = !rule[1] || rule[1] === 'standard';
@@ -506,8 +525,8 @@
       const names = catalogNames(category);
       const listed = new Set(names.filter(name => !name.endsWith('*')));
       const categorySkills = skills.filter(skill => skill.category === category && skill.name);
-      const rows = names.map(name => a4SkillRow(category, name, categorySkills.find(skill => skill.name === name))).join('')
-        + categorySkills.filter(skill => !listed.has(skill.name)).map(skill => a4SkillRow(category, skill.name, skill, true)).join('');
+      const rows = names.map(name => a4SkillRow(category, name, categorySkills.find(skill => skill.name === name), false, favorites)).join('')
+        + categorySkills.filter(skill => !listed.has(skill.name)).map(skill => a4SkillRow(category, skill.name, skill, true, favorites)).join('');
       return `<tr class="category-record-row" data-category="${esc(category)}"><th scope="row">${esc(category)}</th><td><output class="record-total"></output></td><td><output class="record-stats"></output></td><td><output class="record-cost"></output></td>${rankFields}<td><output class="record-rank"></output></td><td><output class="record-stat"></output></td><td><output class="record-profession"></output></td><td><output class="record-special-text">0</output><input name="record-special" type="hidden" value="${esc(values.special ?? 0)}"></td><td><output class="record-special2-text">0</output><input name="record-special2" type="hidden" value="${esc(values.special2 ?? 0)}"></td></tr><tr class="a4-skill-container" data-category="${esc(category)}"><td colspan="10"><div class="a4-skill-head"><span>Skill</span><span>Total</span><span>Ranks</span><span>Rank bonus</span><span>Category</span><span>Item</span><span>Special</span></div><div class="a4-skill-list">${rows}</div></td></tr>`;
     }).join('');
     $$('.category-record-row').forEach(row => {
@@ -1025,6 +1044,45 @@
       ? `Potential Presence ${presence || '—'} − 25 + (${dice.join(' + ')}) = ${potential ?? '—'}${potential !== null ? ' (limited to 1–100)' : ''}. Temporary Appearance usually matches while well groomed and dressed.`
       : 'Potential Presence − 25 + 5d10, limited to 1–100. Temporary Appearance usually matches while well groomed and dressed.';
     $('#role-roll-summary').textContent = form.elements.roleRollSummaryText.value;
+  }
+  function updatePhysicalSource() {
+    const profile = racePhysicalProfiles[form.elements.race.value];
+    if (!profile) return;
+    $('#role-physical-source').textContent = `${profile.source} · Height and weight are varied around the race’s published averages. Age is a lifespan-based suggestion${profile.immortal ? ' (Wood Elves are immortal)' : ''}. ${profile.eyes.length ? '' : 'The race description does not specify eye color.'}`;
+  }
+  function randomPhysicalChoice(values) { return values[Math.floor(Math.random() * values.length)]; }
+  function randomizePhysicalDetails(force = true) {
+    const profile = racePhysicalProfiles[form.elements.race.value];
+    if (!profile) return;
+    let previous = {};
+    try { previous = JSON.parse(form.elements.rolePhysicalGenerated.value || '{}') || {}; } catch { /* Ignore old invalid data. */ }
+    const genderField = form.elements.roleGender;
+    if (!genderField.value) genderField.value = randomPhysicalChoice(['Male','Female']);
+    const gender = genderField.value.trim().toLowerCase();
+    const average = values => gender === 'female' ? values[1] : gender === 'male' ? values[0] : Math.round((values[0] + values[1]) / 2);
+    const height = average(profile.heights) + Math.floor(Math.random() * 9) - 4;
+    const weight = Math.round(average(profile.weights) * (0.85 + Math.random() * 0.3));
+    const months = readTrainingSelections().reduce((sum, name) => sum + (trainingPackages.find(pack => pack.name === name)?.months || 0), 0);
+    const minimumAge = Math.max(profile.age[0], 16 + Math.ceil(months / 12));
+    const maximumAge = Math.max(minimumAge, profile.age[1]);
+    const choices = {
+      roleAge:String(minimumAge + Math.floor(Math.random() * (maximumAge - minimumAge + 1))),
+      roleBuild:randomPhysicalChoice(profile.builds),
+      roleHeight:`${Math.floor(height / 12)}'${height % 12}"`,
+      roleWeight:`${weight} lb`,
+      roleSkin:randomPhysicalChoice(profile.skin),
+      roleHair:randomPhysicalChoice(profile.hair),
+      roleDemeanor:randomPhysicalChoice(profile.demeanor)
+    };
+    if (profile.eyes.length) choices.roleEyes = randomPhysicalChoice(profile.eyes);
+    else if (form.elements.roleEyes.value === previous.roleEyes) form.elements.roleEyes.value = '';
+    const generated = {};
+    Object.entries(choices).forEach(([name, value]) => {
+      const field = form.elements[name];
+      if (force || !field.value || field.value === previous[name]) { field.value = value; generated[name] = value; }
+    });
+    form.elements.rolePhysicalGenerated.value = JSON.stringify(generated);
+    updatePhysicalSource();
   }
   function rollOpenEndedD10() {
     const rolls = [];
@@ -1859,6 +1917,7 @@
   function updateSheetHints() {
     updateRuleBonuses();
     updateAppearance();
+    updatePhysicalSource();
     $('#roll-potentials').setAttribute('aria-pressed', String(form.elements.potentialMethod.value === 'roll'));
     $('#fixed-potentials').setAttribute('aria-pressed', String(form.elements.potentialMethod.value === 'fixed'));
     const mode = form.elements.statPoolMode.value;
@@ -2003,6 +2062,7 @@
       if (field && typeof value !== 'object') field.value = key === 'realm' && value === 'Choose at table' ? 'None' : value;
     }
     makeStats(character.stats || {});
+    if (!character.rolePhysicalGenerated) randomizePhysicalDetails(false);
     renderCategoryRecord(character);
     renderSkillTree(character);
     updateDevelopment();
@@ -2266,6 +2326,23 @@
   });
   $('#hide-zero-skills').addEventListener('change', updateA4Visibility);
   $('#hide-zero-groups').addEventListener('change', updateA4Visibility);
+  $('#hide-non-favorites').addEventListener('change', updateA4Visibility);
+  $('#category-record-list').addEventListener('click', event => {
+    const button = event.target.closest('.favorite-skill');
+    if (!button) return;
+    const row = button.closest('.a4-skill-row');
+    const key = favoriteSkillKey(row.dataset.category, row.dataset.skill);
+    const favorites = readFavoriteSkills();
+    if (favorites.has(key)) favorites.delete(key); else favorites.add(key);
+    form.elements.favoriteSkills.value = JSON.stringify([...favorites]);
+    const selected = favorites.has(key);
+    button.setAttribute('aria-pressed', String(selected));
+    button.setAttribute('aria-label', `${selected ? 'Remove' : 'Add'} ${row.dataset.skill} ${selected ? 'from' : 'to'} favorites`);
+    button.title = selected ? 'Remove from favorites' : 'Add to favorites';
+    button.textContent = selected ? '★' : '☆';
+    updateA4Visibility();
+    saveCurrent();
+  });
   const openLanguagePicker = () => { renderLanguagePicker(); $('#language-picker').showModal(); };
   const openHobbyPicker = () => { renderHobbyPicker(); $('#hobby-picker').showModal(); };
   const openApprenticeshipPicker = () => {
@@ -2599,6 +2676,7 @@
     form.elements.appearanceTemp.value = '';
     saveCurrent();
   });
+  $('#randomize-physical').addEventListener('click', () => { randomizePhysicalDetails(); saveCurrent(); });
   form.addEventListener('submit', event => event.preventDefault());
   form.addEventListener('input', event => {
     const match = /^stat-temp-(\d+)$/.exec(event.target.name || '');
@@ -2612,6 +2690,7 @@
     syncA4SkillToTree(event.target);
     if (event.target.name === 'race') {
       applyRaceAdolescence(event.target.value);
+      randomizePhysicalDetails(false);
       const details = readBackgroundDetails();
       if (details.extraLanguages) { details.extraLanguages = []; writeBackgroundDetails(details); }
     }

@@ -149,21 +149,24 @@
               </div>
             </div>
             <p class="sheet-hint" id="role-roll-summary" aria-live="polite"></p>
-            <h3 class="role-subheading">Physical details</h3>
+            <div class="role-physical-heading"><h3 class="role-subheading">Physical details</h3><button type="button" id="randomize-physical" class="creation-pick-button">Randomize from race</button></div>
+            <p class="sheet-hint" id="role-physical-source"></p>
             <div class="role-physical-grid">
               <label class="sheet-field">Demeanor<input name="roleDemeanor" maxlength="80" placeholder="e.g. calm, proud, stern"></label>
               <label class="sheet-field">Gender<input name="roleGender" maxlength="60"></label>
               <label class="sheet-field">Age<input name="roleAge" type="number" min="0" max="999"></label>
+              <label class="sheet-field">Build<input name="roleBuild" maxlength="80"></label>
               <label class="sheet-field">Height<input name="roleHeight" maxlength="50"></label>
               <label class="sheet-field">Weight<input name="roleWeight" maxlength="50"></label>
               <label class="sheet-field">Skin<input name="roleSkin" maxlength="60"></label>
               <label class="sheet-field">Hair<input name="roleHair" maxlength="60"></label>
               <label class="sheet-field">Eyes<input name="roleEyes" maxlength="60"></label>
             </div>
+            <input name="rolePhysicalGenerated" type="hidden" value="{}">
             <label class="sheet-field role-background">Background and history<textarea name="roleHistory" rows="3" maxlength="2000" placeholder="Family, home, important events, and connections"></textarea></label>
           </section>
           <section class="record-section record-category-sheet" id="creation-category-sheet">
-            <div class="record-section-title"><h2>Skill Category Record Sheet <span>T-6.2</span></h2><div class="record-filters"><label class="hide-zero-control"><input type="checkbox" id="hide-zero-skills"> Hide skills with 0 rank</label><label class="hide-zero-control"><input type="checkbox" id="hide-zero-groups"> Hide groups with 0 ranks</label></div></div>
+            <div class="record-section-title"><h2>Skill Category Record Sheet <span>T-6.2</span></h2><div class="record-filters"><label class="hide-zero-control"><input type="checkbox" id="hide-zero-skills"> Hide skills with 0 rank</label><label class="hide-zero-control"><input type="checkbox" id="hide-zero-groups"> Hide groups with 0 ranks</label><label class="hide-zero-control"><input type="checkbox" id="hide-non-favorites"> Hide non-favorites</label></div></div>
             <div class="category-record-scroll"><table class="category-record-table"><colgroup><col class="category-name-col"><col class="category-total-col"><col class="category-stats-col"><col class="category-cost-col"><col span="6"></colgroup><thead><tr class="category-record-head"><th scope="col">Skill category</th><th scope="col">Total bonus</th><th scope="col">Stats</th><th scope="col">Dev cost</th><th scope="col">Ranks</th><th scope="col">Rank bonus</th><th scope="col">Stat bonus</th><th scope="col">Prof. bonus</th><th scope="col">Special 1</th><th scope="col">Special 2</th></tr></thead><tbody id="category-record-list"></tbody></table></div>
             <div class="dp-summary"><div><span>DP available</span><strong id="dp-available">—</strong></div><div><span>Spent</span><strong id="dp-spent">0</strong></div><div><span>Remaining</span><strong id="dp-remaining">—</strong></div></div>
           </section>
@@ -196,6 +199,7 @@
           <input name="trainingSelections" type="hidden" value="[]">
           <input name="trainingChoiceSelections" type="hidden" value="{}">
           <input name="trainingBenefits" type="hidden" value="{}">
+          <input name="favoriteSkills" type="hidden" value="[]">
           <input name="spellDevelopmentOrder" type="hidden" value="[]">
           <div id="skill-category-picker" hidden><div id="skill-category-options"></div><button type="button" id="cancel-skill-category">Cancel</button></div>
           <div id="skills-list"></div>

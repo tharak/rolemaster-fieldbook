@@ -268,6 +268,8 @@ input::placeholder, textarea::placeholder { color: #82998a; opacity: 1; }
 .role-appearance-score .sheet-field { flex: 1; min-width: 0; }
 .role-appearance-score .creation-pick-button { flex: none; margin-bottom: 1px; }
 .role-subheading { margin: 18px 0 10px; }
+.role-physical-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 18px; }
+.role-physical-heading .role-subheading, .role-physical-heading .creation-pick-button { margin: 0; }
 .role-physical-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px 14px; }
 .role-background { margin-top: 14px; }
 @media (max-width: 700px) { .role-grid { grid-template-columns: 1fr; } .role-physical-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
@@ -414,6 +416,11 @@ input::placeholder, textarea::placeholder { color: #82998a; opacity: 1; }
 .a4-skill-head span:not(:first-child), .a4-skill-row > :not(:first-child) { text-align: center; }
 .a4-skill-row { border-bottom: 1px solid var(--line); color: var(--ink); font: 10px var(--mono); }
 .a4-skill-row > strong { padding-left: 14px; font: 600 10px var(--sans); text-align: left; }
+.a4-skill-title { display: flex; align-items: center; min-width: 0; gap: 4px; }
+.a4-skill-title strong { overflow: hidden; text-overflow: ellipsis; font: 600 10px var(--sans); text-align: left; }
+.favorite-skill { flex: none; width: 24px; height: 24px; padding: 0; border: 0; background: none; color: var(--muted); font: 20px/1 var(--sans); cursor: pointer; }
+.favorite-skill:hover, .favorite-skill[aria-pressed="true"] { color: #e9c773; }
+.favorite-skill:focus-visible { outline: 2px solid #c5f0cf; outline-offset: 1px; }
 .a4-skill-row > strong small { color: var(--muted); font-weight: 400; }
 .a4-skill-row output { display: block; }
 .a4-skill-row .a4-total { color: var(--accent-text); font-weight: 700; }
