@@ -401,6 +401,7 @@ input::placeholder, textarea::placeholder { color: #82998a; opacity: 1; }
 .a4-skill-row > strong small { color: var(--muted); font-weight: 400; }
 .a4-skill-row output { display: block; }
 .a4-skill-row .a4-total { color: var(--accent-text); font-weight: 700; }
+.a4-template-note { grid-column: 2 / -1; color: var(--muted); font: 10px var(--sans); }
 .a4-skill-row input, .a4-skill-row select { width: 100%; min-width: 0; height: 25px; padding: 2px; border: 1px solid var(--line); border-radius: 3px; background: var(--input); color: var(--ink); text-align: center; font: 10px var(--mono); }
 .a4-template button { grid-column: 2/-1; justify-self: start; border: 0; background: none; color: var(--accent-text); font: 10px var(--sans); cursor: pointer; }
 .category-record-row[hidden], .a4-skill-row[hidden], .a4-skill-container[hidden] { display: none !important; }

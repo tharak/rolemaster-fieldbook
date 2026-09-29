@@ -129,7 +129,6 @@
             <div class="record-section-title"><h2>Skill Category Record Sheet <span>T-6.2</span></h2><div class="record-filters"><label class="hide-zero-control"><input type="checkbox" id="hide-zero-skills"> Hide skills with 0 rank</label><label class="hide-zero-control"><input type="checkbox" id="hide-zero-groups"> Hide groups with 0 ranks</label></div></div>
             <div class="category-record-scroll"><table class="category-record-table"><colgroup><col class="category-name-col"><col class="category-stats-col"><col class="category-cost-col"><col span="8"></colgroup><thead><tr class="category-record-head"><th scope="col">Skill category</th><th scope="col">Stats</th><th scope="col">Dev cost</th><th scope="col">Ranks</th><th scope="col">New ranks</th><th scope="col">Rank bonus</th><th scope="col">Stat bonus</th><th scope="col">Prof. bonus</th><th scope="col">Special 1</th><th scope="col">Special 2</th><th scope="col">Total bonus</th></tr></thead><tbody id="category-record-list"></tbody></table></div>
             <div class="dp-summary"><div><span>DP available</span><strong id="dp-available">—</strong></div><div><span>Spent</span><strong id="dp-spent">0</strong></div><div><span>Remaining</span><strong id="dp-remaining">—</strong></div></div>
-            <div class="sheet-fields two-up compact-fields"><label class="sheet-field">Other DP spent<input name="otherDp" type="number" min="0" max="999" value="0"></label></div>
           </section>
           <section class="record-section">
             <h2>Commonly used attacks</h2>
@@ -149,6 +148,7 @@
         </div>
         <div hidden>
           <input name="backgroundOptions" type="hidden">
+          <input name="otherDp" type="hidden" value="0">
           <div id="skill-category-picker" hidden><div id="skill-category-options"></div><button type="button" id="cancel-skill-category">Cancel</button></div>
           <div id="skills-list"></div>
         </div>
@@ -163,7 +163,7 @@
       <dialog id="hobby-picker" aria-labelledby="hobby-picker-title">
         <div class="language-picker-head"><div><h2 id="hobby-picker-title">Hobby ranks</h2><p id="hobby-picker-subtitle"></p></div><button type="button" id="close-hobby-picker" aria-label="Close hobby picker">×</button></div>
         <div class="language-picker-budget"><strong id="hobby-picker-remaining"></strong><span id="hobby-picker-used"></span></div>
-        <p class="language-picker-note">Spend ranks on skills or skill categories. A choice may receive only as many ranks as your profession can develop in one level, and its development cost must be below 40. Add specific skills from the T-6.2 sheet before opening this picker.</p>
+        <p class="language-picker-note">Spend ranks on skills or skill categories. A choice may receive only as many ranks as your profession can develop in one level, and its development cost must be below 40.</p>
         <label class="hobby-search">Find a skill or category<input id="hobby-search" type="search" placeholder="Search choices"></label>
         <div class="hobby-filters" role="group" aria-label="Hobby rank filters"><button type="button" id="hide-zero-hobby-skills" aria-pressed="false">Hide 0-rank skills</button><button type="button" id="hide-zero-hobby-categories" aria-pressed="false">Hide 0-rank categories</button></div>
         <div id="hobby-picker-list" class="hobby-picker-list"></div>
