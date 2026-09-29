@@ -143,12 +143,24 @@
     const bands = [[24,44],[34,39],[44,33],[54,28],[64,22],[74,17],[84,11],[91,6],[92,5],[94,4],[96,3],[98,2],[100,1]];
     return Math.min(101, value + (bands.find(([high]) => value <= high)?.[1] || 0));
   }
+  function ensureStatRoll() {
+    const roll = Number(form.elements.statRoll.value);
+    if (Number.isInteger(roll) && roll >= 10 && roll <= 100) return false;
+    const dice = Array.from({length: 10}, () => Math.floor(Math.random() * 10) + 1);
+    form.elements.statRoll.value = String(dice.reduce((sum, value) => sum + value, 0));
+    form.elements.statDice.value = dice.join(',');
+    return true;
+  }
   function updateSheetHints() {
     updateRuleBonuses();
     const mode = form.elements.statPoolMode.value;
     const roll = Number(form.elements.statRoll.value);
     const validRoll = Number.isInteger(roll) && roll >= 10 && roll <= 100;
     const budget = mode === '660' ? 660 : mode === 'roll' && validRoll ? 600 + roll : null;
+    $('#stat-roll-preview').textContent = validRoll ? String(roll) : '—';
+    $('#rolled-stat-pool').setAttribute('aria-label', validRoll ? `Use 10d10 roll of ${roll}` : 'Use 10d10 roll');
+    $('#rolled-stat-pool').setAttribute('aria-pressed', String(mode === 'roll'));
+    $('#fixed-stat-pool').setAttribute('aria-pressed', String(mode === '660'));
     $('#stat-pool-print-addend').textContent = mode === '660' ? '60' : mode === 'roll' && validRoll ? String(roll) : '—';
     $('#stat-pool-total').textContent = budget === null ? '—' : String(budget);
     const values = statNames.map((_, index) => Number(form.elements.namedItem(`stat-temp-${index}`).value) || 0);
@@ -168,7 +180,7 @@
     $('#profession-info').textContent = `${primes.join(' and ')} are prime stats (90 minimum). ${requiredRealm === 'Choose at table' ? 'Choose Essence, Channeling or Mentalism as your realm.' : `${requiredRealm} is this profession’s realm.`}`;
     const [hobby, language, background] = raceAllowances[form.elements.race.value] || [0,0,0];
     $('#race-allowance').textContent = `${form.elements.race.value}: ${background} background options, ${hobby} hobby ranks and ${language} extra language ranks.`;
-    $('#stat-dice').textContent = mode === 'roll' && form.elements.statDice.value ? `10d10: ${form.elements.statDice.value.split(',').join(' + ')} = ${form.elements.statRoll.value}` : '';
+    $('#stat-dice').textContent = form.elements.statDice.value ? `10d10: ${form.elements.statDice.value.split(',').join(' + ')} = ${form.elements.statRoll.value}` : '';
     for (const [name, limit] of [['hobbyUsed',hobby],['languageUsed',language],['backgroundUsed',background]]) {
       const field = form.elements[name];
       field.classList.toggle('over-budget', Number(field.value) > limit);
@@ -231,11 +243,19 @@
   }
   function openCharacter(id) {
     const character = characters.find(item => item.id === id); if (!character) return;
-    currentId = id; fillForm(character); showView('editor'); revealSelectedChoices();
+    currentId = id; fillForm(character);
+    const generated = ensureStatRoll();
+    const missingMode = !form.elements.statPoolMode.value;
+    if (missingMode) form.elements.statPoolMode.value = 'roll';
+    if (generated || missingMode) saveCurrent();
+    showView('editor'); revealSelectedChoices();
   }
   function newCharacter() {
     currentId = crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random()}`;
-    fillForm({realm:'Choose at table'}); showView('editor'); revealSelectedChoices();
+    fillForm({realm:'Choose at table'});
+    ensureStatRoll();
+    form.elements.statPoolMode.value = 'roll';
+    updateDevelopment(); showView('editor'); revealSelectedChoices();
     $('input[name="name"]').focus();
   }
   function saveCurrent() {
@@ -438,17 +458,13 @@
     });
     saveCurrent();
   });
-  $('#roll-stat-pool').addEventListener('click', () => {
-    const dice = Array.from({length: 10}, () => Math.floor(Math.random() * 10) + 1);
+  $('#rolled-stat-pool').addEventListener('click', () => {
+    ensureStatRoll();
     form.elements.statPoolMode.value = 'roll';
-    form.elements.statRoll.value = String(dice.reduce((sum, value) => sum + value, 0));
-    form.elements.statDice.value = dice.join(',');
     saveCurrent();
   });
   $('#fixed-stat-pool').addEventListener('click', () => {
     form.elements.statPoolMode.value = '660';
-    form.elements.statRoll.value = '';
-    form.elements.statDice.value = '';
     saveCurrent();
   });
   $$('[data-open-table]').forEach(button => button.addEventListener('click', () => {
