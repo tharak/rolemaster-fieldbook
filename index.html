@@ -68,7 +68,16 @@
                   </div>
                 </fieldset>
                 <label class="sheet-field full">Training packages<input name="training" maxlength="120"></label>
-                <label class="sheet-field full">Realm of power<select name="realm"><option>None</option><option>Essence</option><option>Channeling</option><option>Mentalism</option><option>Choose at table</option></select></label>
+                <fieldset class="sheet-choice-field full">
+                  <legend>Realm of power</legend>
+                  <div class="choice-strip">
+                    <label class="choice-tile"><input type="radio" name="realm" value="None" checked><span>None</span></label>
+                    <label class="choice-tile"><input type="radio" name="realm" value="Essence"><span>Essence</span></label>
+                    <label class="choice-tile"><input type="radio" name="realm" value="Channeling"><span>Channeling</span></label>
+                    <label class="choice-tile"><input type="radio" name="realm" value="Mentalism"><span>Mentalism</span></label>
+                    <label class="choice-tile"><input type="radio" name="realm" value="Choose at table"><span>Choose at table</span></label>
+                  </div>
+                </fieldset>
               </div>
               <p class="sheet-hint" id="profession-info"></p>
             </section>
