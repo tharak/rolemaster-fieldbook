@@ -4,24 +4,24 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#24372f">
-  <meta name="description" content="Browse Rolemaster tables and create characters.">
+  <meta name="description" content="Create Rolemaster characters and browse the tables.">
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
-  <title>Rolemaster Tables & Characters</title>
+  <title>Rolemaster Characters & Tables</title>
   <link rel="stylesheet" href="styles.css">
   <link rel="stylesheet" href="enhancements.css">
   <link rel="stylesheet" href="refresh.css">
 </head>
 <body>
   <header class="topbar">
-    <a class="brand" href="#tables" aria-label="Rolemaster tables">Rolemaster</a>
+    <a class="brand" href="#characters" aria-label="Rolemaster characters">Rolemaster</a>
     <nav aria-label="Main navigation">
-      <button class="nav-link active" data-view="tables">Tables</button>
-      <button class="nav-link" data-view="home">Characters <span id="character-count">0</span></button>
+      <button class="nav-link active" data-view="home">Characters <span id="character-count">0</span></button>
+      <button class="nav-link" data-view="tables">Tables</button>
     </nav>
   </header>
 
   <main>
-    <section id="home-view" class="view">
+    <section id="home-view" class="view active">
       <div class="section-heading"><div><h1>Characters</h1><p class="section-subtitle">Saved in this browser.</p></div><button id="new-character" class="button button-dark">New character</button></div>
       <div id="roster" class="roster"></div>
       <div class="empty-state" id="empty-state"><h2>No characters yet</h2><p>Create a character to get started.</p><button id="empty-new-character" class="button button-dark">Create character</button></div>
@@ -51,7 +51,7 @@
       </form>
     </section>
 
-    <section id="tables-view" class="view active">
+    <section id="tables-view" class="view">
       <div class="table-intro"><h1>Tables</h1><p>Search by name or table number.</p></div>
       <div class="table-filters" role="group" aria-label="Filter tables"><button class="filter-chip active" data-group="all" aria-pressed="true">All tables</button><button class="filter-chip" data-group="attacks" aria-pressed="false">Attacks</button><button class="filter-chip" data-group="criticals" aria-pressed="false">Criticals</button><button class="filter-chip" data-group="character" aria-pressed="false">Character</button><button class="filter-chip" data-group="play" aria-pressed="false">At the table</button></div>
       <div class="table-layout"><aside class="table-sidebar"><label class="field">Find a table<input id="table-search" type="search" placeholder="Weapon, spell, stat…"></label><p id="table-count" class="table-count">Loading tables…</p><div id="table-list" class="table-list"></div></aside><section class="table-card"><div class="table-toolbar"><div><h2 id="table-current">Loading tables…</h2><span id="table-code" class="table-code"></span></div><div class="lookup-controls"><label class="field"><span id="roll-label">Modified roll</span><input id="table-roll" type="number" min="1" max="300" value="100"></label><label class="field" id="column-select-field">Target armor<select id="table-column"></select></label></div></div><div class="lookup-result" id="lookup-result" aria-live="polite"></div><div class="table-scroll"><table id="attack-grid" class="attack-grid"></table></div><div id="table-source" class="table-source" hidden></div><div id="table-note" class="table-note"></div></section></div>

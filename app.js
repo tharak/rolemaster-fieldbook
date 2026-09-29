@@ -316,7 +316,7 @@
     showView('tables');
   }
   $$('.nav-link').forEach(button => button.addEventListener('click', () => showView(button.dataset.view)));
-  $('.brand').addEventListener('click', event => { event.preventDefault(); showView('tables'); });
+  $('.brand').addEventListener('click', event => { event.preventDefault(); showView('home'); });
   $('#new-character').addEventListener('click', newCharacter);
   $('#empty-new-character').addEventListener('click', newCharacter);
   $$('.filter-chip').forEach(button => button.addEventListener('click', () => openTableGroup(button.dataset.group)));
