@@ -122,6 +122,14 @@
     Dwarf:[['Dwarvish',8,6],['Common-speech',5,5],['Elvish',4,4]],
     Halfling:[['Small-speech',8,6],['Common-speech',8,6]]
   };
+  // A-1 allowed adolescence development, with separate spoken and written rank caps.
+  const raceAdolescenceLanguages = {
+    'Common Man':[['High-speech',6,6],['Common-speech',10,10],['Small-speech',6,6]],
+    'High Man':[['High-speech',10,10],['Common-speech',10,10],['Grey-elvish',8,8],['High-elvish',6,6],['Hill-speech',6,6],['Sea-speech',8,8],['Small-speech',6,6],['Plains-speech',6,6]],
+    'Wood Elf':[['Grey-elvish',10,10],['Common-speech',10,10],['High-elvish',10,10],['High-speech',4,4],['Plains-speech',8,8],['Wood-speech',8,8]],
+    Dwarf:[['Dwarvish',10,10],['Common-speech',10,10],['Hill-speech',2,2],['Plains-speech',6,6],['Wood-speech',6,6]],
+    Halfling:[['Small-speech',10,10],['Common-speech',10,10],['High-speech',8,8],['Grey-elvish',8,8]]
+  };
   // Weapon choices from the outfitting lists in the matching A-1 race entries.
   const raceWeaponChoices = {
     'Common Man':{'Weapon • 1-H Edged':['Dagger','Handaxe','Throwing dagger'],'Weapon • Missile':['Sling'],'Weapon • Pole Arms':['Fishing spear'],'Weapon • Thrown':['Dagger','Handaxe','Throwing dagger','Fishing spear']},
@@ -321,6 +329,7 @@
     const row = document.createElement('div'); row.className = 'skill-row rank-row'; row.dataset.category = category;
     if (skill.raceGrant) row.dataset.raceGrant = skill.raceGrant;
     if (skill.raceBase) row.dataset.raceBase = skill.raceBase;
+    if (skill.languageSpent) row.dataset.languageSpent = skill.languageSpent;
     const choice = skill.raceGrant?.startsWith('weapon:') || skill.raceGrant === 'race:open-spell-list';
     row.innerHTML = `<div class="rank-title"><label>Skill<input ${choice ? 'type="hidden"' : 'type="text"'} aria-label="Skill name" name="skill-name" maxlength="60" placeholder="Skill name" value="${esc(skill.name || '')}"></label>${choice ? `<button type="button" class="choose-skill" aria-expanded="false">${esc(skill.name || 'Choose skill')} ▾</button>` : ''}<button type="button" class="change-skill-category" aria-label="Change category for ${esc(skill.name || 'skill')}">${esc(category)}</button></div><label>Before<input aria-label="Ranks before this level" name="skill-start" type="number" min="0" max="99" value="${esc(skill.start ?? skill.ranks ?? 0)}"></label><label>Buy<select aria-label="Ranks purchased this level" name="skill-buy"></select></label><label>Item<input aria-label="Item bonus" name="skill-item" type="number" value="${esc(skill.item ?? 0)}"></label><label>Special<input aria-label="Skill special bonus" name="skill-special" type="number" value="${esc(skill.special ?? 0)}"></label><output class="rank-cost"></output><button type="button" class="remove-skill" aria-label="Remove skill">×</button>${choice ? '<div class="skill-choice-options" hidden></div>' : ''}<div class="bonus-breakdown skill-bonus"></div>`;
     $('.category-skills', parent).append(row);
@@ -378,6 +387,60 @@
     $('.choose-skill', row).setAttribute('aria-expanded', 'true');
     panel.scrollIntoView({block:'nearest'});
   }
+  function languageSkillRow(name) {
+    return $$('.skill-row', $('#skills-list')).find(row => row.dataset.category === 'Communications' && $('[name="skill-name"]', row).value === name);
+  }
+  function updateLanguagePickerBudget() {
+    const limit = raceAllowances[form.elements.race.value]?.[1] || 0;
+    const used = Number(form.elements.languageUsed.value) || 0;
+    const allocated = $$('.skill-row[data-language-spent]', $('#skills-list')).reduce((sum, row) => sum + (Number(row.dataset.languageSpent) || 0), 0);
+    $('#language-picker-remaining').textContent = `${Math.max(0, limit - used)} ranks left`;
+    $('#language-picker-used').textContent = `${used} of ${limit} spent`;
+    const legacy = Math.max(0, used - allocated);
+    const note = $('#language-legacy-note');
+    note.hidden = !legacy;
+    note.innerHTML = legacy ? `${legacy} previously recorded rank${legacy === 1 ? '' : 's'} have no language assignment. <button type="button" id="reset-unassigned-languages">Reset unassigned ranks</button> to allocate them here.` : '';
+  }
+  function renderLanguagePicker() {
+    const race = form.elements.race.value;
+    $('#language-picker-subtitle').textContent = `${race} · allowed adolescence development (A-1)`;
+    $('#language-picker-list').innerHTML = (raceAdolescenceLanguages[race] || []).map(([language, spoken, written]) => {
+      const fields = [['spoken',spoken],['written',written]].map(([mode, cap]) => {
+        const row = languageSkillRow(`${language} (${mode})`);
+        const spent = Number(row?.dataset.languageSpent) || 0;
+        const current = row ? Number($('[name="skill-start"]', row).value) || 0 : 0;
+        const maxExtra = Math.max(0, cap - (current - spent));
+        return `<label>${mode === 'spoken' ? 'Spoken' : 'Written'}<input type="number" inputmode="numeric" min="0" max="${maxExtra}" value="${spent}" data-language="${esc(language)}" data-mode="${mode}" aria-label="${esc(language)} ${mode} extra ranks"><small>${current} / ${cap} ranks</small></label>`;
+      }).join('');
+      return `<div class="language-choice"><strong>${esc(language)}</strong>${fields}</div>`;
+    }).join('');
+    updateLanguagePickerBudget();
+  }
+  function updateLanguageAllocation(input) {
+    const language = input.dataset.language;
+    const mode = input.dataset.mode;
+    const name = `${language} (${mode})`;
+    let row = languageSkillRow(name);
+    const previous = Number(row?.dataset.languageSpent) || 0;
+    const current = row ? Number($('[name="skill-start"]', row).value) || 0 : 0;
+    const limit = raceAllowances[form.elements.race.value]?.[1] || 0;
+    const used = Number(form.elements.languageUsed.value) || 0;
+    const maxExtra = Number(input.max);
+    const requested = Number(input.value);
+    const next = Math.max(0, Math.min(Number.isInteger(requested) ? requested : 0, maxExtra, limit - used + previous));
+    if (!row && next) row = skillRow({category:'Communications', name, start:next, languageSpent:next});
+    else if (row) {
+      $('[name="skill-start"]', row).value = String(Math.max(0, current - previous + next));
+      if (next) row.dataset.languageSpent = String(next); else delete row.dataset.languageSpent;
+      if (!next && !Number($('[name="skill-start"]', row).value) && !Number($('[name="skill-buy"]', row).value) && !Number($('[name="skill-item"]', row).value) && !Number($('[name="skill-special"]', row).value) && !row.dataset.raceGrant) row.remove();
+    }
+    form.elements.languageUsed.value = String(used - previous + next);
+    input.value = String(next);
+    input.nextElementSibling.textContent = `${(current - previous) + next} / ${maxExtra + (current - previous)} ranks`;
+    updateDevelopment();
+    updateLanguagePickerBudget();
+    saveCurrent();
+  }
   function renderSkillTree(character = {}) {
     $('#skills-list').innerHTML = '';
     Object.keys(character.categoryRanks || {}).filter(category => skillCategoryRules[category]).forEach(categoryRow);
@@ -387,6 +450,13 @@
   function applyRaceAdolescence(race) {
     const raceIndex = adolescenceRaces.indexOf(race);
     if (raceIndex < 0) return;
+    $$('.skill-row[data-language-spent]', $('#skills-list')).forEach(row => {
+      const field = $('[name="skill-start"]', row);
+      field.value = String(Math.max(0, (Number(field.value) || 0) - (Number(row.dataset.languageSpent) || 0)));
+      delete row.dataset.languageSpent;
+      if (!Number(field.value) && !Number($('[name="skill-buy"]', row).value) && !Number($('[name="skill-item"]', row).value) && !Number($('[name="skill-special"]', row).value) && !row.dataset.raceGrant) row.remove();
+    });
+    form.elements.languageUsed.value = '0';
     $$('.category-record-row').forEach(record => {
       const field = $('[name="record-start"]', record);
       if (!field) return;
@@ -657,6 +727,7 @@
     $('#profession-info').textContent = `${primes.join(' and ')} are prime stats (90 minimum). ${requiredRealm === 'Choose at table' ? 'Choose Essence, Channeling or Mentalism as your realm.' : `${requiredRealm} is this profession’s realm.`}`;
     const [hobby, language, background] = raceAllowances[form.elements.race.value] || [0,0,0];
     $('#race-allowance').textContent = `${form.elements.race.value}: ${background} background options, ${hobby} hobby ranks and ${language} extra language ranks.`;
+    $('#language-spent-label').textContent = `${Number(form.elements.languageUsed.value) || 0} used`;
     $('#race-language-note').textContent = `Starting languages: ${(raceStartingLanguages[form.elements.race.value] || []).map(([name, spoken, written]) => `${name} S${spoken}/W${written}`).join(', ')}.`;
     $('#stat-dice').textContent = form.elements.statDice.value ? `10d10: ${form.elements.statDice.value.split(',').join(' + ')} = ${form.elements.statRoll.value}` : '';
     for (const [name, limit] of [['hobbyUsed',hobby],['languageUsed',language],['backgroundUsed',background]]) {
@@ -692,7 +763,11 @@
       const left = limit - used;
       $(output).textContent = left < 0 ? `${-left} over` : `${left} left`;
       $(output).classList.toggle('over-budget', left < 0 || used < 0);
-      if (left !== 0 || used < 0) addStep(`${left > 0 ? `Allocate ${left}` : `Review ${-left}`} ${label}.`, target);
+      if (left !== 0 || used < 0) {
+        const text = `${left > 0 ? `Allocate ${left}` : `Review ${-left}`} ${label}.`;
+        if (name === 'languageUsed') steps.push(`<li><button type="button" class="creation-step-button" data-open-language-picker>${text}</button></li>`);
+        else addStep(text, target);
+      }
     }
     if (Number(form.elements.backgroundUsed.value) > 0 && !form.elements.backgroundOptions.value.trim()) addStep('Record chosen background options.', 'creation-background');
     const dpRemaining = Number($('#dp-remaining').textContent);
@@ -724,6 +799,7 @@
       special: $('[name="skill-special"]', row).value,
       raceGrant: row.dataset.raceGrant || '',
       raceBase: Number(row.dataset.raceBase) || 0,
+      languageSpent: Number(row.dataset.languageSpent) || 0,
       ranks: (Number($('[name="skill-start"]', row).value) || 0) + (Number(row.dataset.pendingBuy || $('[name="skill-buy"]', row).value) || 0)
     })).filter(skill => skill.name || Number(skill.start) || Number(skill.buy));
     const visibleCategories = new Set($$('.category-row', $('#skills-list')).map(row => row.dataset.category));
@@ -1014,6 +1090,16 @@
   });
   $('#hide-zero-skills').addEventListener('change', updateA4Visibility);
   $('#hide-zero-groups').addEventListener('change', updateA4Visibility);
+  const openLanguagePicker = () => { renderLanguagePicker(); $('#language-picker').showModal(); };
+  $('#open-language-picker').addEventListener('click', openLanguagePicker);
+  $('#creation-steps').addEventListener('click', event => { if (event.target.closest('[data-open-language-picker]')) openLanguagePicker(); });
+  $('#close-language-picker').addEventListener('click', () => $('#language-picker').close());
+  $('#language-picker-list').addEventListener('input', event => { if (event.target.matches('input[data-language]')) updateLanguageAllocation(event.target); });
+  $('#language-legacy-note').addEventListener('click', event => {
+    if (event.target.id !== 'reset-unassigned-languages') return;
+    form.elements.languageUsed.value = String($$('.skill-row[data-language-spent]', $('#skills-list')).reduce((sum, row) => sum + (Number(row.dataset.languageSpent) || 0), 0));
+    renderLanguagePicker(); saveCurrent();
+  });
   $('#rolled-stat-pool').addEventListener('click', () => {
     rollStatPool();
     form.elements.statPoolMode.value = 'roll';

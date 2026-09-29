@@ -89,7 +89,7 @@
             <h2>Finish character creation</h2>
             <div class="creation-pools">
               <div class="creation-pool"><span>Adolescence · T-1.6</span><strong>Applied</strong><small id="adolescence-summary"></small></div>
-              <div class="creation-pool"><span>Language ranks · T-1.6</span><output id="language-remaining"></output><label class="sheet-field">Ranks used<input name="languageUsed" type="number" min="0" max="99" value="0"></label></div>
+              <div class="creation-pool"><span>Language ranks · T-1.6</span><output id="language-remaining"></output><small id="language-spent-label"></small><button type="button" id="open-language-picker" class="creation-pick-button">Choose languages</button><input name="languageUsed" type="hidden" value="0"></div>
               <div class="creation-pool"><span>Hobby ranks · T-1.6</span><output id="hobby-remaining"></output><label class="sheet-field">Ranks used<input name="hobbyUsed" type="number" min="0" max="99" value="0"></label></div>
               <div class="creation-pool"><span>Background options · T-1.6</span><output id="background-remaining"></output><label class="sheet-field">Options used<input name="backgroundUsed" type="number" min="0" max="99" value="0"></label></div>
             </div>
@@ -187,6 +187,13 @@
           </section>
         </div>
       </form>
+      <dialog id="language-picker" aria-labelledby="language-picker-title">
+        <div class="language-picker-head"><div><h2 id="language-picker-title">Adolescence languages</h2><p id="language-picker-subtitle"></p></div><button type="button" id="close-language-picker" aria-label="Close language picker">×</button></div>
+        <div class="language-picker-budget"><strong id="language-picker-remaining"></strong><span id="language-picker-used"></span></div>
+        <p class="language-picker-note">Spoken and written are separate skills. Each number is the extra rank spent from this pool; the race’s starting ranks are already included.</p>
+        <div id="language-picker-list" class="language-picker-list"></div>
+        <p id="language-legacy-note" class="language-picker-note" hidden></p>
+      </dialog>
     </section>
 
     <section id="tables-view" class="view">
