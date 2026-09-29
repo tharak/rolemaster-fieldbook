@@ -112,9 +112,9 @@
       const values = saved[category] || {};
       const standard = !rule[1] || rule[1] === 'standard';
       const rankFields = standard
-        ? `<input name="record-start" aria-label="${esc(category)} ranks before this level" type="number" min="0" max="99" value="${esc(values.start ?? 0)}"><select name="record-buy" aria-label="${esc(category)} new ranks"></select>`
-        : '<span class="not-applicable">n/a</span><span class="not-applicable">n/a</span>';
-      return `<div class="category-record-row" data-category="${esc(category)}"><strong>${esc(category)}</strong><output class="record-stats"></output><output class="record-cost"></output>${rankFields}<output class="record-rank"></output><output class="record-stat"></output><output class="record-profession"></output><input name="record-special" aria-label="${esc(category)} first special bonus" type="number" value="${esc(values.special ?? 0)}"><input name="record-special2" aria-label="${esc(category)} second special bonus" type="number" value="${esc(values.special2 ?? 0)}"><output class="record-total"></output></div>`;
+        ? `<td><input name="record-start" aria-label="${esc(category)} ranks before this level" type="number" min="0" max="99" value="${esc(values.start ?? 0)}"></td><td><select name="record-buy" aria-label="${esc(category)} new ranks"></select></td>`
+        : '<td class="not-applicable">n/a</td><td class="not-applicable">n/a</td>';
+      return `<tr class="category-record-row" data-category="${esc(category)}"><th scope="row">${esc(category)}</th><td><output class="record-stats"></output></td><td><output class="record-cost"></output></td>${rankFields}<td><output class="record-rank"></output></td><td><output class="record-stat"></output></td><td><output class="record-profession"></output></td><td><input name="record-special" aria-label="${esc(category)} first special bonus" type="number" value="${esc(values.special ?? 0)}"></td><td><input name="record-special2" aria-label="${esc(category)} second special bonus" type="number" value="${esc(values.special2 ?? 0)}"></td><td><output class="record-total"></output></td></tr>`;
     }).join('');
     $$('.category-record-row').forEach(row => {
       if ($('[name="record-buy"]', row)) {
