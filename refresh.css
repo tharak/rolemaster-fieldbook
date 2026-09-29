@@ -522,6 +522,21 @@ input::placeholder, textarea::placeholder { color: #82998a; opacity: 1; }
 .apprenticeship-package small { color: var(--muted); font: 9px var(--mono); }
 .apprenticeship-package > button[aria-pressed="true"] small { color: #d4e5d7; }
 .apprenticeship-package p { margin: 5px 8px; color: var(--muted); font: 10px/1.4 var(--sans); }
+.training-benefits { margin: 8px; padding: 8px; border: 1px solid var(--line); border-radius: 4px; }
+.training-benefits > summary { cursor: pointer; color: var(--accent-text); font: 700 11px var(--sans); }
+.training-benefit-block { padding: 8px 0; border-bottom: 1px solid var(--line); }
+.training-benefit-block > strong { font: 700 11px var(--sans); }
+.training-benefit-block .choice-strip { margin: 8px 0; }
+.training-benefit-block button { flex: 0 0 auto; padding: 6px 8px; border: 1px solid #729279; border-radius: 4px; background: var(--input); color: var(--ink); font: 10px var(--sans); cursor: pointer; }
+.training-benefit-block button[aria-pressed="true"] { border-color: #a6dfb8; background: #376c4a; color: #fff; }
+.training-benefit-block ul { margin: 7px 0; padding-left: 20px; color: var(--muted); font: 10px/1.5 var(--sans); }
+.training-special-result { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 2px 8px; padding: 6px; border-bottom: 1px solid var(--line); font: 10px var(--sans); }
+.training-special-result small { grid-column: 1; color: var(--muted); font: 9px var(--mono); }
+.training-special-result strong { grid-column: 2; grid-row: 1 / 3; align-self: center; color: var(--muted); }
+.training-special-result.is-awarded { background: #29473555; }
+.training-special-result.is-awarded strong { color: var(--accent-text); }
+.training-grant-last, .training-item-note { display: block; margin: 8px 0; color: var(--muted); font: 10px var(--sans); }
+.training-item-note input { display: block; width: 100%; margin-top: 4px; padding: 6px; border: 1px solid #729279; border-radius: 4px; background: var(--input); color: var(--ink); font: 11px var(--sans); }
 .package-grant-choice { margin: 8px; padding: 7px; border: 1px solid var(--line); border-radius: 4px; }
 .package-grant-choice > strong, .package-grant-choice > small { display: block; font: 10px/1.4 var(--sans); }
 .package-grant-choice > small { color: var(--muted); }

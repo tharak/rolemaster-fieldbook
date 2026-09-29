@@ -85,18 +85,6 @@
             <div class="resistance-grid" id="resistance-grid"></div>
             <label class="sheet-field">Other resistance notes<textarea name="resistances" rows="2" maxlength="500"></textarea></label>
           </section>
-          <section class="record-section record-creation" id="creation-progress">
-            <h2>Finish character creation</h2>
-            <div class="creation-pools">
-              <div class="creation-pool"><span>Adolescence · T-1.6</span><strong>Applied</strong><small id="adolescence-summary"></small><button type="button" id="open-race-weapons" class="creation-pick-button">Choose racial weapons</button></div>
-              <div class="creation-pool"><span>Language ranks · T-1.6</span><output id="language-remaining"></output><small id="language-spent-label"></small><button type="button" id="open-language-picker" class="creation-pick-button">Choose languages</button><input name="languageUsed" type="hidden" value="0"></div>
-              <div class="creation-pool"><span>Hobby ranks · T-1.6</span><output id="hobby-remaining"></output><small id="hobby-spent-label"></small><button type="button" id="open-hobby-picker" class="creation-pick-button">Choose hobbies</button><input name="hobbyUsed" type="hidden" value="0"></div>
-              <div class="creation-pool"><span>Background options · T-1.6</span><output id="background-remaining"></output><small id="background-spent-label"></small><button type="button" id="open-background-picker" class="creation-pick-button">Choose options</button><input name="backgroundUsed" type="hidden" value="0"><input name="backgroundSelections" type="hidden" value="{}"></div>
-              <div class="creation-pool"><span>Apprenticeship · 6.0</span><output id="apprenticeship-remaining">—</output><small id="apprenticeship-spent-label">0 DP spent</small><button type="button" id="open-apprenticeship-picker" class="creation-pick-button">Spend development points</button></div>
-            </div>
-            <div class="creation-next"><strong>Remaining steps</strong><ul id="creation-steps"></ul></div>
-            <label class="sheet-field creation-notes">Adolescence choices & languages<input name="adolescence" maxlength="300" placeholder="Notes on selected weapons, hobbies and languages"></label>
-          </section>
           <section class="record-section record-stats" id="creation-stats">
             <h2>Stats & bonuses</h2>
             <div class="stat-pool-panel">
@@ -125,6 +113,18 @@
             <p class="sheet-hint" id="prime-stats"></p>
             <p class="sheet-hint" id="creation-checks" aria-live="polite"></p>
           </section>
+          <section class="record-section record-creation" id="creation-progress">
+            <h2>Finish character creation</h2>
+            <div class="creation-pools">
+              <div class="creation-pool"><span>Adolescence · T-1.6</span><strong>Applied</strong><small id="adolescence-summary"></small><button type="button" id="open-race-weapons" class="creation-pick-button">Choose racial weapons</button></div>
+              <div class="creation-pool"><span>Language ranks · T-1.6</span><output id="language-remaining"></output><small id="language-spent-label"></small><button type="button" id="open-language-picker" class="creation-pick-button">Choose languages</button><input name="languageUsed" type="hidden" value="0"></div>
+              <div class="creation-pool"><span>Hobby ranks · T-1.6</span><output id="hobby-remaining"></output><small id="hobby-spent-label"></small><button type="button" id="open-hobby-picker" class="creation-pick-button">Choose hobbies</button><input name="hobbyUsed" type="hidden" value="0"></div>
+              <div class="creation-pool"><span>Background options · T-1.6</span><output id="background-remaining"></output><small id="background-spent-label"></small><button type="button" id="open-background-picker" class="creation-pick-button">Choose options</button><input name="backgroundUsed" type="hidden" value="0"><input name="backgroundSelections" type="hidden" value="{}"></div>
+              <div class="creation-pool"><span>Apprenticeship · 6.0</span><output id="apprenticeship-remaining">—</output><small id="apprenticeship-spent-label">0 DP spent</small><button type="button" id="open-apprenticeship-picker" class="creation-pick-button">Spend development points</button></div>
+            </div>
+            <div class="creation-next"><strong>Remaining steps</strong><ul id="creation-steps"></ul></div>
+            <label class="sheet-field creation-notes">Adolescence choices & languages<input name="adolescence" maxlength="300" placeholder="Notes on selected weapons, hobbies and languages"></label>
+          </section>
           <section class="record-section record-category-sheet" id="creation-category-sheet">
             <div class="record-section-title"><h2>Skill Category Record Sheet <span>T-6.2</span></h2><div class="record-filters"><label class="hide-zero-control"><input type="checkbox" id="hide-zero-skills"> Hide skills with 0 rank</label><label class="hide-zero-control"><input type="checkbox" id="hide-zero-groups"> Hide groups with 0 ranks</label></div></div>
             <div class="category-record-scroll"><table class="category-record-table"><colgroup><col class="category-name-col"><col class="category-total-col"><col class="category-stats-col"><col class="category-cost-col"><col span="6"></colgroup><thead><tr class="category-record-head"><th scope="col">Skill category</th><th scope="col">Total bonus</th><th scope="col">Stats</th><th scope="col">Dev cost</th><th scope="col">Ranks</th><th scope="col">Rank bonus</th><th scope="col">Stat bonus</th><th scope="col">Prof. bonus</th><th scope="col">Special 1</th><th scope="col">Special 2</th></tr></thead><tbody id="category-record-list"></tbody></table></div>
@@ -140,6 +140,7 @@
             <div class="ruled-labels"><span>Item</span><span>Location · Weight · Description</span></div>
             <textarea class="ruled-textarea" name="notes" rows="6" maxlength="1200" aria-label="Commonly used equipment"></textarea>
             <div id="background-rewards-summary" class="language-picker-note"></div>
+            <div id="training-rewards-summary" class="language-picker-note"></div>
           </section>
           <section class="record-bottom">
             <div><label class="sheet-field">Hits (maximum)<input name="hits" type="number" min="0"></label></div>
@@ -156,6 +157,7 @@
           <input name="statGainHistory" type="hidden" value="[]">
           <input name="trainingSelections" type="hidden" value="[]">
           <input name="trainingChoiceSelections" type="hidden" value="{}">
+          <input name="trainingBenefits" type="hidden" value="{}">
           <input name="spellDevelopmentOrder" type="hidden" value="[]">
           <div id="skill-category-picker" hidden><div id="skill-category-options"></div><button type="button" id="cancel-skill-category">Cancel</button></div>
           <div id="skills-list"></div>

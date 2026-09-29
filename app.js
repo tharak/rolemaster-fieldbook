@@ -948,6 +948,75 @@
       return choices && typeof choices === 'object' && !Array.isArray(choices) ? choices : {};
     } catch { return {}; }
   }
+  function readTrainingBenefits() {
+    try {
+      const value = JSON.parse(form.elements.trainingBenefits.value || '{}');
+      return value && typeof value === 'object' && !Array.isArray(value) ? value : {};
+    } catch { return {}; }
+  }
+  function writeTrainingBenefits(value) { form.elements.trainingBenefits.value = JSON.stringify(value); }
+  function rollD10() { return Math.floor(Math.random() * 10) + 1; }
+  function rollD100() { return Math.floor(Math.random() * 100) + 1; }
+  function rollOpenEndedD10() {
+    const rolls = [];
+    let roll;
+    do { roll = rollD10(); rolls.push(roll); } while (roll === 10);
+    return {rolls, total:rolls.reduce((sum, value) => sum + (value === 10 ? 9 : value), 0)};
+  }
+  function rollOpenEndedD100() {
+    const first = rollD100();
+    const rolls = [first];
+    if (first <= 5) {
+      let next;
+      do { next = rollD100(); rolls.push(-next); } while (next >= 96);
+    } else if (first >= 96) {
+      let next;
+      do { next = rollD100(); rolls.push(next); } while (next >= 96);
+    }
+    return {rolls, total:rolls.reduce((sum, value) => sum + value, 0)};
+  }
+  function formatRolls(rolls) {
+    return (rolls || []).map((value, index) => index === 0 ? String(value) : value < 0 ? ` − ${-value}` : ` + ${value}`).join('');
+  }
+  function packageMoneyNeedsRoll(pack) { return /d10/i.test(pack.startingMoney); }
+  function trainingSpecialAwards(pack, special = {}) {
+    const last = pack.specialItems.length - 1;
+    if (special.mode === 'last') return [last];
+    if (special.mode !== 'rolled') return [];
+    const awards = special.rows?.flatMap((row, index) => row.gained ? [index] : []) || [];
+    if (!awards.length || special.grantLast) awards.push(last);
+    return [...new Set(awards)];
+  }
+  function rollItemDice(item) {
+    return [...item.matchAll(/\b(\d*)d10\b/gi)].map(match => {
+      const count = Number(match[1]) || 1;
+      const rolls = Array.from({length:count}, rollD10);
+      return {dice:match[0], rolls, total:rolls.reduce((sum, roll) => sum + roll, 0)};
+    });
+  }
+  function rollTrainingSpecials(pack) {
+    let gained = 0;
+    const rows = pack.specialItems.map(([item, chance]) => {
+      const effectiveChance = chance / (2 ** gained);
+      const dice = rollOpenEndedD100();
+      const won = dice.total + effectiveChance > 100;
+      if (won) gained++;
+      return {item, chance, effectiveChance, dice, gained:won};
+    });
+    const special = {mode:'rolled', rows, grantLast:false, notes:{}, itemDice:{}};
+    trainingSpecialAwards(pack, special).forEach(index => { special.itemDice[index] = rollItemDice(pack.specialItems[index][0]); });
+    return special;
+  }
+  function changeTrainingBenefit(name, change) {
+    const pack = trainingPackages.find(item => item.name === name);
+    if (!pack || !readTrainingSelections().includes(name)) return;
+    const benefits = readTrainingBenefits();
+    benefits[name] ||= {};
+    change(benefits[name], pack);
+    writeTrainingBenefits(benefits);
+    saveCurrent();
+    renderTrainingPackages();
+  }
   function packageChoiceCategory(packName, rule, choices) {
     const source = rule[2];
     if (typeof source === 'string' && source.startsWith('@')) return choices[packName]?.[source.slice(1)] || '';
@@ -990,6 +1059,7 @@
   function pendingTrainingChoices() {
     const choices = readTrainingChoices();
     const history = readStatGainHistory();
+    const benefits = readTrainingBenefits();
     return readTrainingSelections().reduce((pending, name) => {
       const ranks = (packageChoiceRules[name] || []).filter(([id, kind, source, total]) => {
         const selected = choices[name]?.[id];
@@ -997,7 +1067,10 @@
           : !selected || Object.values(selected).reduce((sum, value) => sum + (Number(value) || 0), 0) < total;
       }).length;
       const rolls = packageStatGrantRules(name).filter(([id]) => !history.some(entry => entry.source === name && entry.grantId === id)).length;
-      return pending + ranks + rolls;
+      const pack = trainingPackages.find(item => item.name === name);
+      const money = pack && packageMoneyNeedsRoll(pack) && !benefits[name]?.money ? 1 : 0;
+      const specials = pack && !benefits[name]?.special?.mode ? 1 : 0;
+      return pending + ranks + rolls + money + specials;
     }, 0);
   }
   function applyTrainingGrants() {
@@ -1056,8 +1129,28 @@
     skills.forEach(({category, name, ranks}) => skillRow({category, name, start:Math.min(10, ranks), packageBase:Math.min(10, ranks)}));
     updateDevelopment();
   }
+  function renderPackageBenefits(pack, wasOpen) {
+    const benefits = readTrainingBenefits()[pack.name] || {};
+    const money = benefits.money;
+    const special = benefits.special || {};
+    const awards = trainingSpecialAwards(pack, special);
+    const moneyMarkup = packageMoneyNeedsRoll(pack)
+      ? `<p>${esc(pack.startingMoney)}${money ? ` · <strong>+${money.total}</strong> (${money.mode === 'fixed' ? 'fixed 6' : formatRolls(money.rolls)})` : ''}. Add this amount in the same unit as your race’s normal starting money.</p><div class="choice-strip"><button type="button" data-training-money-roll="${esc(pack.name)}">${money?.mode === 'rolled' ? 'Reroll d10' : 'Roll d10'}</button><button type="button" data-training-money-fixed="${esc(pack.name)}" aria-pressed="${money?.mode === 'fixed'}">Take +6</button></div>`
+      : '<p>Normal starting money · no extra roll.</p>';
+    const specialMarkup = special.mode === 'rolled'
+      ? `<div class="training-special-results">${pack.specialItems.map(([item], index) => {
+        const row = special.rows?.[index];
+        const awarded = awards.includes(index);
+        return `<div class="training-special-result${awarded ? ' is-awarded' : ''}"><span>${esc(item)}</span><small>${row ? `${formatRolls(row.dice.rolls)} = ${row.dice.total} · +${row.effectiveChance} = ${row.dice.total + row.effectiveChance}` : '—'}${awarded && !row?.gained ? ' · granted final item' : ''}</small><strong>${awarded ? 'Gained' : 'Missed'}</strong></div>`;
+      }).join('')}</div><label class="training-grant-last"><input type="checkbox" data-training-grant-last="${esc(pack.name)}"${special.grantLast ? ' checked' : ''}> GM grants the final item as well</label>`
+      : special.mode === 'last' ? `<p>Taking the final item: <strong>${esc(pack.specialItems.at(-1)[0])}</strong></p>`
+      : `<p>Roll d100 open-ended for each item in order. After each gain, later chances are halved. If none succeed, the final item is granted.</p><ul>${pack.specialItems.map(([item, chance]) => `<li>${esc(item)} · +${chance}</li>`).join('')}</ul>`;
+    return `<details class="training-benefits" data-training-benefits="${esc(pack.name)}"${wasOpen ? ' open' : ''}><summary>Starting money and special items · A-5</summary><div class="training-benefit-block"><strong>Starting money</strong>${moneyMarkup}</div><div class="training-benefit-block"><strong>Special items</strong>${specialMarkup}<div class="choice-strip"><button type="button" data-training-special-roll="${esc(pack.name)}">${special.mode === 'rolled' ? 'Reroll specials' : 'Roll specials'}</button><button type="button" data-training-special-last="${esc(pack.name)}" aria-pressed="${special.mode === 'last'}">Take final item</button></div>${awards.map(index => `<label class="training-item-note">${esc(pack.specialItems[index][0])}${special.itemDice?.[index]?.length ? ` · ${special.itemDice[index].map(result => `${result.dice}: ${result.rolls.join('+')} = ${result.total}`).join(' · ')}` : ''} · GM details<input type="text" data-training-benefit-note="${esc(pack.name)}" data-item-index="${index}" value="${esc(special.notes?.[index] || '')}" maxlength="150" placeholder="Name, form, or other detail"></label>`).join('')}</div></details>`;
+  }
   function renderTrainingPackages() {
     const selected = readTrainingSelections();
+    const openBenefits = new Set($$('details.training-benefits[open]').map(item => item.dataset.trainingBenefits));
+    const previousActive = new Set($$('#apprenticeship-package-list > .apprenticeship-package > button[aria-pressed="true"]').map(item => item.dataset.package));
     const professionIndex = developmentRules?.professions?.indexOf(form.elements.profession.value) ?? -1;
     const months = selected.reduce((total, name) => total + (trainingPackages.find(pack => pack.name === name)?.months || 0), 0);
     $('#training-duration').textContent = months ? `${months} months of training` : '';
@@ -1065,8 +1158,25 @@
       const active = selected.includes(pack.name);
       const fixed = Object.entries(pack.categories).filter(([, ranks]) => ranks).map(([category, ranks]) => `${category} +${ranks}`)
         .concat(pack.skills.map(([category, name, ranks]) => `${name} (${category}) +${ranks}`));
-      return `<div class="apprenticeship-package"><button type="button" data-package="${esc(pack.name)}" aria-pressed="${active}"><strong>${esc(pack.name)} <small>${pack.type === 'L' ? 'Lifestyle' : 'Vocational'}</small></strong><span>${pack.costs[professionIndex] ?? '—'} DP · ${pack.months} months</span></button>${active ? `<p>Fixed grants: ${esc(fixed.join(' · ') || 'none')}</p>${renderPackageChoices(pack, readTrainingChoices())}<p>Stat gains: ${esc(pack.statGains)}</p><details><summary>Starting money and special items</summary><p>Starting money: ${esc(pack.startingMoney)}</p><ul>${pack.specialItems.map(([item, chance]) => `<li>${esc(item)} · ${chance}% chance</li>`).join('')}</ul></details>` : ''}</div>`;
+      return `<div class="apprenticeship-package"><button type="button" data-package="${esc(pack.name)}" aria-pressed="${active}"><strong>${esc(pack.name)} <small>${pack.type === 'L' ? 'Lifestyle' : 'Vocational'}</small></strong><span>${pack.costs[professionIndex] ?? '—'} DP · ${pack.months} months</span></button>${active ? `<p>Fixed grants: ${esc(fixed.join(' · ') || 'none')}</p>${renderPackageChoices(pack, readTrainingChoices())}<p>Stat gains: ${esc(pack.statGains)}</p>${renderPackageBenefits(pack, openBenefits.has(pack.name) || !previousActive.has(pack.name))}` : ''}</div>`;
     }).join('');
+  }
+  function renderTrainingBenefitsSummary() {
+    const benefits = readTrainingBenefits();
+    const rewards = [];
+    readTrainingSelections().forEach(name => {
+      const pack = trainingPackages.find(item => item.name === name);
+      if (!pack) return;
+      const entry = benefits[name] || {};
+      if (packageMoneyNeedsRoll(pack) && entry.money) rewards.push(`${name}: +${entry.money.total} normal starting-money units`);
+      trainingSpecialAwards(pack, entry.special).forEach(index => {
+        const item = pack.specialItems[index][0];
+        const note = entry.special?.notes?.[index];
+        const dice = entry.special?.itemDice?.[index]?.map(result => `${result.dice}=${result.total}`).join(', ');
+        rewards.push(`${name}: ${item}${dice ? ` [${dice}]` : ''}${note ? ` (${note})` : ''}`);
+      });
+    });
+    $('#training-rewards-summary').textContent = rewards.length ? `Training rewards: ${rewards.join(' · ')}` : '';
   }
   function toggleTrainingPackage(name) {
     const pack = trainingPackages.find(item => item.name === name);
@@ -1605,6 +1715,7 @@
     $('#dp-remaining').textContent = remaining === null ? '—' : String(remaining);
     $('#dp-remaining').classList.toggle('over-budget', remaining !== null && remaining < 0);
     renderBackgroundRewardsSummary();
+    renderTrainingBenefitsSummary();
     updateSheetHints();
     updateApprenticeshipBudget();
   }
@@ -2099,6 +2210,7 @@
     $('#apprenticeship-picker').showModal();
     renderApprenticeshipStatGains();
     renderTrainingPackages();
+    $('#apprenticeship-package-list').closest('details').open = readTrainingSelections().length > 0;
     renderWeaponCostAssignments();
   };
   const openBackgroundPicker = () => { renderBackgroundPicker(); $('#background-picker').showModal(); };
@@ -2146,6 +2258,25 @@
     saveCurrent();
   });
   $('#apprenticeship-package-list').addEventListener('click', event => {
+    const benefitButton = event.target.closest('button[data-training-money-roll], button[data-training-money-fixed], button[data-training-special-roll], button[data-training-special-last]');
+    if (benefitButton) {
+      if (benefitButton.hasAttribute('data-training-money-roll')) {
+        changeTrainingBenefit(benefitButton.dataset.trainingMoneyRoll, (entry, pack) => {
+          const dice = /open-ended/i.test(pack.startingMoney) ? rollOpenEndedD10() : {rolls:[rollD10()]};
+          entry.money = {mode:'rolled', rolls:dice.rolls, total:dice.total ?? dice.rolls[0]};
+        });
+      } else if (benefitButton.hasAttribute('data-training-money-fixed')) {
+        changeTrainingBenefit(benefitButton.dataset.trainingMoneyFixed, entry => { entry.money = {mode:'fixed', rolls:[], total:6}; });
+      } else if (benefitButton.hasAttribute('data-training-special-roll')) {
+        changeTrainingBenefit(benefitButton.dataset.trainingSpecialRoll, (entry, pack) => { entry.special = rollTrainingSpecials(pack); });
+      } else if (benefitButton.hasAttribute('data-training-special-last')) {
+        changeTrainingBenefit(benefitButton.dataset.trainingSpecialLast, (entry, pack) => {
+          const last = pack.specialItems.length - 1;
+          entry.special = {mode:'last', rows:[], notes:entry.special?.notes?.[last] ? {[last]:entry.special.notes[last]} : {}, itemDice:{[last]:rollItemDice(pack.specialItems[last][0])}};
+        });
+      }
+      return;
+    }
     const categoryButton = event.target.closest('button[data-package-category]');
     if (categoryButton) {
       const name = categoryButton.dataset.package;
@@ -2167,6 +2298,31 @@
     if (button) swapWeaponCostAssignment(button.dataset.weaponCostCategory, button.dataset.weaponCostSource);
   });
   $('#apprenticeship-package-list').addEventListener('change', event => {
+    const grantLast = event.target.closest('input[data-training-grant-last]');
+    if (grantLast) {
+      changeTrainingBenefit(grantLast.dataset.trainingGrantLast, (entry, pack) => {
+        if (entry.special?.mode === 'rolled') {
+          entry.special.grantLast = grantLast.checked;
+          if (grantLast.checked) {
+            const last = pack.specialItems.length - 1;
+            entry.special.itemDice ||= {};
+            entry.special.itemDice[last] ||= rollItemDice(pack.specialItems[last][0]);
+          }
+        }
+      });
+      return;
+    }
+    const benefitNote = event.target.closest('input[data-training-benefit-note]');
+    if (benefitNote) {
+      changeTrainingBenefit(benefitNote.dataset.trainingBenefitNote, entry => {
+        if (!entry.special) return;
+        entry.special.notes ||= {};
+        const note = benefitNote.value.trim();
+        if (note) entry.special.notes[benefitNote.dataset.itemIndex] = note;
+        else delete entry.special.notes[benefitNote.dataset.itemIndex];
+      });
+      return;
+    }
     const input = event.target.closest('input[data-package-skill]');
     if (!input) return;
     const name = input.dataset.package;
