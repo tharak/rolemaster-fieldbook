@@ -255,7 +255,8 @@ input::placeholder, textarea::placeholder { color: #82998a; opacity: 1; }
 .record-header .sheet-field:nth-child(4), .record-header .sheet-field:nth-child(5), .record-header .sheet-field:nth-child(6) { border-top: 1px solid var(--line); }
 .record-body { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 3px; background: #729279; }
 .record-body > .record-section, .record-body > .record-bottom { min-width: 0; background: var(--card); border-bottom: 0; }
-.record-creation, .record-stats, .record-category-sheet, .record-skills, .record-bottom { grid-column: 1 / -1; }
+.record-character, .record-creation, .record-stats, .record-category-sheet, .record-skills, .record-bottom { grid-column: 1 / -1; }
+.record-resistance[hidden] { display: none; }
 .record-section { padding: 0 16px 16px; border-bottom: 3px solid #729279; }
 .record-section h2, .record-bottom h2 { margin: 0 -16px 13px; padding: 9px 16px; background: #294735; color: #ecf4ec; font: 700 13px/1.2 Georgia, serif; font-variant: small-caps; letter-spacing: .08em; text-transform: none; }
 .record-section-title { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin: 0 -16px 10px; padding: 0 16px; background: #294735; }

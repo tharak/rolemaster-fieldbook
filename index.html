@@ -66,7 +66,6 @@
                   <label class="choice-tile"><input type="radio" name="profession" value="Bard"><span>Bard</span></label>
                 </div>
               </fieldset>
-              <label class="sheet-field full">Training packages<input name="training" maxlength="120" readonly placeholder="Choose during apprenticeship"><small id="training-duration"></small></label>
               <fieldset class="sheet-choice-field full">
                 <legend>Realm of power</legend>
                 <div class="choice-strip">
@@ -80,7 +79,7 @@
             <p class="sheet-hint" id="profession-info"></p>
             <p class="sheet-hint" id="race-language-note"></p>
           </section>
-          <section class="record-section record-resistance">
+          <section class="record-section record-resistance" hidden>
             <h2>Resistance rolls</h2>
             <div class="resistance-grid" id="resistance-grid"></div>
             <label class="sheet-field">Other resistance notes<textarea name="resistances" rows="2" maxlength="500"></textarea></label>
@@ -149,6 +148,7 @@
           </section>
         </div>
         <div hidden>
+          <input name="training" type="hidden">
           <input name="backgroundOptions" type="hidden">
           <input name="backgroundDetails" type="hidden" value="{}">
           <input name="weaponCostAssignments" type="hidden" value="{}">

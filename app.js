@@ -1152,8 +1152,6 @@
     const openBenefits = new Set($$('details.training-benefits[open]').map(item => item.dataset.trainingBenefits));
     const previousActive = new Set($$('#apprenticeship-package-list > .apprenticeship-package > button[aria-pressed="true"]').map(item => item.dataset.package));
     const professionIndex = developmentRules?.professions?.indexOf(form.elements.profession.value) ?? -1;
-    const months = selected.reduce((total, name) => total + (trainingPackages.find(pack => pack.name === name)?.months || 0), 0);
-    $('#training-duration').textContent = months ? `${months} months of training` : '';
     $('#apprenticeship-package-list').innerHTML = trainingPackages.map(pack => {
       const active = selected.includes(pack.name);
       const fixed = Object.entries(pack.categories).filter(([, ranks]) => ranks).map(([category, ranks]) => `${category} +${ranks}`)
@@ -1708,8 +1706,6 @@
     spent += Number(form.elements.otherDp.value) || 0;
     spent += readStatGainHistory().reduce((sum, entry) => sum + (Number(entry.cost) || 0), 0);
     spent += trainingPackageCost();
-    const trainingMonths = readTrainingSelections().reduce((sum, name) => sum + (trainingPackages.find(pack => pack.name === name)?.months || 0), 0);
-    $('#training-duration').textContent = trainingMonths ? `${trainingMonths} months of training` : '';
     $('#dp-spent').textContent = String(spent);
     const remaining = hasStats ? available - spent : null;
     $('#dp-remaining').textContent = remaining === null ? '—' : String(remaining);
