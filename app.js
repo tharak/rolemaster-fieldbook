@@ -92,6 +92,36 @@
     Bard:{'Artistic • Active':5,Awareness:5,'Body Development':5,Communications:5,Influence:5,Lore:10,'Power Awareness':5,'Self Control':5,Weapon:5}
   };
   const raceAllowances = {'Common Man':[12,8,6], 'High Man':[10,12,4], 'Wood Elf':[10,12,4], Dwarf:[12,8,5], Halfling:[12,6,5]};
+  const adolescenceRaces = ['Common Man','High Man','Wood Elf','Dwarf','Halfling'];
+  // Fixed adolescence ranks from T-1.6, in the race order above.
+  const adolescenceCategoryRanks = {
+    'Armor • Light':[1,1,0,1,0], 'Armor • Medium':[0,2,0,3,0],
+    'Athletic • Brawn':[1,1,1,1,1], 'Athletic • Endurance':[1,1,1,1,1], 'Athletic • Gymnastics':[1,1,1,1,1],
+    'Awareness • Searching':[1,1,1,1,1], Communications:[1,3,2,1,1], 'Lore • General':[3,3,3,3,2],
+    'Outdoor • Animal':[1,1,1,0,0], 'Outdoor • Environmental':[2,1,5,2,1], 'Power Awareness':[0,1,1,0,0],
+    'Science/Analytic • Basic':[0,1,1,1,0], 'Subterfuge • Stealth':[1,0,4,0,5],
+    'Technical/Trade • General':[1,1,1,1,1],
+    'Weapon • 1-H Concussion':[0,0,0,4,0], 'Weapon • 1-H Edged':[1,2,1,0,0],
+    'Weapon • 2-Handed':[0,1,0,0,0], 'Weapon • Missile':[1,1,3,0,2],
+    'Weapon • Pole Arms':[1,1,0,0,0], 'Weapon • Thrown':[1,0,0,1,2]
+  };
+  const adolescenceSkillRanks = [
+    ['Armor • Light','Soft Leather',[1,0,0,0,0]], ['Armor • Light','Rigid Leather',[1,1,0,1,0]],
+    ['Armor • Medium','Chain',[0,2,0,3,0]], ['Athletic • Endurance','Swimming',[1,1,3,0,0]],
+    ['Athletic • Gymnastics','Climbing',[0,0,2,1,2]], ['Awareness • Perceptions','Alertness',[2,2,6,4,8]],
+    ['Body Development','Body Development',[2,3,1,3,2]],
+    ['Lore • General','Own Region Lore',[3,3,3,3,3]], ['Lore • General','Own Race Lore',[3,3,3,3,3]],
+    ['Outdoor • Animal','Riding (horse)',[1,1,1,0,0]],
+    ['Subterfuge • Stealth','Stalking',[1,0,4,0,5]], ['Subterfuge • Stealth','Hiding',[1,0,4,0,5]]
+  ];
+  // Starting spoken/written language ranks from the matching A-1 race entries (A-1.1–A-1.5).
+  const raceStartingLanguages = {
+    'Common Man':[['Common-speech',8,6]],
+    'High Man':[['High-speech',8,6],['Common-speech',8,6],['Grey-elvish',6,6],['High-elvish',2,2]],
+    'Wood Elf':[['Elvish',10,10],['Grey-elvish',8,6],['Common-speech',8,6],['High-elvish',4,4]],
+    Dwarf:[['Dwarvish',8,6],['Common-speech',5,5],['Elvish',4,4]],
+    Halfling:[['Small-speech',8,6],['Common-speech',8,6]]
+  };
   const raceStats = {
     'Common Man':[0,0,0,0,2,0,0,0,0,2],
     'High Man':[-2,4,0,0,0,0,0,4,-2,4],
@@ -226,6 +256,7 @@
       return `<tr class="category-record-row" data-category="${esc(category)}"><th scope="row">${esc(category)}</th><td><output class="record-stats"></output></td><td><output class="record-cost"></output></td>${rankFields}<td><output class="record-rank"></output></td><td><output class="record-stat"></output></td><td><output class="record-profession"></output></td><td><input name="record-special" aria-label="${esc(category)} first special bonus" type="number" value="${esc(values.special ?? 0)}"></td><td><input name="record-special2" aria-label="${esc(category)} second special bonus" type="number" value="${esc(values.special2 ?? 0)}"></td><td><output class="record-total"></output></td></tr><tr class="a4-skill-container" data-category="${esc(category)}"><td colspan="11"><div class="a4-skill-head"><span>Appendix A-4 skills</span><span>Ranks</span><span>New</span><span>Rank bonus</span><span>Category</span><span>Item</span><span>Special</span><span>Total</span></div><div class="a4-skill-list">${rows}</div></td></tr>`;
     }).join('');
     $$('.category-record-row').forEach(row => {
+      row.dataset.raceBase = String(Number(saved[row.dataset.category]?.raceBase) || 0);
       if ($('[name="record-buy"]', row)) {
         if (!developmentRules && saved[row.dataset.category]?.buy) row.dataset.pendingBuy = saved[row.dataset.category].buy;
         updateSkillBuyOptions(row, Number(saved[row.dataset.category]?.buy) || 0);
@@ -263,6 +294,7 @@
       if (record) {
         for (const name of ['record-start','record-special','record-special2']) { const field = $(`[name="${name}"]`, record); if (field) field.value = '0'; }
         const buy = $('[name="record-buy"]', record); if (buy) buy.value = '0';
+        record.dataset.raceBase = '0';
       }
       branch.remove();
       if (group && !$('.skill-category', parent)) parent.remove();
@@ -274,6 +306,8 @@
     const category = skill.category && skillCategoryRules[skill.category] ? skill.category : Object.keys(skillCategoryRules)[0];
     const parent = categoryRow(category).closest('.skill-category');
     const row = document.createElement('div'); row.className = 'skill-row rank-row'; row.dataset.category = category;
+    if (skill.raceGrant) row.dataset.raceGrant = skill.raceGrant;
+    if (skill.raceBase) row.dataset.raceBase = skill.raceBase;
     row.innerHTML = `<div class="rank-title"><label>Skill<input aria-label="Skill name" name="skill-name" maxlength="60" placeholder="Skill name" value="${esc(skill.name || '')}"></label><button type="button" class="change-skill-category" aria-label="Change category for ${esc(skill.name || 'skill')}">${esc(category)}</button></div><label>Before<input aria-label="Ranks before this level" name="skill-start" type="number" min="0" max="99" value="${esc(skill.start ?? skill.ranks ?? 0)}"></label><label>Buy<select aria-label="Ranks purchased this level" name="skill-buy"></select></label><label>Item<input aria-label="Item bonus" name="skill-item" type="number" value="${esc(skill.item ?? 0)}"></label><label>Special<input aria-label="Skill special bonus" name="skill-special" type="number" value="${esc(skill.special ?? 0)}"></label><output class="rank-cost"></output><button type="button" class="remove-skill" aria-label="Remove skill">×</button><div class="bonus-breakdown skill-bonus"></div>`;
     $('.category-skills', parent).append(row);
     if (!developmentRules && skill.buy) row.dataset.pendingBuy = skill.buy;
@@ -287,6 +321,50 @@
     Object.keys(character.categoryRanks || {}).filter(category => skillCategoryRules[category]).forEach(categoryRow);
     (character.skills || []).forEach(skillRow);
     updateDevelopment();
+  }
+  function applyRaceAdolescence(race) {
+    const raceIndex = adolescenceRaces.indexOf(race);
+    if (raceIndex < 0) return;
+    $$('.category-record-row').forEach(record => {
+      const field = $('[name="record-start"]', record);
+      if (!field) return;
+      const previous = Number(record.dataset.raceBase) || 0;
+      const next = adolescenceCategoryRanks[record.dataset.category]?.[raceIndex] || 0;
+      field.value = String(Math.max(0, (Number(field.value) || 0) - previous + next));
+      record.dataset.raceBase = String(next);
+      if (next) categoryRow(record.dataset.category);
+    });
+    const grants = new Map();
+    const grant = (category, name, ranks, key = `${category}:${name}`) => {
+      if (ranks) grants.set(key, {category, name, ranks});
+    };
+    adolescenceSkillRanks.forEach(([category, name, ranks]) => grant(category, name, ranks[raceIndex]));
+    Object.entries(adolescenceCategoryRanks).forEach(([category, ranks]) => {
+      if (category.startsWith('Weapon •')) grant(category, 'Choose a weapon', ranks[raceIndex], `weapon:${category}`);
+    });
+    if (race === 'Wood Elf') grant('Spells • Own Realm Open Lists', 'Choose an open spell list', 2, 'race:open-spell-list');
+    (raceStartingLanguages[race] || []).forEach(([language, spoken, written]) => {
+      grant('Communications', `${language} (spoken)`, spoken);
+      grant('Communications', `${language} (written)`, written);
+    });
+    const tracked = $$('.skill-row[data-race-grant]', $('#skills-list'));
+    tracked.forEach(row => {
+      const next = grants.get(row.dataset.raceGrant);
+      const previous = Number(row.dataset.raceBase) || 0;
+      const field = $('[name="skill-start"]', row);
+      field.value = String(Math.max(0, (Number(field.value) || 0) - previous + (next?.ranks || 0)));
+      row.dataset.raceBase = String(next?.ranks || 0);
+      if (!next && !Number(field.value) && !Number($('[name="skill-buy"]', row).value) && !Number($('[name="skill-item"]', row).value) && !Number($('[name="skill-special"]', row).value)) row.remove();
+      grants.delete(row.dataset.raceGrant);
+    });
+    grants.forEach(({category, name, ranks}, key) => {
+      const row = $$('.skill-row', $('#skills-list')).find(skill => skill.dataset.category === category && $('[name="skill-name"]', skill).value === name && !skill.dataset.raceGrant);
+      if (row) {
+        $('[name="skill-start"]', row).value = String((Number($('[name="skill-start"]', row).value) || 0) + ranks);
+        row.dataset.raceGrant = key;
+        row.dataset.raceBase = String(ranks);
+      } else skillRow({category, name, start:ranks, raceGrant:key, raceBase:ranks});
+    });
   }
   function openSkillCategoryPicker(target = null) {
     skillCategoryPickerTarget = target;
@@ -503,6 +581,7 @@
     $('#profession-info').textContent = `${primes.join(' and ')} are prime stats (90 minimum). ${requiredRealm === 'Choose at table' ? 'Choose Essence, Channeling or Mentalism as your realm.' : `${requiredRealm} is this profession’s realm.`}`;
     const [hobby, language, background] = raceAllowances[form.elements.race.value] || [0,0,0];
     $('#race-allowance').textContent = `${form.elements.race.value}: ${background} background options, ${hobby} hobby ranks and ${language} extra language ranks.`;
+    $('#race-language-note').textContent = `Starting languages: ${(raceStartingLanguages[form.elements.race.value] || []).map(([name, spoken, written]) => `${name} S${spoken}/W${written}`).join(', ')}. ${language} T-1.6 language ranks remain to allocate.`;
     $('#stat-dice').textContent = form.elements.statDice.value ? `10d10: ${form.elements.statDice.value.split(',').join(' + ')} = ${form.elements.statRoll.value}` : '';
     for (const [name, limit] of [['hobbyUsed',hobby],['languageUsed',language],['backgroundUsed',background]]) {
       const field = form.elements[name];
@@ -541,6 +620,8 @@
       buy: row.dataset.pendingBuy || $('[name="skill-buy"]', row).value || '0',
       item: $('[name="skill-item"]', row).value,
       special: $('[name="skill-special"]', row).value,
+      raceGrant: row.dataset.raceGrant || '',
+      raceBase: Number(row.dataset.raceBase) || 0,
       ranks: (Number($('[name="skill-start"]', row).value) || 0) + (Number(row.dataset.pendingBuy || $('[name="skill-buy"]', row).value) || 0)
     })).filter(skill => skill.name || Number(skill.start) || Number(skill.buy));
     const visibleCategories = new Set($$('.category-row', $('#skills-list')).map(row => row.dataset.category));
@@ -549,8 +630,9 @@
       const buy = row.dataset.pendingBuy || $('[name="record-buy"]', row)?.value || '0';
       const special = $('[name="record-special"]', row).value;
       const special2 = $('[name="record-special2"]', row).value;
-      return visibleCategories.has(row.dataset.category) || Number(start) || Number(buy) || Number(special) || Number(special2)
-        ? [[row.dataset.category, {start, buy, special, special2}]] : [];
+      const raceBase = Number(row.dataset.raceBase) || 0;
+      return visibleCategories.has(row.dataset.category) || Number(start) || Number(buy) || Number(special) || Number(special2) || raceBase
+        ? [[row.dataset.category, {start, buy, special, special2, raceBase}]] : [];
     }));
     ['skill-name','skill-start','skill-buy','skill-item','skill-special','record-start','record-buy','record-special','record-special2','a4-start','a4-buy','a4-item','a4-special'].forEach(key => delete data[key]);
     data.stats = Object.fromEntries(statNames.map((name, index) => [name, Object.fromEntries(['temp','pot','basic','racial','special','total'].map(part => [part, data[`stat-${part}-${index}`] || '']))]));
@@ -586,6 +668,7 @@
   function newCharacter() {
     currentId = crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random()}`;
     fillForm({realm:'None'});
+    applyRaceAdolescence(form.elements.race.value);
     applyProfessionStatDefaults();
     setPotentialStats(fixedPotential, 'fixed');
     ensureStatRoll();
@@ -841,6 +924,7 @@
   form.addEventListener('change', event => {
     showEditedCategory(event.target);
     syncA4SkillToTree(event.target);
+    if (event.target.name === 'race') applyRaceAdolescence(event.target.value);
     if (event.target.name === 'profession') {
       const realm = realmByProfession[event.target.value];
       form.elements.realm.value = realm === 'Choose at table' ? 'None' : realm || 'None';
