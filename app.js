@@ -252,7 +252,7 @@
       const label = name.slice(0, -1);
       return `<div class="a4-skill-row a4-template is-zero-rank" data-category="${esc(category)}"><strong>${esc(label)} <small>each instance separately</small></strong><span class="a4-template-note">Specific skills appear when chosen</span></div>`;
     }
-    return `<div class="a4-skill-row${extra ? ' a4-extra' : ''}" data-category="${esc(category)}" data-skill="${esc(name)}"><strong>${esc(name)}</strong><output class="a4-start-text">0</output><input name="a4-start" type="hidden" value="${esc(skill.start ?? skill.ranks ?? 0)}"><output class="a4-buy-text">0</output><select name="a4-buy" hidden></select><output class="a4-rank">—</output><output class="a4-category">—</output><output class="a4-item-text">0</output><input name="a4-item" type="hidden" value="${esc(skill.item ?? 0)}"><output class="a4-special-text">0</output><input name="a4-special" type="hidden" value="${esc(skill.special ?? 0)}"><output class="a4-total">—</output></div>`;
+    return `<div class="a4-skill-row${extra ? ' a4-extra' : ''}" data-category="${esc(category)}" data-skill="${esc(name)}"><strong>${esc(name)}</strong><output class="a4-start-text">0</output><input name="a4-start" type="hidden" value="${esc(skill.start ?? skill.ranks ?? 0)}"><select name="a4-buy" hidden></select><output class="a4-rank">—</output><output class="a4-category">—</output><output class="a4-item-text">0</output><input name="a4-item" type="hidden" value="${esc(skill.item ?? 0)}"><output class="a4-special-text">0</output><input name="a4-special" type="hidden" value="${esc(skill.special ?? 0)}"><output class="a4-total">—</output></div>`;
   }
   function updateA4Visibility() {
     const hideSkills = $('#hide-zero-skills').checked;
@@ -294,7 +294,6 @@
         $('[name="a4-item"]', row).value = item;
         $('[name="a4-special"]', row).value = special;
         $('.a4-start-text', row).textContent = start;
-        $('.a4-buy-text', row).textContent = buy.value;
         $('.a4-item-text', row).textContent = item;
         $('.a4-special-text', row).textContent = special;
         const ranks = (Number(start) || 0) + (Number(buy.value) || 0);
@@ -316,14 +315,14 @@
       const values = saved[category] || {};
       const standard = !rule[1] || rule[1] === 'standard';
       const rankFields = standard
-        ? `<td><output class="record-start-text">0</output><input name="record-start" type="hidden" value="${esc(values.start ?? 0)}"></td><td><output class="record-buy-text">0</output><select name="record-buy" hidden></select></td>`
-        : '<td class="not-applicable">n/a</td><td class="not-applicable">n/a</td>';
+        ? `<td><output class="record-start-text">0</output><input name="record-start" type="hidden" value="${esc(values.start ?? 0)}"><select name="record-buy" hidden></select></td>`
+        : '<td class="not-applicable">n/a</td>';
       const names = catalogNames(category);
       const listed = new Set(names.filter(name => !name.endsWith('*')));
       const categorySkills = skills.filter(skill => skill.category === category && skill.name);
       const rows = names.map(name => a4SkillRow(category, name, categorySkills.find(skill => skill.name === name))).join('')
         + categorySkills.filter(skill => !listed.has(skill.name)).map(skill => a4SkillRow(category, skill.name, skill, true)).join('');
-      return `<tr class="category-record-row" data-category="${esc(category)}"><th scope="row">${esc(category)}</th><td><output class="record-stats"></output></td><td><output class="record-cost"></output></td>${rankFields}<td><output class="record-rank"></output></td><td><output class="record-stat"></output></td><td><output class="record-profession"></output></td><td><output class="record-special-text">0</output><input name="record-special" type="hidden" value="${esc(values.special ?? 0)}"></td><td><output class="record-special2-text">0</output><input name="record-special2" type="hidden" value="${esc(values.special2 ?? 0)}"></td><td><output class="record-total"></output></td></tr><tr class="a4-skill-container" data-category="${esc(category)}"><td colspan="11"><div class="a4-skill-head"><span>Skill</span><span>Ranks</span><span>New</span><span>Rank bonus</span><span>Category</span><span>Item</span><span>Special</span><span>Total</span></div><div class="a4-skill-list">${rows}</div></td></tr>`;
+      return `<tr class="category-record-row" data-category="${esc(category)}"><th scope="row">${esc(category)}</th><td><output class="record-stats"></output></td><td><output class="record-cost"></output></td>${rankFields}<td><output class="record-rank"></output></td><td><output class="record-stat"></output></td><td><output class="record-profession"></output></td><td><output class="record-special-text">0</output><input name="record-special" type="hidden" value="${esc(values.special ?? 0)}"></td><td><output class="record-special2-text">0</output><input name="record-special2" type="hidden" value="${esc(values.special2 ?? 0)}"></td><td><output class="record-total"></output></td></tr><tr class="a4-skill-container" data-category="${esc(category)}"><td colspan="10"><div class="a4-skill-head"><span>Skill</span><span>Ranks</span><span>Rank bonus</span><span>Category</span><span>Item</span><span>Special</span><span>Total</span></div><div class="a4-skill-list">${rows}</div></td></tr>`;
     }).join('');
     $$('.category-record-row').forEach(row => {
       row.dataset.raceBase = String(Number(saved[row.dataset.category]?.raceBase) || 0);
@@ -868,7 +867,6 @@
       const stats = rule[0] === 'realm' ? ({Channeling:'In',Essence:'Em',Mentalism:'Pr'}[form.elements.realm.value] || 'Realm') : rule[0];
       if (buy) {
         $('.record-start-text', record).textContent = $('[name="record-start"]', record).value;
-        $('.record-buy-text', record).textContent = buy.value;
       }
       $('.record-special-text', record).textContent = String(special);
       $('.record-special2-text', record).textContent = String(special2);
