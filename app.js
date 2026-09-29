@@ -159,14 +159,20 @@
     return `<div class="a4-skill-row${extra ? ' a4-extra' : ''}" data-category="${esc(category)}" data-skill="${esc(name)}"><strong>${esc(name)}</strong><input name="a4-start" aria-label="${esc(name)} ranks before this level" type="number" min="0" max="99" value="${esc(skill.start ?? skill.ranks ?? 0)}"><select name="a4-buy" aria-label="${esc(name)} new ranks"></select><output class="a4-rank">—</output><output class="a4-category">—</output><input name="a4-item" aria-label="${esc(name)} item bonus" type="number" value="${esc(skill.item ?? 0)}"><input name="a4-special" aria-label="${esc(name)} special bonus" type="number" value="${esc(skill.special ?? 0)}"><output class="a4-total">—</output></div>`;
   }
   function updateA4Visibility() {
-    const hide = $('#hide-zero-skills').checked;
+    const hideSkills = $('#hide-zero-skills').checked;
+    const hideGroups = $('#hide-zero-groups').checked;
     $$('.a4-skill-container').forEach(container => {
+      const category = container.previousElementSibling;
+      const categoryRanks = Number($('[name="record-start"]', category)?.value || 0) + Number($('[name="record-buy"]', category)?.value || 0);
+      const skillRows = $$('.a4-skill-row', container);
+      const emptyGroup = categoryRanks === 0 && skillRows.every(row => row.classList.contains('is-zero-rank'));
+      category.hidden = hideGroups && emptyGroup;
       let shown = 0;
-      $$('.a4-skill-row', container).forEach(row => {
-        row.hidden = hide && row.classList.contains('is-zero-rank');
+      skillRows.forEach(row => {
+        row.hidden = hideSkills && row.classList.contains('is-zero-rank');
         if (!row.hidden) shown++;
       });
-      container.hidden = !shown;
+      container.hidden = category.hidden || !shown;
     });
   }
   function updateA4SkillRows() {
@@ -812,6 +818,7 @@
     updateDevelopment();
   });
   $('#hide-zero-skills').addEventListener('change', updateA4Visibility);
+  $('#hide-zero-groups').addEventListener('change', updateA4Visibility);
   $('#rolled-stat-pool').addEventListener('click', () => {
     rollStatPool();
     form.elements.statPoolMode.value = 'roll';

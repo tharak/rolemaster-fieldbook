@@ -372,6 +372,7 @@ input::placeholder, textarea::placeholder { color: #82998a; opacity: 1; }
 .record-category-sheet { padding-top: 0; }
 .record-category-sheet .record-section-title { flex-wrap: wrap; padding-bottom: 7px; }
 .record-category-sheet h2 span { margin-left: 6px; color: #b6d2b6; font: 10px var(--mono); }
+.record-filters { display: flex; flex-wrap: wrap; gap: 4px 14px; }
 .hide-zero-control { display: inline-flex; align-items: center; gap: 6px; color: #e5f4e8; font: 10px var(--sans); cursor: pointer; }
 .hide-zero-control input { accent-color: #a6dfb8; }
 .category-record-scroll { overflow-x: auto; }
@@ -399,7 +400,7 @@ input::placeholder, textarea::placeholder { color: #82998a; opacity: 1; }
 .a4-skill-row .a4-total { color: var(--accent-text); font-weight: 700; }
 .a4-skill-row input, .a4-skill-row select { width: 100%; min-width: 0; height: 25px; padding: 2px; border: 1px solid var(--line); border-radius: 3px; background: var(--input); color: var(--ink); text-align: center; font: 10px var(--mono); }
 .a4-template button { grid-column: 2/-1; justify-self: start; border: 0; background: none; color: var(--accent-text); font: 10px var(--sans); cursor: pointer; }
-.a4-skill-row[hidden], .a4-skill-container[hidden] { display: none !important; }
+.category-record-row[hidden], .a4-skill-row[hidden], .a4-skill-container[hidden] { display: none !important; }
 @media (max-width: 700px) { .category-record-table th:first-child { position: sticky; left: 0; z-index: 2; background: var(--card); } .category-record-head th:first-child { z-index: 3; } }
 @media (max-width: 700px) {
   .record-skills .rank-row { display: flex; flex-wrap: wrap; align-items: end; gap: 6px; }
