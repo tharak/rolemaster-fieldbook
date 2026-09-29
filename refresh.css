@@ -198,6 +198,7 @@ body { color: var(--ink); }
 .field input, .field select, .field textarea, .stat-row input, .skill-row input, .skill-row select, .lookup-controls input, .lookup-controls select {
   background: var(--input); border-color: var(--line); color: var(--ink);
 }
+select option, select optgroup { background-color: var(--input); color: var(--ink); }
 input::placeholder, textarea::placeholder { color: #82998a; opacity: 1; }
 .field input:focus, .field select:focus, .field textarea:focus, .stat-row input:focus, .skill-row input:focus, .skill-row select:focus { border-color: var(--olive); box-shadow: 0 0 0 2px #91cda530; }
 .dp-summary { background: #17251e; border-color: var(--line); }
