@@ -85,7 +85,18 @@
             <div class="resistance-grid" id="resistance-grid"></div>
             <label class="sheet-field">Other resistance notes<textarea name="resistances" rows="2" maxlength="500"></textarea></label>
           </section>
-          <section class="record-section record-stats">
+          <section class="record-section record-creation" id="creation-progress">
+            <h2>Finish character creation</h2>
+            <div class="creation-pools">
+              <div class="creation-pool"><span>Adolescence · T-1.6</span><strong>Applied</strong><small id="adolescence-summary"></small></div>
+              <div class="creation-pool"><span>Language ranks · T-1.6</span><output id="language-remaining"></output><label class="sheet-field">Ranks used<input name="languageUsed" type="number" min="0" max="99" value="0"></label></div>
+              <div class="creation-pool"><span>Hobby ranks · T-1.6</span><output id="hobby-remaining"></output><label class="sheet-field">Ranks used<input name="hobbyUsed" type="number" min="0" max="99" value="0"></label></div>
+              <div class="creation-pool"><span>Background options · T-1.6</span><output id="background-remaining"></output><label class="sheet-field">Options used<input name="backgroundUsed" type="number" min="0" max="99" value="0"></label></div>
+            </div>
+            <div class="creation-next"><strong>Remaining steps</strong><ul id="creation-steps"></ul></div>
+            <label class="sheet-field creation-notes">Adolescence choices & languages<input name="adolescence" maxlength="300" placeholder="Notes on selected weapons, hobbies and languages"></label>
+          </section>
+          <section class="record-section record-stats" id="creation-stats">
             <h2>Stats & bonuses</h2>
             <div class="stat-pool-panel">
               <div class="stat-pool-caption">Stat pool</div>
@@ -113,7 +124,7 @@
             <p class="sheet-hint" id="prime-stats"></p>
             <p class="sheet-hint" id="creation-checks" aria-live="polite"></p>
           </section>
-          <section class="record-section record-category-sheet">
+          <section class="record-section record-category-sheet" id="creation-category-sheet">
             <div class="record-section-title"><h2>Skill Category Record Sheet <span>T-6.2</span></h2><div class="record-filters"><label class="hide-zero-control"><input type="checkbox" id="hide-zero-skills"> Don't show skills with 0 rank</label><label class="hide-zero-control"><input type="checkbox" id="hide-zero-groups"> Don't show groups with 0 ranks</label></div></div>
             <div class="category-record-scroll"><table class="category-record-table"><colgroup><col class="category-name-col"><col class="category-stats-col"><col class="category-cost-col"><col span="8"></colgroup><thead><tr class="category-record-head"><th scope="col">Skill category</th><th scope="col">Stats</th><th scope="col">Dev cost</th><th scope="col">Ranks</th><th scope="col">New ranks</th><th scope="col">Rank bonus</th><th scope="col">Stat bonus</th><th scope="col">Prof. bonus</th><th scope="col">Special 1</th><th scope="col">Special 2</th><th scope="col">Total bonus</th></tr></thead><tbody id="category-record-list"></tbody></table></div>
           </section>
@@ -145,24 +156,19 @@
               <label class="sheet-field full">Alignment<input name="alignment" maxlength="120"></label>
             </div>
           </section>
-          <section class="record-section">
+          <section class="record-section" id="creation-background">
             <h2>Background information</h2>
             <label class="sheet-field">Character concept<textarea name="concept" rows="3" maxlength="400"></textarea></label>
             <label class="sheet-field">Background & history<textarea name="history" rows="4" maxlength="1200"></textarea></label>
             <label class="sheet-field">Background options<textarea name="backgroundOptions" rows="3" maxlength="600"></textarea></label>
-            <div class="sheet-fields two-up compact-fields">
-              <label class="sheet-field">Options used<input name="backgroundUsed" type="number" min="0" max="99" value="0"></label>
-              <label class="sheet-field">Hobby ranks used<input name="hobbyUsed" type="number" min="0" max="99" value="0"></label>
-              <label class="sheet-field">Language ranks used<input name="languageUsed" type="number" min="0" max="99" value="0"></label>
-            </div>
             <p class="sheet-hint" id="race-allowance"></p>
           </section>
-          <section class="record-section record-skills">
+          <section class="record-section record-skills" id="creation-skills">
             <div class="record-section-title"><h2>Commonly used skills</h2><div class="skill-tree-actions"><button type="button" id="add-category" class="text-button">＋ Add category</button><button type="button" id="add-skill" class="text-button">＋ Add skill</button></div></div>
             <div id="skill-category-picker" class="skill-category-picker" hidden><p>Choose a category</p><div id="skill-category-options"></div><button type="button" id="cancel-skill-category" class="text-button">Cancel</button></div>
             <div id="skills-list" class="skills-list"></div>
             <div class="dp-summary"><div><span>DP available</span><strong id="dp-available">—</strong></div><div><span>Spent</span><strong id="dp-spent">0</strong></div><div><span>Remaining</span><strong id="dp-remaining">—</strong></div></div>
-            <div class="sheet-fields two-up compact-fields"><label class="sheet-field">Other DP spent<input name="otherDp" type="number" min="0" max="999" value="0"></label><label class="sheet-field">Adolescence ranks & languages<input name="adolescence" maxlength="300" placeholder="Starting ranks, hobbies and languages"></label></div>
+            <div class="sheet-fields two-up compact-fields"><label class="sheet-field">Other DP spent<input name="otherDp" type="number" min="0" max="999" value="0"></label></div>
           </section>
           <section class="record-section">
             <h2>Commonly used attacks</h2>

@@ -581,7 +581,7 @@
     $('#profession-info').textContent = `${primes.join(' and ')} are prime stats (90 minimum). ${requiredRealm === 'Choose at table' ? 'Choose Essence, Channeling or Mentalism as your realm.' : `${requiredRealm} is this profession’s realm.`}`;
     const [hobby, language, background] = raceAllowances[form.elements.race.value] || [0,0,0];
     $('#race-allowance').textContent = `${form.elements.race.value}: ${background} background options, ${hobby} hobby ranks and ${language} extra language ranks.`;
-    $('#race-language-note').textContent = `Starting languages: ${(raceStartingLanguages[form.elements.race.value] || []).map(([name, spoken, written]) => `${name} S${spoken}/W${written}`).join(', ')}. ${language} T-1.6 language ranks remain to allocate.`;
+    $('#race-language-note').textContent = `Starting languages: ${(raceStartingLanguages[form.elements.race.value] || []).map(([name, spoken, written]) => `${name} S${spoken}/W${written}`).join(', ')}.`;
     $('#stat-dice').textContent = form.elements.statDice.value ? `10d10: ${form.elements.statDice.value.split(',').join(' + ')} = ${form.elements.statRoll.value}` : '';
     for (const [name, limit] of [['hobbyUsed',hobby],['languageUsed',language],['backgroundUsed',background]]) {
       const field = form.elements[name];
@@ -596,6 +596,32 @@
     else check = 'Initial choices and temporary stats complete.';
     $('#creation-checks').textContent = check;
     $('#creation-checks').classList.toggle('is-complete', check.endsWith('complete.'));
+    const raceIndex = adolescenceRaces.indexOf(form.elements.race.value);
+    const categoryRanks = Object.values(adolescenceCategoryRanks).reduce((sum, ranks) => sum + (ranks[raceIndex] || 0), 0);
+    const skillRanks = adolescenceSkillRanks.reduce((sum, [, , ranks]) => sum + (ranks[raceIndex] || 0), 0)
+      + Object.entries(adolescenceCategoryRanks).filter(([category]) => category.startsWith('Weapon •')).reduce((sum, [, ranks]) => sum + (ranks[raceIndex] || 0), 0)
+      + (form.elements.race.value === 'Wood Elf' ? 2 : 0);
+    $('#adolescence-summary').textContent = `${categoryRanks} category ranks · ${skillRanks} skill ranks`;
+    const steps = [];
+    const addStep = (label, target) => steps.push(`<li><a href="#${target}">${label}</a></li>`);
+    if (check !== 'Initial choices and temporary stats complete.') addStep(esc(check), 'creation-stats');
+    const choices = $$('.skill-row[data-race-grant]', $('#skills-list')).filter(row => $('[name="skill-name"]', row).value.startsWith('Choose ')).length;
+    if (choices) addStep(`Choose ${choices} racial weapon${choices === 1 ? '' : 's'} or spell list${choices === 1 ? '' : 's'}.`, 'creation-skills');
+    for (const [name, limit, output, label, target] of [
+      ['languageUsed',language,'#language-remaining','language ranks','creation-skills'],
+      ['hobbyUsed',hobby,'#hobby-remaining','hobby ranks','creation-skills'],
+      ['backgroundUsed',background,'#background-remaining','background options','creation-background']
+    ]) {
+      const used = Number(form.elements[name].value) || 0;
+      const left = limit - used;
+      $(output).textContent = left < 0 ? `${-left} over` : `${left} left`;
+      $(output).classList.toggle('over-budget', left < 0 || used < 0);
+      if (left !== 0 || used < 0) addStep(`${left > 0 ? `Allocate ${left}` : `Review ${-left}`} ${label}.`, target);
+    }
+    if (Number(form.elements.backgroundUsed.value) > 0 && !form.elements.backgroundOptions.value.trim()) addStep('Record chosen background options.', 'creation-background');
+    const dpRemaining = Number($('#dp-remaining').textContent);
+    if ($('#dp-remaining').textContent !== '—' && dpRemaining !== 0) addStep(`${dpRemaining > 0 ? `Spend ${dpRemaining}` : `Review ${-dpRemaining}`} development points.`, 'creation-skills');
+    $('#creation-steps').innerHTML = steps.length ? steps.join('') : '<li class="is-complete">Creation choices recorded.</li>';
   }
   function showView(name) {
     $$('.view').forEach(view => view.classList.toggle('active', view.id === `${name}-view`));
