@@ -29,50 +29,109 @@
 
     <section id="editor-view" class="view">
       <div class="editor-top"><button class="back-link" id="back-roster">← All characters</button><div class="editor-actions"><button class="button button-quiet" id="print-character">Print sheet</button><button class="button button-quiet danger" id="delete-character">Delete</button></div></div>
-      <div class="editor-title"><h1 id="editor-heading">New character</h1></div>
-      <div class="creation-layout">
-        <nav class="creation-steps" aria-label="Character creation steps" id="creation-steps"></nav>
-        <form id="character-form" class="creation-form">
-          <div class="step-heading"><span id="step-count">Step 1 of 7</span><h2 id="step-title">Concept & choices</h2><p id="step-description"></p></div>
-          <section class="creation-step" data-step="0">
-            <div class="panel field-grid">
-              <label class="field wide">Character name<input name="name" required maxlength="50" placeholder="Character name"></label>
-              <label class="field wide">Character concept<textarea name="concept" rows="2" maxlength="400" placeholder="What kind of character do you want to play?"></textarea></label>
-              <label class="field">Race<select name="race"><option>Common Man</option><option>High Man</option><option>Wood Elf</option><option>Dwarf</option><option>Halfling</option></select></label>
-              <label class="field">Profession<select name="profession"><option>Fighter</option><option>Thief</option><option>Rogue</option><option>Cleric</option><option>Magician</option><option>Mentalist</option><option>Ranger</option><option>Dabbler</option><option>Bard</option></select></label>
-              <label class="field">Realm of power<select name="realm"><option>None</option><option>Essence</option><option>Channeling</option><option>Mentalism</option><option>Choose at table</option></select></label>
-              <label class="field">Player<input name="player" maxlength="50" placeholder="Optional"></label>
-              <label class="field">Campaign<input name="campaign" maxlength="50" placeholder="Optional"></label>
-            </div>
-            <div class="step-references"><button type="button" data-open-table="T-1.1">Race abilities · T-1.1</button><button type="button" data-open-table="T-1.4">Professions · T-1.4</button></div>
-          </section>
-          <section class="creation-step" data-step="1" hidden>
-            <div class="panel"><div class="field-grid"><label class="field">Stat pool<select name="statPoolMode"><option value="660">Fixed · 660</option><option value="roll">600 + 10d10</option></select></label><label class="field" id="stat-roll-field" hidden>10d10 total<input name="statRoll" type="number" min="10" max="100" placeholder="10–100"></label></div><p class="step-hint" id="stat-budget">0 of 660 points assigned</p><p class="step-hint" id="prime-stats"></p><div class="stat-header"><span>STAT</span><span>TEMP</span><span>POT</span></div><div id="stats-list" class="stats-list"></div><p class="step-hint">Enter potential stats from T-1.3 after rolling, or use its fixed modification option.</p></div>
-            <div class="step-references"><button type="button" id="fixed-potentials">Use fixed potential option</button><button type="button" data-open-table="T-1.2">Stat costs · T-1.2</button><button type="button" data-open-table="T-1.3">Potential stats · T-1.3</button></div>
-          </section>
-          <section class="creation-step" data-step="2" hidden>
-            <div class="panel"><p class="step-hint">Copy your race’s starting skill and category ranks from T-1.6. Add hobby ranks and extra language ranks separately.</p><div class="racial-summary" id="racial-summary"></div><div class="field-grid"><label class="field wide">Adolescence ranks and languages<textarea name="adolescence" rows="7" placeholder="Starting ranks, chosen skills and languages…"></textarea></label><label class="field">Hobby ranks used<input name="hobbyUsed" type="number" min="0" max="99" value="0"></label><label class="field">Extra language ranks used<input name="languageUsed" type="number" min="0" max="99" value="0"></label></div></div>
-            <div class="step-references"><button type="button" data-open-table="T-1.6">Adolescence ranks · T-1.6</button></div>
-          </section>
-          <section class="creation-step" data-step="3" hidden>
-            <div class="panel"><p class="step-hint" id="background-allowance"></p><div class="field-grid"><label class="field">Options used<input name="backgroundUsed" type="number" min="0" max="99" value="0"></label><label class="field wide">Background options chosen<textarea name="backgroundOptions" rows="6" placeholder="Extra money, languages, stat gain rolls, special items or bonuses…"></textarea></label></div></div>
-            <div class="step-references"><button type="button" data-open-table="T-1.5">Background options · T-1.5</button></div>
-          </section>
-          <section class="creation-step" data-step="4" hidden>
-            <div class="panel"><div class="dp-summary"><div><span>AVAILABLE</span><strong id="dp-available">—</strong><small>(Ag + Co + Me + Re + SD) ÷ 5</small></div><div><span>SPENT</span><strong id="dp-spent">0</strong></div><div><span>REMAINING</span><strong id="dp-remaining">—</strong></div></div><p class="step-hint">Spend one level of development points on skills, training packages, or stat gain rolls. Record package and stat gain costs below.</p><div class="field-grid"><label class="field wide">Training packages<input name="training" maxlength="120" placeholder="Packages chosen"></label><label class="field">Other DP spent<input name="otherDp" type="number" min="0" max="999" value="0"></label></div><div class="field wide"><div class="field-label-row"><span class="field-label">Skill investments</span><button type="button" id="add-skill" class="text-button">＋ Add skill</button></div><div class="skills-head"><span>SKILL</span><span>CATEGORY</span><span>START</span><span>RANKS</span><span>DP</span><span></span></div><div id="skills-list" class="skills-list"></div></div></div>
-            <div class="step-references"><button type="button" data-open-table="T-2.8">Development costs · T-2.8</button><button type="button" data-open-table="T-2.7">Training packages · T-2.7</button><button type="button" data-open-table="T-2.3">Stat gains · T-2.3</button></div>
-          </section>
-          <section class="creation-step" data-step="5" hidden>
-            <div class="panel field-grid"><label class="field">Age<input name="age" type="number" min="16" placeholder="16+"></label><label class="field">Appearance<input name="appearance" type="number" min="1" max="100" placeholder="1–100"></label><label class="field">Personality<input name="personality" maxlength="120"></label><label class="field">Motivation<input name="motivation" maxlength="120"></label><label class="field">Alignment<input name="alignment" maxlength="120"></label><label class="field">Physical appearance<input name="physicalAppearance" maxlength="160" placeholder="Height, hair, eyes…"></label><label class="field wide">Background and history<textarea name="history" rows="5" maxlength="1200" placeholder="Where did your character come from?"></textarea></label></div>
-            <div class="step-references"><button type="button" data-open-table="T-1.7">Role traits · T-1.7</button></div>
-          </section>
-          <section class="creation-step" data-step="6" hidden>
-            <div class="panel"><p class="step-hint">Total bonuses, outfit your character, then record hits, power points, defenses, movement and spells. Starting level is 1 with 10,000 XP.</p><div class="field-grid"><label class="field">Level<input name="level" type="number" min="1" max="100" value="1"></label><label class="field">Experience points<input name="xp" type="number" min="0" value="10000"></label><label class="field">Armor type<select name="armor"><option>— Choose armor —</option><option>Plate · AT 20</option><option>Plate · AT 19</option><option>Plate · AT 18</option><option>Chain · AT 17</option><option>Chain · AT 16</option><option>Chain · AT 15</option><option>Chain · AT 14</option><option>Chain · AT 13</option><option>Rigid leather · AT 12</option><option>Rigid leather · AT 11</option><option>Rigid leather · AT 10</option><option>Soft leather · AT 9</option><option>Soft leather · AT 8</option><option>Soft leather · AT 7</option><option>Soft leather · AT 6</option><option>Soft leather · AT 5</option><option>No armor · AT 4</option><option>No armor · AT 3</option><option>No armor · AT 2</option><option>No armor · AT 1</option></select></label><label class="field">Equipment weight<input name="equipmentWeight" type="number" min="0" step="0.1"></label><label class="field">Hits<input name="hits" type="number" min="0"></label><label class="field">Power points<input name="powerPoints" type="number" min="0"></label><label class="field">Defensive bonus<input name="defensiveBonus" type="number"></label><label class="field">Base movement rate<input name="movement" type="number" min="0"></label><label class="field">Moving maneuver penalty<input name="maneuverPenalty" type="number"></label><label class="field wide">Stat, category & skill bonuses<textarea name="bonuses" rows="3" maxlength="1200" placeholder="Record total bonuses from T-2.1 and T-2.2…"></textarea></label><label class="field wide">Spells and spell lists<textarea name="spells" rows="3" maxlength="800"></textarea></label><label class="field wide">Resistance roll bonuses<textarea name="resistances" rows="2" maxlength="500"></textarea></label><label class="field wide">Equipment & notes<textarea name="notes" rows="5" maxlength="1200" placeholder="Weapons, gear and other notes…"></textarea></label></div></div>
-            <div class="step-references"><button type="button" data-open-table="T-2.1">Stat bonuses · T-2.1</button><button type="button" data-open-table="T-2.2">Rank bonuses · T-2.2</button></div>
-          </section>
-          <div class="step-footer"><button type="button" class="button button-quiet" id="previous-step">← Previous</button><span id="save-status">Saved in this browser</span><button type="button" class="button button-dark" id="next-step">Next step →</button></div>
-        </form>
-      </div>
+      <form id="character-form" class="record-sheet">
+        <div class="record-header">
+          <h1 class="record-title">Character Record Sheet <span>T-6.1</span></h1>
+          <label class="sheet-field sheet-name">Character name<input name="name" required maxlength="50" placeholder="Name"></label>
+          <label class="sheet-field">Experience points<input name="xp" type="number" min="0" value="10000"></label>
+          <label class="sheet-field">Level<input name="level" type="number" min="1" max="100" value="1"></label>
+          <label class="sheet-field">Player<input name="player" maxlength="50"></label>
+          <label class="sheet-field">Campaign (GM)<input name="campaign" maxlength="50"></label>
+        </div>
+        <div class="record-body">
+          <div class="record-column record-left">
+            <section class="record-section">
+              <h2>Character</h2>
+              <div class="sheet-fields two-up">
+                <label class="sheet-field">Race<select name="race"><option>Common Man</option><option>High Man</option><option>Wood Elf</option><option>Dwarf</option><option>Halfling</option></select></label>
+                <label class="sheet-field">Profession<select name="profession"><option>Fighter</option><option>Thief</option><option>Rogue</option><option>Cleric</option><option>Magician</option><option>Mentalist</option><option>Ranger</option><option>Dabbler</option><option>Bard</option></select></label>
+                <label class="sheet-field full">Training packages<input name="training" maxlength="120"></label>
+                <label class="sheet-field full">Realm of power<select name="realm"><option>None</option><option>Essence</option><option>Channeling</option><option>Mentalism</option><option>Choose at table</option></select></label>
+              </div>
+            </section>
+            <section class="record-section">
+              <h2>Armor & defense</h2>
+              <div class="sheet-fields two-up">
+                <label class="sheet-field full">Armor type<select name="armor"><option>— Choose armor —</option><option>Plate · AT 20</option><option>Plate · AT 19</option><option>Plate · AT 18</option><option>Chain · AT 17</option><option>Chain · AT 16</option><option>Chain · AT 15</option><option>Chain · AT 14</option><option>Chain · AT 13</option><option>Rigid leather · AT 12</option><option>Rigid leather · AT 11</option><option>Rigid leather · AT 10</option><option>Soft leather · AT 9</option><option>Soft leather · AT 8</option><option>Soft leather · AT 7</option><option>Soft leather · AT 6</option><option>Soft leather · AT 5</option><option>No armor · AT 4</option><option>No armor · AT 3</option><option>No armor · AT 2</option><option>No armor · AT 1</option></select></label>
+                <label class="sheet-field">Equipment weight<input name="equipmentWeight" type="number" min="0" step="0.1"></label>
+                <label class="sheet-field">Weight penalty<input name="weightPenalty" type="number"></label>
+                <label class="sheet-field">Base movement rate<input name="movement" type="number" min="0"></label>
+                <label class="sheet-field">Moving maneuver penalty<input name="maneuverPenalty" type="number"></label>
+                <label class="sheet-field">Missile penalty<input name="missilePenalty" type="number"></label>
+                <label class="sheet-field">Shield bonus<input name="shieldBonus" type="number"></label>
+                <label class="sheet-field full">Total normal DB<input name="defensiveBonus" type="number"></label>
+              </div>
+            </section>
+            <section class="record-section">
+              <h2>Resistance rolls</h2>
+              <div class="sheet-note-grid"><span>Channeling</span><span>Essence</span><span>Mentalism</span><span>Poison / Disease</span><span>Fear</span></div>
+              <label class="sheet-field">Bonuses by type<textarea name="resistances" rows="4" maxlength="500" placeholder="Race + stat + other = total"></textarea></label>
+            </section>
+            <section class="record-section">
+              <h2>Race / stat fixed info</h2>
+              <label class="sheet-field">Progressions & recovery<textarea name="fixedInfo" rows="4" maxlength="600" placeholder="Soul departure, recovery, body development, power points…"></textarea></label>
+            </section>
+            <section class="record-section">
+              <h2>Role traits</h2>
+              <div class="sheet-fields two-up">
+                <label class="sheet-field">Appearance<input name="appearance" type="number" min="1" max="100"></label>
+                <label class="sheet-field">Actual age<input name="age" type="number" min="1"></label>
+                <label class="sheet-field full">Physical appearance<input name="physicalAppearance" maxlength="160" placeholder="Height, hair, eyes…"></label>
+                <label class="sheet-field full">Personality<input name="personality" maxlength="120"></label>
+                <label class="sheet-field full">Motivation<input name="motivation" maxlength="120"></label>
+                <label class="sheet-field full">Alignment<input name="alignment" maxlength="120"></label>
+              </div>
+            </section>
+            <section class="record-section">
+              <h2>Background information</h2>
+              <label class="sheet-field">Character concept<textarea name="concept" rows="3" maxlength="400"></textarea></label>
+              <label class="sheet-field">Background & history<textarea name="history" rows="4" maxlength="1200"></textarea></label>
+              <label class="sheet-field">Background options<textarea name="backgroundOptions" rows="3" maxlength="600"></textarea></label>
+              <div class="sheet-fields two-up compact-fields">
+                <label class="sheet-field">Options used<input name="backgroundUsed" type="number" min="0" max="99" value="0"></label>
+                <label class="sheet-field">Hobby ranks used<input name="hobbyUsed" type="number" min="0" max="99" value="0"></label>
+                <label class="sheet-field">Language ranks used<input name="languageUsed" type="number" min="0" max="99" value="0"></label>
+              </div>
+            </section>
+          </div>
+          <div class="record-column record-right">
+            <section class="record-section record-stats">
+              <h2>Stats & bonuses</h2>
+              <div class="stat-header"><span>Stat</span><span>Temp</span><span>Pot</span><span>Basic</span><span>Racial</span><span>Special</span><span>Total</span></div>
+              <div id="stats-list" class="stats-list"></div>
+              <div class="stat-tools">
+                <label class="sheet-field">Stat pool<select name="statPoolMode"><option value="660">Fixed · 660</option><option value="roll">600 + 10d10</option></select></label>
+                <label class="sheet-field" id="stat-roll-field" hidden>10d10 total<input name="statRoll" type="number" min="10" max="100"></label>
+                <span id="stat-budget">0 of 660 points assigned</span>
+              </div>
+              <p class="sheet-hint" id="prime-stats"></p>
+            </section>
+            <section class="record-section record-skills">
+              <div class="record-section-title"><h2>Commonly used skills</h2><button type="button" id="add-skill" class="text-button">＋ Add skill</button></div>
+              <div class="skills-head"><span>Skill</span><span>Category</span><span>Before</span><span>Buy</span><span>DP</span><span></span></div>
+              <div id="skills-list" class="skills-list"></div>
+              <div class="dp-summary"><div><span>DP available</span><strong id="dp-available">—</strong></div><div><span>Spent</span><strong id="dp-spent">0</strong></div><div><span>Remaining</span><strong id="dp-remaining">—</strong></div></div>
+              <div class="sheet-fields two-up compact-fields"><label class="sheet-field">Other DP spent<input name="otherDp" type="number" min="0" max="999" value="0"></label><label class="sheet-field">Adolescence ranks & languages<input name="adolescence" maxlength="300" placeholder="Starting ranks, hobbies and languages"></label></div>
+            </section>
+            <section class="record-section">
+              <h2>Commonly used attacks</h2>
+              <div class="ruled-labels"><span>Attack / weapon</span><span>Ranks · Bonus · Fumble · Range</span></div>
+              <textarea class="ruled-textarea" name="attacks" rows="5" maxlength="700" aria-label="Commonly used attacks"></textarea>
+            </section>
+            <section class="record-section">
+              <h2>Commonly used equipment</h2>
+              <div class="ruled-labels"><span>Item</span><span>Location · Weight · Description</span></div>
+              <textarea class="ruled-textarea" name="notes" rows="6" maxlength="1200" aria-label="Commonly used equipment"></textarea>
+            </section>
+            <section class="record-bottom">
+              <div><label class="sheet-field">Hits (maximum)<input name="hits" type="number" min="0"></label></div>
+              <div><h2>Miscellaneous information</h2><label class="sheet-field">Bonuses<textarea name="bonuses" rows="3" maxlength="1200"></textarea></label><label class="sheet-field">Spells & spell lists<textarea name="spells" rows="3" maxlength="800"></textarea></label></div>
+              <div><label class="sheet-field">Power points (max.)<input name="powerPoints" type="number" min="0"></label></div>
+            </section>
+          </div>
+        </div>
+        <div class="record-references"><button type="button" id="fixed-potentials">Use fixed potential option</button><button type="button" data-open-table="T-1.1">Race abilities</button><button type="button" data-open-table="T-1.2">Stat costs</button><button type="button" data-open-table="T-1.3">Potential stats</button><button type="button" data-open-table="T-2.8">Development costs</button></div>
+      </form>
     </section>
 
     <section id="tables-view" class="view">

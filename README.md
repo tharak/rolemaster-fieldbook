@@ -20,4 +20,4 @@ Each file in `tables/` is one table or chart. `tables/index.json` provides the s
 
 ## Current scope
 
-Character creation follows the Core Rules sequence: concept and initial choices, stats, adolescence, background options, apprenticeship, role, and final preparation. Each step links to its relevant table. The stats step tracks assignment points and can apply the fixed potential stat option. The apprenticeship step calculates development points from the five development stats and applies profession-specific skill costs; training packages and extra stat gain costs can be entered as other DP spent. Characters save automatically in this browser, including the current step.
+Character creation uses a single editable page modeled on Character Record Sheet T-6.1 in the Core Rules. It groups identity, defense, resistance rolls, role traits, and background on the left, with stats, skills, attacks, equipment, hits, and power points on the right. Existing characters remain in browser storage. Stat assignment points, fixed potential stats, and apprenticeship development point costs remain available; the remaining sheet entries are recorded manually for now.
