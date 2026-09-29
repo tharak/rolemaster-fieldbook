@@ -143,12 +143,15 @@
     const bands = [[24,44],[34,39],[44,33],[54,28],[64,22],[74,17],[84,11],[91,6],[92,5],[94,4],[96,3],[98,2],[100,1]];
     return Math.min(101, value + (bands.find(([high]) => value <= high)?.[1] || 0));
   }
-  function ensureStatRoll() {
-    const roll = Number(form.elements.statRoll.value);
-    if (Number.isInteger(roll) && roll >= 10 && roll <= 100) return false;
+  function rollStatPool() {
     const dice = Array.from({length: 10}, () => Math.floor(Math.random() * 10) + 1);
     form.elements.statRoll.value = String(dice.reduce((sum, value) => sum + value, 0));
     form.elements.statDice.value = dice.join(',');
+  }
+  function ensureStatRoll() {
+    const roll = Number(form.elements.statRoll.value);
+    if (Number.isInteger(roll) && roll >= 10 && roll <= 100) return false;
+    rollStatPool();
     return true;
   }
   function updateSheetHints() {
@@ -459,7 +462,7 @@
     saveCurrent();
   });
   $('#rolled-stat-pool').addEventListener('click', () => {
-    ensureStatRoll();
+    rollStatPool();
     form.elements.statPoolMode.value = 'roll';
     saveCurrent();
   });
