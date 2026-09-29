@@ -319,10 +319,10 @@ input::placeholder, textarea::placeholder { color: #82998a; opacity: 1; }
 .record-skills .skill-cell { min-width: 0; }
 .record-skills .skill-cell input, .record-skills .skill-cell select { width: 100%; background: var(--input); border-color: var(--line); color: var(--ink); }
 .record-skills .skill-cell small { display: none; }
-.record-skills .dp-summary { margin: 14px 0 0; }
-.record-skills .dp-summary > div { padding: 8px 12px; }
-.record-skills .dp-summary strong { font: 700 19px var(--mono); }
-.record-skills .dp-summary span { text-transform: uppercase; font-size: 9px; }
+.record-category-sheet .dp-summary { margin: 14px 0 0; }
+.record-category-sheet .dp-summary > div { padding: 8px 12px; }
+.record-category-sheet .dp-summary strong { font: 700 19px var(--mono); }
+.record-category-sheet .dp-summary span { text-transform: uppercase; font-size: 9px; }
 .ruled-labels { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; color: var(--muted); font: 10px var(--mono); }
 .ruled-textarea { display: block; width: 100%; margin-top: 3px; padding: 3px 2px; border: 0; background: repeating-linear-gradient(to bottom, transparent 0 27px, #4e6855 27px 28px); color: var(--ink); font: 13px/28px var(--mono); resize: vertical; outline: none; }
 .ruled-textarea:focus { background-color: #1f3528; }

@@ -994,7 +994,6 @@
     const requiredRealm = realmByProfession[form.elements.profession.value];
     $('#profession-info').textContent = `${primes.join(' and ')} are prime stats (90 minimum). ${requiredRealm === 'Choose at table' ? 'Choose Essence, Channeling or Mentalism as your realm.' : `${requiredRealm} is this profession’s realm.`}`;
     const [hobby, language, background] = raceAllowances[form.elements.race.value] || [0,0,0];
-    $('#race-allowance').textContent = `${form.elements.race.value}: ${background} background options, ${hobby} hobby ranks and ${language} extra language ranks.`;
     $('#language-spent-label').textContent = `${Number(form.elements.languageUsed.value) || 0} used`;
     $('#hobby-spent-label').textContent = `${Number(form.elements.hobbyUsed.value) || 0} used`;
     $('#background-spent-label').textContent = `${Number(form.elements.backgroundUsed.value) || 0} used`;
@@ -1026,10 +1025,10 @@
     if (weaponChoices) steps.push(`<li><button type="button" class="creation-step-button" data-open-race-weapons>Choose ${weaponChoices} racial weapon${weaponChoices === 1 ? '' : 's'}.</button></li>`);
     const spellChoice = $$('.skill-row[data-race-grant="race:open-spell-list"]', $('#skills-list')).find(row => $('[name="skill-name"]', row).value.startsWith('Choose '));
     if (spellChoice) steps.push('<li><button type="button" class="creation-step-button" data-open-spell-choice>Choose an open spell list.</button></li>');
-    for (const [name, limit, output, label, target] of [
-      ['languageUsed',language,'#language-remaining','language ranks','creation-skills'],
-      ['hobbyUsed',hobby,'#hobby-remaining','hobby ranks','creation-skills'],
-      ['backgroundUsed',background,'#background-remaining','background options','creation-background']
+    for (const [name, limit, output, label] of [
+      ['languageUsed',language,'#language-remaining','language ranks'],
+      ['hobbyUsed',hobby,'#hobby-remaining','hobby ranks'],
+      ['backgroundUsed',background,'#background-remaining','background options']
     ]) {
       const used = Number(form.elements[name].value) || 0;
       const left = limit - used;
@@ -1040,14 +1039,13 @@
         if (name === 'languageUsed') steps.push(`<li><button type="button" class="creation-step-button" data-open-language-picker>${text}</button></li>`);
         else if (name === 'hobbyUsed') steps.push(`<li><button type="button" class="creation-step-button" data-open-hobby-picker>${text}</button></li>`);
         else if (name === 'backgroundUsed') steps.push(`<li><button type="button" class="creation-step-button" data-open-background-picker>${text}</button></li>`);
-        else addStep(text, target);
       }
     }
     const overHobbyLimit = hobbyOverLimitCount();
     if (overHobbyLimit) steps.push(`<li><button type="button" class="creation-step-button" data-open-hobby-picker>Review ${overHobbyLimit} hobby allocation${overHobbyLimit === 1 ? '' : 's'} above the ${esc(form.elements.profession.value)} limit.</button></li>`);
     if (Number(form.elements.backgroundUsed.value) > 0 && !form.elements.backgroundOptions.value.trim()) steps.push('<li><button type="button" class="creation-step-button" data-open-background-picker>Record chosen background option details.</button></li>');
     const dpRemaining = Number($('#dp-remaining').textContent);
-    if ($('#dp-remaining').textContent !== '—' && dpRemaining !== 0) addStep(`${dpRemaining > 0 ? `Spend ${dpRemaining}` : `Review ${-dpRemaining}`} development points.`, 'creation-skills');
+    if ($('#dp-remaining').textContent !== '—' && dpRemaining !== 0) addStep(`${dpRemaining > 0 ? `Spend ${dpRemaining}` : `Review ${-dpRemaining}`} development points.`, 'creation-category-sheet');
     $('#creation-steps').innerHTML = steps.length ? steps.join('') : '<li class="is-complete">Creation choices recorded.</li>';
   }
   function showView(name) {
@@ -1138,7 +1136,7 @@
     const data = formData();
     if (!data.name.trim()) return;
     const previous = characters.findIndex(item => item.id === currentId);
-    const saved = {id: currentId, ...data};
+    const saved = {...(previous >= 0 ? characters[previous] : {}), id: currentId, ...data};
     if (previous < 0) characters.unshift(saved); else characters[previous] = saved;
     writeCharacters(); renderRoster();
   }
@@ -1325,8 +1323,6 @@
   $('#empty-new-character').addEventListener('click', newCharacter);
   $$('.filter-chip').forEach(button => button.addEventListener('click', () => openTableGroup(button.dataset.group)));
   $('#back-roster').addEventListener('click', () => { saveCurrent(); renderRoster(); showView('home'); });
-  $('#add-skill').addEventListener('click', () => openSkillCategoryPicker());
-  $('#add-category').addEventListener('click', () => openSkillCategoryPicker('category'));
   $('#cancel-skill-category').addEventListener('click', () => { $('#skill-category-picker').hidden = true; skillCategoryPickerTarget = null; });
   $('#skill-category-options').addEventListener('click', event => {
     const button = event.target.closest('button[data-category]');

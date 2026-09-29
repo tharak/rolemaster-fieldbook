@@ -128,46 +128,6 @@
           <section class="record-section record-category-sheet" id="creation-category-sheet">
             <div class="record-section-title"><h2>Skill Category Record Sheet <span>T-6.2</span></h2><div class="record-filters"><label class="hide-zero-control"><input type="checkbox" id="hide-zero-skills"> Don't show skills with 0 rank</label><label class="hide-zero-control"><input type="checkbox" id="hide-zero-groups"> Don't show groups with 0 ranks</label></div></div>
             <div class="category-record-scroll"><table class="category-record-table"><colgroup><col class="category-name-col"><col class="category-stats-col"><col class="category-cost-col"><col span="8"></colgroup><thead><tr class="category-record-head"><th scope="col">Skill category</th><th scope="col">Stats</th><th scope="col">Dev cost</th><th scope="col">Ranks</th><th scope="col">New ranks</th><th scope="col">Rank bonus</th><th scope="col">Stat bonus</th><th scope="col">Prof. bonus</th><th scope="col">Special 1</th><th scope="col">Special 2</th><th scope="col">Total bonus</th></tr></thead><tbody id="category-record-list"></tbody></table></div>
-          </section>
-          <section class="record-section">
-            <h2>Armor & defense</h2>
-            <div class="sheet-fields two-up">
-              <label class="sheet-field full">Armor type<select name="armor"><option>— Choose armor —</option><option>Plate · AT 20</option><option>Plate · AT 19</option><option>Plate · AT 18</option><option>Chain · AT 17</option><option>Chain · AT 16</option><option>Chain · AT 15</option><option>Chain · AT 14</option><option>Chain · AT 13</option><option>Rigid leather · AT 12</option><option>Rigid leather · AT 11</option><option>Rigid leather · AT 10</option><option>Soft leather · AT 9</option><option>Soft leather · AT 8</option><option>Soft leather · AT 7</option><option>Soft leather · AT 6</option><option>Soft leather · AT 5</option><option>No armor · AT 4</option><option>No armor · AT 3</option><option>No armor · AT 2</option><option>No armor · AT 1</option></select></label>
-              <label class="sheet-field">Equipment weight<input name="equipmentWeight" type="number" min="0" step="0.1"></label>
-              <label class="sheet-field">Weight penalty<input name="weightPenalty" type="number"></label>
-              <label class="sheet-field">Base movement rate<input name="movement" type="number" min="0"></label>
-              <label class="sheet-field">Moving maneuver penalty<input name="maneuverPenalty" type="number"></label>
-              <label class="sheet-field">Missile penalty<input name="missilePenalty" type="number"></label>
-              <label class="sheet-field">Shield bonus<input name="shieldBonus" type="number"></label>
-              <label class="sheet-field full">Total normal DB<input name="defensiveBonus" type="number"></label>
-            </div>
-          </section>
-          <section class="record-section">
-            <h2>Race / stat fixed info</h2>
-            <label class="sheet-field">Progressions & recovery<textarea name="fixedInfo" rows="4" maxlength="600" placeholder="Soul departure, recovery, body development, power points…"></textarea></label>
-          </section>
-          <section class="record-section">
-            <h2>Role traits</h2>
-            <div class="sheet-fields two-up">
-              <label class="sheet-field">Appearance<input name="appearance" type="number" min="1" max="100"></label>
-              <label class="sheet-field">Actual age<input name="age" type="number" min="1"></label>
-              <label class="sheet-field full">Physical appearance<input name="physicalAppearance" maxlength="160" placeholder="Height, hair, eyes…"></label>
-              <label class="sheet-field full">Personality<input name="personality" maxlength="120"></label>
-              <label class="sheet-field full">Motivation<input name="motivation" maxlength="120"></label>
-              <label class="sheet-field full">Alignment<input name="alignment" maxlength="120"></label>
-            </div>
-          </section>
-          <section class="record-section" id="creation-background">
-            <h2>Background information</h2>
-            <label class="sheet-field">Character concept<textarea name="concept" rows="3" maxlength="400"></textarea></label>
-            <label class="sheet-field">Background & history<textarea name="history" rows="4" maxlength="1200"></textarea></label>
-            <label class="sheet-field">Background options<textarea name="backgroundOptions" rows="3" maxlength="600"></textarea></label>
-            <p class="sheet-hint" id="race-allowance"></p>
-          </section>
-          <section class="record-section record-skills" id="creation-skills">
-            <div class="record-section-title"><h2>Commonly used skills</h2><div class="skill-tree-actions"><button type="button" id="add-category" class="text-button">＋ Add category</button><button type="button" id="add-skill" class="text-button">＋ Add skill</button></div></div>
-            <div id="skill-category-picker" class="skill-category-picker" hidden><p>Choose a category</p><div id="skill-category-options"></div><button type="button" id="cancel-skill-category" class="text-button">Cancel</button></div>
-            <div id="skills-list" class="skills-list"></div>
             <div class="dp-summary"><div><span>DP available</span><strong id="dp-available">—</strong></div><div><span>Spent</span><strong id="dp-spent">0</strong></div><div><span>Remaining</span><strong id="dp-remaining">—</strong></div></div>
             <div class="sheet-fields two-up compact-fields"><label class="sheet-field">Other DP spent<input name="otherDp" type="number" min="0" max="999" value="0"></label></div>
           </section>
@@ -187,6 +147,11 @@
             <div><label class="sheet-field">Power points (max.)<input name="powerPoints" type="number" min="0"></label></div>
           </section>
         </div>
+        <div hidden>
+          <input name="backgroundOptions" type="hidden">
+          <div id="skill-category-picker" hidden><div id="skill-category-options"></div><button type="button" id="cancel-skill-category">Cancel</button></div>
+          <div id="skills-list"></div>
+        </div>
       </form>
       <dialog id="language-picker" aria-labelledby="language-picker-title">
         <div class="language-picker-head"><div><h2 id="language-picker-title">Adolescence languages</h2><p id="language-picker-subtitle"></p></div><button type="button" id="close-language-picker" aria-label="Close language picker">×</button></div>
@@ -198,7 +163,7 @@
       <dialog id="hobby-picker" aria-labelledby="hobby-picker-title">
         <div class="language-picker-head"><div><h2 id="hobby-picker-title">Hobby ranks</h2><p id="hobby-picker-subtitle"></p></div><button type="button" id="close-hobby-picker" aria-label="Close hobby picker">×</button></div>
         <div class="language-picker-budget"><strong id="hobby-picker-remaining"></strong><span id="hobby-picker-used"></span></div>
-        <p class="language-picker-note">Spend ranks on skills or skill categories. A choice may receive only as many ranks as your profession can develop in one level, and its development cost must be below 40. Add any specific skill missing here in Commonly used skills, then reopen this picker.</p>
+        <p class="language-picker-note">Spend ranks on skills or skill categories. A choice may receive only as many ranks as your profession can develop in one level, and its development cost must be below 40. Add specific skills from the T-6.2 sheet before opening this picker.</p>
         <label class="hobby-search">Find a skill or category<input id="hobby-search" type="search" placeholder="Search choices"></label>
         <div class="hobby-filters" role="group" aria-label="Hobby rank filters"><button type="button" id="hide-zero-hobby-skills" aria-pressed="false">Hide 0-rank skills</button><button type="button" id="hide-zero-hobby-categories" aria-pressed="false">Hide 0-rank categories</button></div>
         <div id="hobby-picker-list" class="hobby-picker-list"></div>
