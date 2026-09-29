@@ -90,7 +90,7 @@
             <div class="creation-pools">
               <div class="creation-pool"><span>Adolescence · T-1.6</span><strong>Applied</strong><small id="adolescence-summary"></small></div>
               <div class="creation-pool"><span>Language ranks · T-1.6</span><output id="language-remaining"></output><small id="language-spent-label"></small><button type="button" id="open-language-picker" class="creation-pick-button">Choose languages</button><input name="languageUsed" type="hidden" value="0"></div>
-              <div class="creation-pool"><span>Hobby ranks · T-1.6</span><output id="hobby-remaining"></output><label class="sheet-field">Ranks used<input name="hobbyUsed" type="number" min="0" max="99" value="0"></label></div>
+              <div class="creation-pool"><span>Hobby ranks · T-1.6</span><output id="hobby-remaining"></output><small id="hobby-spent-label"></small><button type="button" id="open-hobby-picker" class="creation-pick-button">Choose hobbies</button><input name="hobbyUsed" type="hidden" value="0"></div>
               <div class="creation-pool"><span>Background options · T-1.6</span><output id="background-remaining"></output><label class="sheet-field">Options used<input name="backgroundUsed" type="number" min="0" max="99" value="0"></label></div>
             </div>
             <div class="creation-next"><strong>Remaining steps</strong><ul id="creation-steps"></ul></div>
@@ -193,6 +193,18 @@
         <p class="language-picker-note">Spoken and written are separate skills. Enter total ranks; only ranks above the base shown for each skill spend from this pool.</p>
         <div id="language-picker-list" class="language-picker-list"></div>
         <p id="language-legacy-note" class="language-picker-note" hidden></p>
+      </dialog>
+      <dialog id="hobby-picker" aria-labelledby="hobby-picker-title">
+        <div class="language-picker-head"><div><h2 id="hobby-picker-title">Hobby ranks</h2><p id="hobby-picker-subtitle"></p></div><button type="button" id="close-hobby-picker" aria-label="Close hobby picker">×</button></div>
+        <div class="language-picker-budget"><strong id="hobby-picker-remaining"></strong><span id="hobby-picker-used"></span></div>
+        <p class="language-picker-note">Spend ranks on skills or skill categories. A choice may receive only as many ranks as your profession can develop in one level, and its development cost must be below 40. Add any specific skill missing here in Commonly used skills, then reopen this picker.</p>
+        <label class="hobby-search">Find a skill or category<input id="hobby-search" type="search" placeholder="Search choices"></label>
+        <div id="hobby-picker-list" class="hobby-picker-list"></div>
+        <p id="hobby-legacy-note" class="language-picker-note" hidden></p>
+      </dialog>
+      <dialog id="skill-choice-dialog" aria-labelledby="skill-choice-title">
+        <div class="language-picker-head"><div><h2 id="skill-choice-title">Choose a racial weapon</h2><p id="skill-choice-subtitle"></p></div><button type="button" id="close-skill-choice" aria-label="Close skill picker">×</button></div>
+        <div id="skill-choice-list" class="skill-choice-dialog-list"></div>
       </dialog>
     </section>
 

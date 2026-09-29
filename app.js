@@ -13,6 +13,7 @@
   let currentId = null;
   let activeTableGroup = 'all';
   let skillCategoryPickerTarget = null;
+  let skillChoiceTarget = null;
   const primeStats = {Fighter:['Strength','Constitution'], Thief:['Agility','Quickness'], Rogue:['Agility','Strength'], Cleric:['Intuition','Memory'], Magician:['Empathy','Reasoning'], Mentalist:['Presence','Self Discipline'], Ranger:['Intuition','Constitution'], Dabbler:['Empathy','Agility'], Bard:['Presence','Memory']};
   // Category stats and rank progressions from Core Rules T-2.5.
   const skillCategoryRules = {
@@ -278,6 +279,7 @@
     }).join('');
     $$('.category-record-row').forEach(row => {
       row.dataset.raceBase = String(Number(saved[row.dataset.category]?.raceBase) || 0);
+      row.dataset.hobbySpent = String(Number(saved[row.dataset.category]?.hobbySpent) || 0);
       if ($('[name="record-buy"]', row)) {
         if (!developmentRules && saved[row.dataset.category]?.buy) row.dataset.pendingBuy = saved[row.dataset.category].buy;
         updateSkillBuyOptions(row, Number(saved[row.dataset.category]?.buy) || 0);
@@ -316,6 +318,8 @@
         for (const name of ['record-start','record-special','record-special2']) { const field = $(`[name="${name}"]`, record); if (field) field.value = '0'; }
         const buy = $('[name="record-buy"]', record); if (buy) buy.value = '0';
         record.dataset.raceBase = '0';
+        form.elements.hobbyUsed.value = String(Math.max(0, (Number(form.elements.hobbyUsed.value) || 0) - (Number(record.dataset.hobbySpent) || 0)));
+        record.dataset.hobbySpent = '0';
       }
       branch.remove();
       if (group && !$('.skill-category', parent)) parent.remove();
@@ -330,12 +334,17 @@
     if (skill.raceGrant) row.dataset.raceGrant = skill.raceGrant;
     if (skill.raceBase) row.dataset.raceBase = skill.raceBase;
     if (skill.languageSpent) row.dataset.languageSpent = skill.languageSpent;
+    if (skill.hobbySpent) row.dataset.hobbySpent = skill.hobbySpent;
     const choice = skill.raceGrant?.startsWith('weapon:') || skill.raceGrant === 'race:open-spell-list';
-    row.innerHTML = `<div class="rank-title"><label>Skill<input ${choice ? 'type="hidden"' : 'type="text"'} aria-label="Skill name" name="skill-name" maxlength="60" placeholder="Skill name" value="${esc(skill.name || '')}"></label>${choice ? `<button type="button" class="choose-skill" aria-expanded="false">${esc(skill.name || 'Choose skill')} ▾</button>` : ''}<button type="button" class="change-skill-category" aria-label="Change category for ${esc(skill.name || 'skill')}">${esc(category)}</button></div><label>Before<input aria-label="Ranks before this level" name="skill-start" type="number" min="0" max="99" value="${esc(skill.start ?? skill.ranks ?? 0)}"></label><label>Buy<select aria-label="Ranks purchased this level" name="skill-buy"></select></label><label>Item<input aria-label="Item bonus" name="skill-item" type="number" value="${esc(skill.item ?? 0)}"></label><label>Special<input aria-label="Skill special bonus" name="skill-special" type="number" value="${esc(skill.special ?? 0)}"></label><output class="rank-cost"></output><button type="button" class="remove-skill" aria-label="Remove skill">×</button>${choice ? '<div class="skill-choice-options" hidden></div>' : ''}<div class="bonus-breakdown skill-bonus"></div>`;
+    row.innerHTML = `<div class="rank-title"><label>Skill<input ${choice ? 'type="hidden"' : 'type="text"'} aria-label="Skill name" name="skill-name" maxlength="60" placeholder="Skill name" value="${esc(skill.name || '')}"></label>${choice ? `<button type="button" class="choose-skill" aria-haspopup="dialog">${esc(skill.name || 'Choose skill')} ▾</button>` : ''}<button type="button" class="change-skill-category" aria-label="Change category for ${esc(skill.name || 'skill')}">${esc(category)}</button></div><label>Before<input aria-label="Ranks before this level" name="skill-start" type="number" min="0" max="99" value="${esc(skill.start ?? skill.ranks ?? 0)}"></label><label>Buy<select aria-label="Ranks purchased this level" name="skill-buy"></select></label><label>Item<input aria-label="Item bonus" name="skill-item" type="number" value="${esc(skill.item ?? 0)}"></label><label>Special<input aria-label="Skill special bonus" name="skill-special" type="number" value="${esc(skill.special ?? 0)}"></label><output class="rank-cost"></output><button type="button" class="remove-skill" aria-label="Remove skill">×</button><div class="bonus-breakdown skill-bonus"></div>`;
     $('.category-skills', parent).append(row);
     if (!developmentRules && skill.buy) row.dataset.pendingBuy = skill.buy;
     updateSkillBuyOptions(row, Number(skill.buy) || 0);
-    $('.remove-skill', row).addEventListener('click', () => { row.remove(); updateDevelopment(); saveCurrent(); });
+    $('.remove-skill', row).addEventListener('click', () => {
+      form.elements.hobbyUsed.value = String(Math.max(0, (Number(form.elements.hobbyUsed.value) || 0) - (Number(row.dataset.hobbySpent) || 0)));
+      form.elements.languageUsed.value = String(Math.max(0, (Number(form.elements.languageUsed.value) || 0) - (Number(row.dataset.languageSpent) || 0)));
+      row.remove(); updateDevelopment(); saveCurrent();
+    });
     $('.change-skill-category', row).addEventListener('click', () => openSkillCategoryPicker(row));
     if (choice) attachSkillChoice(row);
     return row;
@@ -346,12 +355,9 @@
       const field = $('[name="skill-name"]', row);
       field.type = 'hidden';
       button = document.createElement('button');
-      button.type = 'button'; button.className = 'choose-skill'; button.setAttribute('aria-expanded', 'false');
+      button.type = 'button'; button.className = 'choose-skill'; button.setAttribute('aria-haspopup', 'dialog');
       button.textContent = `${field.value} ▾`;
       $('.change-skill-category', row).before(button);
-      const panel = document.createElement('div');
-      panel.className = 'skill-choice-options'; panel.hidden = true;
-      $('.bonus-breakdown', row).before(panel);
     }
     button.addEventListener('click', () => openSkillChoice(row));
   }
@@ -367,28 +373,21 @@
       const field = $('[name="skill-name"]', row);
       if (!skillChoices(row).includes(field.value)) field.value = row.dataset.raceGrant === 'race:open-spell-list' ? 'Choose an open spell list' : 'Choose a weapon';
       button.textContent = `${field.value} ▾`;
-      $('.skill-choice-options', row).hidden = true;
-      button.setAttribute('aria-expanded', 'false');
     });
   }
   function openSkillChoice(row) {
-    const panel = $('.skill-choice-options', row);
-    const open = panel.hidden;
-    $$('.skill-choice-options', $('#skills-list')).forEach(item => {
-      item.hidden = true;
-      $('.choose-skill', item.closest('.skill-row')).setAttribute('aria-expanded', 'false');
-    });
-    if (!open) return;
+    skillChoiceTarget = row;
     const choices = skillChoices(row);
-    panel.innerHTML = choices.length
-      ? `<span>Pick ${row.dataset.raceGrant === 'race:open-spell-list' ? `${esc(form.elements.realm.value)} open spell list` : 'a racial weapon'}</span><div>${choices.map(name => `<button type="button" data-choice="${esc(name)}" aria-pressed="${name === $('[name="skill-name"]', row).value}">${esc(name)}</button>`).join('')}</div>`
-      : '<span>Choose a realm of power in Character first.</span>';
-    panel.hidden = false;
-    $('.choose-skill', row).setAttribute('aria-expanded', 'true');
-    panel.scrollIntoView({block:'nearest'});
+    const spell = row.dataset.raceGrant === 'race:open-spell-list';
+    $('#skill-choice-title').textContent = spell ? 'Choose an open spell list' : 'Choose a racial weapon';
+    $('#skill-choice-subtitle').textContent = spell ? `${form.elements.realm.value} open lists` : `${form.elements.race.value} · ${row.dataset.category}`;
+    $('#skill-choice-list').innerHTML = choices.length
+      ? choices.map(name => `<button type="button" data-choice="${esc(name)}" aria-pressed="${name === $('[name="skill-name"]', row).value}">${esc(name)}</button>`).join('')
+      : '<p>Choose a realm of power in Character first.</p>';
+    $('#skill-choice-dialog').showModal();
   }
   function languageSkillRow(name) {
-    return $$('.skill-row', $('#skills-list')).find(row => row.dataset.category === 'Communications' && $('[name="skill-name"]', row).value === name);
+    return findSkillRow('Communications', name);
   }
   function updateLanguagePickerBudget() {
     const limit = raceAllowances[form.elements.race.value]?.[1] || 0;
@@ -440,6 +439,83 @@
     updateDevelopment();
     updateLanguagePickerBudget();
     saveCurrent();
+  }
+  function hobbyRankLimit(category) {
+    const costs = developmentRules?.categories?.[category]?.[form.elements.profession.value] || [];
+    return costs.filter(cost => cost < 40).length;
+  }
+  function hobbySkillOptions() {
+    const options = new Map();
+    const add = (category, name) => {
+      if (!name || name.startsWith('Choose ') || !hobbyRankLimit(category)) return;
+      options.set(`${category}:${name}`, {category, name});
+    };
+    Object.entries(a4Skills).forEach(([category, names]) => names.split('|').filter(name => name && !name.endsWith('*')).forEach(name => add(category, name)));
+    $$('.skill-row', $('#skills-list')).forEach(row => add(row.dataset.category, $('[name="skill-name"]', row).value));
+    Object.entries(raceWeaponChoices[form.elements.race.value] || {}).forEach(([category, names]) => names.forEach(name => add(category, name)));
+    (raceAdolescenceLanguages[form.elements.race.value] || []).forEach(([name]) => { add('Communications', `${name} (spoken)`); add('Communications', `${name} (written)`); });
+    return [...options.values()].sort((a, b) => a.category.localeCompare(b.category) || a.name.localeCompare(b.name));
+  }
+  function updateHobbyPickerBudget() {
+    const limit = raceAllowances[form.elements.race.value]?.[0] || 0;
+    const used = Number(form.elements.hobbyUsed.value) || 0;
+    const allocatedSkills = $$('.skill-row[data-hobby-spent]', $('#skills-list')).reduce((sum, row) => sum + (Number(row.dataset.hobbySpent) || 0), 0);
+    const allocatedCategories = $$('.category-record-row[data-hobby-spent]').reduce((sum, row) => sum + (Number(row.dataset.hobbySpent) || 0), 0);
+    $('#hobby-picker-remaining').textContent = `${Math.max(0, limit - used)} ranks left`;
+    $('#hobby-picker-used').textContent = `${used} of ${limit} spent`;
+    const legacy = Math.max(0, used - allocatedSkills - allocatedCategories);
+    const note = $('#hobby-legacy-note');
+    note.hidden = !legacy;
+    note.innerHTML = legacy ? `${legacy} previously recorded rank${legacy === 1 ? '' : 's'} have no skill assignment. <button type="button" id="reset-unassigned-hobbies">Reset unassigned ranks</button> to allocate them here.` : '';
+  }
+  function hobbyChoiceMarkup(kind, category, name = '') {
+    const row = kind === 'category'
+      ? $$('.category-record-row').find(item => item.dataset.category === category)
+      : findSkillRow(category, name);
+    const field = kind === 'category' ? $('[name="record-start"]', row) : row ? $('[name="skill-start"]', row) : null;
+    const current = Number(field?.value) || 0;
+    const spent = Number(row?.dataset.hobbySpent) || 0;
+    const base = Math.max(0, current - spent);
+    const max = Math.min(99, base + hobbyRankLimit(category));
+    const label = kind === 'category' ? category : name;
+    return `<label class="hobby-choice" data-search="${esc(`${category} ${name}`.toLowerCase())}"><span><strong>${esc(label)}</strong>${kind === 'skill' ? `<small>${esc(category)}</small>` : '<small>Skill category</small>'}</span><input type="number" inputmode="numeric" min="${base}" max="${max}" value="${current}" data-kind="${kind}" data-category="${esc(category)}" data-name="${esc(name)}" aria-label="${esc(label)} total hobby ranks"><em>Base ${base} · +${hobbyRankLimit(category)} max</em></label>`;
+  }
+  function findSkillRow(category, name) {
+    return $$('.skill-row', $('#skills-list')).find(row => row.dataset.category === category && $('[name="skill-name"]', row).value === name);
+  }
+  function renderHobbyPicker() {
+    $('#hobby-picker-subtitle').textContent = `${form.elements.race.value} · ${form.elements.profession.value} costs`;
+    const categories = Object.entries(skillCategoryRules).filter(([category, rule]) => (!rule[1] || rule[1] === 'standard') && hobbyRankLimit(category));
+    const skills = hobbySkillOptions();
+    $('#hobby-picker-list').innerHTML = developmentRules
+      ? `<h3>Skill categories</h3>${categories.map(([category]) => hobbyChoiceMarkup('category', category)).join('')}<h3>Skills</h3>${skills.map(({category, name}) => hobbyChoiceMarkup('skill', category, name)).join('')}`
+      : '<p>Skill costs are loading. Try again in a moment.</p>';
+    $('#hobby-search').value = '';
+    updateHobbyPickerBudget();
+  }
+  function updateHobbyAllocation(input) {
+    const kind = input.dataset.kind;
+    const category = input.dataset.category;
+    const name = input.dataset.name;
+    let row = kind === 'category' ? $$('.category-record-row').find(item => item.dataset.category === category) : findSkillRow(category, name);
+    const field = row ? $(`[name="${kind === 'category' ? 'record-start' : 'skill-start'}"]`, row) : null;
+    const previous = Number(row?.dataset.hobbySpent) || 0;
+    const current = Number(field?.value) || 0;
+    const base = Math.max(0, current - previous);
+    const limit = raceAllowances[form.elements.race.value]?.[0] || 0;
+    const used = Number(form.elements.hobbyUsed.value) || 0;
+    const requested = Number(input.value);
+    const next = Math.max(0, Math.min(Number.isInteger(requested) ? requested - base : 0, Number(input.max) - base, limit - used + previous));
+    if (!row && next) row = skillRow({category, name, start:next, hobbySpent:next});
+    else if (row) {
+      field.value = String(base + next);
+      row.dataset.hobbySpent = String(next);
+      if (kind === 'category' && next) categoryRow(category);
+      if (kind === 'skill' && !next && !Number(field.value) && !Number($('[name="skill-buy"]', row).value) && !Number($('[name="skill-item"]', row).value) && !Number($('[name="skill-special"]', row).value) && !row.dataset.raceGrant && !row.dataset.languageSpent) row.remove();
+    }
+    form.elements.hobbyUsed.value = String(used - previous + next);
+    input.value = String(base + next);
+    updateDevelopment(); updateHobbyPickerBudget(); saveCurrent();
   }
   function renderSkillTree(character = {}) {
     $('#skills-list').innerHTML = '';
@@ -496,7 +572,6 @@
           name.type = 'text';
           if (name.value.startsWith('Choose ')) name.value = '';
           $('.choose-skill', row)?.remove();
-          $('.skill-choice-options', row)?.remove();
         }
       }
       grants.delete(grantKey);
@@ -728,6 +803,7 @@
     const [hobby, language, background] = raceAllowances[form.elements.race.value] || [0,0,0];
     $('#race-allowance').textContent = `${form.elements.race.value}: ${background} background options, ${hobby} hobby ranks and ${language} extra language ranks.`;
     $('#language-spent-label').textContent = `${Number(form.elements.languageUsed.value) || 0} used`;
+    $('#hobby-spent-label').textContent = `${Number(form.elements.hobbyUsed.value) || 0} used`;
     $('#race-language-note').textContent = `Starting languages: ${(raceStartingLanguages[form.elements.race.value] || []).map(([name, spoken, written]) => `${name} S${spoken}/W${written}`).join(', ')}.`;
     $('#stat-dice').textContent = form.elements.statDice.value ? `10d10: ${form.elements.statDice.value.split(',').join(' + ')} = ${form.elements.statRoll.value}` : '';
     for (const [name, limit] of [['hobbyUsed',hobby],['languageUsed',language],['backgroundUsed',background]]) {
@@ -766,6 +842,7 @@
       if (left !== 0 || used < 0) {
         const text = `${left > 0 ? `Allocate ${left}` : `Review ${-left}`} ${label}.`;
         if (name === 'languageUsed') steps.push(`<li><button type="button" class="creation-step-button" data-open-language-picker>${text}</button></li>`);
+        else if (name === 'hobbyUsed') steps.push(`<li><button type="button" class="creation-step-button" data-open-hobby-picker>${text}</button></li>`);
         else addStep(text, target);
       }
     }
@@ -800,6 +877,7 @@
       raceGrant: row.dataset.raceGrant || '',
       raceBase: Number(row.dataset.raceBase) || 0,
       languageSpent: Number(row.dataset.languageSpent) || 0,
+      hobbySpent: Number(row.dataset.hobbySpent) || 0,
       ranks: (Number($('[name="skill-start"]', row).value) || 0) + (Number(row.dataset.pendingBuy || $('[name="skill-buy"]', row).value) || 0)
     })).filter(skill => skill.name || Number(skill.start) || Number(skill.buy));
     const visibleCategories = new Set($$('.category-row', $('#skills-list')).map(row => row.dataset.category));
@@ -809,8 +887,9 @@
       const special = $('[name="record-special"]', row).value;
       const special2 = $('[name="record-special2"]', row).value;
       const raceBase = Number(row.dataset.raceBase) || 0;
-      return visibleCategories.has(row.dataset.category) || Number(start) || Number(buy) || Number(special) || Number(special2) || raceBase
-        ? [[row.dataset.category, {start, buy, special, special2, raceBase}]] : [];
+      const hobbySpent = Number(row.dataset.hobbySpent) || 0;
+      return visibleCategories.has(row.dataset.category) || Number(start) || Number(buy) || Number(special) || Number(special2) || raceBase || hobbySpent
+        ? [[row.dataset.category, {start, buy, special, special2, raceBase, hobbySpent}]] : [];
     }));
     ['skill-name','skill-start','skill-buy','skill-item','skill-special','record-start','record-buy','record-special','record-special2','a4-start','a4-buy','a4-item','a4-special'].forEach(key => delete data[key]);
     data.stats = Object.fromEntries(statNames.map((name, index) => [name, Object.fromEntries(['temp','pot','basic','racial','special','total'].map(part => [part, data[`stat-${part}-${index}`] || '']))]));
@@ -1068,16 +1147,26 @@
     skillCategoryPickerTarget = null;
     updateDevelopment(); saveCurrent();
   });
-  $('#skills-list').addEventListener('click', event => {
+  $('#skill-choice-list').addEventListener('click', event => {
     const button = event.target.closest('button[data-choice]');
-    if (!button) return;
-    const row = button.closest('.skill-row');
+    if (!button || !skillChoiceTarget) return;
+    const row = skillChoiceTarget;
+    const existing = findSkillRow(row.dataset.category, button.dataset.choice);
+    if (existing && existing !== row) {
+      for (const name of ['skill-start','skill-item','skill-special']) {
+        $(`[name="${name}"]`, row).value = String((Number($(`[name="${name}"]`, row).value) || 0) + (Number($(`[name="${name}"]`, existing).value) || 0));
+      }
+      row.dataset.hobbySpent = String((Number(row.dataset.hobbySpent) || 0) + (Number(existing.dataset.hobbySpent) || 0));
+      updateSkillBuyOptions(row, (Number($('[name="skill-buy"]', row).value) || 0) + (Number($('[name="skill-buy"]', existing).value) || 0));
+      existing.remove();
+    }
     $('[name="skill-name"]', row).value = button.dataset.choice;
     $('.choose-skill', row).textContent = `${button.dataset.choice} ▾`;
-    $('.choose-skill', row).setAttribute('aria-expanded', 'false');
-    $('.skill-choice-options', row).hidden = true;
+    $('#skill-choice-dialog').close(); skillChoiceTarget = null;
     updateDevelopment(); saveCurrent();
   });
+  $('#close-skill-choice').addEventListener('click', () => $('#skill-choice-dialog').close());
+  $('#skill-choice-dialog').addEventListener('close', () => { skillChoiceTarget = null; });
   $('#category-record-list').addEventListener('click', event => {
     const button = event.target.closest('.add-skill-variant');
     if (!button) return;
@@ -1091,14 +1180,32 @@
   $('#hide-zero-skills').addEventListener('change', updateA4Visibility);
   $('#hide-zero-groups').addEventListener('change', updateA4Visibility);
   const openLanguagePicker = () => { renderLanguagePicker(); $('#language-picker').showModal(); };
+  const openHobbyPicker = () => { renderHobbyPicker(); $('#hobby-picker').showModal(); };
   $('#open-language-picker').addEventListener('click', openLanguagePicker);
-  $('#creation-steps').addEventListener('click', event => { if (event.target.closest('[data-open-language-picker]')) openLanguagePicker(); });
+  $('#open-hobby-picker').addEventListener('click', openHobbyPicker);
+  $('#creation-steps').addEventListener('click', event => {
+    if (event.target.closest('[data-open-language-picker]')) openLanguagePicker();
+    if (event.target.closest('[data-open-hobby-picker]')) openHobbyPicker();
+  });
   $('#close-language-picker').addEventListener('click', () => $('#language-picker').close());
   $('#language-picker-list').addEventListener('change', event => { if (event.target.matches('input[data-language]')) updateLanguageAllocation(event.target); });
   $('#language-legacy-note').addEventListener('click', event => {
     if (event.target.id !== 'reset-unassigned-languages') return;
     form.elements.languageUsed.value = String($$('.skill-row[data-language-spent]', $('#skills-list')).reduce((sum, row) => sum + (Number(row.dataset.languageSpent) || 0), 0));
     renderLanguagePicker(); saveCurrent();
+  });
+  $('#close-hobby-picker').addEventListener('click', () => $('#hobby-picker').close());
+  $('#hobby-search').addEventListener('input', event => {
+    const term = event.target.value.trim().toLowerCase();
+    $$('.hobby-choice', $('#hobby-picker-list')).forEach(row => { row.hidden = !!term && !row.dataset.search.includes(term); });
+  });
+  $('#hobby-picker-list').addEventListener('change', event => { if (event.target.matches('input[data-kind]')) updateHobbyAllocation(event.target); });
+  $('#hobby-legacy-note').addEventListener('click', event => {
+    if (event.target.id !== 'reset-unassigned-hobbies') return;
+    const skillRanks = $$('.skill-row[data-hobby-spent]', $('#skills-list')).reduce((sum, row) => sum + (Number(row.dataset.hobbySpent) || 0), 0);
+    const categoryRanks = $$('.category-record-row[data-hobby-spent]').reduce((sum, row) => sum + (Number(row.dataset.hobbySpent) || 0), 0);
+    form.elements.hobbyUsed.value = String(skillRanks + categoryRanks);
+    updateHobbyPickerBudget(); saveCurrent();
   });
   $('#rolled-stat-pool').addEventListener('click', () => {
     rollStatPool();
