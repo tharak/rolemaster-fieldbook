@@ -12,7 +12,41 @@
   let characters = readCharacters();
   let currentId = null;
   let activeTableGroup = 'all';
+  let skillCategoryPickerTarget = null;
   const primeStats = {Fighter:['Strength','Constitution'], Thief:['Agility','Quickness'], Rogue:['Agility','Strength'], Cleric:['Intuition','Memory'], Magician:['Empathy','Reasoning'], Mentalist:['Presence','Self Discipline'], Ranger:['Intuition','Constitution'], Dabbler:['Empathy','Agility'], Bard:['Presence','Memory']};
+  // Category stats and rank progressions from Core Rules T-2.5.
+  const skillCategoryRules = {
+    'Armor • Heavy':['St/Ag/St'], 'Armor • Light':['Ag/St/Ag'], 'Armor • Medium':['St/Ag/St'],
+    'Artistic • Active':['Pr/Em/Ag'], 'Artistic • Passive':['Em/In/Pr'],
+    'Athletic • Brawn':['St/Co/Ag'], 'Athletic • Endurance':['Co/Ag/St'], 'Athletic • Gymnastics':['Ag/Qu/Ag'],
+    'Awareness • Perceptions':['In/SD/In','limited'], 'Awareness • Searching':['In/Re/SD'], 'Awareness • Senses':['In/SD/In'],
+    'Body Development':['Co/SD/Co','special'], 'Combat Maneuvers':['Ag/Qu/SD','combined'],
+    Communications:['Re/Me/Em'], Crafts:['Ag/Me/SD','combined'], 'Directed Spells':['Ag/SD/Ag'], Influence:['Pr/Em/In'],
+    'Lore • General':['Me/Re/Me'], 'Lore • Magical':['Me/Re/Me'], 'Lore • Obscure':['Me/Re/Me'], 'Lore • Technical':['Me/Re/Me'],
+    'Martial Arts • Striking':['St/Ag/St'], 'Outdoor • Animal':['Em/Ag/Em'], 'Outdoor • Environmental':['SD/In/Me'],
+    'Power Awareness':['Em/In/Pr'], 'Power Point Development':['realm','special'],
+    'Science/Analytic • Basic':['Re/Me/Re'], 'Science/Analytic • Specialized':['Re/Me/Re','combined'],
+    'Self Control':['SD/Pr/SD'],
+    'Spells • Own Realm Closed Lists':['realm','limited'], 'Spells • Own Realm Open Lists':['realm','limited'], 'Spells • Own Realm Own Base Lists':['realm','limited'],
+    'Subterfuge • Attack':['Ag/SD/In'], 'Subterfuge • Mechanics':['In/Ag/Re'], 'Subterfuge • Stealth':['Ag/SD/In'],
+    'Technical/Trade • General':['Re/Me/SD'], 'Technical/Trade • Professional':['Re/Me/In','combined'], 'Technical/Trade • Vocational':['Me/In/Re','combined'],
+    Urban:['In/Pr/Re'], 'Weapon • 1-H Concussion':['St/Ag/St'], 'Weapon • 1-H Edged':['St/Ag/St'],
+    'Weapon • 2-Handed':['St/Ag/St'], 'Weapon • Missile':['Ag/St/Ag'], 'Weapon • Missile Artillery':['In/Ag/Re'],
+    'Weapon • Pole Arms':['St/Ag/St'], 'Weapon • Thrown':['Ag/St/Ag']
+  };
+  const statAbbreviations = {Ag:0,Co:1,Me:2,Re:3,SD:4,Em:5,In:6,Pr:7,Qu:8,St:9};
+  // Profession bonuses for categories and groups of categories from T-1.4.
+  const professionSkillBonuses = {
+    Fighter:{Armor:10,'Body Development':10,'Combat Maneuvers':10,Weapon:20},
+    Thief:{'Athletic • Gymnastics':5,Awareness:10,'Body Development':5,'Self Control':5,Subterfuge:15,Weapon:10},
+    Rogue:{Armor:5,'Athletic • Gymnastics':5,Awareness:5,'Body Development':5,'Combat Maneuvers':5,Subterfuge:10,Weapon:15},
+    Cleric:{Awareness:5,Influence:5,'Lore • Magical':5,Outdoor:5,'Power Awareness':15,'Power Point Development':5,Spells:5,Weapon:5},
+    Magician:{'Directed Spells':10,'Lore • Magical':10,'Power Awareness':20,'Power Point Development':5,Spells:5},
+    Mentalist:{Awareness:5,'Body Development':5,Influence:10,'Lore • Magical':5,'Power Awareness':10,'Power Point Development':5,'Self Control':5,Spells:5},
+    Ranger:{Athletic:5,Awareness:10,'Body Development':5,Outdoor:20,'Subterfuge • Stealth':5,Weapon:5},
+    Dabbler:{Awareness:10,'Body Development':5,Influence:5,'Lore • Magical':5,'Power Awareness':10,Subterfuge:5,Urban:5,Weapon:5},
+    Bard:{'Artistic • Active':5,Awareness:5,'Body Development':5,Communications:5,Influence:5,Lore:10,'Power Awareness':5,'Self Control':5,Weapon:5}
+  };
   const raceAllowances = {'Common Man':[12,8,6], 'High Man':[10,12,4], 'Wood Elf':[10,12,4], Dwarf:[12,8,5], Halfling:[12,6,5]};
   const raceStats = {
     'Common Man':[0,0,0,0,2,0,0,0,0,2],
@@ -49,25 +83,88 @@
   function makeResistances() {
     $('#resistance-grid').innerHTML = `<div class="rr-head"><span>Type</span><span>Race</span><span>Stat</span><span>Other</span><span>Total</span></div>${resistanceTypes.map(([key, label]) => `<div class="rr-row"><span>${label}</span><output id="rr-race-${key}">—</output><output id="rr-stat-${key}">—</output><input aria-label="${label} other resistance bonus" name="rr-other-${key}" type="number" value="0"><output id="rr-total-${key}">—</output></div>`).join('')}`;
   }
+  function categoryGroup(category) { return category.includes(' • ') ? category.split(' • ')[0] : ''; }
+  function rankBonus(ranks, progression) {
+    const n = Math.max(0, Number(ranks) || 0);
+    const rounded = value => Math.floor(value + 0.5);
+    if (progression === 'category') return n ? rounded(2 * Math.min(n, 10) + Math.min(Math.max(n - 10, 0), 10) + .5 * Math.min(Math.max(n - 20, 0), 10)) : -15;
+    if (progression === 'limited') return rounded(Math.min(n, 20) + .5 * Math.min(Math.max(n - 20, 0), 10));
+    if (progression === 'special') return 6 * Math.min(n, 10) + 5 * Math.min(Math.max(n - 10, 0), 10) + 4 * Math.min(Math.max(n - 20, 0), 10) + 3 * Math.max(n - 30, 0);
+    if (progression === 'combined') return n ? rounded(5 * Math.min(n, 10) + 3 * Math.min(Math.max(n - 10, 0), 10) + 1.5 * Math.min(Math.max(n - 20, 0), 10) + .5 * Math.max(n - 30, 0)) : -30;
+    return n ? rounded(3 * Math.min(n, 10) + 2 * Math.min(Math.max(n - 10, 0), 10) + Math.min(Math.max(n - 20, 0), 10) + .5 * Math.max(n - 30, 0)) : -15;
+  }
+  function categoryStatBonus(category) {
+    const rule = skillCategoryRules[category];
+    if (!rule) return null;
+    const realmStat = {Channeling:'In',Essence:'Em',Mentalism:'Pr'}[form.elements.realm.value];
+    const stats = rule[0] === 'realm' ? [realmStat] : rule[0].split('/');
+    if (stats.some(stat => !stat || statAbbreviations[stat] === undefined)) return null;
+    const totals = stats.map(stat => form.elements.namedItem(`stat-total-${statAbbreviations[stat]}`).value);
+    return totals.some(value => value === '') ? null : totals.reduce((sum, value) => sum + Number(value), 0);
+  }
+  function categoryProfessionBonus(category) {
+    const bonuses = professionSkillBonuses[form.elements.profession.value] || {};
+    return bonuses[category] ?? bonuses[categoryGroup(category)] ?? 0;
+  }
+  function categoryRow(category, values = {}) {
+    const existing = $$('.category-row', $('#skills-list')).find(row => row.dataset.category === category);
+    if (existing) return existing;
+    const group = categoryGroup(category);
+    let parent = $('#skills-list');
+    if (group) {
+      let branch = $$('.skill-group', parent).find(item => item.dataset.group === group);
+      if (!branch) {
+        branch = document.createElement('section'); branch.className = 'skill-group'; branch.dataset.group = group;
+        branch.innerHTML = `<h3>${esc(group)} <small>Group</small><output class="group-profession-bonus"></output></h3>`;
+        parent.append(branch);
+      }
+      parent = branch;
+    }
+    const branch = document.createElement('section'); branch.className = 'skill-category';
+    branch.innerHTML = `<div class="category-row rank-row"><div class="rank-title"><strong>${esc(group ? category.slice(group.length + 3) : category)}</strong><small>Category</small></div><label>Before<input name="skill-start" aria-label="${esc(category)} category ranks before this level" type="number" min="0" max="99" value="${esc(values.start ?? 0)}"></label><label>Buy<select name="skill-buy" aria-label="${esc(category)} category ranks purchased this level"></select></label><label>Special<input name="category-special" aria-label="${esc(category)} category special bonus" type="number" value="${esc(values.special ?? 0)}"></label><output class="rank-cost"></output><button type="button" class="add-category-skill" aria-label="Add skill to ${esc(category)}">＋ Skill</button><button type="button" class="remove-category" aria-label="Remove ${esc(category)} category">×</button></div><div class="bonus-breakdown category-bonus"></div><div class="category-skills"></div>`;
+    parent.append(branch);
+    const row = $('.category-row', branch); row.dataset.category = category;
+    if (!developmentRules && values.buy) row.dataset.pendingBuy = values.buy;
+    $('.add-category-skill', row).addEventListener('click', () => { const skill = skillRow({category}); $('[name="skill-name"]', skill).focus(); updateDevelopment(); saveCurrent(); });
+    $('.remove-category', row).addEventListener('click', () => {
+      if ($('.skill-row', branch)) return;
+      branch.remove();
+      if (group && !$('.skill-category', parent)) parent.remove();
+      updateDevelopment(); saveCurrent();
+    });
+    updateSkillBuyOptions(row, Number(values.buy) || 0);
+    return row;
+  }
   function skillRow(skill = {}) {
-    const row = document.createElement('div'); row.className = 'skill-row';
-    const categories = Object.keys(developmentRules?.categories || {});
-    const categoryOptions = categories.map(category => `<option value="${esc(category)}" ${skill.category === category ? 'selected' : ''}>${esc(category)}</option>`).join('');
-    row.innerHTML = `<label class="skill-cell"><small>Skill</small><input aria-label="Skill name" name="skill-name" maxlength="60" placeholder="Skill name" value="${esc(skill.name || '')}"></label><label class="skill-cell"><small>Category</small><select aria-label="Skill category" name="skill-category">${categoryOptions}</select></label><label class="skill-cell"><small>Before</small><input aria-label="Ranks before this level" name="skill-start" type="number" min="0" max="99" placeholder="0" value="${esc(skill.start ?? skill.ranks ?? 0)}"></label><label class="skill-cell"><small>Buy</small><select aria-label="Ranks purchased this level" name="skill-buy"></select></label><span class="skill-dp-cost">0 DP</span><button type="button" class="remove-skill" aria-label="Remove skill">×</button>`;
-    const category = $('[name="skill-category"]', row);
-    if (skill.category && categories.includes(skill.category)) category.value = skill.category;
+    const category = skill.category && skillCategoryRules[skill.category] ? skill.category : Object.keys(skillCategoryRules)[0];
+    const parent = categoryRow(category).closest('.skill-category');
+    const row = document.createElement('div'); row.className = 'skill-row rank-row'; row.dataset.category = category;
+    row.innerHTML = `<div class="rank-title"><label>Skill<input aria-label="Skill name" name="skill-name" maxlength="60" placeholder="Skill name" value="${esc(skill.name || '')}"></label><button type="button" class="change-skill-category" aria-label="Change category for ${esc(skill.name || 'skill')}">${esc(category)}</button></div><label>Before<input aria-label="Ranks before this level" name="skill-start" type="number" min="0" max="99" value="${esc(skill.start ?? skill.ranks ?? 0)}"></label><label>Buy<select aria-label="Ranks purchased this level" name="skill-buy"></select></label><label>Item<input aria-label="Item bonus" name="skill-item" type="number" value="${esc(skill.item ?? 0)}"></label><label>Special<input aria-label="Skill special bonus" name="skill-special" type="number" value="${esc(skill.special ?? 0)}"></label><output class="rank-cost"></output><button type="button" class="remove-skill" aria-label="Remove skill">×</button><div class="bonus-breakdown skill-bonus"></div>`;
+    $('.category-skills', parent).append(row);
     if (!developmentRules && skill.buy) row.dataset.pendingBuy = skill.buy;
-    if (!developmentRules && skill.category) row.dataset.pendingCategory = skill.category;
-    $('.remove-skill', row).addEventListener('click', () => { row.remove(); updateDevelopment(); saveCurrent(); });
-    $('#skills-list').append(row);
     updateSkillBuyOptions(row, Number(skill.buy) || 0);
-    category.addEventListener('change', () => { updateSkillBuyOptions(row); updateDevelopment(); saveCurrent(); });
-    $('[name="skill-buy"]', row).addEventListener('change', () => { updateDevelopment(); saveCurrent(); });
-    $('[name="skill-start"]', row).addEventListener('input', () => { updateDevelopment(); saveCurrent(); });
-    $('[name="skill-name"]', row).addEventListener('input', saveCurrent);
+    $('.remove-skill', row).addEventListener('click', () => { row.remove(); updateDevelopment(); saveCurrent(); });
+    $('.change-skill-category', row).addEventListener('click', () => openSkillCategoryPicker(row));
+    return row;
+  }
+  function renderSkillTree(character = {}) {
+    $('#skills-list').innerHTML = '';
+    Object.entries(character.categoryRanks || {}).filter(([category]) => skillCategoryRules[category]).forEach(([category, values]) => categoryRow(category, values));
+    (character.skills || []).forEach(skillRow);
+    updateDevelopment();
+  }
+  function openSkillCategoryPicker(target = null) {
+    skillCategoryPickerTarget = target;
+    const picker = $('#skill-category-picker'); picker.hidden = false;
+    const categories = Object.keys(developmentRules?.categories || skillCategoryRules);
+    const groups = new Map();
+    categories.forEach(category => { const group = categoryGroup(category) || 'Other'; if (!groups.has(group)) groups.set(group, []); groups.get(group).push(category); });
+    $('#skill-category-options').innerHTML = [...groups].map(([group, items]) => `<div class="picker-group"><strong>${esc(group)}</strong><div>${items.map(category => `<button type="button" data-category="${esc(category)}">${esc(categoryGroup(category) ? category.slice(group.length + 3) : category)}</button>`).join('')}</div></div>`).join('');
+    picker.scrollIntoView({block:'nearest'});
+    $('button[data-category]', picker)?.focus();
   }
   function costForSkill(row, profession) {
-    const category = $('[name="skill-category"]', row).value;
+    const category = row.dataset.category;
     return developmentRules?.categories?.[category]?.[profession] || null;
   }
   function updateSkillBuyOptions(row, preferred) {
@@ -83,6 +180,7 @@
   }
   function updateDevelopment() {
     if (!$('#dp-available')) return;
+    updateRuleBonuses();
     const developmentIndices = [0, 1, 2, 3, 4];
     const values = developmentIndices.map(index => Number(form.elements.namedItem(`stat-temp-${index}`).value));
     const hasStats = values.every(value => Number.isFinite(value) && value >= 1 && value <= 101);
@@ -90,20 +188,44 @@
     if (hasStats) $('#dp-available').textContent = String(available); else $('#dp-available').textContent = '—';
     const profession = form.elements.profession.value;
     let spent = 0;
-    $$('.skill-row', $('#skills-list')).forEach(row => {
+    $$('.rank-row', $('#skills-list')).forEach(row => {
+      updateSkillBuyOptions(row);
       const costs = costForSkill(row, profession);
       const ranks = Number($('[name="skill-buy"]', row).value) || 0;
       const cost = costs ? costs.slice(0, ranks).reduce((sum, value) => sum + value, 0) : 0;
       const start = Number($('[name="skill-start"]', row).value) || 0;
       spent += cost;
-      $('.skill-dp-cost', row).textContent = `${cost} DP · ${start + ranks} total`;
+      $('.rank-cost', row).textContent = `${cost} DP · ${start + ranks} ranks`;
+    });
+    $$('.category-row', $('#skills-list')).forEach(row => {
+      $('.remove-category', row).disabled = !!$('.skill-row', row.parentElement);
+      const category = row.dataset.category;
+      const rule = skillCategoryRules[category];
+      const categoryRanks = (Number($('[name="skill-start"]', row).value) || 0) + (Number($('[name="skill-buy"]', row).value) || 0);
+      const rank = rule[1] && rule[1] !== 'standard' ? 0 : rankBonus(categoryRanks, 'category');
+      const stat = categoryStatBonus(category);
+      const professionBonus = categoryProfessionBonus(category);
+      const special = Number($('[name="category-special"]', row).value) || 0;
+      const total = stat === null ? null : rank + stat + professionBonus + special;
+      row.dataset.bonus = total === null ? '' : String(total);
+      $('.category-bonus', row.parentElement).innerHTML = `<span>Rank ${rank} + stat ${stat ?? '—'} + profession ${professionBonus} + special ${special}</span><strong>Category ${total ?? '—'}</strong>`;
+      $$('.skill-row', row.parentElement).forEach(skill => {
+        const skillRanks = (Number($('[name="skill-start"]', skill).value) || 0) + (Number($('[name="skill-buy"]', skill).value) || 0);
+        const skillRank = rankBonus(skillRanks, rule[1] || 'standard');
+        const item = Number($('[name="skill-item"]', skill).value) || 0;
+        const skillSpecial = Number($('[name="skill-special"]', skill).value) || 0;
+        $('.skill-bonus', skill).innerHTML = `<span>Rank ${skillRank} + category ${total ?? '—'} + item ${item} + special ${skillSpecial}</span><strong>Skill ${total === null ? '—' : skillRank + total + item + skillSpecial}</strong>`;
+      });
+    });
+    $$('.skill-group', $('#skills-list')).forEach(group => {
+      const bonus = (professionSkillBonuses[profession] || {})[group.dataset.group] || 0;
+      $('.group-profession-bonus', group).textContent = bonus ? `+${bonus} profession` : '';
     });
     spent += Number(form.elements.otherDp.value) || 0;
     $('#dp-spent').textContent = String(spent);
     const remaining = hasStats ? available - spent : null;
     $('#dp-remaining').textContent = remaining === null ? '—' : String(remaining);
     $('#dp-remaining').classList.toggle('over-budget', remaining !== null && remaining < 0);
-    $$('.skill-row', $('#skills-list')).forEach(row => updateSkillBuyOptions(row));
     updateSheetHints();
   }
   function statCost(value) { return value <= 90 ? value : 90 + (value - 90) ** 2; }
@@ -242,11 +364,19 @@
     const data = Object.fromEntries(new FormData(form).entries());
     data.skills = $$('.skill-row', $('#skills-list')).map(row => ({
       name: $('[name="skill-name"]', row).value,
-      category: $('[name="skill-category"]', row).value || row.dataset.pendingCategory || '',
+      category: row.dataset.category,
       start: $('[name="skill-start"]', row).value,
       buy: $('[name="skill-buy"]', row).value || row.dataset.pendingBuy || '0',
+      item: $('[name="skill-item"]', row).value,
+      special: $('[name="skill-special"]', row).value,
       ranks: (Number($('[name="skill-start"]', row).value) || 0) + (Number($('[name="skill-buy"]', row).value || row.dataset.pendingBuy) || 0)
     })).filter(skill => skill.name || Number(skill.start) || Number(skill.buy));
+    data.categoryRanks = Object.fromEntries($$('.category-row', $('#skills-list')).map(row => [row.dataset.category, {
+      start: $('[name="skill-start"]', row).value,
+      buy: $('[name="skill-buy"]', row).value || row.dataset.pendingBuy || '0',
+      special: $('[name="category-special"]', row).value
+    }]));
+    ['skill-name','skill-start','skill-buy','skill-item','skill-special','category-special'].forEach(key => delete data[key]);
     data.stats = Object.fromEntries(statNames.map((name, index) => [name, Object.fromEntries(['temp','pot','basic','racial','special','total'].map(part => [part, data[`stat-${part}-${index}`] || '']))]));
     Object.keys(data).filter(key => /^stat-(temp|pot|basic|racial|special|total)-\d+$/.test(key)).forEach(key => delete data[key]);
     return data;
@@ -258,9 +388,7 @@
       if (field && typeof value !== 'object') field.value = key === 'realm' && value === 'Choose at table' ? 'None' : value;
     }
     makeStats(character.stats || {});
-    $('#skills-list').innerHTML = '';
-    (character.skills || []).forEach(skillRow);
-    if (!character.skills?.length) skillRow();
+    renderSkillTree(character);
     updateDevelopment();
   }
   function revealSelectedChoices() {
@@ -453,9 +581,7 @@
       if (!tableResponse.ok || !costResponse.ok) throw new Error('Reference files could not be loaded');
       tables = await tableResponse.json();
       developmentRules = await costResponse.json();
-      const savedSkills = $$('.skill-row', $('#skills-list')).map(row => ({name: $('[name="skill-name"]', row).value, category: $('[name="skill-category"]', row).value || row.dataset.pendingCategory, start: $('[name="skill-start"]', row).value, buy: $('[name="skill-buy"]', row).value || row.dataset.pendingBuy}));
-      $('#skills-list').innerHTML = '';
-      savedSkills.forEach(skillRow);
+      renderSkillTree(formData());
       renderTables();
       updateDevelopment();
     } catch (error) {
@@ -480,7 +606,28 @@
   $('#empty-new-character').addEventListener('click', newCharacter);
   $$('.filter-chip').forEach(button => button.addEventListener('click', () => openTableGroup(button.dataset.group)));
   $('#back-roster').addEventListener('click', () => { saveCurrent(); renderRoster(); showView('home'); });
-  $('#add-skill').addEventListener('click', () => { skillRow(); $('[name="skill-name"]', $('#skills-list').lastElementChild).focus(); });
+  $('#add-skill').addEventListener('click', () => openSkillCategoryPicker());
+  $('#add-category').addEventListener('click', () => openSkillCategoryPicker('category'));
+  $('#cancel-skill-category').addEventListener('click', () => { $('#skill-category-picker').hidden = true; skillCategoryPickerTarget = null; });
+  $('#skill-category-options').addEventListener('click', event => {
+    const button = event.target.closest('button[data-category]');
+    if (!button) return;
+    const category = button.dataset.category;
+    if (skillCategoryPickerTarget === 'category') {
+      categoryRow(category);
+    } else if (skillCategoryPickerTarget) {
+      skillCategoryPickerTarget.dataset.category = category;
+      $('.change-skill-category', skillCategoryPickerTarget).textContent = category;
+      $('.category-skills', categoryRow(category).parentElement).append(skillCategoryPickerTarget);
+      updateSkillBuyOptions(skillCategoryPickerTarget);
+    } else {
+      const row = skillRow({category});
+      $('[name="skill-name"]', row).focus();
+    }
+    $('#skill-category-picker').hidden = true;
+    skillCategoryPickerTarget = null;
+    updateDevelopment(); saveCurrent();
+  });
   $('#rolled-stat-pool').addEventListener('click', () => {
     rollStatPool();
     form.elements.statPoolMode.value = 'roll';
@@ -506,7 +653,6 @@
       setPotentialStats(fixedPotential, 'fixed');
     }
     if (event.target.name === 'realm' && realmByProfession[form.elements.profession.value] !== 'Choose at table') form.elements.realm.value = realmByProfession[form.elements.profession.value];
-    if (event.target.name === 'profession') $$('.skill-row', $('#skills-list')).forEach(row => updateSkillBuyOptions(row));
     updateDevelopment();
     saveCurrent();
   });

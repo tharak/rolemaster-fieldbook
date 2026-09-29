@@ -335,6 +335,52 @@ input::placeholder, textarea::placeholder { color: #82998a; opacity: 1; }
 @media (max-width: 540px) { .record-sheet { margin: 8px 10px 30px; border-width: 2px; } .record-title { font-size: 18px; } .record-section { padding-left: 12px; padding-right: 12px; } .record-section h2 { margin-left: -12px; margin-right: -12px; padding-left: 12px; } .record-bottom { grid-template-columns: 1fr 1fr; } .record-bottom > div:nth-child(2) { grid-column: 1 / -1; grid-row: 2; border-left: 0; border-top: 3px solid #729279; } .record-bottom > div:nth-child(3) { border-left: 3px solid #729279; } }
 @media print { @page { size: letter portrait; margin: 7mm; } .record-sheet { max-width: none; margin: 0; border-color: #111; box-shadow: none; } .record-title, .record-section h2, .record-section-title, .record-bottom h2 { background: #111 !important; color: #fff !important; } .record-left, .record-section, .record-header, .record-bottom > div + div { border-color: #111; } .sheet-field, .sheet-hint, .sheet-note-grid, .ruled-labels { color: #222; } .sheet-field input, .sheet-field select, .sheet-field textarea, .record-stats .stat-row input, .record-skills .skill-cell input, .record-skills .skill-cell select, .ruled-textarea { color: #111 !important; background-color: #fff !important; border-color: #777 !important; } .record-stats .stat-header, .record-stats .stat-row, .record-skills .skills-head, .record-skills .skill-row { min-width: 0; } }
 
+/* Skill group → category → skill tree. */
+.record-skills { overflow-x: visible; }
+.skill-tree-actions { display: flex; flex-wrap: wrap; gap: 10px; }
+.skill-category-picker[hidden] { display: none; }
+.skill-category-picker { margin: 10px 0; padding: 12px; border: 1px solid var(--line); background: var(--input); max-height: 310px; overflow-y: auto; }
+.skill-category-picker p { margin: 0 0 10px; font-size: 12px; font-weight: 700; }
+.picker-group { margin-bottom: 12px; }
+.picker-group strong { display: block; margin-bottom: 5px; font-size: 11px; color: var(--muted); }
+.picker-group > div { display: flex; flex-wrap: wrap; gap: 5px; }
+.picker-group button { border: 1px solid var(--line); border-radius: 4px; padding: 7px 9px; background: var(--card); color: var(--ink); cursor: pointer; font-size: 11px; }
+.picker-group button:hover, .picker-group button:focus-visible { border-color: var(--olive); background: var(--olive-dark); color: #fff; }
+.skill-group { margin: 14px 0; border-left: 2px solid var(--olive); padding-left: 10px; }
+.skill-group h3 { margin: 0 0 6px; font-size: 13px; color: var(--ink); }
+.group-profession-bonus { float: right; color: var(--accent-text); font: 10px var(--mono); }
+.skill-group h3 small, .rank-title small { margin-left: 6px; color: var(--muted); font: 9px var(--mono); text-transform: uppercase; }
+.skill-category { margin: 8px 0 12px; padding: 6px 8px; border: 1px solid var(--line); border-radius: 5px; background: color-mix(in srgb, var(--input) 65%, transparent); }
+.record-skills .rank-row { min-width: 0; display: grid; align-items: end; gap: 7px; }
+.record-skills .category-row { grid-template-columns: minmax(125px,1fr) 57px 57px 62px 100px 58px 24px; }
+.record-skills .skill-row { grid-template-columns: minmax(125px,1fr) 57px 57px 57px 62px 100px 24px; margin: 0; padding: 8px 0; border-top: 1px solid var(--line); border-bottom: 0; }
+.record-skills .rank-row label { display: block; min-width: 0; color: var(--muted); font: 9px var(--mono); text-transform: uppercase; }
+.record-skills .rank-row input, .record-skills .rank-row select { display: block; width: 100%; min-width: 0; height: 28px; margin-top: 3px; padding: 4px; border: 1px solid var(--line); border-radius: 4px; background: var(--input); color: var(--ink); font: 11px var(--mono); }
+.record-skills .rank-title input { font: 12px var(--sans); text-transform: none; }
+.record-skills .rank-cost { align-self: center; font: 10px var(--mono); color: var(--ink); white-space: nowrap; }
+.record-skills .bonus-breakdown { grid-column: 1/-1; display: flex; flex-wrap: wrap; justify-content: space-between; gap: 3px 8px; padding: 3px 0 6px; color: var(--muted); font: 10px/1.4 var(--mono); }
+.record-skills .bonus-breakdown strong { color: var(--ink); font-size: 12px; }
+.record-skills .category-bonus { padding: 5px 0 8px; border-bottom: 1px solid var(--line); }
+.record-skills .change-skill-category { display: block; padding: 3px 0 0; border: 0; background: none; color: var(--accent-text); text-align: left; font: 10px var(--sans); cursor: pointer; }
+.record-skills .add-category-skill { align-self: center; border: 0; background: none; color: var(--accent-text); cursor: pointer; font: 10px var(--sans); white-space: nowrap; }
+.record-skills .remove-category { align-self: center; border: 0; background: none; color: #f2aaa0; cursor: pointer; font-size: 17px; }
+.record-skills .remove-category:disabled { opacity: .25; cursor: default; }
+.record-skills .remove-skill { align-self: center; }
+.record-skills .rank-row.unavailable { opacity: .65; }
+@media (max-width: 700px) {
+  .record-skills .rank-row { display: flex; flex-wrap: wrap; align-items: end; gap: 6px; }
+  .record-skills .rank-title { flex: 1 0 100%; }
+  .record-skills .rank-row > label { width: 48px; }
+  .record-skills .rank-cost { margin-left: auto; }
+  .record-skills .bonus-breakdown { flex: 1 0 100%; }
+  .record-skills .skill-row { padding-left: 9px; }
+}
+@media print {
+  .skill-category-picker, .record-skills .add-category-skill, .record-skills .change-skill-category, .record-skills .remove-skill, .record-skills .remove-category { display: none !important; }
+  .skill-group, .skill-category { break-inside: avoid; }
+  .record-skills .rank-row input, .record-skills .rank-row select { color: #111 !important; background: #fff !important; }
+}
+
 /* Character creation rules */
 .resistance-grid { margin-bottom: 12px; font: 11px var(--mono); }
 .rr-head, .rr-row { display: grid; grid-template-columns: minmax(100px, 1.6fr) repeat(4, minmax(42px, .65fr)); gap: 4px; align-items: center; }

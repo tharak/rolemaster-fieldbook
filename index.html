@@ -156,8 +156,8 @@
               <p class="sheet-hint" id="creation-checks" aria-live="polite"></p>
             </section>
             <section class="record-section record-skills">
-              <div class="record-section-title"><h2>Commonly used skills</h2><button type="button" id="add-skill" class="text-button">＋ Add skill</button></div>
-              <div class="skills-head"><span>Skill</span><span>Category</span><span>Before</span><span>Buy</span><span>DP</span><span></span></div>
+              <div class="record-section-title"><h2>Commonly used skills</h2><div class="skill-tree-actions"><button type="button" id="add-category" class="text-button">＋ Add category</button><button type="button" id="add-skill" class="text-button">＋ Add skill</button></div></div>
+              <div id="skill-category-picker" class="skill-category-picker" hidden><p>Choose a category</p><div id="skill-category-options"></div><button type="button" id="cancel-skill-category" class="text-button">Cancel</button></div>
               <div id="skills-list" class="skills-list"></div>
               <div class="dp-summary"><div><span>DP available</span><strong id="dp-available">—</strong></div><div><span>Spent</span><strong id="dp-spent">0</strong></div><div><span>Remaining</span><strong id="dp-remaining">—</strong></div></div>
               <div class="sheet-fields two-up compact-fields"><label class="sheet-field">Other DP spent<input name="otherDp" type="number" min="0" max="999" value="0"></label><label class="sheet-field">Adolescence ranks & languages<input name="adolescence" maxlength="300" placeholder="Starting ranks, hobbies and languages"></label></div>
