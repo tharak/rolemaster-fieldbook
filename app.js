@@ -40,27 +40,17 @@
     let saved;
     try { saved = JSON.parse(form.elements.weaponCostAssignments.value || '{}'); } catch { saved = {}; }
     const slots = weaponCategories.map(category => saved?.[category]);
-    return slots.every(slot => weaponCategories.includes(slot)) && new Set(slots).size === weaponCategories.length
-      ? saved : Object.fromEntries(weaponCategories.map(category => [category, category]));
+    if (slots.every(slot => weaponCategories.includes(slot)) && new Set(slots).size === weaponCategories.length) return saved;
+    const defaults = Object.fromEntries(weaponCategories.map(category => [category, category]));
+    if (form.elements.profession.value === 'Ranger') {
+      defaults['Weapon • 1-H Concussion'] = 'Weapon • 1-H Edged';
+      defaults['Weapon • 1-H Edged'] = 'Weapon • 1-H Concussion';
+    }
+    return defaults;
   }
   function categoryCosts(category, profession = form.elements.profession.value) {
     const source = category.startsWith('Weapon •') ? weaponCostAssignments()[category] : category;
     return developmentRules?.categories?.[source]?.[profession] || null;
-  }
-  function renderWeaponCostPicker() {
-    const profession = form.elements.profession.value;
-    const assigned = weaponCostAssignments();
-    $('#weapon-cost-subtitle').textContent = `${profession} · A-2 weapon categories`;
-    if (!developmentRules) {
-      $('#weapon-cost-list').innerHTML = '<p class="language-picker-note">Weapon costs are loading. Try again in a moment.</p>';
-      return;
-    }
-    $('#weapon-cost-list').innerHTML = weaponCategories.map(category => `<section class="weapon-cost-choice"><strong>${esc(category.replace('Weapon • ', ''))}</strong><div class="weapon-cost-slots" role="group" aria-label="Cost slot for ${esc(category)}">${weaponCategories.map((slot, index) => {
-      const costs = developmentRules?.categories?.[slot]?.[profession];
-      const selected = assigned[category] === slot;
-      return `<button type="button" data-category="${esc(category)}" data-slot="${esc(slot)}" aria-pressed="${selected}">${index + 1} · ${costs ? costs.join('/') : '—'}</button>`;
-    }).join('')}</div></section>`).join('');
-    $('#weapon-cost-summary').textContent = `Slot 1: ${weaponCategories.find(category => assigned[category] === weaponCategories[0]).replace('Weapon • ', '')}`;
   }
   // Appendix A-4 skill names. A trailing * marks a skill developed separately for each instance.
   const a4Skills = {
@@ -828,8 +818,6 @@
   }
   function updateDevelopment() {
     if (!$('#dp-available')) return;
-    const assigned = weaponCostAssignments();
-    $('#weapon-cost-summary').textContent = `Slot 1: ${weaponCategories.find(category => assigned[category] === weaponCategories[0]).replace('Weapon • ', '')}`;
     updateRuleBonuses();
     const developmentIndices = [0, 1, 2, 3, 4];
     const values = developmentIndices.map(index => Number(form.elements.namedItem(`stat-temp-${index}`).value));
@@ -1190,7 +1178,7 @@
       } else if (detail.categories && detail.professions) {
         $('.table-scroll').hidden = false; $('#table-source').hidden = true;
         $('#attack-grid').innerHTML = `<thead><tr><th>Skill category</th>${detail.professions.map(profession => `<th>${esc(profession)}</th>`).join('')}</tr></thead><tbody>${Object.entries(detail.categories).map(([category, costs]) => `<tr><th scope="row">${esc(category)}</th>${detail.professions.map(profession => `<td>${costs[profession] ? costs[profession].join('/') : '—'}</td>`).join('')}</tr>`).join('')}</tbody>`;
-        $('#table-note').textContent = 'Rank costs by profession. Weapon rows are assignable cost slots for each character. A dash means unavailable.';
+        $('#table-note').textContent = 'Rank costs by profession. Weapon costs may appear in a different category on a character sheet. A dash means unavailable.';
       } else renderSource(detail);
     } catch {
       if (activeTable.code === reference.code) $('#table-source').innerHTML = '<p class="table-load-error">Could not load this table file. Reload the page to try again.</p>';
@@ -1308,7 +1296,6 @@
       renderSkillTree(draft);
       renderTables();
       updateDevelopment();
-      if ($('#weapon-cost-picker').open) renderWeaponCostPicker();
     } catch (error) {
       $('#table-list').innerHTML = '<p class="table-load-error">Table data could not be loaded. Serve this folder over HTTP and reload.</p>';
     }
@@ -1361,38 +1348,6 @@
   $('#skill-choice-dialog').addEventListener('close', () => { skillChoiceTarget = null; });
   $('#open-race-weapons').addEventListener('click', () => { renderRaceWeaponsPicker(); $('#race-weapons-picker').showModal(); });
   $('#close-race-weapons').addEventListener('click', () => $('#race-weapons-picker').close());
-  $('#open-weapon-cost-picker').addEventListener('click', () => {
-    $('#weapon-cost-message').textContent = '';
-    renderWeaponCostPicker();
-    $('#weapon-cost-picker').showModal();
-  });
-  $('#close-weapon-cost-picker').addEventListener('click', () => $('#weapon-cost-picker').close());
-  $('#weapon-cost-list').addEventListener('click', event => {
-    const button = event.target.closest('button[data-category][data-slot]');
-    if (!button || !developmentRules) return;
-    const category = button.dataset.category;
-    const slot = button.dataset.slot;
-    const assigned = weaponCostAssignments();
-    if (assigned[category] === slot) return;
-    const other = weaponCategories.find(name => assigned[name] === slot);
-    const previous = assigned[category];
-    assigned[category] = slot;
-    assigned[other] = previous;
-    const blocked = $$('.rank-row, .category-record-row, .a4-skill-row').some(row => {
-      if (row.dataset.category !== category && row.dataset.category !== other) return false;
-      const buy = $('[name="skill-buy"], [name="record-buy"], [name="a4-buy"]', row);
-      return buy && Number(row.dataset.pendingBuy || buy.value) > (developmentRules.categories[assigned[row.dataset.category]]?.[form.elements.profession.value]?.length || 0);
-    });
-    if (blocked) {
-      $('#weapon-cost-message').textContent = 'Reduce new ranks purchased in these categories before swapping their cost slots.';
-      return;
-    }
-    form.elements.weaponCostAssignments.value = JSON.stringify(assigned);
-    $('#weapon-cost-message').textContent = '';
-    renderWeaponCostPicker();
-    updateDevelopment();
-    saveCurrent();
-  });
   $('#race-weapons-list').addEventListener('click', event => {
     const button = event.target.closest('button[data-choice]');
     if (!button) return;

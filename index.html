@@ -91,7 +91,6 @@
               <div class="creation-pool"><span>Adolescence · T-1.6</span><strong>Applied</strong><small id="adolescence-summary"></small><button type="button" id="open-race-weapons" class="creation-pick-button">Choose racial weapons</button></div>
               <div class="creation-pool"><span>Language ranks · T-1.6</span><output id="language-remaining"></output><small id="language-spent-label"></small><button type="button" id="open-language-picker" class="creation-pick-button">Choose languages</button><input name="languageUsed" type="hidden" value="0"></div>
               <div class="creation-pool"><span>Hobby ranks · T-1.6</span><output id="hobby-remaining"></output><small id="hobby-spent-label"></small><button type="button" id="open-hobby-picker" class="creation-pick-button">Choose hobbies</button><input name="hobbyUsed" type="hidden" value="0"></div>
-              <div class="creation-pool"><span>Weapon costs · A-2</span><strong id="weapon-cost-summary"></strong><small>Assign your profession's cost slots to weapon categories.</small><button type="button" id="open-weapon-cost-picker" class="creation-pick-button">Assign weapon costs</button><input name="weaponCostAssignments" type="hidden" value="{}"></div>
               <div class="creation-pool"><span>Background options · T-1.6</span><output id="background-remaining"></output><small id="background-spent-label"></small><button type="button" id="open-background-picker" class="creation-pick-button">Choose options</button><input name="backgroundUsed" type="hidden" value="0"><input name="backgroundSelections" type="hidden" value="{}"></div>
             </div>
             <div class="creation-next"><strong>Remaining steps</strong><ul id="creation-steps"></ul></div>
@@ -148,6 +147,7 @@
         </div>
         <div hidden>
           <input name="backgroundOptions" type="hidden">
+          <input name="weaponCostAssignments" type="hidden" value="{}">
           <input name="otherDp" type="hidden" value="0">
           <div id="skill-category-picker" hidden><div id="skill-category-options"></div><button type="button" id="cancel-skill-category">Cancel</button></div>
           <div id="skills-list"></div>
@@ -169,12 +169,6 @@
         <div id="hobby-picker-list" class="hobby-picker-list"></div>
         <p id="hobby-picker-empty" class="language-picker-note" hidden>No matching ranks. Change the search or filters to show more choices.</p>
         <p id="hobby-legacy-note" class="language-picker-note" hidden></p>
-      </dialog>
-      <dialog id="weapon-cost-picker" aria-labelledby="weapon-cost-title">
-        <div class="language-picker-head"><div><h2 id="weapon-cost-title">Weapon development costs</h2><p id="weapon-cost-subtitle"></p></div><button type="button" id="close-weapon-cost-picker" aria-label="Close weapon development costs">×</button></div>
-        <p class="language-picker-note">Assign one cost slot to each weapon category. Choosing a slot already in use swaps the two categories. These costs also set the maximum hobby ranks for each category and skill.</p>
-        <div id="weapon-cost-list" class="weapon-cost-list"></div>
-        <p id="weapon-cost-message" class="language-picker-note" role="status"></p>
       </dialog>
       <dialog id="skill-choice-dialog" aria-labelledby="skill-choice-title">
         <div class="language-picker-head"><div><h2 id="skill-choice-title">Choose a racial weapon</h2><p id="skill-choice-subtitle"></p></div><button type="button" id="close-skill-choice" aria-label="Close skill picker">×</button></div>
