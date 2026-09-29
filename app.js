@@ -14,6 +14,25 @@
   let activeTableGroup = 'all';
   const primeStats = {Fighter:['Strength','Constitution'], Thief:['Agility','Quickness'], Rogue:['Agility','Strength'], Cleric:['Intuition','Memory'], Magician:['Empathy','Reasoning'], Mentalist:['Presence','Self Discipline'], Ranger:['Intuition','Constitution'], Dabbler:['Empathy','Agility'], Bard:['Presence','Memory']};
   const raceAllowances = {'Common Man':[12,8,6], 'High Man':[10,12,4], 'Wood Elf':[10,12,4], Dwarf:[12,8,5], Halfling:[12,6,5]};
+  const raceStats = {
+    'Common Man':[0,0,0,0,2,0,0,0,0,2],
+    'High Man':[-2,4,0,0,0,0,0,4,-2,4],
+    'Wood Elf':[4,0,2,0,-5,2,0,2,2,0],
+    Dwarf:[-2,6,0,0,2,-4,0,-4,-2,2],
+    Halfling:[6,6,0,0,-4,-2,0,-6,4,-8]
+  };
+  const raceResistances = {
+    'Common Man':[0,0,0,0,0,0],
+    'High Man':[-5,-5,-5,0,0,0],
+    'Wood Elf':[-5,-5,-5,10,100,0],
+    Dwarf:[40,0,40,20,15,0],
+    Halfling:[50,0,40,30,15,0]
+  };
+  const resistanceTypes = [
+    ['channeling','Channeling',6,1], ['essence','Essence',5,0],
+    ['mentalism','Mentalism',7,2], ['poison','Poison',1,3],
+    ['disease','Disease',1,4], ['fear','Fear',4,5]
+  ];
 
   function readCharacters() {
     try { const data = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); return Array.isArray(data) ? data : []; }
@@ -24,8 +43,11 @@
   function makeStats(stats = {}) {
     $('#stats-list').innerHTML = statNames.map((name, index) => {
       const value = stats[name] || {};
-      return `<div class="stat-row"><span>${name}</span><input aria-label="${name} temporary stat" name="stat-temp-${index}" type="number" min="20" max="100" value="${esc(value.temp ?? '')}" placeholder="—"><input aria-label="${name} potential stat" name="stat-pot-${index}" type="number" min="20" max="101" value="${esc(value.pot ?? '')}" placeholder="—"><input aria-label="${name} basic bonus" name="stat-basic-${index}" type="number" value="${esc(value.basic ?? '')}" placeholder="—"><input aria-label="${name} racial bonus" name="stat-racial-${index}" type="number" value="${esc(value.racial ?? '')}" placeholder="—"><input aria-label="${name} special bonus" name="stat-special-${index}" type="number" value="${esc(value.special ?? '')}" placeholder="—"><input aria-label="${name} total bonus" name="stat-total-${index}" type="number" value="${esc(value.total ?? '')}" placeholder="—"></div>`;
+      return `<div class="stat-row"><span>${name}</span><input aria-label="${name} temporary stat" name="stat-temp-${index}" type="number" min="20" max="100" value="${esc(value.temp ?? '')}" placeholder="—"><input aria-label="${name} potential stat" name="stat-pot-${index}" type="number" min="20" max="101" value="${esc(value.pot ?? '')}" placeholder="—"><input aria-label="${name} basic bonus" name="stat-basic-${index}" type="number" value="${esc(value.basic ?? '')}" placeholder="—" readonly><input aria-label="${name} racial bonus" name="stat-racial-${index}" type="number" value="${esc(value.racial ?? '')}" placeholder="—" readonly><input aria-label="${name} special bonus" name="stat-special-${index}" type="number" value="${esc(value.special ?? '')}" placeholder="—"><input aria-label="${name} total bonus" name="stat-total-${index}" type="number" value="${esc(value.total ?? '')}" placeholder="—" readonly></div>`;
     }).join('');
+  }
+  function makeResistances() {
+    $('#resistance-grid').innerHTML = `<div class="rr-head"><span>Type</span><span>Race</span><span>Stat</span><span>Other</span><span>Total</span></div>${resistanceTypes.map(([key, label]) => `<div class="rr-row"><span>${label}</span><output id="rr-race-${key}">—</output><output id="rr-stat-${key}">—</output><input aria-label="${label} other resistance bonus" name="rr-other-${key}" type="number" value="0"><output id="rr-total-${key}">—</output></div>`).join('')}`;
   }
   function skillRow(skill = {}) {
     const row = document.createElement('div'); row.className = 'skill-row';
@@ -85,15 +107,49 @@
     updateSheetHints();
   }
   function statCost(value) { return value <= 90 ? value : 90 + (value - 90) ** 2; }
+  function basicStatBonus(value) {
+    if (value === 100) return 10;
+    if (value >= 90) return 5 + Math.floor((value - 90) / 2);
+    if (value >= 70) return 1 + Math.floor((value - 70) / 5);
+    if (value >= 31) return 0;
+    if (value >= 11) return -1 - Math.floor((30 - value) / 5);
+    return -5 - Math.floor((10 - value) / 2);
+  }
+  function updateRuleBonuses() {
+    const race = form.elements.race.value;
+    const racial = raceStats[race] || raceStats['Common Man'];
+    const totals = statNames.map((_, index) => {
+      const temporary = form.elements.namedItem(`stat-temp-${index}`).value;
+      const basic = form.elements.namedItem(`stat-basic-${index}`);
+      const raceField = form.elements.namedItem(`stat-racial-${index}`);
+      const special = form.elements.namedItem(`stat-special-${index}`);
+      const total = form.elements.namedItem(`stat-total-${index}`);
+      raceField.value = String(racial[index]);
+      const value = Number(temporary);
+      basic.value = temporary !== '' && Number.isInteger(value) && value >= 20 && value <= 100 ? String(basicStatBonus(value)) : '';
+      total.value = basic.value ? String(Number(basic.value) + racial[index] + (Number(special.value) || 0)) : '';
+      return total.value === '' ? null : Number(total.value);
+    });
+    const rr = raceResistances[race] || raceResistances['Common Man'];
+    resistanceTypes.forEach(([key, , statIndex, raceIndex]) => {
+      const stat = totals[statIndex] === null ? null : 3 * totals[statIndex];
+      const other = Number(form.elements.namedItem(`rr-other-${key}`).value) || 0;
+      $(`#rr-race-${key}`).textContent = String(rr[raceIndex]);
+      $(`#rr-stat-${key}`).textContent = stat === null ? '—' : String(stat);
+      $(`#rr-total-${key}`).textContent = stat === null ? '—' : String(rr[raceIndex] + stat + other);
+    });
+  }
   function fixedPotential(value) {
     const bands = [[24,44],[34,39],[44,33],[54,28],[64,22],[74,17],[84,11],[91,6],[92,5],[94,4],[96,3],[98,2],[100,1]];
     return Math.min(101, value + (bands.find(([high]) => value <= high)?.[1] || 0));
   }
   function updateSheetHints() {
+    updateRuleBonuses();
     const mode = form.elements.statPoolMode.value;
     $('#stat-roll-field').hidden = mode !== 'roll';
+    $('#roll-stat-pool').hidden = mode !== 'roll';
     const roll = Number(form.elements.statRoll.value);
-    const budget = mode === 'roll' ? (roll >= 10 && roll <= 100 ? 600 + roll : null) : 660;
+    const budget = mode === 'roll' ? (Number.isInteger(roll) && roll >= 10 && roll <= 100 ? 600 + roll : null) : 660;
     const values = statNames.map((_, index) => Number(form.elements.namedItem(`stat-temp-${index}`).value) || 0);
     const spent = values.reduce((sum, value) => sum + statCost(value), 0);
     const remaining = budget === null ? 'Enter your 10d10 total' : `${spent} of ${budget} points assigned · ${budget - spent} remaining`;
@@ -102,11 +158,24 @@
     const primes = primeStats[form.elements.profession.value] || [];
     const missing = primes.filter(name => values[statNames.indexOf(name)] < 90);
     $('#prime-stats').textContent = `Prime stats: ${primes.join(' and ')} · each must be at least 90${missing.length ? ` (${missing.join(', ')} below 90)` : ''}`;
+    const requiredRealm = realmByProfession[form.elements.profession.value];
+    $('#profession-info').textContent = `${primes.join(' and ')} are prime stats (90 minimum). ${requiredRealm === 'Choose at table' ? 'Choose Essence, Channeling or Mentalism as your realm.' : `${requiredRealm} is this profession’s realm.`}`;
     const [hobby, language, background] = raceAllowances[form.elements.race.value] || [0,0,0];
+    $('#race-allowance').textContent = `${form.elements.race.value}: ${background} background options, ${hobby} hobby ranks and ${language} extra language ranks.`;
+    $('#stat-dice').textContent = mode === 'roll' && form.elements.statDice.value ? `10d10: ${form.elements.statDice.value.split(',').join(' + ')} = ${form.elements.statRoll.value}` : '';
     for (const [name, limit] of [['hobbyUsed',hobby],['languageUsed',language],['backgroundUsed',background]]) {
       const field = form.elements[name];
       field.classList.toggle('over-budget', Number(field.value) > limit);
     }
+    let check = '';
+    if (budget === null) check = 'Roll 10d10 or enter its total to set your stat pool.';
+    else if (values.some(value => !Number.isInteger(value) || value < 20 || value > 100)) check = 'Enter all 10 temporary stats (20–100).';
+    else if (missing.length) check = 'Each prime stat must be at least 90.';
+    else if (spent !== budget) check = `${Math.abs(budget - spent)} stat assignment points ${spent > budget ? 'over budget' : 'remaining'}.`;
+    else if (requiredRealm === 'Choose at table' && !['Essence','Channeling','Mentalism'].includes(form.elements.realm.value)) check = 'Choose a realm of power.';
+    else check = 'Initial choices and temporary stats complete.';
+    $('#creation-checks').textContent = check;
+    $('#creation-checks').classList.toggle('is-complete', check.endsWith('complete.'));
   }
   function showView(name) {
     $$('.view').forEach(view => view.classList.toggle('active', view.id === `${name}-view`));
@@ -331,7 +400,7 @@
       $('#table-list').innerHTML = '<p class="table-load-error">Table data could not be loaded. Serve this folder over HTTP and reload.</p>';
     }
   }
-  makeStats(); renderRoster(); loadReferenceData();
+  makeStats(); makeResistances(); renderRoster(); loadReferenceData();
   function openTableGroup(group) {
     activeTableGroup = group;
     $$('.filter-chip').forEach(button => {
@@ -357,6 +426,13 @@
     });
     saveCurrent();
   });
+  $('#roll-stat-pool').addEventListener('click', () => {
+    const dice = Array.from({length: 10}, () => Math.floor(Math.random() * 10) + 1);
+    form.elements.statPoolMode.value = 'roll';
+    form.elements.statRoll.value = String(dice.reduce((sum, value) => sum + value, 0));
+    form.elements.statDice.value = dice.join(',');
+    updateDevelopment(); saveCurrent();
+  });
   $$('[data-open-table]').forEach(button => button.addEventListener('click', () => {
     const reference = tables.find(table => table.code === button.dataset.openTable);
     if (!reference) return;
@@ -367,9 +443,14 @@
   }));
   $('#return-to-character').addEventListener('click', () => showView('editor'));
   form.addEventListener('submit', event => event.preventDefault());
-  form.addEventListener('input', saveCurrent);
+  form.addEventListener('input', event => {
+    if (event.target.name === 'statRoll') form.elements.statDice.value = '';
+    saveCurrent();
+  });
   form.addEventListener('change', event => {
     if (event.target.name === 'profession') form.elements.realm.value = realmByProfession[event.target.value] || 'Choose at table';
+    if (event.target.name === 'realm' && realmByProfession[form.elements.profession.value] !== 'Choose at table') form.elements.realm.value = realmByProfession[form.elements.profession.value];
+    if (event.target.name === 'statRoll') form.elements.statDice.value = '';
     if (event.target.name === 'profession') $$('.skill-row', $('#skills-list')).forEach(row => updateSkillBuyOptions(row));
     updateDevelopment();
     saveCurrent();

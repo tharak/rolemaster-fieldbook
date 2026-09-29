@@ -48,6 +48,7 @@
                 <label class="sheet-field full">Training packages<input name="training" maxlength="120"></label>
                 <label class="sheet-field full">Realm of power<select name="realm"><option>None</option><option>Essence</option><option>Channeling</option><option>Mentalism</option><option>Choose at table</option></select></label>
               </div>
+              <p class="sheet-hint" id="profession-info"></p>
             </section>
             <section class="record-section">
               <h2>Armor & defense</h2>
@@ -64,8 +65,8 @@
             </section>
             <section class="record-section">
               <h2>Resistance rolls</h2>
-              <div class="sheet-note-grid"><span>Channeling</span><span>Essence</span><span>Mentalism</span><span>Poison / Disease</span><span>Fear</span></div>
-              <label class="sheet-field">Bonuses by type<textarea name="resistances" rows="4" maxlength="500" placeholder="Race + stat + other = total"></textarea></label>
+              <div class="resistance-grid" id="resistance-grid"></div>
+              <label class="sheet-field">Other resistance notes<textarea name="resistances" rows="2" maxlength="500"></textarea></label>
             </section>
             <section class="record-section">
               <h2>Race / stat fixed info</h2>
@@ -92,6 +93,7 @@
                 <label class="sheet-field">Hobby ranks used<input name="hobbyUsed" type="number" min="0" max="99" value="0"></label>
                 <label class="sheet-field">Language ranks used<input name="languageUsed" type="number" min="0" max="99" value="0"></label>
               </div>
+              <p class="sheet-hint" id="race-allowance"></p>
             </section>
           </div>
           <div class="record-column record-right">
@@ -100,11 +102,15 @@
               <div class="stat-header"><span>Stat</span><span>Temp</span><span>Pot</span><span>Basic</span><span>Racial</span><span>Special</span><span>Total</span></div>
               <div id="stats-list" class="stats-list"></div>
               <div class="stat-tools">
-                <label class="sheet-field">Stat pool<select name="statPoolMode"><option value="660">Fixed · 660</option><option value="roll">600 + 10d10</option></select></label>
+                <label class="sheet-field">Stat pool<select name="statPoolMode"><option value="roll">600 + 10d10</option><option value="660">Fixed · 660</option></select></label>
                 <label class="sheet-field" id="stat-roll-field" hidden>10d10 total<input name="statRoll" type="number" min="10" max="100"></label>
+                <input name="statDice" type="hidden">
+                <button type="button" id="roll-stat-pool" class="sheet-action">Roll 10d10</button>
                 <span id="stat-budget">0 of 660 points assigned</span>
               </div>
+              <p class="sheet-hint" id="stat-dice" aria-live="polite"></p>
               <p class="sheet-hint" id="prime-stats"></p>
+              <p class="sheet-hint" id="creation-checks" aria-live="polite"></p>
             </section>
             <section class="record-section record-skills">
               <div class="record-section-title"><h2>Commonly used skills</h2><button type="button" id="add-skill" class="text-button">＋ Add skill</button></div>
