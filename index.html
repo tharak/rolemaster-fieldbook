@@ -142,11 +142,12 @@
                 <input name="statPoolMode" type="hidden">
                 <input name="statRoll" type="hidden">
                 <input name="statDice" type="hidden">
+                <input name="potentialMethod" type="hidden" value="fixed">
                 <p class="sheet-hint" id="stat-dice" aria-live="polite"></p>
                 <p class="sheet-hint" id="stat-budget">Choose a stat pool.</p>
                 <div class="potential-actions" role="group" aria-label="Potential stats">
-                  <button type="button" id="roll-potentials" class="pool-button">Roll potential stats</button>
-                  <button type="button" id="fixed-potentials" class="pool-button">Fixed mod</button>
+                  <button type="button" id="roll-potentials" class="pool-button" aria-pressed="false">Roll potential stats</button>
+                  <button type="button" id="fixed-potentials" class="pool-button" aria-pressed="true">Fixed mod</button>
                 </div>
               </div>
               <div class="stat-header"><span>Stat</span><span>Temp</span><span>Pot</span><span>Basic</span><span>Racial</span><span>Special</span><span>Total</span></div>

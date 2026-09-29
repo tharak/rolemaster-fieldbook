@@ -125,14 +125,15 @@
     const result = base + Array.from({length: dice}, () => Math.floor(Math.random() * sides) + 1).reduce((sum, roll) => sum + roll, 0);
     return Math.max(value, result);
   }
-  function setPotentialStats(calculate) {
-    statNames.forEach((_, index) => {
-      const temporary = Number(form.elements.namedItem(`stat-temp-${index}`).value);
-      if (Number.isInteger(temporary) && temporary >= 20 && temporary <= 100) {
-        form.elements.namedItem(`stat-pot-${index}`).value = String(calculate(temporary));
-      }
-    });
-    saveCurrent();
+  function updatePotentialStat(index, calculate) {
+    const temporaryField = form.elements.namedItem(`stat-temp-${index}`);
+    const temporary = Number(temporaryField.value);
+    form.elements.namedItem(`stat-pot-${index}`).value = temporaryField.value !== '' && Number.isInteger(temporary) && temporary >= 20 && temporary <= 100
+      ? String(calculate(temporary)) : '';
+  }
+  function setPotentialStats(calculate, method) {
+    statNames.forEach((_, index) => updatePotentialStat(index, calculate));
+    form.elements.potentialMethod.value = method;
   }
   function basicStatBonus(value) {
     if (value === 100) return 10;
@@ -179,6 +180,8 @@
   }
   function updateSheetHints() {
     updateRuleBonuses();
+    $('#roll-potentials').setAttribute('aria-pressed', String(form.elements.potentialMethod.value === 'roll'));
+    $('#fixed-potentials').setAttribute('aria-pressed', String(form.elements.potentialMethod.value === 'fixed'));
     const mode = form.elements.statPoolMode.value;
     const roll = Number(form.elements.statRoll.value);
     const validRoll = Number.isInteger(roll) && roll >= 10 && roll <= 100;
@@ -279,6 +282,7 @@
     currentId = crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random()}`;
     fillForm({realm:'None'});
     applyProfessionStatDefaults();
+    setPotentialStats(fixedPotential, 'fixed');
     ensureStatRoll();
     form.elements.statPoolMode.value = 'roll';
     updateDevelopment(); showView('editor'); revealSelectedChoices();
@@ -486,15 +490,20 @@
     form.elements.statPoolMode.value = '660';
     saveCurrent();
   });
-  $('#roll-potentials').addEventListener('click', () => setPotentialStats(rolledPotential));
-  $('#fixed-potentials').addEventListener('click', () => setPotentialStats(fixedPotential));
+  $('#roll-potentials').addEventListener('click', () => { setPotentialStats(rolledPotential, 'roll'); saveCurrent(); });
+  $('#fixed-potentials').addEventListener('click', () => { setPotentialStats(fixedPotential, 'fixed'); saveCurrent(); });
   form.addEventListener('submit', event => event.preventDefault());
-  form.addEventListener('input', saveCurrent);
+  form.addEventListener('input', event => {
+    const match = /^stat-temp-(\d+)$/.exec(event.target.name || '');
+    if (match) updatePotentialStat(Number(match[1]), form.elements.potentialMethod.value === 'roll' ? rolledPotential : fixedPotential);
+    saveCurrent();
+  });
   form.addEventListener('change', event => {
     if (event.target.name === 'profession') {
       const realm = realmByProfession[event.target.value];
       form.elements.realm.value = realm === 'Choose at table' ? 'None' : realm || 'None';
       applyProfessionStatDefaults();
+      setPotentialStats(fixedPotential, 'fixed');
     }
     if (event.target.name === 'realm' && realmByProfession[form.elements.profession.value] !== 'Choose at table') form.elements.realm.value = realmByProfession[form.elements.profession.value];
     if (event.target.name === 'profession') $$('.skill-row', $('#skills-list')).forEach(row => updateSkillBuyOptions(row));
