@@ -146,13 +146,14 @@
   function updateSheetHints() {
     updateRuleBonuses();
     const mode = form.elements.statPoolMode.value;
-    $('#stat-roll-field').hidden = mode !== 'roll';
-    $('#roll-stat-pool').hidden = mode !== 'roll';
     const roll = Number(form.elements.statRoll.value);
-    const budget = mode === 'roll' ? (Number.isInteger(roll) && roll >= 10 && roll <= 100 ? 600 + roll : null) : 660;
+    const validRoll = Number.isInteger(roll) && roll >= 10 && roll <= 100;
+    const budget = mode === '660' ? 660 : mode === 'roll' && validRoll ? 600 + roll : null;
+    $('#stat-pool-print-addend').textContent = mode === '660' ? '60' : mode === 'roll' && validRoll ? String(roll) : '—';
+    $('#stat-pool-total').textContent = budget === null ? '—' : String(budget);
     const values = statNames.map((_, index) => Number(form.elements.namedItem(`stat-temp-${index}`).value) || 0);
     const spent = values.reduce((sum, value) => sum + statCost(value), 0);
-    const remaining = budget === null ? 'Enter your 10d10 total' : `${spent} of ${budget} points assigned · ${budget - spent} remaining`;
+    const remaining = budget === null ? 'Choose a stat pool.' : `${spent} of ${budget} points assigned · ${budget - spent} remaining`;
     $('#stat-budget').textContent = remaining;
     $('#stat-budget').classList.toggle('over-budget', budget !== null && spent > budget);
     const primes = primeStats[form.elements.profession.value] || [];
@@ -173,7 +174,7 @@
       field.classList.toggle('over-budget', Number(field.value) > limit);
     }
     let check = '';
-    if (budget === null) check = 'Roll 10d10 or enter its total to set your stat pool.';
+    if (budget === null) check = 'Roll 10d10 or choose Fixed 60 to set your stat pool.';
     else if (values.some(value => !Number.isInteger(value) || value < 20 || value > 100)) check = 'Enter all 10 temporary stats (20–100).';
     else if (missing.length) check = 'Each prime stat must be at least 90.';
     else if (spent !== budget) check = `${Math.abs(budget - spent)} stat assignment points ${spent > budget ? 'over budget' : 'remaining'}.`;
@@ -442,7 +443,13 @@
     form.elements.statPoolMode.value = 'roll';
     form.elements.statRoll.value = String(dice.reduce((sum, value) => sum + value, 0));
     form.elements.statDice.value = dice.join(',');
-    updateDevelopment(); saveCurrent();
+    saveCurrent();
+  });
+  $('#fixed-stat-pool').addEventListener('click', () => {
+    form.elements.statPoolMode.value = '660';
+    form.elements.statRoll.value = '';
+    form.elements.statDice.value = '';
+    saveCurrent();
   });
   $$('[data-open-table]').forEach(button => button.addEventListener('click', () => {
     const reference = tables.find(table => table.code === button.dataset.openTable);
@@ -454,14 +461,10 @@
   }));
   $('#return-to-character').addEventListener('click', () => showView('editor'));
   form.addEventListener('submit', event => event.preventDefault());
-  form.addEventListener('input', event => {
-    if (event.target.name === 'statRoll') form.elements.statDice.value = '';
-    saveCurrent();
-  });
+  form.addEventListener('input', saveCurrent);
   form.addEventListener('change', event => {
     if (event.target.name === 'profession') form.elements.realm.value = realmByProfession[event.target.value] || 'Choose at table';
     if (event.target.name === 'realm' && realmByProfession[form.elements.profession.value] !== 'Choose at table') form.elements.realm.value = realmByProfession[form.elements.profession.value];
-    if (event.target.name === 'statRoll') form.elements.statDice.value = '';
     if (event.target.name === 'profession') $$('.skill-row', $('#skills-list')).forEach(row => updateSkillBuyOptions(row));
     updateDevelopment();
     saveCurrent();

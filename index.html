@@ -122,21 +122,20 @@
             <section class="record-section record-stats">
               <h2>Stats & bonuses</h2>
               <div class="stat-pool-panel">
-                <fieldset class="sheet-choice-field stat-pool-field">
-                  <legend>Stat pool</legend>
-                  <div class="stat-pool-choices">
-                    <span class="stat-pool-base">600 +</span>
-                    <label class="choice-tile"><input type="radio" name="statPoolMode" value="roll" checked><span>Roll 10d10</span></label>
-                    <label class="choice-tile"><input type="radio" name="statPoolMode" value="660"><span>Fixed 60</span></label>
-                  </div>
-                </fieldset>
-                <div class="stat-tools">
-                  <label class="sheet-field" id="stat-roll-field" hidden>10d10 total<input name="statRoll" type="number" min="10" max="100"></label>
-                  <input name="statDice" type="hidden">
-                  <button type="button" id="roll-stat-pool" class="sheet-action">Roll dice</button>
-                  <span id="stat-budget">Enter your 10d10 total</span>
+                <div class="stat-pool-caption">Stat pool</div>
+                <div class="stat-pool-row" role="group" aria-label="Stat pool calculation">
+                  <span class="stat-pool-base">600 +</span>
+                  <button type="button" id="roll-stat-pool" class="pool-button">Roll 10d10</button>
+                  <button type="button" id="fixed-stat-pool" class="pool-button">Fixed 60</button>
+                  <output id="stat-pool-print-addend" aria-hidden="true">—</output>
+                  <span class="stat-pool-equals">=</span>
+                  <output id="stat-pool-total" aria-label="Stat pool total" aria-live="polite">—</output>
                 </div>
+                <input name="statPoolMode" type="hidden">
+                <input name="statRoll" type="hidden">
+                <input name="statDice" type="hidden">
                 <p class="sheet-hint" id="stat-dice" aria-live="polite"></p>
+                <p class="sheet-hint" id="stat-budget">Choose a stat pool.</p>
               </div>
               <div class="stat-header"><span>Stat</span><span>Temp</span><span>Pot</span><span>Basic</span><span>Racial</span><span>Special</span><span>Total</span></div>
               <div id="stats-list" class="stats-list"></div>
