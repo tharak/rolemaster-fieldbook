@@ -88,10 +88,10 @@
           <section class="record-section record-creation" id="creation-progress">
             <h2>Finish character creation</h2>
             <div class="creation-pools">
-              <div class="creation-pool"><span>Adolescence · T-1.6</span><strong>Applied</strong><small id="adolescence-summary"></small></div>
+              <div class="creation-pool"><span>Adolescence · T-1.6</span><strong>Applied</strong><small id="adolescence-summary"></small><button type="button" id="open-race-weapons" class="creation-pick-button">Choose racial weapons</button></div>
               <div class="creation-pool"><span>Language ranks · T-1.6</span><output id="language-remaining"></output><small id="language-spent-label"></small><button type="button" id="open-language-picker" class="creation-pick-button">Choose languages</button><input name="languageUsed" type="hidden" value="0"></div>
               <div class="creation-pool"><span>Hobby ranks · T-1.6</span><output id="hobby-remaining"></output><small id="hobby-spent-label"></small><button type="button" id="open-hobby-picker" class="creation-pick-button">Choose hobbies</button><input name="hobbyUsed" type="hidden" value="0"></div>
-              <div class="creation-pool"><span>Background options · T-1.6</span><output id="background-remaining"></output><label class="sheet-field">Options used<input name="backgroundUsed" type="number" min="0" max="99" value="0"></label></div>
+              <div class="creation-pool"><span>Background options · T-1.6</span><output id="background-remaining"></output><small id="background-spent-label"></small><button type="button" id="open-background-picker" class="creation-pick-button">Choose options</button><input name="backgroundUsed" type="hidden" value="0"><input name="backgroundSelections" type="hidden" value="{}"></div>
             </div>
             <div class="creation-next"><strong>Remaining steps</strong><ul id="creation-steps"></ul></div>
             <label class="sheet-field creation-notes">Adolescence choices & languages<input name="adolescence" maxlength="300" placeholder="Notes on selected weapons, hobbies and languages"></label>
@@ -207,6 +207,20 @@
       <dialog id="skill-choice-dialog" aria-labelledby="skill-choice-title">
         <div class="language-picker-head"><div><h2 id="skill-choice-title">Choose a racial weapon</h2><p id="skill-choice-subtitle"></p></div><button type="button" id="close-skill-choice" aria-label="Close skill picker">×</button></div>
         <div id="skill-choice-list" class="skill-choice-dialog-list"></div>
+      </dialog>
+      <dialog id="race-weapons-picker" aria-labelledby="race-weapons-title">
+        <div class="language-picker-head"><div><h2 id="race-weapons-title">Racial weapons</h2><p id="race-weapons-subtitle"></p></div><button type="button" id="close-race-weapons" aria-label="Close racial weapons">×</button></div>
+        <p class="language-picker-note">Choose one weapon for each adolescence weapon grant.</p>
+        <div id="race-weapons-list" class="race-weapons-list"></div>
+      </dialog>
+      <dialog id="background-picker" aria-labelledby="background-picker-title">
+        <div class="language-picker-head"><div><h2 id="background-picker-title">Background options</h2><p id="background-picker-subtitle"></p></div><button type="button" id="close-background-picker" aria-label="Close background options">×</button></div>
+        <div class="language-picker-budget"><strong id="background-picker-remaining"></strong><span id="background-picker-used"></span></div>
+        <p class="language-picker-note">Choose options from T-1.5. Items and money can be rolled for one option or chosen for two. Record the result and any bonus target below.</p>
+        <div id="background-picker-list" class="background-picker-list"></div>
+        <p id="background-race-note" class="language-picker-note"></p>
+        <label class="background-picker-notes">Chosen or rolled details<textarea id="background-picker-notes" rows="3" placeholder="Item, money, extra language, or special bonus target"></textarea></label>
+        <p id="background-legacy-note" class="language-picker-note" hidden></p>
       </dialog>
     </section>
 
