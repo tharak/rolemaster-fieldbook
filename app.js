@@ -122,6 +122,19 @@
     Dwarf:[['Dwarvish',8,6],['Common-speech',5,5],['Elvish',4,4]],
     Halfling:[['Small-speech',8,6],['Common-speech',8,6]]
   };
+  // Weapon choices from the outfitting lists in the matching A-1 race entries.
+  const raceWeaponChoices = {
+    'Common Man':{'Weapon • 1-H Edged':['Dagger','Handaxe','Throwing dagger'],'Weapon • Missile':['Sling'],'Weapon • Pole Arms':['Fishing spear'],'Weapon • Thrown':['Dagger','Handaxe','Throwing dagger','Fishing spear']},
+    'High Man':{'Weapon • 1-H Edged':['Battle axe','Broadsword','Dagger','Short sword','Bastard sword','Falchion','Foil','Kynac','Long kynac','Main gauche','Rapier'],'Weapon • 2-Handed':['Flail','Quarterstaff','Two-handed sword','War mattock'],'Weapon • Missile':['Composite bow','Long bow'],'Weapon • Pole Arms':['Halbard','Lance','Spear','Boar spear']},
+    'Wood Elf':{'Weapon • 1-H Edged':['Dagger','Handaxe','Broadsword','Short sword','Whip','Main gauche','Shang','Rapier','Gé','Kynac'],'Weapon • Missile':['Long bow','Short bow']},
+    Dwarf:{'Weapon • 1-H Concussion':['Club','War hammer','Mace'],'Weapon • Thrown':['Dagger','Handaxe','Spear']},
+    Halfling:{'Weapon • Missile':['Short bow','Sling'],'Weapon • Thrown':['Dagger','Handaxe','Pilum']}
+  };
+  const openSpellLists = {
+    Essence:['Delving Ways','Detecting Ways','Elemental Shields','Essence Hand','Essence’s Perceptions','Lesser Illusions','Physical Enhancement','Rune Mastery','Spell Wall','Unbarring Ways'],
+    Channeling:['Barrier Law','Concussion’s Ways','Detection Mastery','Light’s Way','Lofty Movements','Nature’s Law','Purifications','Sound’s Way','Spell Defense','Weather Ways'],
+    Mentalism:['Anticipations','Attack Avoidance','Brilliance','Cloaking','Damage Resistance','Delving','Detections','Illusions','Self Healing','Spell Resistance']
+  };
   const raceStats = {
     'Common Man':[0,0,0,0,2,0,0,0,0,2],
     'High Man':[-2,4,0,0,0,0,0,4,-2,4],
@@ -308,13 +321,62 @@
     const row = document.createElement('div'); row.className = 'skill-row rank-row'; row.dataset.category = category;
     if (skill.raceGrant) row.dataset.raceGrant = skill.raceGrant;
     if (skill.raceBase) row.dataset.raceBase = skill.raceBase;
-    row.innerHTML = `<div class="rank-title"><label>Skill<input aria-label="Skill name" name="skill-name" maxlength="60" placeholder="Skill name" value="${esc(skill.name || '')}"></label><button type="button" class="change-skill-category" aria-label="Change category for ${esc(skill.name || 'skill')}">${esc(category)}</button></div><label>Before<input aria-label="Ranks before this level" name="skill-start" type="number" min="0" max="99" value="${esc(skill.start ?? skill.ranks ?? 0)}"></label><label>Buy<select aria-label="Ranks purchased this level" name="skill-buy"></select></label><label>Item<input aria-label="Item bonus" name="skill-item" type="number" value="${esc(skill.item ?? 0)}"></label><label>Special<input aria-label="Skill special bonus" name="skill-special" type="number" value="${esc(skill.special ?? 0)}"></label><output class="rank-cost"></output><button type="button" class="remove-skill" aria-label="Remove skill">×</button><div class="bonus-breakdown skill-bonus"></div>`;
+    const choice = skill.raceGrant?.startsWith('weapon:') || skill.raceGrant === 'race:open-spell-list';
+    row.innerHTML = `<div class="rank-title"><label>Skill<input ${choice ? 'type="hidden"' : 'type="text"'} aria-label="Skill name" name="skill-name" maxlength="60" placeholder="Skill name" value="${esc(skill.name || '')}"></label>${choice ? `<button type="button" class="choose-skill" aria-expanded="false">${esc(skill.name || 'Choose skill')} ▾</button>` : ''}<button type="button" class="change-skill-category" aria-label="Change category for ${esc(skill.name || 'skill')}">${esc(category)}</button></div><label>Before<input aria-label="Ranks before this level" name="skill-start" type="number" min="0" max="99" value="${esc(skill.start ?? skill.ranks ?? 0)}"></label><label>Buy<select aria-label="Ranks purchased this level" name="skill-buy"></select></label><label>Item<input aria-label="Item bonus" name="skill-item" type="number" value="${esc(skill.item ?? 0)}"></label><label>Special<input aria-label="Skill special bonus" name="skill-special" type="number" value="${esc(skill.special ?? 0)}"></label><output class="rank-cost"></output><button type="button" class="remove-skill" aria-label="Remove skill">×</button>${choice ? '<div class="skill-choice-options" hidden></div>' : ''}<div class="bonus-breakdown skill-bonus"></div>`;
     $('.category-skills', parent).append(row);
     if (!developmentRules && skill.buy) row.dataset.pendingBuy = skill.buy;
     updateSkillBuyOptions(row, Number(skill.buy) || 0);
     $('.remove-skill', row).addEventListener('click', () => { row.remove(); updateDevelopment(); saveCurrent(); });
     $('.change-skill-category', row).addEventListener('click', () => openSkillCategoryPicker(row));
+    if (choice) attachSkillChoice(row);
     return row;
+  }
+  function attachSkillChoice(row) {
+    let button = $('.choose-skill', row);
+    if (!button) {
+      const field = $('[name="skill-name"]', row);
+      field.type = 'hidden';
+      button = document.createElement('button');
+      button.type = 'button'; button.className = 'choose-skill'; button.setAttribute('aria-expanded', 'false');
+      button.textContent = `${field.value} ▾`;
+      $('.change-skill-category', row).before(button);
+      const panel = document.createElement('div');
+      panel.className = 'skill-choice-options'; panel.hidden = true;
+      $('.bonus-breakdown', row).before(panel);
+    }
+    button.addEventListener('click', () => openSkillChoice(row));
+  }
+  function skillChoices(row) {
+    return row.dataset.raceGrant === 'race:open-spell-list'
+      ? openSpellLists[form.elements.realm.value] || []
+      : raceWeaponChoices[form.elements.race.value]?.[row.dataset.raceGrant.slice('weapon:'.length)] || [];
+  }
+  function validateSkillChoices() {
+    $$('.skill-row[data-race-grant]', $('#skills-list')).forEach(row => {
+      const button = $('.choose-skill', row);
+      if (!button) return;
+      const field = $('[name="skill-name"]', row);
+      if (!skillChoices(row).includes(field.value)) field.value = row.dataset.raceGrant === 'race:open-spell-list' ? 'Choose an open spell list' : 'Choose a weapon';
+      button.textContent = `${field.value} ▾`;
+      $('.skill-choice-options', row).hidden = true;
+      button.setAttribute('aria-expanded', 'false');
+    });
+  }
+  function openSkillChoice(row) {
+    const panel = $('.skill-choice-options', row);
+    const open = panel.hidden;
+    $$('.skill-choice-options', $('#skills-list')).forEach(item => {
+      item.hidden = true;
+      $('.choose-skill', item.closest('.skill-row')).setAttribute('aria-expanded', 'false');
+    });
+    if (!open) return;
+    const choices = skillChoices(row);
+    panel.innerHTML = choices.length
+      ? `<span>Pick ${row.dataset.raceGrant === 'race:open-spell-list' ? `${esc(form.elements.realm.value)} open spell list` : 'a racial weapon'}</span><div>${choices.map(name => `<button type="button" data-choice="${esc(name)}" aria-pressed="${name === $('[name="skill-name"]', row).value}">${esc(name)}</button>`).join('')}</div>`
+      : '<span>Choose a realm of power in Character first.</span>';
+    panel.hidden = false;
+    $('.choose-skill', row).setAttribute('aria-expanded', 'true');
+    panel.scrollIntoView({block:'nearest'});
   }
   function renderSkillTree(character = {}) {
     $('#skills-list').innerHTML = '';
@@ -349,13 +411,25 @@
     });
     const tracked = $$('.skill-row[data-race-grant]', $('#skills-list'));
     tracked.forEach(row => {
-      const next = grants.get(row.dataset.raceGrant);
+      const grantKey = row.dataset.raceGrant;
+      const next = grants.get(grantKey);
       const previous = Number(row.dataset.raceBase) || 0;
       const field = $('[name="skill-start"]', row);
       field.value = String(Math.max(0, (Number(field.value) || 0) - previous + (next?.ranks || 0)));
       row.dataset.raceBase = String(next?.ranks || 0);
-      if (!next && !Number(field.value) && !Number($('[name="skill-buy"]', row).value) && !Number($('[name="skill-item"]', row).value) && !Number($('[name="skill-special"]', row).value)) row.remove();
-      grants.delete(row.dataset.raceGrant);
+      if (!next) {
+        if (!Number(field.value) && !Number($('[name="skill-buy"]', row).value) && !Number($('[name="skill-item"]', row).value) && !Number($('[name="skill-special"]', row).value)) row.remove();
+        else {
+          delete row.dataset.raceGrant;
+          delete row.dataset.raceBase;
+          const name = $('[name="skill-name"]', row);
+          name.type = 'text';
+          if (name.value.startsWith('Choose ')) name.value = '';
+          $('.choose-skill', row)?.remove();
+          $('.skill-choice-options', row)?.remove();
+        }
+      }
+      grants.delete(grantKey);
     });
     grants.forEach(({category, name, ranks}, key) => {
       const row = $$('.skill-row', $('#skills-list')).find(skill => skill.dataset.category === category && $('[name="skill-name"]', skill).value === name && !skill.dataset.raceGrant);
@@ -363,8 +437,10 @@
         $('[name="skill-start"]', row).value = String((Number($('[name="skill-start"]', row).value) || 0) + ranks);
         row.dataset.raceGrant = key;
         row.dataset.raceBase = String(ranks);
+        if (key.startsWith('weapon:') || key === 'race:open-spell-list') attachSkillChoice(row);
       } else skillRow({category, name, start:ranks, raceGrant:key, raceBase:ranks});
     });
+    validateSkillChoices();
   }
   function openSkillCategoryPicker(target = null) {
     skillCategoryPickerTarget = target;
@@ -916,6 +992,16 @@
     skillCategoryPickerTarget = null;
     updateDevelopment(); saveCurrent();
   });
+  $('#skills-list').addEventListener('click', event => {
+    const button = event.target.closest('button[data-choice]');
+    if (!button) return;
+    const row = button.closest('.skill-row');
+    $('[name="skill-name"]', row).value = button.dataset.choice;
+    $('.choose-skill', row).textContent = `${button.dataset.choice} ▾`;
+    $('.choose-skill', row).setAttribute('aria-expanded', 'false');
+    $('.skill-choice-options', row).hidden = true;
+    updateDevelopment(); saveCurrent();
+  });
   $('#category-record-list').addEventListener('click', event => {
     const button = event.target.closest('.add-skill-variant');
     if (!button) return;
@@ -958,6 +1044,7 @@
       setPotentialStats(fixedPotential, 'fixed');
     }
     if (event.target.name === 'realm' && realmByProfession[form.elements.profession.value] !== 'Choose at table') form.elements.realm.value = realmByProfession[form.elements.profession.value];
+    if (event.target.name === 'profession' || event.target.name === 'realm') validateSkillChoices();
     updateDevelopment();
     saveCurrent();
   });

@@ -359,6 +359,16 @@ input::placeholder, textarea::placeholder { color: #82998a; opacity: 1; }
 .record-skills .rank-row label { display: block; min-width: 0; color: var(--muted); font: 9px var(--mono); text-transform: uppercase; }
 .record-skills .rank-row input, .record-skills .rank-row select { display: block; width: 100%; min-width: 0; height: 28px; margin-top: 3px; padding: 4px; border: 1px solid var(--line); border-radius: 4px; background: var(--input); color: var(--ink); font: 11px var(--mono); }
 .record-skills .rank-title input { font: 12px var(--sans); text-transform: none; }
+.record-skills .rank-title input[type="hidden"] { display: none; }
+.record-skills .choose-skill { display: block; width: 100%; margin-top: 3px; padding: 6px 8px; border: 1px solid #729279; border-radius: 4px; background: var(--input); color: var(--ink); text-align: left; font: 12px var(--sans); cursor: pointer; }
+.record-skills .choose-skill:hover, .record-skills .choose-skill:focus-visible { border-color: #a6dfb8; background: var(--olive-dark); outline: none; }
+.skill-choice-options[hidden] { display: none; }
+.skill-choice-options { grid-column: 1 / -1; padding: 10px; border: 1px solid #729279; border-radius: 5px; background: #1f3528; }
+.skill-choice-options > span { display: block; margin-bottom: 8px; color: #b6cbb9; font: 600 11px var(--sans); }
+.skill-choice-options > div { display: flex; flex-wrap: wrap; gap: 6px; }
+.skill-choice-options button { padding: 7px 9px; border: 1px solid #729279; border-radius: 4px; background: var(--input); color: var(--ink); font: 11px var(--sans); cursor: pointer; }
+.skill-choice-options button:hover, .skill-choice-options button:focus-visible { border-color: #a6dfb8; background: var(--olive-dark); outline: none; }
+.skill-choice-options button[aria-pressed="true"] { border-color: #a6dfb8; background: #376c4a; color: #fff; }
 .record-skills .rank-cost { align-self: center; font: 10px var(--mono); color: var(--ink); white-space: nowrap; }
 .record-skills .bonus-breakdown { grid-column: 1/-1; display: flex; flex-wrap: wrap; justify-content: space-between; gap: 3px 8px; padding: 3px 0 6px; color: var(--muted); font: 10px/1.4 var(--mono); }
 .record-skills .bonus-breakdown strong { color: var(--ink); font-size: 12px; }
@@ -411,7 +421,8 @@ input::placeholder, textarea::placeholder { color: #82998a; opacity: 1; }
   .record-skills .skill-row { padding-left: 9px; }
 }
 @media print {
-  .skill-category-picker, .hide-zero-control, .a4-template button, .record-skills .add-category-skill, .record-skills .change-skill-category, .record-skills .remove-skill, .record-skills .remove-category { display: none !important; }
+  .skill-category-picker, .skill-choice-options, .hide-zero-control, .a4-template button, .record-skills .add-category-skill, .record-skills .change-skill-category, .record-skills .remove-skill, .record-skills .remove-category { display: none !important; }
+  .record-skills .choose-skill { border: 0; padding: 0; background: none; color: #111; }
   .skill-group, .skill-category { break-inside: avoid; }
   .record-skills .rank-row input, .record-skills .rank-row select { color: #111 !important; background: #fff !important; }
   .record-category-sheet { break-before: page; }
