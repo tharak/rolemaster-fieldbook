@@ -39,150 +39,146 @@
           <label class="sheet-field">Campaign (GM)<input name="campaign" maxlength="50"></label>
         </div>
         <div class="record-body">
-          <div class="record-column record-left">
-            <section class="record-section">
-              <h2>Character</h2>
-              <div class="sheet-fields two-up">
-                <fieldset class="sheet-choice-field full">
-                  <legend>Race</legend>
-                  <div class="choice-strip">
-                    <label class="choice-tile"><input type="radio" name="race" value="Common Man" checked><span>Common Man</span></label>
-                    <label class="choice-tile"><input type="radio" name="race" value="High Man"><span>High Man</span></label>
-                    <label class="choice-tile"><input type="radio" name="race" value="Wood Elf"><span>Wood Elf</span></label>
-                    <label class="choice-tile"><input type="radio" name="race" value="Dwarf"><span>Dwarf</span></label>
-                    <label class="choice-tile"><input type="radio" name="race" value="Halfling"><span>Halfling</span></label>
-                  </div>
-                </fieldset>
-                <fieldset class="sheet-choice-field full">
-                  <legend>Profession</legend>
-                  <div class="choice-strip">
-                    <label class="choice-tile"><input type="radio" name="profession" value="Fighter" checked><span>Fighter</span></label>
-                    <label class="choice-tile"><input type="radio" name="profession" value="Thief"><span>Thief</span></label>
-                    <label class="choice-tile"><input type="radio" name="profession" value="Rogue"><span>Rogue</span></label>
-                    <label class="choice-tile"><input type="radio" name="profession" value="Cleric"><span>Cleric</span></label>
-                    <label class="choice-tile"><input type="radio" name="profession" value="Magician"><span>Magician</span></label>
-                    <label class="choice-tile"><input type="radio" name="profession" value="Mentalist"><span>Mentalist</span></label>
-                    <label class="choice-tile"><input type="radio" name="profession" value="Ranger"><span>Ranger</span></label>
-                    <label class="choice-tile"><input type="radio" name="profession" value="Dabbler"><span>Dabbler</span></label>
-                    <label class="choice-tile"><input type="radio" name="profession" value="Bard"><span>Bard</span></label>
-                  </div>
-                </fieldset>
-                <label class="sheet-field full">Training packages<input name="training" maxlength="120"></label>
-                <fieldset class="sheet-choice-field full">
-                  <legend>Realm of power</legend>
-                  <div class="choice-strip">
-                    <label class="choice-tile"><input type="radio" name="realm" value="None" checked><span>None</span></label>
-                    <label class="choice-tile"><input type="radio" name="realm" value="Essence"><span>Essence</span></label>
-                    <label class="choice-tile"><input type="radio" name="realm" value="Channeling"><span>Channeling</span></label>
-                    <label class="choice-tile"><input type="radio" name="realm" value="Mentalism"><span>Mentalism</span></label>
-                  </div>
-                </fieldset>
-              </div>
-              <p class="sheet-hint" id="profession-info"></p>
-            </section>
-            <section class="record-section">
-              <h2>Armor & defense</h2>
-              <div class="sheet-fields two-up">
-                <label class="sheet-field full">Armor type<select name="armor"><option>— Choose armor —</option><option>Plate · AT 20</option><option>Plate · AT 19</option><option>Plate · AT 18</option><option>Chain · AT 17</option><option>Chain · AT 16</option><option>Chain · AT 15</option><option>Chain · AT 14</option><option>Chain · AT 13</option><option>Rigid leather · AT 12</option><option>Rigid leather · AT 11</option><option>Rigid leather · AT 10</option><option>Soft leather · AT 9</option><option>Soft leather · AT 8</option><option>Soft leather · AT 7</option><option>Soft leather · AT 6</option><option>Soft leather · AT 5</option><option>No armor · AT 4</option><option>No armor · AT 3</option><option>No armor · AT 2</option><option>No armor · AT 1</option></select></label>
-                <label class="sheet-field">Equipment weight<input name="equipmentWeight" type="number" min="0" step="0.1"></label>
-                <label class="sheet-field">Weight penalty<input name="weightPenalty" type="number"></label>
-                <label class="sheet-field">Base movement rate<input name="movement" type="number" min="0"></label>
-                <label class="sheet-field">Moving maneuver penalty<input name="maneuverPenalty" type="number"></label>
-                <label class="sheet-field">Missile penalty<input name="missilePenalty" type="number"></label>
-                <label class="sheet-field">Shield bonus<input name="shieldBonus" type="number"></label>
-                <label class="sheet-field full">Total normal DB<input name="defensiveBonus" type="number"></label>
-              </div>
-            </section>
-            <section class="record-section">
-              <h2>Resistance rolls</h2>
-              <div class="resistance-grid" id="resistance-grid"></div>
-              <label class="sheet-field">Other resistance notes<textarea name="resistances" rows="2" maxlength="500"></textarea></label>
-            </section>
-            <section class="record-section">
-              <h2>Race / stat fixed info</h2>
-              <label class="sheet-field">Progressions & recovery<textarea name="fixedInfo" rows="4" maxlength="600" placeholder="Soul departure, recovery, body development, power points…"></textarea></label>
-            </section>
-            <section class="record-section">
-              <h2>Role traits</h2>
-              <div class="sheet-fields two-up">
-                <label class="sheet-field">Appearance<input name="appearance" type="number" min="1" max="100"></label>
-                <label class="sheet-field">Actual age<input name="age" type="number" min="1"></label>
-                <label class="sheet-field full">Physical appearance<input name="physicalAppearance" maxlength="160" placeholder="Height, hair, eyes…"></label>
-                <label class="sheet-field full">Personality<input name="personality" maxlength="120"></label>
-                <label class="sheet-field full">Motivation<input name="motivation" maxlength="120"></label>
-                <label class="sheet-field full">Alignment<input name="alignment" maxlength="120"></label>
-              </div>
-            </section>
-            <section class="record-section">
-              <h2>Background information</h2>
-              <label class="sheet-field">Character concept<textarea name="concept" rows="3" maxlength="400"></textarea></label>
-              <label class="sheet-field">Background & history<textarea name="history" rows="4" maxlength="1200"></textarea></label>
-              <label class="sheet-field">Background options<textarea name="backgroundOptions" rows="3" maxlength="600"></textarea></label>
-              <div class="sheet-fields two-up compact-fields">
-                <label class="sheet-field">Options used<input name="backgroundUsed" type="number" min="0" max="99" value="0"></label>
-                <label class="sheet-field">Hobby ranks used<input name="hobbyUsed" type="number" min="0" max="99" value="0"></label>
-                <label class="sheet-field">Language ranks used<input name="languageUsed" type="number" min="0" max="99" value="0"></label>
-              </div>
-              <p class="sheet-hint" id="race-allowance"></p>
-            </section>
-          </div>
-          <div class="record-column record-right">
-            <section class="record-section record-stats">
-              <h2>Stats & bonuses</h2>
-              <div class="stat-pool-panel">
-                <div class="stat-pool-caption">Stat pool</div>
-                <div class="stat-pool-row" role="group" aria-label="Stat pool calculation">
-                  <span class="stat-pool-base">600 +</span>
-                  <button type="button" id="rolled-stat-pool" class="pool-roll-view" aria-label="Use rolled stat pool" aria-pressed="true"><span>10d10</span><strong id="stat-roll-preview">—</strong></button>
-                  <button type="button" id="fixed-stat-pool" class="pool-button" aria-pressed="false">Fixed 60</button>
-                  <output id="stat-pool-print-addend" aria-hidden="true">—</output>
-                  <span class="stat-pool-equals">=</span>
-                  <output id="stat-pool-total" aria-label="Stat pool total" aria-live="polite">—</output>
+          <section class="record-section record-character">
+            <h2>Character</h2>
+            <div class="sheet-fields two-up">
+              <fieldset class="sheet-choice-field full">
+                <legend>Race</legend>
+                <div class="choice-strip">
+                  <label class="choice-tile"><input type="radio" name="race" value="Common Man" checked><span>Common Man</span></label>
+                  <label class="choice-tile"><input type="radio" name="race" value="High Man"><span>High Man</span></label>
+                  <label class="choice-tile"><input type="radio" name="race" value="Wood Elf"><span>Wood Elf</span></label>
+                  <label class="choice-tile"><input type="radio" name="race" value="Dwarf"><span>Dwarf</span></label>
+                  <label class="choice-tile"><input type="radio" name="race" value="Halfling"><span>Halfling</span></label>
                 </div>
-                <input name="statPoolMode" type="hidden">
-                <input name="statRoll" type="hidden">
-                <input name="statDice" type="hidden">
-                <input name="potentialMethod" type="hidden" value="fixed">
-                <p class="sheet-hint" id="stat-dice" aria-live="polite"></p>
-                <p class="sheet-hint" id="stat-budget">Choose a stat pool.</p>
-                <div class="potential-actions" role="group" aria-label="Potential stats">
-                  <button type="button" id="roll-potentials" class="pool-button" aria-pressed="false">Roll potential stats</button>
-                  <button type="button" id="fixed-potentials" class="pool-button" aria-pressed="true">Fixed mod</button>
+              </fieldset>
+              <fieldset class="sheet-choice-field full">
+                <legend>Profession</legend>
+                <div class="choice-strip">
+                  <label class="choice-tile"><input type="radio" name="profession" value="Fighter" checked><span>Fighter</span></label>
+                  <label class="choice-tile"><input type="radio" name="profession" value="Thief"><span>Thief</span></label>
+                  <label class="choice-tile"><input type="radio" name="profession" value="Rogue"><span>Rogue</span></label>
+                  <label class="choice-tile"><input type="radio" name="profession" value="Cleric"><span>Cleric</span></label>
+                  <label class="choice-tile"><input type="radio" name="profession" value="Magician"><span>Magician</span></label>
+                  <label class="choice-tile"><input type="radio" name="profession" value="Mentalist"><span>Mentalist</span></label>
+                  <label class="choice-tile"><input type="radio" name="profession" value="Ranger"><span>Ranger</span></label>
+                  <label class="choice-tile"><input type="radio" name="profession" value="Dabbler"><span>Dabbler</span></label>
+                  <label class="choice-tile"><input type="radio" name="profession" value="Bard"><span>Bard</span></label>
                 </div>
+              </fieldset>
+              <label class="sheet-field full">Training packages<input name="training" maxlength="120"></label>
+              <fieldset class="sheet-choice-field full">
+                <legend>Realm of power</legend>
+                <div class="choice-strip">
+                  <label class="choice-tile"><input type="radio" name="realm" value="None" checked><span>None</span></label>
+                  <label class="choice-tile"><input type="radio" name="realm" value="Essence"><span>Essence</span></label>
+                  <label class="choice-tile"><input type="radio" name="realm" value="Channeling"><span>Channeling</span></label>
+                  <label class="choice-tile"><input type="radio" name="realm" value="Mentalism"><span>Mentalism</span></label>
+                </div>
+              </fieldset>
+            </div>
+            <p class="sheet-hint" id="profession-info"></p>
+          </section>
+          <section class="record-section record-resistance">
+            <h2>Resistance rolls</h2>
+            <div class="resistance-grid" id="resistance-grid"></div>
+            <label class="sheet-field">Other resistance notes<textarea name="resistances" rows="2" maxlength="500"></textarea></label>
+          </section>
+          <section class="record-section record-stats">
+            <h2>Stats & bonuses</h2>
+            <div class="stat-pool-panel">
+              <div class="stat-pool-caption">Stat pool</div>
+              <div class="stat-pool-row" role="group" aria-label="Stat pool calculation">
+                <span class="stat-pool-base">600 +</span>
+                <button type="button" id="rolled-stat-pool" class="pool-roll-view" aria-label="Use rolled stat pool" aria-pressed="true"><span>10d10</span><strong id="stat-roll-preview">—</strong></button>
+                <button type="button" id="fixed-stat-pool" class="pool-button" aria-pressed="false">Fixed 60</button>
+                <output id="stat-pool-print-addend" aria-hidden="true">—</output>
+                <span class="stat-pool-equals">=</span>
+                <output id="stat-pool-total" aria-label="Stat pool total" aria-live="polite">—</output>
               </div>
-              <div class="stat-header"><span>Stat</span><span>Temp</span><span>Pot</span><span>Basic</span><span>Racial</span><span>Special</span><span>Total</span></div>
-              <div id="stats-list" class="stats-list"></div>
-              <p class="sheet-hint" id="prime-stats"></p>
-              <p class="sheet-hint" id="creation-checks" aria-live="polite"></p>
-            </section>
-            <section class="record-section record-skills">
-              <div class="record-section-title"><h2>Commonly used skills</h2><div class="skill-tree-actions"><button type="button" id="add-category" class="text-button">＋ Add category</button><button type="button" id="add-skill" class="text-button">＋ Add skill</button></div></div>
-              <div id="skill-category-picker" class="skill-category-picker" hidden><p>Choose a category</p><div id="skill-category-options"></div><button type="button" id="cancel-skill-category" class="text-button">Cancel</button></div>
-              <div id="skills-list" class="skills-list"></div>
-              <div class="dp-summary"><div><span>DP available</span><strong id="dp-available">—</strong></div><div><span>Spent</span><strong id="dp-spent">0</strong></div><div><span>Remaining</span><strong id="dp-remaining">—</strong></div></div>
-              <div class="sheet-fields two-up compact-fields"><label class="sheet-field">Other DP spent<input name="otherDp" type="number" min="0" max="999" value="0"></label><label class="sheet-field">Adolescence ranks & languages<input name="adolescence" maxlength="300" placeholder="Starting ranks, hobbies and languages"></label></div>
-            </section>
-            <section class="record-section">
-              <h2>Commonly used attacks</h2>
-              <div class="ruled-labels"><span>Attack / weapon</span><span>Ranks · Bonus · Fumble · Range</span></div>
-              <textarea class="ruled-textarea" name="attacks" rows="5" maxlength="700" aria-label="Commonly used attacks"></textarea>
-            </section>
-            <section class="record-section">
-              <h2>Commonly used equipment</h2>
-              <div class="ruled-labels"><span>Item</span><span>Location · Weight · Description</span></div>
-              <textarea class="ruled-textarea" name="notes" rows="6" maxlength="1200" aria-label="Commonly used equipment"></textarea>
-            </section>
-            <section class="record-bottom">
-              <div><label class="sheet-field">Hits (maximum)<input name="hits" type="number" min="0"></label></div>
-              <div><h2>Miscellaneous information</h2><label class="sheet-field">Bonuses<textarea name="bonuses" rows="3" maxlength="1200"></textarea></label><label class="sheet-field">Spells & spell lists<textarea name="spells" rows="3" maxlength="800"></textarea></label></div>
-              <div><label class="sheet-field">Power points (max.)<input name="powerPoints" type="number" min="0"></label></div>
-            </section>
-          </div>
+              <input name="statPoolMode" type="hidden">
+              <input name="statRoll" type="hidden">
+              <input name="statDice" type="hidden">
+              <input name="potentialMethod" type="hidden" value="fixed">
+              <p class="sheet-hint" id="stat-dice" aria-live="polite"></p>
+              <p class="sheet-hint" id="stat-budget">Choose a stat pool.</p>
+              <div class="potential-actions" role="group" aria-label="Potential stats">
+                <button type="button" id="roll-potentials" class="pool-button" aria-pressed="false">Roll potential stats</button>
+                <button type="button" id="fixed-potentials" class="pool-button" aria-pressed="true">Fixed mod</button>
+              </div>
+            </div>
+            <div class="stat-header"><span>Stat</span><span>Temp</span><span>Pot</span><span>Basic</span><span>Racial</span><span>Special</span><span>Total</span></div>
+            <div id="stats-list" class="stats-list"></div>
+            <p class="sheet-hint" id="prime-stats"></p>
+            <p class="sheet-hint" id="creation-checks" aria-live="polite"></p>
+          </section>
+          <section class="record-section record-category-sheet">
+            <div class="record-section-title"><h2>Skill Category Record Sheet <span>T-6.2</span></h2></div>
+            <div class="category-record-scroll"><div class="category-record-head"><span>Skill category</span><span>Stats</span><span>Dev cost</span><span>Ranks</span><span>New</span><span>Rank</span><span>Stat</span><span>Prof.</span><span>Special</span><span>Special</span><span>Total</span></div><div id="category-record-list"></div></div>
+          </section>
+          <section class="record-section">
+            <h2>Armor & defense</h2>
+            <div class="sheet-fields two-up">
+              <label class="sheet-field full">Armor type<select name="armor"><option>— Choose armor —</option><option>Plate · AT 20</option><option>Plate · AT 19</option><option>Plate · AT 18</option><option>Chain · AT 17</option><option>Chain · AT 16</option><option>Chain · AT 15</option><option>Chain · AT 14</option><option>Chain · AT 13</option><option>Rigid leather · AT 12</option><option>Rigid leather · AT 11</option><option>Rigid leather · AT 10</option><option>Soft leather · AT 9</option><option>Soft leather · AT 8</option><option>Soft leather · AT 7</option><option>Soft leather · AT 6</option><option>Soft leather · AT 5</option><option>No armor · AT 4</option><option>No armor · AT 3</option><option>No armor · AT 2</option><option>No armor · AT 1</option></select></label>
+              <label class="sheet-field">Equipment weight<input name="equipmentWeight" type="number" min="0" step="0.1"></label>
+              <label class="sheet-field">Weight penalty<input name="weightPenalty" type="number"></label>
+              <label class="sheet-field">Base movement rate<input name="movement" type="number" min="0"></label>
+              <label class="sheet-field">Moving maneuver penalty<input name="maneuverPenalty" type="number"></label>
+              <label class="sheet-field">Missile penalty<input name="missilePenalty" type="number"></label>
+              <label class="sheet-field">Shield bonus<input name="shieldBonus" type="number"></label>
+              <label class="sheet-field full">Total normal DB<input name="defensiveBonus" type="number"></label>
+            </div>
+          </section>
+          <section class="record-section">
+            <h2>Race / stat fixed info</h2>
+            <label class="sheet-field">Progressions & recovery<textarea name="fixedInfo" rows="4" maxlength="600" placeholder="Soul departure, recovery, body development, power points…"></textarea></label>
+          </section>
+          <section class="record-section">
+            <h2>Role traits</h2>
+            <div class="sheet-fields two-up">
+              <label class="sheet-field">Appearance<input name="appearance" type="number" min="1" max="100"></label>
+              <label class="sheet-field">Actual age<input name="age" type="number" min="1"></label>
+              <label class="sheet-field full">Physical appearance<input name="physicalAppearance" maxlength="160" placeholder="Height, hair, eyes…"></label>
+              <label class="sheet-field full">Personality<input name="personality" maxlength="120"></label>
+              <label class="sheet-field full">Motivation<input name="motivation" maxlength="120"></label>
+              <label class="sheet-field full">Alignment<input name="alignment" maxlength="120"></label>
+            </div>
+          </section>
+          <section class="record-section">
+            <h2>Background information</h2>
+            <label class="sheet-field">Character concept<textarea name="concept" rows="3" maxlength="400"></textarea></label>
+            <label class="sheet-field">Background & history<textarea name="history" rows="4" maxlength="1200"></textarea></label>
+            <label class="sheet-field">Background options<textarea name="backgroundOptions" rows="3" maxlength="600"></textarea></label>
+            <div class="sheet-fields two-up compact-fields">
+              <label class="sheet-field">Options used<input name="backgroundUsed" type="number" min="0" max="99" value="0"></label>
+              <label class="sheet-field">Hobby ranks used<input name="hobbyUsed" type="number" min="0" max="99" value="0"></label>
+              <label class="sheet-field">Language ranks used<input name="languageUsed" type="number" min="0" max="99" value="0"></label>
+            </div>
+            <p class="sheet-hint" id="race-allowance"></p>
+          </section>
+          <section class="record-section record-skills">
+            <div class="record-section-title"><h2>Commonly used skills</h2><div class="skill-tree-actions"><button type="button" id="add-category" class="text-button">＋ Add category</button><button type="button" id="add-skill" class="text-button">＋ Add skill</button></div></div>
+            <div id="skill-category-picker" class="skill-category-picker" hidden><p>Choose a category</p><div id="skill-category-options"></div><button type="button" id="cancel-skill-category" class="text-button">Cancel</button></div>
+            <div id="skills-list" class="skills-list"></div>
+            <div class="dp-summary"><div><span>DP available</span><strong id="dp-available">—</strong></div><div><span>Spent</span><strong id="dp-spent">0</strong></div><div><span>Remaining</span><strong id="dp-remaining">—</strong></div></div>
+            <div class="sheet-fields two-up compact-fields"><label class="sheet-field">Other DP spent<input name="otherDp" type="number" min="0" max="999" value="0"></label><label class="sheet-field">Adolescence ranks & languages<input name="adolescence" maxlength="300" placeholder="Starting ranks, hobbies and languages"></label></div>
+          </section>
+          <section class="record-section">
+            <h2>Commonly used attacks</h2>
+            <div class="ruled-labels"><span>Attack / weapon</span><span>Ranks · Bonus · Fumble · Range</span></div>
+            <textarea class="ruled-textarea" name="attacks" rows="5" maxlength="700" aria-label="Commonly used attacks"></textarea>
+          </section>
+          <section class="record-section">
+            <h2>Commonly used equipment</h2>
+            <div class="ruled-labels"><span>Item</span><span>Location · Weight · Description</span></div>
+            <textarea class="ruled-textarea" name="notes" rows="6" maxlength="1200" aria-label="Commonly used equipment"></textarea>
+          </section>
+          <section class="record-bottom">
+            <div><label class="sheet-field">Hits (maximum)<input name="hits" type="number" min="0"></label></div>
+            <div><h2>Miscellaneous information</h2><label class="sheet-field">Bonuses<textarea name="bonuses" rows="3" maxlength="1200"></textarea></label><label class="sheet-field">Spells & spell lists<textarea name="spells" rows="3" maxlength="800"></textarea></label></div>
+            <div><label class="sheet-field">Power points (max.)<input name="powerPoints" type="number" min="0"></label></div>
+          </section>
         </div>
-        <section class="record-section record-category-sheet">
-          <div class="record-section-title"><h2>Skill Category Record Sheet <span>T-6.2</span></h2></div>
-          <div class="category-record-scroll"><div class="category-record-head"><span>Skill category</span><span>Stats</span><span>Dev cost</span><span>Ranks</span><span>New</span><span>Rank</span><span>Stat</span><span>Prof.</span><span>Special</span><span>Special</span><span>Total</span></div><div id="category-record-list"></div></div>
-        </section>
       </form>
     </section>
 
