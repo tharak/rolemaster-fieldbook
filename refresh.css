@@ -511,6 +511,11 @@ input::placeholder, textarea::placeholder { color: #82998a; opacity: 1; }
 .package-free-roll button { flex: 0 0 auto; padding: 6px 8px; border: 1px solid #729279; border-radius: 4px; background: var(--input); color: var(--ink); font: 10px var(--sans); cursor: pointer; }
 .apprenticeship-packages { margin: 10px 0 14px; padding: 8px; border: 1px solid var(--line); border-radius: 5px; }
 .apprenticeship-packages summary { color: var(--accent-text); font: 700 11px var(--sans); cursor: pointer; }
+.weapon-cost-row { padding: 9px 0; border-bottom: 1px solid var(--line); }
+.weapon-cost-row > strong { display: block; margin-bottom: 6px; font: 600 11px var(--sans); }
+.weapon-cost-row > strong small { color: var(--muted); font: 10px var(--mono); }
+.weapon-cost-row .choice-strip button { flex: 0 0 auto; padding: 6px 8px; border: 1px solid #729279; border-radius: 4px; background: var(--input); color: var(--ink); font: 10px var(--sans); cursor: pointer; }
+.weapon-cost-row .choice-strip button[aria-pressed="true"] { border-color: #a6dfb8; background: #376c4a; color: #fff; }
 .apprenticeship-package { padding: 6px 0; border-bottom: 1px solid var(--line); }
 .apprenticeship-package > button { display: flex; justify-content: space-between; align-items: center; gap: 10px; width: 100%; padding: 8px; border: 1px solid #729279; border-radius: 4px; background: var(--input); color: var(--ink); text-align: left; font: 11px var(--sans); cursor: pointer; }
 .apprenticeship-package > button[aria-pressed="true"] { background: #376c4a; color: #fff; }

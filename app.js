@@ -101,6 +101,62 @@
     const source = category.startsWith('Weapon •') ? weaponCostAssignments()[category] : category;
     return developmentRules?.categories?.[source]?.[profession] || null;
   }
+  function renderWeaponCostAssignments() {
+    const assignments = weaponCostAssignments();
+    const profession = form.elements.profession.value;
+    $('#weapon-cost-picker-list').innerHTML = developmentRules ? weaponCategories.map(category => {
+      const selected = assignments[category];
+      const costs = developmentRules.categories[selected]?.[profession] || [];
+      return `<div class="weapon-cost-row"><strong>${esc(category.replace('Weapon • ', ''))} <small>· ${costs.join('/')} DP</small></strong><div class="choice-strip">${weaponCategories.map(source => {
+        const slot = developmentRules.categories[source]?.[profession] || [];
+        return `<button type="button" data-weapon-cost-category="${esc(category)}" data-weapon-cost-source="${esc(source)}" aria-pressed="${selected === source}">${esc(source.replace('Weapon • ', ''))} · ${slot.join('/')}</button>`;
+      }).join('')}</div></div>`;
+    }).join('') : '<p class="language-picker-note">Development costs are loading.</p>';
+  }
+  function swapWeaponCostAssignment(category, source) {
+    if (!weaponCategories.includes(category) || !weaponCategories.includes(source) || !developmentRules) return;
+    const current = weaponCostAssignments();
+    const owner = weaponCategories.find(other => current[other] === source);
+    if (!owner || owner === category) return;
+    const next = {...current, [category]:source, [owner]:current[category]};
+    const profession = form.elements.profession.value;
+    for (const weapon of weaponCategories) {
+      const costs = developmentRules.categories[next[weapon]]?.[profession] || [];
+      const hobbyLimit = costs.filter(cost => cost < 40).length;
+      const record = $$('.category-record-row').find(row => row.dataset.category === weapon);
+      const rows = [record, ...$$('.skill-row', $('#skills-list')).filter(row => row.dataset.category === weapon)].filter(Boolean);
+      if (rows.some(row => {
+        const purchased = Number($(`[name="${row === record ? 'record-buy' : 'skill-buy'}"]`, row)?.value) || 0;
+        return purchased > costs.length || (Number(row.dataset.hobbySpent) || 0) > hobbyLimit;
+      })) {
+        $('#weapon-cost-picker-message').textContent = `${weapon.replace('Weapon • ', '')} has more hobby or purchased ranks than that cost slot allows.`;
+        return;
+      }
+    }
+    const oldSpent = weaponCategories.reduce((total, weapon) => {
+      const costs = developmentRules.categories[current[weapon]][profession] || [];
+      const record = $$('.category-record-row').find(row => row.dataset.category === weapon);
+      const rows = [record, ...$$('.skill-row', $('#skills-list')).filter(row => row.dataset.category === weapon)].filter(Boolean);
+      return total + rows.reduce((sum, row) => sum + costs.slice(0, Number($(`[name="${row === record ? 'record-buy' : 'skill-buy'}"]`, row)?.value) || 0).reduce((a, b) => a + b, 0), 0);
+    }, 0);
+    const newSpent = weaponCategories.reduce((total, weapon) => {
+      const costs = developmentRules.categories[next[weapon]][profession] || [];
+      const record = $$('.category-record-row').find(row => row.dataset.category === weapon);
+      const rows = [record, ...$$('.skill-row', $('#skills-list')).filter(row => row.dataset.category === weapon)].filter(Boolean);
+      return total + rows.reduce((sum, row) => sum + costs.slice(0, Number($(`[name="${row === record ? 'record-buy' : 'skill-buy'}"]`, row)?.value) || 0).reduce((a, b) => a + b, 0), 0);
+    }, 0);
+    const remaining = Number($('#dp-remaining').textContent);
+    if ($('#dp-remaining').textContent !== '—' && newSpent > oldSpent && remaining < newSpent - oldSpent) {
+      $('#weapon-cost-picker-message').textContent = 'That assignment would exceed the development point pool.';
+      return;
+    }
+    form.elements.weaponCostAssignments.value = JSON.stringify(next);
+    $('#weapon-cost-picker-message').textContent = '';
+    updateDevelopment();
+    renderWeaponCostAssignments();
+    renderApprenticeshipPicker();
+    saveCurrent();
+  }
   function spellDevelopmentOrder() {
     let order = [];
     try { order = JSON.parse(form.elements.spellDevelopmentOrder.value || '[]'); } catch { /* Use current rows. */ }
@@ -1807,6 +1863,7 @@
     $('#apprenticeship-picker').showModal();
     renderApprenticeshipStatGains();
     renderTrainingPackages();
+    renderWeaponCostAssignments();
   };
   const openBackgroundPicker = () => { renderBackgroundPicker(); $('#background-picker').showModal(); };
   $('#open-language-picker').addEventListener('click', openLanguagePicker);
@@ -1868,6 +1925,10 @@
     }
     const button = event.target.closest('button[data-package]');
     if (button) toggleTrainingPackage(button.dataset.package);
+  });
+  $('#weapon-cost-picker-list').addEventListener('click', event => {
+    const button = event.target.closest('button[data-weapon-cost-source]');
+    if (button) swapWeaponCostAssignment(button.dataset.weaponCostCategory, button.dataset.weaponCostSource);
   });
   $('#apprenticeship-package-list').addEventListener('change', event => {
     const input = event.target.closest('input[data-package-skill]');
