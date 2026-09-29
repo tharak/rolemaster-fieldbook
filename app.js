@@ -222,13 +222,19 @@
     if (!character.skills?.length) skillRow();
     updateDevelopment();
   }
+  function revealSelectedChoices() {
+    $$('.choice-strip').forEach(strip => {
+      const selected = $('input:checked', strip)?.closest('.choice-tile');
+      strip.scrollLeft = selected ? selected.offsetLeft : 0;
+    });
+  }
   function openCharacter(id) {
     const character = characters.find(item => item.id === id); if (!character) return;
-    currentId = id; fillForm(character); showView('editor');
+    currentId = id; fillForm(character); showView('editor'); revealSelectedChoices();
   }
   function newCharacter() {
     currentId = crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random()}`;
-    fillForm({realm:'Choose at table'}); showView('editor');
+    fillForm({realm:'Choose at table'}); showView('editor'); revealSelectedChoices();
     $('input[name="name"]').focus();
   }
   function saveCurrent() {

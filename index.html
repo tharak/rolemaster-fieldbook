@@ -43,8 +43,30 @@
             <section class="record-section">
               <h2>Character</h2>
               <div class="sheet-fields two-up">
-                <label class="sheet-field">Race<select name="race"><option>Common Man</option><option>High Man</option><option>Wood Elf</option><option>Dwarf</option><option>Halfling</option></select></label>
-                <label class="sheet-field">Profession<select name="profession"><option>Fighter</option><option>Thief</option><option>Rogue</option><option>Cleric</option><option>Magician</option><option>Mentalist</option><option>Ranger</option><option>Dabbler</option><option>Bard</option></select></label>
+                <fieldset class="sheet-choice-field full">
+                  <legend>Race</legend>
+                  <div class="choice-strip">
+                    <label class="choice-tile"><input type="radio" name="race" value="Common Man" checked><span>Common Man</span></label>
+                    <label class="choice-tile"><input type="radio" name="race" value="High Man"><span>High Man</span></label>
+                    <label class="choice-tile"><input type="radio" name="race" value="Wood Elf"><span>Wood Elf</span></label>
+                    <label class="choice-tile"><input type="radio" name="race" value="Dwarf"><span>Dwarf</span></label>
+                    <label class="choice-tile"><input type="radio" name="race" value="Halfling"><span>Halfling</span></label>
+                  </div>
+                </fieldset>
+                <fieldset class="sheet-choice-field full">
+                  <legend>Profession</legend>
+                  <div class="choice-strip">
+                    <label class="choice-tile"><input type="radio" name="profession" value="Fighter" checked><span>Fighter</span></label>
+                    <label class="choice-tile"><input type="radio" name="profession" value="Thief"><span>Thief</span></label>
+                    <label class="choice-tile"><input type="radio" name="profession" value="Rogue"><span>Rogue</span></label>
+                    <label class="choice-tile"><input type="radio" name="profession" value="Cleric"><span>Cleric</span></label>
+                    <label class="choice-tile"><input type="radio" name="profession" value="Magician"><span>Magician</span></label>
+                    <label class="choice-tile"><input type="radio" name="profession" value="Mentalist"><span>Mentalist</span></label>
+                    <label class="choice-tile"><input type="radio" name="profession" value="Ranger"><span>Ranger</span></label>
+                    <label class="choice-tile"><input type="radio" name="profession" value="Dabbler"><span>Dabbler</span></label>
+                    <label class="choice-tile"><input type="radio" name="profession" value="Bard"><span>Bard</span></label>
+                  </div>
+                </fieldset>
                 <label class="sheet-field full">Training packages<input name="training" maxlength="120"></label>
                 <label class="sheet-field full">Realm of power<select name="realm"><option>None</option><option>Essence</option><option>Channeling</option><option>Mentalism</option><option>Choose at table</option></select></label>
               </div>

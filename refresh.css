@@ -269,6 +269,15 @@ input::placeholder, textarea::placeholder { color: #82998a; opacity: 1; }
 .sheet-fields { display: grid; gap: 10px 14px; }
 .sheet-fields.two-up { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .sheet-fields .full { grid-column: 1 / -1; }
+.sheet-choice-field { min-width: 0; margin: 0; padding: 0; border: 0; }
+.sheet-choice-field legend { margin-bottom: 5px; padding: 0; color: #b6cbb9; font: 600 10px/1.35 var(--sans); letter-spacing: .02em; }
+.choice-strip { position: relative; display: flex; gap: 7px; overflow-x: auto; overscroll-behavior-x: contain; scroll-snap-type: x proximity; scrollbar-width: thin; scrollbar-color: #668b70 transparent; padding: 2px 1px 8px; }
+.choice-tile { position: relative; flex: none; scroll-snap-align: start; cursor: pointer; }
+.choice-tile input { position: absolute; width: 1px; height: 1px; opacity: 0; }
+.choice-tile span { display: flex; align-items: center; justify-content: center; min-height: 40px; padding: 7px 12px; border: 1px solid #55715d; border-radius: 6px; background: var(--input); color: #d4e3d7; font: 600 12px/1.2 var(--sans); white-space: nowrap; transition: background .15s, border-color .15s; }
+.choice-tile:hover span { border-color: var(--olive); background: var(--soft); }
+.choice-tile input:checked + span { border-color: #a6dfb8; background: var(--olive-dark); color: #fff; box-shadow: inset 0 0 0 1px #a6dfb8; }
+.choice-tile input:focus-visible + span { outline: 2px solid #c5f0cf; outline-offset: 2px; }
 .record-section > .sheet-field + .sheet-field { margin-top: 11px; }
 .compact-fields { margin-top: 12px; }
 .sheet-note-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px 10px; margin-bottom: 12px; color: var(--muted); font: 11px var(--mono); }
@@ -327,3 +336,4 @@ input::placeholder, textarea::placeholder { color: #82998a; opacity: 1; }
 #creation-checks.is-complete { color: var(--accent-text); }
 .sheet-field input.over-budget { color: #ffb1a7; border-color: #b56b63; }
 @media print { .rr-row input, .record-stats .stat-row input[readonly] { background: #fff !important; color: #111 !important; } .sheet-action, #creation-checks, #stat-dice { display: none !important; } }
+@media print { .choice-strip { overflow: visible; padding: 0; } .choice-tile:has(input:not(:checked)) { display: none; } .choice-tile input:checked + span { background: #fff !important; color: #111 !important; border-color: #777 !important; box-shadow: none; } }
