@@ -156,6 +156,11 @@
     $('#stat-budget').textContent = remaining;
     $('#stat-budget').classList.toggle('over-budget', budget !== null && spent > budget);
     const primes = primeStats[form.elements.profession.value] || [];
+    $$('.stat-row', $('#stats-list')).forEach((row, index) => {
+      const isPrime = primes.includes(statNames[index]);
+      row.classList.toggle('is-prime', isPrime);
+      row.firstElementChild.title = isPrime ? 'Prime stat (minimum 90)' : '';
+    });
     const missing = primes.filter(name => values[statNames.indexOf(name)] < 90);
     $('#prime-stats').textContent = `Prime stats: ${primes.join(' and ')} · each must be at least 90${missing.length ? ` (${missing.join(', ')} below 90)` : ''}`;
     const requiredRealm = realmByProfession[form.elements.profession.value];
