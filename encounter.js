@@ -225,7 +225,7 @@
     return html;
   }
   function renderPhaseCards() {
-    const scrollPositions=new Map([...$('#encounter-phase-cards').querySelectorAll('.encounter-phase-cards')].map(element=>[element.closest('[data-actor-card]').dataset.actorCard,element.scrollLeft]));
+    const scrollPosition=$('#encounter-phase-cards').scrollLeft;
     if(!orderedActors().length){$('#encounter-phase-cards').innerHTML='<p class="play-muted">Add a character above to plan their actions.</p>';return;}
     $('#encounter-phase-cards').innerHTML=orderedActors().map(([id,value])=>{
       const who=actor(id);
@@ -239,7 +239,7 @@
       }).join('');
       return `<section class="encounter-actor-card" data-actor-card="${esc(id)}">${header}<div class="encounter-phase-cards">${cards}</div></section>`;
     }).join('');
-    $('#encounter-phase-cards').querySelectorAll('.encounter-phase-cards').forEach(element=>{element.scrollLeft=scrollPositions.get(element.closest('[data-actor-card]').dataset.actorCard)||0;});
+    $('#encounter-phase-cards').scrollLeft=scrollPosition;
     $('#encounter-phase-cards').querySelectorAll('input,select,button').forEach(control=>{control.disabled=state.phase>=0||resolving;});
   }
   function renderLog() {
