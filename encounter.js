@@ -77,6 +77,19 @@
       .replace(/(\d*)\(\s*([-−–+])\s*(\d+)\s*\)/g,(_,count,sign,amount)=>sign==='+'?`${rounds(count,'attacker gains')} +${amount} bonus`:`${count?rounds(count,'foe suffers'):'Foe suffers'} −${amount} penalty`)
       .replace(/\s+[–—]\s+/g,'; ');
   }
+  const criticalPenalty=value=>(value?.criticalEffects||[]).reduce((sum,effect)=>sum-(effect.kind==='penalty'&&(effect.startsRound??state.round)<=state.round?Number(effect.amount)||0:0),0);
+  function criticalPenalties(effect) {
+    if(/\b(?:with|without|w\/o|if)\b/i.test(effect||''))return [];
+    return [...String(effect||'').matchAll(/(\d*)\(\s*[-−–]\s*(\d+)\s*\)/g)].map(([,rounds,amount])=>({kind:'penalty',amount:Number(amount),roundsLeft:rounds?Number(rounds):null}));
+  }
+  function addCriticalPenalties(value,penalties) {
+    if(!penalties.length)return;
+    value.criticalEffects=Array.isArray(value.criticalEffects)?value.criticalEffects:[];
+    for(const effect of penalties)value.criticalEffects.push({...effect,startsRound:state.round+(effect.roundsLeft!==null&&(value.activityThisRound||0)>=50?1:0),id:crypto.randomUUID?.()||`${Date.now()}-${Math.random()}`});
+  }
+  function advanceCriticalPenalties() {
+    for(const value of Object.values(state.tokens))value.criticalEffects=(value.criticalEffects||[]).filter(effect=>effect.kind!=='penalty'||effect.roundsLeft===null||(effect.startsRound??state.round)>state.round||--effect.roundsLeft>0);
+  }
   const tableCache=new Map();
   async function loadTable(code) {
     if(!tableCache.has(code))tableCache.set(code,fetch(`tables/${code}.json`).then(response=>{if(!response.ok)throw new Error(`Table ${code} unavailable`);return response.json();}));
@@ -90,12 +103,12 @@
       const row=table.rows.find(item=>item.roll.endsWith('+')?lookup>=Number.parseInt(item.roll,10):rollInRow(item.roll,lookup));
       const cell=row?.cells?.[columnIndex];
       const dice=`${roll}${modifier?` ${modifier>=0?'+':'−'} ${Math.abs(modifier)} = ${total}`:''}`;
-      if(!cell)return {html:`${tableLink(code,label)} roll ${dice}: no matching entry.`,extraHits:0};
+      if(!cell)return {html:`${tableLink(code,label)} roll ${dice}: no matching entry.`,extraHits:0,penalties:[]};
       const effect=cell.effect?` <strong>${esc(expandTableSymbols(cell.effect))}</strong>`:'';
       const conditional=/\b(?:with|without|w\/o|if)\b/i.test(cell.effect||'');
       const extraHits=conditional?0:Number(/\+(\d+)H\b/.exec(cell.effect||'')?.[1])||0;
-      return {html:`${tableLink(code,label)} roll ${dice}: ${esc(expandTableSymbols(cell.description))}${effect}${conditional?' (Apply the matching condition manually.)':''}`,extraHits};
-    } catch {return {html:`${tableLink(code,label)} roll ${roll}: table unavailable.`,extraHits:0};}
+      return {html:`${tableLink(code,label)} roll ${dice}: ${esc(expandTableSymbols(cell.description))}${effect}${conditional?' (Apply the matching condition manually.)':''}`,extraHits,penalties:criticalPenalties(cell.effect)};
+    } catch {return {html:`${tableLink(code,label)} roll ${roll}: table unavailable.`,extraHits:0,penalties:[]};}
   }
   const weaponFumbleColumn=category=>category==='Weapon • 2-Handed'?1:category==='Weapon • Pole Arms'?2:category==='Weapon • Thrown'?4:category==='Weapon • Missile'||category==='Weapon • Missile Artillery'?5:0;
   const spellFailureColumn=(skill,attack)=>attack==='bolt'||attack==='ball'?0:attack==='basic'?1:/inform|divin|detect|sense/i.test(skill?.name||'')?2:3;
@@ -165,7 +178,7 @@
     for(const [id,value] of Object.entries(state.tokens)) {
       const who=actor(id);if(!who)continue;
       if(reroll||!Array.isArray(value.initiativeRoll))value.initiativeRoll=[d10(),d10()];
-      const mod=(value.surprised?-4:0)+(who.hitsMax>0&&(value.hits||0)>who.hitsMax/2?-4:0)-Math.floor(movementActivity(id)/10)+(Number(value.initiativeMod)||0);
+      const mod=(value.surprised?-4:0)+(who.hitsMax>0&&(value.hits||0)>who.hitsMax/2?-4:0)-Math.floor(movementActivity(id)/10)+(Number(value.initiativeMod)||0)+criticalPenalty(value);
       value.initiative=value.initiativeRoll[0]+value.initiativeRoll[1]+(who.stats[8]||0)+mod;
     }
   }
@@ -283,7 +296,8 @@
       const who=actor(id);
       const used=phases.reduce((sum,phase)=>{const draft=draftFor(id,phase);return sum+(draft.choice==='none'?0:Number(draft.activity)||0);},0);
       const statuses=statusChoices.map(status=>{const active=status==='Surprised'?!!value.surprised:(value.statuses||[]).includes(status);return `<button type="button" data-status="${status}" aria-pressed="${active}" class="${active?'selected':''}">${status}</button>`;}).join('');
-      const header=`<header class="encounter-actor-header"><div class="encounter-actor-initiative"><small>Initiative</small><strong>${value.initiative}</strong><small>${value.initiativeRoll?.join(' + ')||''} + Qu/mods</small></div><div class="encounter-actor-name"><small>Name</small><strong>${esc(who.name)}</strong><small>DB ${who.db} · AT ${who.at} · ${who.baseMove} ft/round</small></div><label><span>Hits</span><span class="encounter-vital-input"><input type="number" min="0" max="${Math.max(0,who.hitsMax)}" data-vital="hits" value="${value.hits||0}"><small>/ ${who.hitsMax||'—'}</small></span></label><label><span>PP</span><span class="encounter-vital-input"><input type="number" min="0" max="${Math.max(0,who.ppMax)}" data-vital="pp" value="${value.pp||0}"><small>/ ${who.ppMax||'—'}</small></span></label></header><div class="encounter-actor-tools"><span>${used} / 100% activity</span><label>Initiative modifier <input type="number" data-initiative-mod value="${value.initiativeMod||0}"></label><button type="button" data-place-actor="${esc(id)}">Place on map</button></div><div class="encounter-status"><strong>Status</strong><div class="encounter-status-options">${statuses}</div></div>`;
+      const effects=(value.criticalEffects||[]).filter(effect=>effect.kind==='penalty').map(effect=>`<span>−${esc(effect.amount)} to rolls · ${(effect.startsRound??state.round)>state.round?'starts next round · ':''}${effect.roundsLeft===null?'until healed':`${effect.roundsLeft} round${effect.roundsLeft===1?'':'s'}`}<button type="button" data-clear-effect="${esc(effect.id)}" aria-label="Clear −${esc(effect.amount)} critical penalty">×</button></span>`).join('');
+      const header=`<header class="encounter-actor-header"><div class="encounter-actor-initiative"><small>Initiative</small><strong>${value.initiative}</strong><small>${value.initiativeRoll?.join(' + ')||''} + Qu/mods</small></div><div class="encounter-actor-name"><small>Name</small><strong>${esc(who.name)}</strong><small>DB ${who.db} · AT ${who.at} · ${who.baseMove} ft/round</small></div><label><span>Hits</span><span class="encounter-vital-input"><input type="number" min="0" max="${Math.max(0,who.hitsMax)}" data-vital="hits" value="${value.hits||0}"><small>/ ${who.hitsMax||'—'}</small></span></label><label><span>PP</span><span class="encounter-vital-input"><input type="number" min="0" max="${Math.max(0,who.ppMax)}" data-vital="pp" value="${value.pp||0}"><small>/ ${who.ppMax||'—'}</small></span></label></header><div class="encounter-actor-tools"><span>${used} / 100% activity</span><label>Initiative modifier <input type="number" data-initiative-mod value="${value.initiativeMod||0}"></label><button type="button" data-place-actor="${esc(id)}">Place on map</button></div><div class="encounter-status"><strong>Status</strong><div class="encounter-status-options">${statuses}</div></div>${effects?`<div class="encounter-critical-effects" aria-label="Critical penalties">${effects}</div>`:''}`;
       const cards=phases.map((phase,index)=>{
       const draft=draftFor(who.id,phase),type=draftType(draft,who),kind=targetKindFor(draft,who);
       const target=kind==='creature'?(actor(draft.target)?.name||'Tap a highlighted creature on the map'):kind==='hex'?(draft.hex?`Hex ${draft.hex.q},${draft.hex.r} · ${token(who.id)?.q!=null?distance(token(who.id),draft.hex)*state.scale:0} ft`:'Tap a highlighted hex on the map'):'';
@@ -384,8 +398,8 @@
     if(lineTo(value,foeToken).slice(0,-1).some(hex=>state.terrain[keyOf(hex.q,hex.r)]==='blocked'))return 'Blocked terrain obscures the target.';
     const code=attackTables[weapon.category];
     if(!code) return 'No matching attack table for this item. Use the Tables page.';
-    const roll=openEnded(),activityMax=declaration.type==='melee'?100:60;
-    const modified=roll.total+weapon.bonus-foe.db+phaseModifier(declaration.phase)-Math.max(0,activityMax-declaration.activity)+declaration.modifier;
+    const roll=openEnded(),activityMax=declaration.type==='melee'?100:60,penalty=criticalPenalty(value);
+    const modified=roll.total+weapon.bonus-foe.db+phaseModifier(declaration.phase)-Math.max(0,activityMax-declaration.activity)+declaration.modifier+penalty;
     try {
       const table=await loadTable(code),regular=table.rows.filter(row=>!row.unmodified);
       const row=regular.find(item=>{const [a,b]=item.roll.split('-');return modified>=(a==='XX'?-Infinity:Number(a))&&modified<=Number(b||a);})||(modified>150?regular[0]:regular.at(-1));
@@ -400,10 +414,11 @@
       if(critical){
         const outcome=await narrativeRoll(criticalTable,critical.charCodeAt(0)-65,`${critical} critical`);
         if(outcome.extraHits)foeToken.hits=foe.hitsMax>0?Math.min(foe.hitsMax,foeToken.hits+outcome.extraHits):foeToken.hits+outcome.extraHits;
-        criticalText=` · ${outcome.html}${outcome.extraHits?` · ${outcome.extraHits} extra hits applied`:''}`;
+        addCriticalPenalties(foeToken,outcome.penalties);
+        criticalText=` · ${outcome.html}${outcome.extraHits?` · ${outcome.extraHits} extra hits applied`:''}${outcome.penalties.length?' · critical penalty recorded':''}`;
       }
       if(roll.first<=2||result==='F')fumbleText=` · ${(await narrativeRoll('A-10.11.1',weaponFumbleColumn(weapon.category),'weapon fumble')).html}`;
-      return `${esc(weapon.name)} vs ${esc(foe.name)}: ${diceText(roll)} ${roll.total} + ${weapon.bonus} OB − ${foe.db} DB ${actionPenalty>=0?'+':'−'} ${Math.abs(actionPenalty)} action ${declaration.modifier>=0?'+':'−'} ${Math.abs(declaration.modifier)} other = ${modified}. ${tableLink(code)} result <strong>${esc(result)}</strong>${hits?` · ${hits} hits applied`:''}${criticalText}${fumbleText}.`;
+      return `${esc(weapon.name)} vs ${esc(foe.name)}: ${diceText(roll)} ${roll.total} + ${weapon.bonus} OB − ${foe.db} DB ${actionPenalty>=0?'+':'−'} ${Math.abs(actionPenalty)} action ${declaration.modifier>=0?'+':'−'} ${Math.abs(declaration.modifier)} other${penalty?` ${penalty} critical penalty`:''} = ${modified}. ${tableLink(code)} result <strong>${esc(result)}</strong>${hits?` · ${hits} hits applied`:''}${criticalText}${fumbleText}.`;
     } catch { return `Attack roll ${modified}. ${esc(code)} could not be loaded; use the Tables page.`; }
   }
   async function spellAttackResult(who,declaration,spellSkill) {
@@ -411,6 +426,7 @@
     if(!foe||!foeToken||!within(foeToken.q,foeToken.r))return 'Choose and place a spell target to resolve its attack.';
     const origin=token(who.id);
     if(!origin||!within(origin.q,origin.r))return 'Place the caster on the map first.';
+    const penalty=criticalPenalty(origin);
     if(declaration.range&&distance(origin,foeToken)*state.scale>declaration.range)return 'Spell target is outside the selected range.';
     if(lineTo(origin,foeToken).slice(0,-1).some(hex=>state.terrain[keyOf(hex.q,hex.r)]==='blocked'))return 'Blocked terrain obscures the spell target.';
     const kind=declaration.spellAttack,code=kind==='basic'?'A-10.9.11':kind==='bolt'?'A-10.9.9':'A-10.9.10';
@@ -421,45 +437,46 @@
       if(!unmodified&&(first<=5||first>=96)) {let next;do {next=d100();dice.push(first<=5?-next:next);}while(next>=96);}
       const roll={first,dice,total:dice.reduce((sum,item)=>sum+item,0),unmodified};
       if(kind==='basic') {
+        const modified=roll.total+penalty;
         const regular=table.rows.filter(item=>!item.unmodified&&/^\d{2}(?:-\d{2})?$/.test(item.roll));
-        const row=(unmodified&&table.rows.find(item=>item.unmodified&&rollInRow(item.roll,first)))||regular.find(item=>rollInRow(item.roll,roll.total))||(roll.total>95?regular[0]:regular.at(-1));
+        const row=(unmodified&&table.rows.find(item=>item.unmodified&&rollInRow(item.roll,first)))||regular.find(item=>rollInRow(item.roll,modified))||(modified>95?regular[0]:regular.at(-1));
         const possible=table.columns.map((column,index)=>({column,index})).filter(({column})=>column.group===who.realm&&(column.label==='Other'||column.label==='Metal armor'&&foe.at>=13||column.label==='Leather armor'&&foe.at>=5&&foe.at<=12||column.label==='Metal shield'&&foe.shieldBonus>0));
         const chosen=possible.sort((a,b)=>(Number(row.values[b.index])||0)-(Number(row.values[a.index])||0))[0];
-        if(row.values[chosen?.index] === 'F')return `Basic spell vs ${esc(foe.name)}: ${diceText(roll)} → <strong>Spell failure</strong> · ${tableLink(code)} · ${(await narrativeRoll('A-10.11.2',spellFailureColumn(spellSkill,kind),'spell failure')).html}.`;
+        if(row.values[chosen?.index] === 'F')return `Basic spell vs ${esc(foe.name)}: ${diceText(roll)}${penalty?` ${penalty} critical penalty`:''} → ${modified}. <strong>Spell failure</strong> · ${tableLink(code)} · ${(await narrativeRoll('A-10.11.2',spellFailureColumn(spellSkill,kind),'spell failure')).html}.`;
         const rrModifier=Number(row?.values[chosen?.index??table.columns.findIndex(column=>column.group===who.realm&&column.label==='Other')])||0;
         const resist=openEnded(),resistType=who.realm.toLowerCase(),sameRealm=foe.realm===who.realm?15:0;
         const rrTotal=resist.total+(foe.resistances[resistType]||0)+rrModifier+sameRealm;
         const threshold=resistanceThreshold(who.level,foe.level);
-        return `Basic spell vs ${esc(foe.name)}: ${diceText(roll)} → ${rrModifier} RR modifier (${tableLink(code)}). ${esc(foe.name)} resists: ${diceText(resist)} → ${rrTotal}, needs ${threshold}; <strong>${rrTotal>=threshold?'resisted':'affected'}</strong> · ${tableLink('T-3.4')}.`;
+        return `Basic spell vs ${esc(foe.name)}: ${diceText(roll)}${penalty?` ${penalty} critical penalty`:''} → ${modified}: ${rrModifier} RR modifier (${tableLink(code)}). ${esc(foe.name)} resists: ${diceText(resist)} → ${rrTotal}, needs ${threshold}; <strong>${rrTotal>=threshold?'resisted':'affected'}</strong> · ${tableLink('T-3.4')}.`;
       }
       const bonus=kind==='bolt'?(who.skills.find(item=>item.category==='Directed Spells'&&item.ranks>0)?.bonus||0):spellSkill.ranks;
-      const modified=roll.total+bonus-foe.db+declaration.modifier;
+      const modified=roll.total+bonus-foe.db+declaration.modifier+penalty;
       const regular=table.rows.filter(item=>!item.unmodified);
       const row=(unmodified&&table.rows.find(item=>item.unmodified&&rollInRow(item.roll,first)))||regular.find(item=>rollInRow(item.roll,modified))||(modified>150?regular[0]:regular.at(-1));
       const column=table.columns.findIndex(item=>item.label===`AT ${foe.at}`),result=row?.values[column]||'–';
       const hits=Number(/^\d+/.exec(result)?.[0])||0;
       foeToken.hits=foe.hitsMax>0?Math.min(foe.hitsMax,(foeToken.hits||0)+hits):(foeToken.hits||0)+hits;
       const failure=result==='F'?` · ${(await narrativeRoll('A-10.11.2',spellFailureColumn(spellSkill,kind),'spell failure')).html}`:'';
-      return `${kind} spell vs ${esc(foe.name)}: ${diceText(roll)} + ${bonus} OB − ${foe.db} DB ${declaration.modifier>=0?'+':'−'} ${Math.abs(declaration.modifier)} other = ${modified}. ${tableLink(code)} result <strong>${esc(result)}</strong>${hits?` · ${hits} hits applied`:''}${/[A-E]/.test(result)?' · resolve the critical type named by the spell in Tables':''}${failure}.`;
+      return `${kind} spell vs ${esc(foe.name)}: ${diceText(roll)} + ${bonus} OB − ${foe.db} DB ${declaration.modifier>=0?'+':'−'} ${Math.abs(declaration.modifier)} other${penalty?` ${penalty} critical penalty`:''} = ${modified}. ${tableLink(code)} result <strong>${esc(result)}</strong>${hits?` · ${hits} hits applied`:''}${/[A-E]/.test(result)?' · resolve the critical type named by the spell in Tables':''}${failure}.`;
     }catch{return `${kind} spell attack table could not be loaded; use the Tables page.`;}
   }
   async function resolveAction(id,declaration) {
     const who=actor(id),value=token(id); if(!who||!value) return;
     const skill=declaration.skill==='stat'?null:who.skills[Number(declaration.skill)];
     const skillBonus=declaration.skill==='stat'?3*(who.stats[declaration.statIndex]||0):skill?.bonus||0;
-    const phase=phaseModifier(declaration.phase),modifier=declaration.modifier||0;
+    const phase=phaseModifier(declaration.phase),modifier=declaration.modifier||0,penalty=criticalPenalty(value);
     const targetText=declaration.targetHex?` at hex ${declaration.targetHex.q},${declaration.targetHex.r}`:declaration.target?` vs ${esc(actor(declaration.target)?.name||'target')}`:'';
     let detail='';
     if(declaration.type==='simple') detail=`${esc(declaration.description||'Simple action')}${targetText} · ${declaration.activity}% activity.`;
     else if(['melee','missile'].includes(declaration.type)) detail=await attackResult(who,value,declaration);
     else if(declaration.type==='static') {
-      const roll=openEnded(true),total=roll.unmodified?roll.total:roll.total+skillBonus+staticDifficulty[difficulties.indexOf(declaration.difficulty)]+phase+modifier-(100-declaration.activity);
+      const roll=openEnded(true),total=roll.unmodified?roll.total:roll.total+skillBonus+staticDifficulty[difficulties.indexOf(declaration.difficulty)]+phase+modifier+penalty-(100-declaration.activity);
       const outcome=staticResult(total,roll.unmodified);
-      detail=`${esc(declaration.description||skill?.name||'Static maneuver')}${targetText}: ${diceText(roll)} → ${total}. <strong>${outcome}</strong> · ${tableLink('T-4.3')}. ${esc(staticNarrative(outcome))}`;
+      detail=`${esc(declaration.description||skill?.name||'Static maneuver')}${targetText}: ${diceText(roll)}${penalty&&!roll.unmodified?` ${penalty} critical penalty`:''} → ${total}. <strong>${outcome}</strong> · ${tableLink('T-4.3')}. ${esc(staticNarrative(outcome))}`;
     } else if(declaration.type==='moving') {
-      const roll=openEnded(),total=roll.total+skillBonus+phase+modifier;
+      const roll=openEnded(),total=roll.total+skillBonus+phase+modifier+penalty;
       const result=moveResult(total,declaration.difficulty);
-      detail=`${esc(declaration.description||skill?.name||'Moving maneuver')}${targetText}: ${diceText(roll)} → ${total} (${esc(declaration.difficulty)}). <strong>${result===null?'Special result; consult table':`${result}%`}</strong> · ${tableLink('T-4.1')}.`;
+      detail=`${esc(declaration.description||skill?.name||'Moving maneuver')}${targetText}: ${diceText(roll)}${penalty?` ${penalty} critical penalty`:''} → ${total} (${esc(declaration.difficulty)}). <strong>${result===null?'Special result; consult table':`${result}%`}</strong> · ${tableLink('T-4.1')}.`;
     } else if(declaration.type==='move') {
       if(!declaration.destination||value.q==null) {detail='Movement needs a placed character and destination.';}
       else {
@@ -468,10 +485,10 @@
         if(pace>=3) {
           const difficulty=pace===3?'Easy':pace===4?'Light':'Medium';
           const sprint=who.skills.find(item=>item.name==='Sprinting');
-          const roll=openEnded(),total=roll.total+(sprint?.bonus||0)+modifier;
+          const roll=openEnded(),total=roll.total+(sprint?.bonus||0)+modifier+penalty;
           const result=moveResult(total,difficulty);
           if(result===null) {detail=`Movement maneuver ${diceText(roll)} → ${total}. Special result; consult ${tableLink('T-4.1')} before moving.`;appendLog(id,detail);return;}
-          rate*=result/100;rollText=` · ${diceText(roll)} → ${total} (${result}%)`;
+          rate*=result/100;rollText=` · ${diceText(roll)}${penalty?` ${penalty} critical penalty`:''} → ${total} (${result}%)`;
         }
         const path=lineTo(value,declaration.destination);let budget=rate;
         for(const hex of path) {const terrain=state.terrain[keyOf(hex.q,hex.r)]||'clear';const cost=state.scale*(terrain==='difficult'?2:1);if(terrain==='blocked'||budget<cost)break;value.q=hex.q;value.r=hex.r;budget-=cost;}
@@ -487,15 +504,15 @@
         const snap=declaration.phase==='snap'&&!declaration.instant?-20:0;
         const armor=who.realm==='Essence'&&who.at>4?who.at<=6?-10:who.at<=8?-20:who.at<=10?-25:-40:0;
         const list=skill.category.includes('Own Base')?10:skill.category.includes('Open Lists')?5:0;
-        const mods=prep+power+snap+armor+list+modifier+(declaration.phase==='deliberate'?10:0);
+        const mods=prep+power+snap+armor+list+modifier+penalty+(declaration.phase==='deliberate'?10:0);
         value.pp=(value.pp||0)+declaration.spellLevel;
         let cast=false;
-        if([prep,power,snap,armor,modifier].some(number=>number<0)) {
+        if([prep,power,snap,armor,modifier,penalty].some(number=>number<0)) {
           const roll=openEnded(true),total=roll.unmodified?roll.total:roll.total+skill.bonus+mods;
           const outcome=spellResult(total,roll.unmodified);
           cast=['Success','Absolute success','Unusual success'].includes(outcome);
           const failure=/failure/i.test(outcome)?` · ${(await narrativeRoll('A-10.11.2',spellFailureColumn(skill,declaration.spellAttack),'spell failure',-mods*(outcome==='Spectacular failure'?3:outcome==='Absolute failure'?2:1))).html}`:'';
-          detail=`${esc(declaration.description||skill.name)}${targetText} (level ${declaration.spellLevel}): ${diceText(roll)} → ${total}. <strong>${outcome}</strong> · ${tableLink('T-4.5')}. ${esc(spellNarrative(outcome))}${failure} ${declaration.spellLevel} PP used.`;
+          detail=`${esc(declaration.description||skill.name)}${targetText} (level ${declaration.spellLevel}): ${diceText(roll)}${penalty&&!roll.unmodified?` ${penalty} critical penalty`:''} → ${total}. <strong>${outcome}</strong> · ${tableLink('T-4.5')}. ${esc(spellNarrative(outcome))}${failure} ${declaration.spellLevel} PP used.`;
         } else {const roll=d100(),failed=roll<=2;cast=!failed;const failure=failed?` · ${(await narrativeRoll('A-10.11.2',spellFailureColumn(skill,declaration.spellAttack),'spell failure')).html}`:'';detail=`${esc(declaration.description||skill.name)}${targetText} (level ${declaration.spellLevel}): automatic cast check ${roll}. <strong>${failed?'Fails':'Cast'}</strong> · ${declaration.spellLevel} PP used${failure}.`;}
         if(cast&&declaration.spellAttack==='ball'&&declaration.targetHex) {
           const caster=token(who.id),center=declaration.targetHex;
@@ -579,15 +596,15 @@
     if(state.phase<0&&!prepareRoundActions())return;
     resolving=true;
     try {
-      if(state.phase<0){state.phase=0;state.resolved=false;appendLog('',`Initiative rolled · ${tableLink('T-3.1','round sequence')}.`);save();render();}
+      if(state.phase<0){Object.values(state.tokens).forEach(value=>{value.activityThisRound=0;});state.phase=0;state.resolved=false;appendLog('',`Initiative rolled · ${tableLink('T-3.1','round sequence')}.`);save();render();}
       const order=Object.entries(state.tokens).sort((a,b)=>(b[1].initiative||0)-(a[1].initiative||0));
       for(let index=state.phase;index<phases.length;index++) {
         state.phase=index;
-        if(!state.resolved){for(const [id,value] of order)if(value.actions?.[phases[index]])await resolveAction(id,value.actions[phases[index]]);}
+        if(!state.resolved){for(const [id,value] of order)if(value.actions?.[phases[index]]){const action=value.actions[phases[index]];await resolveAction(id,action);value.activityThisRound=(value.activityThisRound||0)+action.activity;}}
         state.resolved=false;save();render();
       }
-      state.round++;state.phase=-1;state.resolved=false;
-      Object.values(state.tokens).forEach(value=>{value.actions={};value.surprised=false;});
+      advanceCriticalPenalties();state.round++;state.phase=-1;state.resolved=false;
+      Object.values(state.tokens).forEach(value=>{value.actions={};value.surprised=false;delete value.activityThisRound;});
       drafts={};state.drafts=drafts;ensureInitiative(true);save();render();message(`Round ${state.round-1} resolved. Plan the next round.`);
     } catch(error){message(`Could not finish the round: ${error.message||error}`);}
     finally {resolving=false;render();}
@@ -645,6 +662,13 @@
     ensureInitiative();save();renderPhaseCards();renderMap();
   });
   $('#encounter-phase-cards').addEventListener('click',event=>{
+    const clear=event.target.closest('[data-clear-effect]');
+    if(clear){
+      if(resolving||state.phase>=0)return;
+      const id=clear.closest('[data-actor-card]').dataset.actorCard,value=token(id);if(!value)return;
+      value.criticalEffects=(value.criticalEffects||[]).filter(effect=>effect.id!==clear.dataset.clearEffect);
+      ensureInitiative();save();renderPhaseCards();return;
+    }
     const status=event.target.closest('[data-status]');
     if(status){
       if(resolving||state.phase>=0)return;
