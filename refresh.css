@@ -796,7 +796,7 @@ input::placeholder, textarea::placeholder { color: #82998a; opacity: 1; }
 .encounter-plan-heading h2 { margin-bottom: 3px; }
 .encounter-plan-heading p { margin: 0; }
 .encounter-plan-heading > strong { flex: none; color: var(--accent-text); font: 700 12px var(--mono); }
-.encounter-phase-cards { display: grid; grid-template-columns: 1fr; gap: 10px; margin-top: 14px; }
+.encounter-phase-cards { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(340px, 1fr); gap: 10px; max-width: 100%; margin-top: 14px; overflow-x: auto; overscroll-behavior-inline: contain; scroll-snap-type: x proximity; scrollbar-width: thin; padding-bottom: 8px; }
 .encounter-actor-list { display: grid; gap: 18px; margin-top: 14px; }
 .encounter-actor-card { min-width: 0; padding: 15px; border: 1px solid var(--line); border-radius: 7px; background: var(--card); }
 .encounter-actor-header { display: grid; grid-template-columns: minmax(90px,.7fr) minmax(160px,2fr) minmax(115px,.9fr) minmax(115px,.9fr); gap: 12px; align-items: start; padding-bottom: 12px; border-bottom: 1px solid var(--line); }
@@ -809,13 +809,13 @@ input::placeholder, textarea::placeholder { color: #82998a; opacity: 1; }
 .encounter-actor-tools { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px; margin-top: 10px; color: var(--muted); font-size: 11px; }
 .encounter-actor-tools > span { margin-right: auto; color: var(--accent-text); font: 700 12px var(--mono); }
 .encounter-actor-tools button { padding: 6px 9px; border: 1px solid var(--line); border-radius: 4px; background: var(--soft); color: var(--accent-text); cursor: pointer; }
-.encounter-phase-card { min-width: 0; padding: 15px; border: 1px solid var(--line); border-radius: 5px; background: var(--input); }
+.encounter-phase-card { min-width: 0; padding: 15px; border: 1px solid var(--line); border-radius: 5px; background: var(--input); scroll-snap-align: start; }
 .encounter-phase-card.active { border-color: var(--accent-text); }
 .encounter-phase-card.current { box-shadow: inset 0 3px var(--accent-text); }
 .encounter-phase-card strong, .encounter-phase-card small { display: block; }
 .encounter-phase-card strong { color: var(--ink); font-size: 13px; }
 .encounter-phase-card small { margin-top: 3px; color: var(--muted); font-size: 10px; }
-.encounter-phase-form { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 10px; margin-top: 12px; }
+.encounter-phase-form { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 10px; margin-top: 12px; }
 .encounter-phase-form label { min-width: 0; color: var(--muted); font-size: 11px; font-weight: 700; }
 .encounter-phase-form input:not([type="checkbox"]), .encounter-phase-form select { display: block; width: 100%; margin-top: 4px; padding: 8px; border: 1px solid var(--line); border-radius: 4px; background: var(--card); color: var(--ink); font-size: 12px; }
 .encounter-phase-form .encounter-phase-wide { grid-column: 1 / -1; }
@@ -875,7 +875,7 @@ input::placeholder, textarea::placeholder { color: #82998a; opacity: 1; }
 .encounter-log { max-height: 450px; overflow: auto; }
 .encounter-log small { color: var(--muted); font: 10px var(--mono); }
 .encounter-log p { margin: 5px 0 0; line-height: 1.5; }
-@media (max-width: 600px) { .encounter-shell { padding: 12px 10px 35px; } .encounter-header { padding: 18px; } .encounter-actor-header { grid-template-columns: repeat(2,minmax(0,1fr)); } .encounter-phase-form { grid-template-columns: repeat(2,minmax(0,1fr)); } .encounter-round { text-align: right; } }
+@media (max-width: 600px) { .encounter-shell { padding: 12px 10px 35px; } .encounter-header { padding: 18px; } .encounter-actor-header { grid-template-columns: repeat(2,minmax(0,1fr)); } .encounter-phase-cards { grid-auto-columns: minmax(290px, calc(100vw - 68px)); } .encounter-phase-form { grid-template-columns: repeat(2,minmax(0,1fr)); } .encounter-round { text-align: right; } }
 @media (max-width: 390px) { .encounter-phase-form { grid-template-columns: 1fr; } .encounter-header { align-items: flex-start; } }
 @media (max-width: 500px) { .encounter-create { align-items: stretch; flex-direction: column; } }
 @media (max-width: 540px) { .topbar { padding: 0 10px; gap: 6px; } .brand { font-size: 14px; } .topbar nav { gap: 7px; } .nav-link { font-size: 11px; } }
