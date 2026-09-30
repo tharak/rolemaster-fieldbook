@@ -40,6 +40,14 @@
         <section class="play-panel" id="play-panel-skills" role="tabpanel" aria-labelledby="play-tab-skills" hidden><div class="play-skill-filters" role="group" aria-label="Skills to show"><button type="button" data-play-skill-filter="active" aria-pressed="true">Trained & favorites</button><button type="button" data-play-skill-filter="favorites" aria-pressed="false">Favorites</button><button type="button" data-play-skill-filter="all" aria-pressed="false">All skills</button></div><div id="play-skills-content"></div></section>
         <section class="play-panel" id="play-panel-combat" role="tabpanel" aria-labelledby="play-tab-combat" hidden><div id="play-combat-content"></div></section>
       </div>
+      <dialog id="play-skill-roll" aria-labelledby="play-skill-roll-title">
+        <div class="language-picker-head"><div><h2 id="play-skill-roll-title"></h2><p id="play-skill-roll-category"></p></div><button type="button" id="close-play-skill-roll" aria-label="Close roll">×</button></div>
+        <div class="play-roll-bonus"><span id="play-roll-bonus-label">Total bonus</span><strong id="play-skill-roll-bonus">—</strong></div>
+        <label class="play-roll-modifier">Situational modifier<input id="play-skill-roll-modifier" type="number" step="1" value="0"></label>
+        <button type="button" id="roll-play-skill" class="button button-dark">Roll open-ended d100</button>
+        <div id="play-skill-roll-result" class="play-roll-result" role="status" aria-live="polite">Roll to see the result.</div>
+        <p id="play-roll-note" class="play-muted"></p>
+      </dialog>
     </section>
 
     <section id="editor-view" class="view">
