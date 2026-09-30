@@ -25,8 +25,8 @@
   const keyOf = (q,r) => `${q},${r}`;
   const within = (q,r) => Number.isInteger(q) && Number.isInteger(r) && q >= 0 && q < columns && r >= 0 && r < rows;
   const distance = (a,b) => Math.max(Math.abs(a.q-b.q),Math.abs(a.r-b.r),Math.abs(a.q+a.r-b.q-b.r));
-  const blankState = () => ({round:1,phase:-1,resolved:false,scale:5,terrain:{},tokens:{},selected:'',drafts:{},log:[]});
-  const normalizeState = saved => ({round:Math.max(1,Number(saved?.round)||1),phase:Number.isInteger(saved?.phase)&&saved.phase>=-1&&saved.phase<=2?saved.phase:-1,resolved:!!saved?.resolved,scale:[5,10,20,50].includes(Number(saved?.scale))?Number(saved.scale):5,terrain:saved?.terrain||{},tokens:saved?.tokens||{},selected:saved?.selected||'',drafts:saved?.drafts||{},log:Array.isArray(saved?.log)?saved.log:[]});
+  const blankState = () => ({round:1,phase:-1,resolved:false,scale:5,terrain:{},tokens:{},selected:'',drafts:{},lastTargets:{},log:[]});
+  const normalizeState = saved => ({round:Math.max(1,Number(saved?.round)||1),phase:Number.isInteger(saved?.phase)&&saved.phase>=-1&&saved.phase<=2?saved.phase:-1,resolved:!!saved?.resolved,scale:[5,10,20,50].includes(Number(saved?.scale))?Number(saved.scale):5,terrain:saved?.terrain||{},tokens:saved?.tokens||{},selected:saved?.selected||'',drafts:saved?.drafts||{},lastTargets:saved?.lastTargets||{},log:Array.isArray(saved?.log)?saved.log:[]});
   function readEncounters() {
     try {
       const stored=localStorage.getItem(storageKey);
@@ -43,7 +43,7 @@
     return [];
   }
   let encounters=readEncounters(),activeEncounterId=null,state=blankState();
-  let activePhase='normal',drafts={},resolving=false,placingActorId='';
+  let activePhase='normal',drafts={},resolving=false,placingActorId='',targetDialogContext=null,tableDialogCode='';
   let roster = [];
   const persist = () => localStorage.setItem(storageKey,JSON.stringify(encounters));
   const save = () => { const current=encounters.find(item=>item.id===activeEncounterId);if(!current)return;current.state=state;current.updatedAt=Date.now();persist(); };
@@ -140,7 +140,7 @@
   }
   function addCriticalEffects(target,attacker,effects) {
     for(const effect of effects) {
-      if(effect.kind==='hits') {const who=actor(Object.keys(state.tokens).find(id=>token(id)===target));target.hits=who?.hitsMax>0?Math.min(who.hitsMax,(target.hits||0)+effect.amount):(target.hits||0)+effect.amount;continue;}
+      if(effect.kind==='hits') {target.hits=(target.hits||0)+effect.amount;continue;}
       const receiver=effect.kind==='bonus'?attacker:target;
       receiver.criticalEffects=Array.isArray(receiver.criticalEffects)?receiver.criticalEffects:[];
       const startsRound=effect.kind==='bleed'||effect.kind==='bonus'?state.round+1:state.round+(effect.roundsLeft!==null&&(target.activityThisRound||0)>=50?1:0);
@@ -156,7 +156,7 @@
     const threshold=10+2*(who?.stats?.[1]||0);
     value.statuses=Array.isArray(value.statuses)?value.statuses:[];
     if(total>0&&total>threshold&&!value.statuses.includes('Unconscious')){value.statuses.push('Unconscious');value.stunUnconscious=true;}
-    else if(total<=threshold&&value.stunUnconscious){value.statuses=value.statuses.filter(item=>item!=='Unconscious');delete value.stunUnconscious;}
+    else if(total<=threshold&&value.stunUnconscious){if(!value.hitUnconscious)value.statuses=value.statuses.filter(item=>item!=='Unconscious');delete value.stunUnconscious;}
   }
   function advanceCriticalEffects(completedRound) {
     for(const [id,value] of Object.entries(state.tokens)) {
@@ -165,13 +165,36 @@
       value.criticalEffects=(value.criticalEffects||[]).filter(effect=>effect.roundsLeft===null||(effect.startsRound??completedRound)>completedRound||(['stun','stunNoParry'].includes(effect.kind)?effect!==spent||--effect.roundsLeft>0:--effect.roundsLeft>0));
       updateStunConsciousness(value);
       const bleeding=activeCriticalEffects(value).filter(effect=>effect.kind==='bleed').reduce((sum,effect)=>sum+effect.amount,0);
-      if(bleeding){const who=actor(id);value.hits=who?.hitsMax>0?Math.min(who.hitsMax,(value.hits||0)+bleeding):(value.hits||0)+bleeding;appendLog(id,`Bleeding: ${bleeding} hit${bleeding===1?'':'s'} at the start of round ${state.round}.`);}
+      if(bleeding){value.hits=(value.hits||0)+bleeding;appendLog(id,`Bleeding: ${bleeding} hit${bleeding===1?'':'s'} at the start of round ${state.round}.`);}
     }
   }
   const tableCache=new Map();
   async function loadTable(code) {
     if(!tableCache.has(code))tableCache.set(code,fetch(`tables/${code}.json`).then(response=>{if(!response.ok)throw new Error(`Table ${code} unavailable`);return response.json();}));
     return tableCache.get(code);
+  }
+  async function openTableDialog(code) {
+    const dialog=$('#encounter-table-dialog');
+    tableDialogCode=code;
+    $('#encounter-table-title').textContent=code;
+    $('#encounter-table-code').textContent='';
+    $('#encounter-table-content').innerHTML='<p>Loading table…</p>';
+    dialog.showModal();
+    try {
+      const table=await loadTable(code);
+      if(!dialog.open||tableDialogCode!==code)return;
+      $('#encounter-table-title').textContent=table.title||code;
+      $('#encounter-table-code').textContent=`${code}${table.printedPages?.length?` · CORE PAGE ${table.printedPages.join(', ')}`:''}`;
+      let html='';
+      if(table.columns&&table.rows) {
+        const headings=table.columns.map(column=>`<th scope="col">${esc(column.group&&column.group!=='Critical severity'?`${column.group} · `:'')}${esc(column.label)}</th>`).join('');
+        const body=table.rows.map(row=>`<tr><th scope="row">${esc(row.roll)}</th>${table.columns.map((_,index)=>{const cell=row.cells?.[index],value=cell?`${cell.description||''}${cell.effect?` · ${expandTableSymbols(cell.effect)}`:''}`:row.values?.[index]??'—';return `<td>${esc(value)}</td>`;}).join('')}</tr>`).join('');
+        html=`<table><thead><tr><th scope="col">Roll</th>${headings}</tr></thead><tbody>${body}</tbody></table>`;
+      } else if(table.categories&&table.professions) {
+        html=`<table><thead><tr><th>Skill category</th>${table.professions.map(name=>`<th>${esc(name)}</th>`).join('')}</tr></thead><tbody>${Object.entries(table.categories).map(([name,costs])=>`<tr><th>${esc(name)}</th>${table.professions.map(profession=>`<td>${esc(costs[profession]?.join('/')||'—')}</td>`).join('')}</tr>`).join('')}</tbody></table>`;
+      } else html=(table.tablePages||[]).map(page=>`<section><h3>CORE PAGE ${esc(page.printedPage)}</h3><pre>${esc(page.text)}</pre></section>`).join('')||'<p>No table data found.</p>';
+      $('#encounter-table-content').innerHTML=html;
+    } catch {$('#encounter-table-content').innerHTML='<p>Could not load this table.</p>';}
   }
   async function narrativeRoll(code,columnIndex,label,modifier=0,criticalTarget=null) {
     const roll=d100(),total=roll+modifier;
@@ -193,6 +216,28 @@
   function appendLog(id, detail) {
     state.log.unshift({round:state.round,phase:state.phase<0?'Declaration':phases[state.phase],actor:actor(id)?.name||'GM',detail});
     state.log = state.log.slice(0,80);
+  }
+  function beginRoundLog() {
+    const initiatives=orderedActors().map(([id,value])=>({name:actor(id).name,roll:[...(value.initiativeRoll||[])],stat:whoQuickness(id),modifier:(value.initiative||0)-(value.initiativeRoll||[]).reduce((sum,item)=>sum+item,0)-whoQuickness(id),total:value.initiative||0}));
+    state.log.unshift({round:state.round,kind:'round',initiatives});
+    state.log=state.log.slice(0,80);
+  }
+  const whoQuickness=id=>actor(id)?.stats?.[8]||0;
+  function checkDeaths() {
+    const soulDeparture={'Common Man':12,'High Man':10,'Wood Elf':3,Dwarf:21,Halfling:18};
+    for(const [id,value] of Object.entries(state.tokens)) {
+      const who=actor(id);
+      if(!who?.hitsMax||value.lastHitCheckRound===state.round||(value.statuses||[]).includes('Dead'))continue;
+      value.lastHitCheckRound=state.round;
+      value.statuses=Array.isArray(value.statuses)?value.statuses:[];
+      const hits=Number(value.hits)||0;
+      if(hits>=who.hitsMax&&!value.statuses.includes('Unconscious')){value.statuses.push('Unconscious');value.hitUnconscious=true;appendLog(id,`Reached ${hits}/${who.hitsMax} hits and passed out.`);}
+      else if(hits<who.hitsMax&&value.hitUnconscious){if(!value.stunUnconscious)value.statuses=value.statuses.filter(item=>item!=='Unconscious');delete value.hitUnconscious;}
+      if(hits>who.hitsMax+who.constitution){
+        if(value.dyingRoundsLeft===undefined){value.dyingRoundsLeft=Math.max(1,12+(who.stats?.[1]||0)+(soulDeparture[who.race]||0));appendLog(id,`Massive shock: dying in ${value.dyingRoundsLeft} rounds unless healed.`);}
+        else if(--value.dyingRoundsLeft<=0){value.statuses.push('Dead');delete value.dyingRoundsLeft;appendLog(id,`Died from massive shock at ${hits} hits.`);}
+      } else if(value.dyingRoundsLeft!==undefined){delete value.dyingRoundsLeft;appendLog(id,'Massive shock stopped after healing.');}
+    }
   }
   function renderList() {
     const sorted=[...encounters].sort((a,b)=>(b.updatedAt||0)-(a.updatedAt||0));
@@ -246,6 +291,7 @@
     if(!drafts[key]) {
       const action=token(id)?.actions?.[phase];
       drafts[key]={choice:choiceFor(action),activity:action?.activity??0,maneuver:action?.type==='moving'?'moving':'static',statIndex:action?.statIndex??0,targetKind:action?.targetHex?'hex':action?.target?'creature':'none',target:action?.target||'',hex:action?.destination||action?.targetHex||null,difficulty:action?.difficulty||'Medium',pace:action?.pace||1,spellLevel:action?.spellLevel||1,preparation:action?.preparation||0,instant:!!action?.instant,spellAttack:action?.spellAttack||'none',areaRadius:action?.areaRadius??0,resistance:action?.resistance||'channeling',attackLevel:action?.attackLevel||1,modifier:action?.modifier||0,range:action?.range||'',description:action?.description||''};
+      restoreLastTarget(id,drafts[key]);
     }
     return drafts[key];
   }
@@ -306,14 +352,34 @@
     if(lineTo(origin,foe).slice(0,-1).some(hex=>state.terrain[keyOf(hex.q,hex.r)]==='blocked'))return false;
     return true;
   }
+  function restoreLastTarget(id,draft) {
+    const who=actor(id),origin=token(id),last=state.lastTargets?.[id]||{};
+    if(!who||!origin)return;
+    const kind=targetKindFor(draft,who);
+    if(kind==='creature'&&!draft.target&&last.creature&&validCreature(last.creature,draft,who,origin))draft.target=last.creature;
+    if(kind==='hex'&&!draft.hex&&last.hex&&validHex(last.hex.q,last.hex.r,draft,who,origin))draft.hex={...last.hex};
+  }
+  function openTargetDialog(id,phase) {
+    const who=actor(id),draft=draftFor(id,phase),origin=token(id),kind=targetKindFor(draft,who);
+    if(!who||!origin||kind==='none')return;
+    targetDialogContext={id,phase,kind};
+    $('#encounter-target-title').textContent=`${who.name} · ${phase} target`;
+    $('#encounter-target-note').textContent=kind==='creature'?'Choose a character in range.':'Choose a hex in range.';
+    if(kind==='creature') {
+      const choices=Object.keys(state.tokens).filter(candidate=>validCreature(candidate,draft,who,origin));
+      $('#encounter-target-options').innerHTML=choices.length?`<div class="encounter-target-list">${choices.map(candidate=>`<button type="button" data-target-creature="${esc(candidate)}" aria-pressed="${candidate===draft.target}">${esc(actor(candidate).name)}<small>Hex ${token(candidate).q},${token(candidate).r} · ${distance(origin,token(candidate))*state.scale} ft</small></button>`).join('')}</div>`:'<p>No characters are in range. Place the characters or change the range.</p>';
+    } else {
+      $('#encounter-target-options').innerHTML=`<div class="encounter-target-grid" role="group" aria-label="Map hexes">${Array.from({length:rows},(_,r)=>Array.from({length:columns},(_,q)=>{const valid=validHex(q,r,draft,who,origin),picked=draft.hex?.q===q&&draft.hex?.r===r;return `<button type="button" data-target-hex="${q},${r}" aria-pressed="${picked}" ${valid?'':'disabled'} title="Hex ${q},${r} · ${distance(origin,{q,r})*state.scale} ft">${q},${r}</button>`;}).join('')).join('')}</div>`;
+    }
+    $('#encounter-target-dialog').showModal();
+  }
   function renderMap() {
     const placing=!!token(placingActorId),who=placing?actor(placingActorId):selected(),origin=who?token(who.id):null,draft=who?draftFor(who.id,activePhase):null;
-    const kind=draft&&!placing?targetKindFor(draft,who):'none';
     const vertices=Array.from({length:6},(_,index)=>{const angle=Math.PI/180*(60*index-30);return `${(size*Math.cos(angle)).toFixed(1)},${(size*Math.sin(angle)).toFixed(1)}`;}).join(' ');
     const cells=[];
     for(let r=0;r<rows;r++)for(let q=0;q<columns;q++) {
       const terrain=state.terrain[keyOf(q,r)]||'clear';
-      const valid=placing?terrain!=='blocked':kind==='hex'&&validHex(q,r,draft,who,origin);
+      const valid=placing&&terrain!=='blocked';
       const aimed=!placing&&draft?.hex?.q===q&&draft?.hex?.r===r;
       cells.push(`<g data-hex="${q},${r}" class="encounter-hex ${terrain}${valid?' valid-target':''}${aimed?' destination':''}" transform="translate(${xOf(q,r)},${yOf(r)})"><polygon points="${vertices}"></polygon>${terrain!=='clear'?`<text text-anchor="middle" y="4">${terrain==='blocked'?'■':'◆'}</text>`:''}</g>`);
     }
@@ -322,13 +388,13 @@
       const character=actor(id);if(!character)return '';
       const stacked=placed.filter(([,item])=>item.q===value.q&&item.r===value.r).findIndex(([other])=>other===id);
       const x=xOf(value.q)+(stacked%2)*12-6,y=yOf(value.r)+Math.floor(stacked/2)*13;
-      const valid=kind==='creature'&&validCreature(id,draft,who,origin);
+      const valid=false;
       return `<g data-token="${esc(id)}" class="encounter-token${id===state.selected?' selected':''}${valid?' valid-target':''}${draft?.target===id?' destination':''}" transform="translate(${x},${y})"><circle r="17"></circle><text text-anchor="middle" y="4">${esc(character.name.slice(0,2).toUpperCase())}</text><title>${esc(character.name)}</title></g>`;
     }).join('');
     $('#encounter-map').setAttribute('viewBox','0 0 970 480');
     $('#encounter-map').innerHTML=cells.join('')+pieces;
     const tool=$('#encounter-map-tool').value;
-    $('#encounter-map-status').textContent=!who?'Add a character to start.':placing?`Tap a highlighted hex to place ${who.name}.`:!origin||!within(origin.q,origin.r)?`Tap a hex to place ${who.name}.`:kind==='creature'?`${who.name} · ${activePhase}: tap a highlighted creature to target it.`:kind==='hex'?`${who.name} · ${activePhase}: tap a highlighted hex to target it.`:tool==='position'?`${who.name} at hex ${origin.q},${origin.r}. Tap another hex to move their token.`:`Tap hexes to ${tool==='clear'?'clear':`paint ${tool}`} terrain.`;
+    $('#encounter-map-status').textContent=!who?'Add a character to start.':placing?`Tap a highlighted hex to place ${who.name}.`:!origin||!within(origin.q,origin.r)?`Tap a hex to place ${who.name}.`:tool==='position'?`${who.name} at hex ${origin.q},${origin.r}. Tap another hex to move their token.`:`Tap hexes to ${tool==='clear'?'clear':`paint ${tool}`} terrain.`;
   }
   function renderCharacterButtons() {
     $('#encounter-character-buttons').innerHTML=roster.length?roster.map(who=>{
@@ -343,6 +409,8 @@
       if(placingActorId===id)placingActorId='';
       for(const key of Object.keys(drafts))if(key.startsWith(`${id}:`))delete drafts[key];
       for(const draft of Object.values(drafts))if(draft.target===id)draft.target='';
+      delete state.lastTargets[id];
+      for(const last of Object.values(state.lastTargets))if(last.creature===id)delete last.creature;
       if(state.selected===id)state.selected=Object.keys(state.tokens)[0]||'';
     } else {
       state.tokens[id]={q:null,r:null,hits:0,pp:0,initiative:null,actions:{}};
@@ -374,13 +442,13 @@
       const who=actor(id);
       const used=phases.reduce((sum,phase)=>{const draft=draftFor(id,phase);return sum+(draft.choice==='none'?0:Number(draft.activity)||0);},0);
       const statuses=statusChoices.map(status=>{const active=status==='Surprised'?!!value.surprised:(value.statuses||[]).includes(status);return `<button type="button" data-status="${status}" aria-pressed="${active}" class="${active?'selected':''}">${status}</button>`;}).join('');
-      const effects=(value.criticalEffects||[]).map(effect=>`<span>${(effect.startsRound??state.round)>state.round?'Starts next round · ':''}${esc(criticalEffectLabel(effect))}<button type="button" data-clear-effect="${esc(effect.id)}" aria-label="Clear ${esc(criticalEffectLabel(effect))}">×</button></span>`).join('');
-      const header=`<header class="encounter-actor-header"><div class="encounter-actor-initiative"><small>Initiative</small><strong>${value.initiative}</strong><small>${value.initiativeRoll?.join(' + ')||''} + Qu/mods</small></div><div class="encounter-actor-name"><small>Name</small><strong>${esc(who.name)}</strong><small>DB ${who.db} · AT ${who.at} · ${who.baseMove} ft/round</small></div><label><span>Hits</span><span class="encounter-vital-input"><input type="number" min="0" max="${Math.max(0,who.hitsMax)}" data-vital="hits" value="${value.hits||0}"><small>/ ${who.hitsMax||'—'}</small></span></label><label><span>PP</span><span class="encounter-vital-input"><input type="number" min="0" max="${Math.max(0,who.ppMax)}" data-vital="pp" value="${value.pp||0}"><small>/ ${who.ppMax||'—'}</small></span></label></header><div class="encounter-actor-tools"><span>${used} / 100% activity</span><label>Initiative modifier <input type="number" data-initiative-mod value="${value.initiativeMod||0}"></label><button type="button" data-place-actor="${esc(id)}">Place on map</button></div><div class="encounter-status"><strong>Status</strong><div class="encounter-status-options">${statuses}</div></div>${effects?`<div class="encounter-critical-effects" aria-label="Critical effects">${effects}</div>`:''}`;
+      const effects=(value.criticalEffects||[]).map(effect=>`<span>${(effect.startsRound??state.round)>state.round?'Starts next round · ':''}${esc(criticalEffectLabel(effect))}<button type="button" data-clear-effect="${esc(effect.id)}" aria-label="Clear ${esc(criticalEffectLabel(effect))}">×</button></span>`).join('')+(value.dyingRoundsLeft!==undefined?`<span>Dying · ${value.dyingRoundsLeft} rounds left</span>`:'');
+      const header=`<header class="encounter-actor-header"><div class="encounter-actor-initiative"><small>Initiative</small><strong>${value.initiative}</strong><small>${value.initiativeRoll?.join(' + ')||''} + Qu/mods</small></div><div class="encounter-actor-name"><small>Name</small><strong>${esc(who.name)}</strong><small>DB ${who.db} · AT ${who.at} · ${who.baseMove} ft/round</small></div><label><span>Hits</span><span class="encounter-vital-input"><input type="number" min="0" data-vital="hits" value="${value.hits||0}"><small>/ ${who.hitsMax||'—'}</small></span></label><label><span>PP</span><span class="encounter-vital-input"><input type="number" min="0" max="${Math.max(0,who.ppMax)}" data-vital="pp" value="${value.pp||0}"><small>/ ${who.ppMax||'—'}</small></span></label></header><div class="encounter-actor-tools"><span>${used} / 100% activity</span><label>Initiative modifier <input type="number" data-initiative-mod value="${value.initiativeMod||0}"></label><button type="button" data-place-actor="${esc(id)}">Place on map</button></div><div class="encounter-status"><strong>Status</strong><div class="encounter-status-options">${statuses}</div></div>${effects?`<div class="encounter-critical-effects" aria-label="Critical effects">${effects}</div>`:''}`;
       const cards=phases.map((phase,index)=>{
       const draft=draftFor(who.id,phase),type=draftType(draft,who),kind=targetKindFor(draft,who);
-      const target=kind==='creature'?(actor(draft.target)?.name||'Tap a highlighted creature on the map'):kind==='hex'?(draft.hex?`Hex ${draft.hex.q},${draft.hex.r} · ${token(who.id)?.q!=null?distance(token(who.id),draft.hex)*state.scale:0} ft`:'Tap a highlighted hex on the map'):'';
+      const target=kind==='creature'?(actor(draft.target)?.name||'Choose a creature'):kind==='hex'?(draft.hex?`Hex ${draft.hex.q},${draft.hex.r} · ${token(who.id)?.q!=null?distance(token(who.id),draft.hex)*state.scale:0} ft`:'Choose a hex'):'';
       const active=phase===activePhase&&who.id===state.selected;
-      return `<article class="encounter-phase-card${active?' active':''}${state.phase===index?' current':''}"><div><strong>${index+1}. ${phase[0].toUpperCase()+phase.slice(1)}</strong><small>${index===0?'Acts early · −20':index===2?'Acts late · +10':'Acts normally'}</small></div><form class="encounter-phase-form" data-actor="${esc(who.id)}" data-phase="${phase}"><label class="encounter-phase-wide">Skill or action<select name="choice">${choiceOptions(who,draft.choice)}</select></label>${draft.choice==='none'?'':`<label>Activity %<input name="activity" type="number" min="0" max="100" value="${esc(draft.activity)}"></label>${['static','moving'].includes(type)?`<label>Maneuver<select name="maneuver">${option('static','Static',draft.maneuver)}${option('moving','Moving',draft.maneuver)}</select></label><label>Difficulty<select name="difficulty">${difficulties.map(item=>option(item,item,draft.difficulty)).join('')}</select></label>`:''}${draft.choice==='stat'?`<label>Applicable stat<select name="statIndex">${['Agility','Constitution','Memory','Reasoning','Self Discipline','Empathy','Intuition','Presence','Quickness','Strength'].map((item,i)=>option(i,item,draft.statIndex)).join('')}</select></label>`:''}${type==='move'?`<label>Pace<select name="pace">${[[1,'Walk ×1'],[1.5,'Jog ×1.5'],[2,'Run ×2'],[3,'Sprint ×3'],[4,'Fast sprint ×4'],[5,'Dash ×5']].map(([value,label])=>option(value,label,draft.pace)).join('')}</select></label>`:''}${type==='spell'?`<label>Spell level<input name="spellLevel" type="number" min="1" max="50" value="${esc(draft.spellLevel)}"></label><label>Preparation rounds<input name="preparation" type="number" min="0" max="20" value="${esc(draft.preparation)}"></label><label>Spell attack<select name="spellAttack">${[['none','No attack'],['basic','Basic'],['bolt','Bolt'],['ball','Ball']].map(([value,label])=>option(value,label,draft.spellAttack)).join('')}</select></label>${draft.spellAttack==='ball'?`<label>Area radius (ft)<input name="areaRadius" type="number" min="0" value="${esc(draft.areaRadius)}"></label>`:''}<label class="encounter-inline-check"><input name="instant" type="checkbox" ${draft.instant?'checked':''}> Instantaneous</label>`:''}${type==='resist'?`<label>Resistance<select name="resistance">${['channeling','essence','mentalism','poison','disease','fear'].map(item=>option(item,item,draft.resistance)).join('')}</select></label><label>Attack level<input name="attackLevel" type="number" min="1" max="100" value="${esc(draft.attackLevel)}"></label>`:''}${!['move','melee','missile','resist'].includes(type)&&!(type==='spell'&&draft.spellAttack!=='none')?`<label>Target<select name="targetKind">${[['none','No target'],['creature','Creature'],['hex','Hex']].map(([value,label])=>option(value,label,draft.targetKind)).join('')}</select></label>`:''}${kind!=='none'&&type!=='move'?`<label>Max range (ft)<input name="range" type="number" min="1" placeholder="Optional" value="${esc(draft.range)}"><small>Blank shows all visible targets.</small></label>`:''}${kind!=='none'?`<div class="encounter-phase-target encounter-phase-wide"><span>${esc(target)}</span><button type="button" data-focus-target="${phase}">Show targets</button></div>`:''}<label>Other modifier<input name="modifier" type="number" value="${esc(draft.modifier)}"></label><label class="encounter-phase-wide">Description<input name="description" type="text" maxlength="100" placeholder="Optional" value="${esc(draft.description)}"></label>`}</form></article>`;
+      return `<article class="encounter-phase-card${active?' active':''}${state.phase===index?' current':''}"><div><strong>${index+1}. ${phase[0].toUpperCase()+phase.slice(1)}</strong><small>${index===0?'Acts early · −20':index===2?'Acts late · +10':'Acts normally'}</small></div><form class="encounter-phase-form" data-actor="${esc(who.id)}" data-phase="${phase}"><label class="encounter-phase-wide">Skill or action<select name="choice">${choiceOptions(who,draft.choice)}</select></label>${draft.choice==='none'?'':`<label>Activity %<input name="activity" type="number" min="0" max="100" value="${esc(draft.activity)}"></label>${['static','moving'].includes(type)?`<label>Maneuver<select name="maneuver">${option('static','Static',draft.maneuver)}${option('moving','Moving',draft.maneuver)}</select></label><label>Difficulty<select name="difficulty">${difficulties.map(item=>option(item,item,draft.difficulty)).join('')}</select></label>`:''}${draft.choice==='stat'?`<label>Applicable stat<select name="statIndex">${['Agility','Constitution','Memory','Reasoning','Self Discipline','Empathy','Intuition','Presence','Quickness','Strength'].map((item,i)=>option(i,item,draft.statIndex)).join('')}</select></label>`:''}${type==='move'?`<label>Pace<select name="pace">${[[1,'Walk ×1'],[1.5,'Jog ×1.5'],[2,'Run ×2'],[3,'Sprint ×3'],[4,'Fast sprint ×4'],[5,'Dash ×5']].map(([value,label])=>option(value,label,draft.pace)).join('')}</select></label>`:''}${type==='spell'?`<label>Spell level<input name="spellLevel" type="number" min="1" max="50" value="${esc(draft.spellLevel)}"></label><label>Preparation rounds<input name="preparation" type="number" min="0" max="20" value="${esc(draft.preparation)}"></label><label>Spell attack<select name="spellAttack">${[['none','No attack'],['basic','Basic'],['bolt','Bolt'],['ball','Ball']].map(([value,label])=>option(value,label,draft.spellAttack)).join('')}</select></label>${draft.spellAttack==='ball'?`<label>Area radius (ft)<input name="areaRadius" type="number" min="0" value="${esc(draft.areaRadius)}"></label>`:''}<label class="encounter-inline-check"><input name="instant" type="checkbox" ${draft.instant?'checked':''}> Instantaneous</label>`:''}${type==='resist'?`<label>Resistance<select name="resistance">${['channeling','essence','mentalism','poison','disease','fear'].map(item=>option(item,item,draft.resistance)).join('')}</select></label><label>Attack level<input name="attackLevel" type="number" min="1" max="100" value="${esc(draft.attackLevel)}"></label>`:''}${!['move','melee','missile','resist'].includes(type)&&!(type==='spell'&&draft.spellAttack!=='none')?`<label>Target<select name="targetKind">${[['none','No target'],['creature','Creature'],['hex','Hex']].map(([value,label])=>option(value,label,draft.targetKind)).join('')}</select></label>`:''}${kind!=='none'&&type!=='move'?`<label>Max range (ft)<input name="range" type="number" min="1" placeholder="Optional" value="${esc(draft.range)}"><small>Blank shows all visible targets.</small></label>`:''}${kind!=='none'?`<div class="encounter-phase-target encounter-phase-wide"><span>${esc(target)}</span><button type="button" data-focus-target="${phase}" aria-haspopup="dialog">Choose target</button></div>`:''}<label>Other modifier<input name="modifier" type="number" value="${esc(draft.modifier)}"></label><label class="encounter-phase-wide">Description<input name="description" type="text" maxlength="100" placeholder="Optional" value="${esc(draft.description)}"></label>`}</form></article>`;
       }).join('');
       return `<section class="encounter-actor-card" data-actor-card="${esc(id)}">${header}<div class="encounter-phase-cards">${cards}</div></section>`;
     }).join('');
@@ -388,7 +456,17 @@
     $('#encounter-phase-cards').querySelectorAll('input,select,button').forEach(control=>{control.disabled=state.phase>=0||resolving;});
   }
   function renderLog() {
-    $('#encounter-log').innerHTML=state.log.length?state.log.map(entry=>`<article><small>Round ${entry.round} · ${esc(entry.phase)} · ${esc(entry.actor)}</small><p>${entry.detail}</p></article>`).join(''):'<p class="play-muted">Resolved actions appear here.</p>';
+    if(!state.log.length){$('#encounter-log').innerHTML='<p class="play-muted">Resolved actions appear here.</p>';return;}
+    const groups=new Map();
+    for(const entry of [...state.log].reverse()){
+      if(!groups.has(entry.round))groups.set(entry.round,{header:null,actions:[]});
+      const group=groups.get(entry.round);
+      if(entry.kind==='round')group.header=entry;else if(entry.phase!=='Declaration'||!entry.detail?.startsWith('Initiative rolled'))group.actions.push(entry);
+    }
+    $('#encounter-log').innerHTML=[...groups].reverse().map(([round,group])=>{
+      const initiatives=group.header?.initiatives?.map(item=>`<span>${esc(item.name)}: ${esc(item.roll.join(' + '))} + ${esc(item.stat)} Qu ${item.modifier?`${item.modifier>=0?'+':'−'} ${Math.abs(item.modifier)} modifiers`:''} = <strong>${esc(item.total)}</strong></span>`).join('')||'';
+      return `<section class="encounter-log-round"><strong>Round ${esc(round)}</strong>${initiatives?`<div class="encounter-log-initiative">${initiatives}</div>`:''}${group.actions.map(entry=>`<article><small>${esc(entry.phase==='Declaration'?'Start':entry.phase)}</small><p><strong>${esc(entry.actor)}:</strong> ${entry.detail}</p></article>`).join('')}</section>`;
+    }).join('');
   }
   function render() {renderCharacterButtons();renderRound();renderPhaseCards();renderMap();renderLog();$('#encounter-scale').value=String(state.scale);}
   function returnToActivePhase(){[...document.querySelectorAll('.encounter-phase-form')].find(form=>form.dataset.actor===state.selected&&form.dataset.phase===activePhase)?.scrollIntoView({behavior:'smooth',block:'center'});}
@@ -484,7 +562,7 @@
       const column=table.columns.findIndex(item=>item.label===`AT ${foe.at}`);
       const result=row?.values[column]||'–';
       const hits=Number(/^\d+/.exec(result)?.[0])||0;
-      foeToken.hits=foe.hitsMax>0?Math.min(foe.hitsMax,Math.max(0,foeToken.hits||0)+hits):Math.max(0,foeToken.hits||0)+hits;
+      foeToken.hits=Math.max(0,foeToken.hits||0)+hits;
       const critical=/[A-E]/.exec(result)?.[0];
       const criticalTable=code==='A-10.9.1'||code==='A-10.9.3'?'A-10.10.3':code==='A-10.9.2'?'A-10.10.5':'A-10.10.4';
       const actionPenalty=phaseModifier(declaration.phase)-Math.max(0,activityMax-declaration.activity);
@@ -532,7 +610,7 @@
       const row=(unmodified&&table.rows.find(item=>item.unmodified&&rollInRow(item.roll,first)))||regular.find(item=>rollInRow(item.roll,modified))||(modified>150?regular[0]:regular.at(-1));
       const column=table.columns.findIndex(item=>item.label===`AT ${foe.at}`),result=row?.values[column]||'–';
       const hits=Number(/^\d+/.exec(result)?.[0])||0;
-      foeToken.hits=foe.hitsMax>0?Math.min(foe.hitsMax,(foeToken.hits||0)+hits):(foeToken.hits||0)+hits;
+      foeToken.hits=(foeToken.hits||0)+hits;
       const failure=result==='F'?` · ${(await narrativeRoll('A-10.11.2',spellFailureColumn(spellSkill,kind),'spell failure')).html}`:'';
       return `${kind} spell vs ${esc(foe.name)}: ${diceText(roll)} + ${bonus} OB − ${foe.db} DB ${declaration.modifier>=0?'+':'−'} ${Math.abs(declaration.modifier)} other${penalty?` ${penalty} critical modifier`:''} = ${modified}. ${tableLink(code)} result <strong>${esc(result)}</strong>${hits?` · ${hits} hits applied`:''}${/[A-E]/.test(result)?' · resolve the critical type named by the spell in Tables':''}${failure}.`;
     }catch{return `${kind} spell attack table could not be loaded; use the Tables page.`;}
@@ -644,6 +722,7 @@
     if(changed==='spellAttack'&&oldAttack!==draft.spellAttack){draft.target='';draft.hex=null;}
     if(changed==='targetKind'&&oldTargetKind!==draft.targetKind){draft.target='';draft.hex=null;}
     if(changed==='instant'&&draftType(draft,who)==='spell')draft.activity=draft.instant?10:75;
+    restoreLastTarget(who.id,draft);
     state.drafts=drafts;save();
     return draft;
   }
@@ -658,8 +737,8 @@
     const skillIndex=Number(draft.choice.split(':')[1]);
     if(['melee','missile'].includes(type)&&!who.attacks[skillIndex]||['static','moving','spell'].includes(type)&&draft.choice!=='stat'&&!who.skills[skillIndex])return {error:'Choose an available skill or attack item.'};
     const kind=targetKindFor(draft,who);
-    if(kind==='creature'&&(!draft.target||!validCreature(draft.target,draft,who,value)))return {error:'Tap a highlighted creature on the map first.'};
-    if(kind==='hex'&&(!draft.hex||!validHex(draft.hex.q,draft.hex.r,draft,who,value)))return {error:'Tap a highlighted hex on the map first.'};
+    if(kind==='creature'&&(!draft.target||!validCreature(draft.target,draft,who,value)))return {error:'Choose a creature in the target popup first.'};
+    if(kind==='hex'&&(!draft.hex||!validHex(draft.hex.q,draft.hex.r,draft,who,value)))return {error:'Choose a hex in the target popup first.'};
     return {action:{phase,type,activity,skill:draft.choice==='stat'?'stat':skillIndex,statIndex:Number(draft.statIndex)||0,target:kind==='creature'?draft.target:'',targetHex:kind==='hex'&&type!=='move'?{...draft.hex}:null,difficulty:draft.difficulty,pace:Number(draft.pace)||1,spellLevel:Number(draft.spellLevel)||1,preparation:Number(draft.preparation)||0,instant:!!draft.instant,spellAttack:draft.spellAttack||'none',areaRadius:Math.max(0,Number(draft.areaRadius)||0),resistance:draft.resistance,attackLevel:Number(draft.attackLevel)||1,modifier:Number(draft.modifier)||0,range:Number(draft.range)||0,description:draft.description,destination:type==='move'?{...draft.hex}:null}};
   }
   function prepareRoundActions() {
@@ -685,7 +764,7 @@
     if(state.phase<0&&!prepareRoundActions())return;
     resolving=true;
     try {
-      if(state.phase<0){Object.values(state.tokens).forEach(value=>{value.activityThisRound=0;});state.phase=0;state.resolved=false;appendLog('',`Initiative rolled · ${tableLink('T-3.1','round sequence')}.`);save();render();}
+      if(state.phase<0){Object.values(state.tokens).forEach(value=>{value.activityThisRound=0;});state.phase=0;state.resolved=false;checkDeaths();beginRoundLog();save();render();}
       const order=Object.entries(state.tokens).sort((a,b)=>(b[1].initiative||0)-(a[1].initiative||0));
       for(let index=state.phase;index<phases.length;index++) {
         state.phase=index;
@@ -700,8 +779,7 @@
   }
   $('#encounter-map').addEventListener('click',event=>{
     if(resolving)return;
-    const who=selected(),origin=token(state.selected),draft=who?draftFor(who.id,activePhase):null;
-    const kind=draft&&state.phase<0&&!placingActorId?targetKindFor(draft,who):'none';
+    const who=selected(),origin=token(state.selected);
     const piece=event.target.closest('[data-token]'),cell=event.target.closest('[data-hex]');
     if(!piece&&!cell)return;
     const targetId=piece?.dataset.token;
@@ -713,15 +791,6 @@
       placing.q=q;placing.r=r;state.selected=placingActorId;placingActorId='';save();render();return message(`${selected()?.name||'Character'} placed at hex ${q},${r}.`);
     }
     if(origin&&!within(origin.q,origin.r)&&who){if(state.terrain[keyOf(q,r)]==='blocked')return message('That hex is blocked.');origin.q=q;origin.r=r;save();render();return;}
-    if(kind==='creature') {
-      const candidate=targetId||Object.keys(state.tokens).find(id=>token(id)?.q===q&&token(id)?.r===r&&validCreature(id,draft,who,origin));
-      if(!candidate||!validCreature(candidate,draft,who,origin))return message('Choose a highlighted creature.');
-      draft.target=candidate;draft.hex=null;state.drafts=drafts;save();renderPhaseCards();renderMap();returnToActivePhase();return message(`${actor(candidate)?.name||'Creature'} selected as the ${activePhase} target.`);
-    }
-    if(kind==='hex') {
-      if(!validHex(q,r,draft,who,origin))return message('Choose a highlighted hex.');
-      draft.hex={q,r};draft.target='';state.drafts=drafts;save();renderPhaseCards();renderMap();returnToActivePhase();return message(`Hex ${q},${r} selected for the ${activePhase} action.`);
-    }
     if(piece){state.selected=targetId;save();render();return;}
     const tool=$('#encounter-map-tool').value;
     if(['clear','difficult','blocked'].includes(tool)){if(tool==='clear')delete state.terrain[keyOf(q,r)];else state.terrain[keyOf(q,r)]=tool;save();render();return;}
@@ -746,7 +815,7 @@
     const id=card.dataset.actorCard,value=token(id);if(!value)return;
     const form=event.target.closest('form');
     if(form){state.selected=id;activePhase=form.dataset.phase;readDraft(form,event.target.name);ensureInitiative();save();renderPhaseCards();renderMap();return;}
-    if(event.target.dataset.vital){const who=actor(id),max=event.target.dataset.vital==='hits'?who.hitsMax:who.ppMax;value[event.target.dataset.vital]=Math.max(0,Math.min(max,Number(event.target.value)||0));}
+    if(event.target.dataset.vital){const who=actor(id),max=event.target.dataset.vital==='hits'?Infinity:who.ppMax;value[event.target.dataset.vital]=Math.max(0,Math.min(max,Number(event.target.value)||0));}
     if(event.target.hasAttribute('data-initiative-mod'))value.initiativeMod=Number(event.target.value)||0;
     ensureInitiative();save();renderPhaseCards();renderMap();
   });
@@ -771,11 +840,29 @@
     const place=event.target.closest('[data-place-actor]');
     if(place){placingActorId=place.dataset.placeActor;state.selected=placingActorId;$('#encounter-map-tool').value='position';save();renderMap();$('#encounter-map').scrollIntoView({behavior:'smooth',block:'center'});return;}
     const button=event.target.closest('[data-focus-target]');if(!button)return;
-    state.selected=button.closest('[data-actor-card]').dataset.actorCard;activePhase=button.dataset.focusTarget;save();renderMap();$('#encounter-map').scrollIntoView({behavior:'smooth',block:'center'});
+    state.selected=button.closest('[data-actor-card]').dataset.actorCard;activePhase=button.dataset.focusTarget;readDraft(button.closest('form'));save();renderMap();openTargetDialog(state.selected,activePhase);
   });
+  $('#encounter-target-options').addEventListener('click',event=>{
+    const creature=event.target.closest('[data-target-creature]'),hex=event.target.closest('[data-target-hex]');
+    if(!targetDialogContext||!creature&&!hex)return;
+    const {id,phase}=targetDialogContext,who=actor(id),draft=draftFor(id,phase),origin=token(id);
+    if(creature) {
+      if(!validCreature(creature.dataset.targetCreature,draft,who,origin))return;
+      draft.target=creature.dataset.targetCreature;draft.hex=null;
+      state.lastTargets[id]={...(state.lastTargets[id]||{}),creature:draft.target};
+    } else {
+      const [q,r]=hex.dataset.targetHex.split(',').map(Number);
+      if(!validHex(q,r,draft,who,origin))return;
+      draft.hex={q,r};draft.target='';
+      state.lastTargets[id]={...(state.lastTargets[id]||{}),hex:{q,r}};
+    }
+    state.drafts=drafts;save();$('#encounter-target-dialog').close();renderPhaseCards();renderMap();
+  });
+  document.querySelectorAll('[data-close-encounter-dialog]').forEach(button=>button.addEventListener('click',()=>document.getElementById(button.dataset.closeEncounterDialog).close()));
+  $('#encounter-target-dialog').addEventListener('close',()=>{targetDialogContext=null;});
   $('#encounter-scale').addEventListener('change',event=>{state.scale=Number(event.target.value);save();render();});
   $('#encounter-map-tool').addEventListener('change',renderMap);
-  $('#encounter-log').addEventListener('click',event=>{const button=event.target.closest('[data-table]');if(button)window.RolemasterEncounter?.openTable(button.dataset.table);});
+  $('#encounter-log').addEventListener('click',event=>{const button=event.target.closest('[data-table]');if(button)openTableDialog(button.dataset.table);});
   $('#encounter-resolve-round').addEventListener('click',resolveRound);
   $('#encounter-reset').addEventListener('click',showList);
   $('#new-encounter-form').addEventListener('submit',event=>{

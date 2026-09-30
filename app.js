@@ -2766,7 +2766,7 @@
         return {...weapon, category:skill?.category || weapon.category || '', bonus:skill?.bonus || 0};
       });
       const height = strideBonus(character.roleHeight || '') || 0;
-      return {id:character.id, name:character.name || 'Unnamed', race:character.race || '', profession:character.profession || '', realm:character.realm || 'None', level:Number(character.level) || 1, stats:totals, skills, attacks, equipmentNames, at, db, shieldBonus:Number(character.dbShield) || 0, baseMove:50 + quickness * 3 + height, hitsMax:Number(character.hits) || 0, ppMax:Number(character.powerPoints) || 0, resistances};
+      return {id:character.id, name:character.name || 'Unnamed', race:character.race || '', profession:character.profession || '', realm:character.realm || 'None', level:Number(character.level) || 1, stats:totals, constitution:Number(character.stats?.Constitution?.temp) || 0, skills, attacks, equipmentNames, at, db, shieldBonus:Number(character.dbShield) || 0, baseMove:50 + quickness * 3 + height, hitsMax:Number(character.hits) || 0, ppMax:Number(character.powerPoints) || 0, resistances};
     });
   }
   window.RolemasterEncounter = {roster:encounterRoster, openTable(code) { const reference = tables.find(item => item.code === code); if (reference) { showView('tables'); chooseTable(reference); } }};
