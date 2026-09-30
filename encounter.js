@@ -4,6 +4,7 @@
   const $ = selector => document.querySelector(selector);
   const esc = value => String(value ?? '').replace(/[&<>"']/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
   const phases = ['snap','normal','deliberate'];
+  const statusChoices = ['Surprised','Stunned','Prone','Bleeding','Unconscious','Dead'];
   const difficulties = ['Routine','Easy','Light','Medium','Hard','Very Hard','Extremely Hard','Sheer Folly','Absurd'];
   const staticDifficulty = [30,20,10,0,-10,-20,-30,-50,-70];
   const attackTables = {'Weapon • 1-H Concussion':'A-10.9.1','Weapon • 1-H Edged':'A-10.9.2','Weapon • 2-Handed':'A-10.9.3','Weapon • Missile':'A-10.9.4','Weapon • Missile Artillery':'A-10.9.4','Weapon • Pole Arms':'A-10.9.5','Weapon • Thrown':'A-10.9.6'};
@@ -63,6 +64,27 @@
   const phaseModifier = phase => phase === 'snap' ? -20 : phase === 'deliberate' ? 10 : 0;
   const tableLink = (code,label=code) => `<button type="button" class="encounter-table-link" data-table="${esc(code)}">${esc(label)}</button>`;
   const rollInRow = (label,roll) => { const [low,high]=label.split('-').map(Number);return roll>=low&&roll<=(high||low); };
+  const tableCache=new Map();
+  async function loadTable(code) {
+    if(!tableCache.has(code))tableCache.set(code,fetch(`tables/${code}.json`).then(response=>{if(!response.ok)throw new Error(`Table ${code} unavailable`);return response.json();}));
+    return tableCache.get(code);
+  }
+  async function narrativeRoll(code,columnIndex,label,modifier=0) {
+    const roll=d100(),total=roll+modifier;
+    try {
+      const table=await loadTable(code);
+      const lookup=Math.max(1,total);
+      const row=table.rows.find(item=>item.roll.endsWith('+')?lookup>=Number.parseInt(item.roll,10):rollInRow(item.roll,lookup));
+      const cell=row?.cells?.[columnIndex];
+      const dice=`${roll}${modifier?` ${modifier>=0?'+':'−'} ${Math.abs(modifier)} = ${total}`:''}`;
+      if(!cell)return {html:`${tableLink(code,label)} roll ${dice}: no matching entry.`,extraHits:0};
+      const effect=cell.effect?` <strong>${esc(cell.effect)}</strong>`:'';
+      const extraHits=Number(/\+(\d+)H\b/.exec(cell.effect||'')?.[1])||0;
+      return {html:`${tableLink(code,label)} roll ${dice}: ${esc(cell.description)}${effect}`,extraHits};
+    } catch {return {html:`${tableLink(code,label)} roll ${roll}: table unavailable.`,extraHits:0};}
+  }
+  const weaponFumbleColumn=category=>category==='Weapon • 2-Handed'?1:category==='Weapon • Pole Arms'?2:category==='Weapon • Thrown'?4:category==='Weapon • Missile'||category==='Weapon • Missile Artillery'?5:0;
+  const spellFailureColumn=(skill,attack)=>attack==='bolt'||attack==='ball'?0:attack==='basic'?1:/inform|divin|detect|sense/i.test(skill?.name||'')?2:3;
   function appendLog(id, detail) {
     state.log.unshift({round:state.round,phase:state.phase<0?'Declaration':phases[state.phase],actor:actor(id)?.name||'GM',detail});
     state.log = state.log.slice(0,80);
@@ -201,11 +223,24 @@
     const tool=$('#encounter-map-tool').value;
     $('#encounter-map-status').textContent=!who?'Add a character to start.':placingActor||!origin||!within(origin.q,origin.r)?`Tap a hex to place ${who.name}.`:kind==='creature'?`${who.name} · ${activePhase}: tap a highlighted creature to target it.`:kind==='hex'?`${who.name} · ${activePhase}: tap a highlighted hex to target it.`:tool==='position'?`${who.name} at hex ${origin.q},${origin.r}. Tap another hex to move their token.`:`Tap hexes to ${tool==='clear'?'clear':`paint ${tool}`} terrain.`;
   }
-  function renderAddCharacter() {
-    const available=roster.filter(who=>!token(who.id));
-    $('#encounter-add-character').innerHTML=available.length?available.map(who=>option(who.id,`${who.name} · level ${who.level}`,null)).join(''):option('',roster.length?'All characters added':'Create a character first','');
-    $('#encounter-add-character').disabled=!available.length||resolving||state.phase>=0;
-    $('#encounter-add-button').disabled=!available.length||resolving||state.phase>=0;
+  function renderCharacterButtons() {
+    $('#encounter-character-buttons').innerHTML=roster.length?roster.map(who=>{
+      const active=!!token(who.id);
+      return `<button type="button" data-toggle-character="${esc(who.id)}" aria-pressed="${active}" class="${active?'selected':''}" ${resolving||state.phase>=0?'disabled':''}>${esc(who.name)}<small>Level ${who.level}</small></button>`;
+    }).join(''):'<p class="play-muted">Create a character first.</p>';
+  }
+  function toggleCharacter(id) {
+    if(resolving||state.phase>=0||!actor(id))return;
+    if(token(id)) {
+      delete state.tokens[id];
+      for(const key of Object.keys(drafts))if(key.startsWith(`${id}:`))delete drafts[key];
+      for(const draft of Object.values(drafts))if(draft.target===id)draft.target='';
+      if(state.selected===id)state.selected=Object.keys(state.tokens)[0]||'';
+    } else {
+      state.tokens[id]={q:null,r:null,hits:0,pp:0,initiative:null,actions:{}};
+      state.selected=id;ensureInitiative();
+    }
+    state.drafts=drafts;save();render();
   }
   function renderRound() {
     $('#encounter-round').textContent=`Round ${state.round}`;
@@ -230,7 +265,8 @@
     $('#encounter-phase-cards').innerHTML=orderedActors().map(([id,value])=>{
       const who=actor(id);
       const used=phases.reduce((sum,phase)=>{const draft=draftFor(id,phase);return sum+(draft.choice==='none'?0:Number(draft.activity)||0);},0);
-      const header=`<header class="encounter-actor-header"><div class="encounter-actor-initiative"><small>Initiative</small><strong>${value.initiative}</strong><small>${value.initiativeRoll?.join(' + ')||''} + Qu/mods</small></div><div class="encounter-actor-name"><small>Name</small><strong>${esc(who.name)}</strong><small>DB ${who.db} · AT ${who.at} · ${who.baseMove} ft/round</small></div><label><span>Hits</span><span class="encounter-vital-input"><input type="number" min="0" max="${Math.max(0,who.hitsMax)}" data-vital="hits" value="${value.hits||0}"><small>/ ${who.hitsMax||'—'}</small></span></label><label><span>PP</span><span class="encounter-vital-input"><input type="number" min="0" max="${Math.max(0,who.ppMax)}" data-vital="pp" value="${value.pp||0}"><small>/ ${who.ppMax||'—'}</small></span></label></header><div class="encounter-actor-tools"><span>${used} / 100% activity</span><label><input type="checkbox" data-surprised ${value.surprised?'checked':''}> Surprised</label><label>Initiative modifier <input type="number" data-initiative-mod value="${value.initiativeMod||0}"></label><button type="button" data-place-actor="${esc(id)}">Place on map</button><button type="button" data-remove-actor="${esc(id)}">Remove</button></div>`;
+      const statuses=statusChoices.map(status=>{const active=status==='Surprised'?!!value.surprised:(value.statuses||[]).includes(status);return `<button type="button" data-status="${status}" aria-pressed="${active}" class="${active?'selected':''}">${status}</button>`;}).join('');
+      const header=`<header class="encounter-actor-header"><div class="encounter-actor-initiative"><small>Initiative</small><strong>${value.initiative}</strong><small>${value.initiativeRoll?.join(' + ')||''} + Qu/mods</small></div><div class="encounter-actor-name"><small>Name</small><strong>${esc(who.name)}</strong><small>DB ${who.db} · AT ${who.at} · ${who.baseMove} ft/round</small></div><label><span>Hits</span><span class="encounter-vital-input"><input type="number" min="0" max="${Math.max(0,who.hitsMax)}" data-vital="hits" value="${value.hits||0}"><small>/ ${who.hitsMax||'—'}</small></span></label><label><span>PP</span><span class="encounter-vital-input"><input type="number" min="0" max="${Math.max(0,who.ppMax)}" data-vital="pp" value="${value.pp||0}"><small>/ ${who.ppMax||'—'}</small></span></label></header><div class="encounter-actor-tools"><span>${used} / 100% activity</span><label>Initiative modifier <input type="number" data-initiative-mod value="${value.initiativeMod||0}"></label><button type="button" data-place-actor="${esc(id)}">Place on map</button></div><div class="encounter-status"><strong>Status</strong><div class="encounter-status-options">${statuses}</div></div>`;
       const cards=phases.map((phase,index)=>{
       const draft=draftFor(who.id,phase),type=draftType(draft,who),kind=targetKindFor(draft,who);
       const target=kind==='creature'?(actor(draft.target)?.name||'Tap a highlighted creature on the map'):kind==='hex'?(draft.hex?`Hex ${draft.hex.q},${draft.hex.r} · ${token(who.id)?.q!=null?distance(token(who.id),draft.hex)*state.scale:0} ft`:'Tap a highlighted hex on the map'):'';
@@ -245,7 +281,7 @@
   function renderLog() {
     $('#encounter-log').innerHTML=state.log.length?state.log.map(entry=>`<article><small>Round ${entry.round} · ${esc(entry.phase)} · ${esc(entry.actor)}</small><p>${entry.detail}</p></article>`).join(''):'<p class="play-muted">Resolved actions appear here.</p>';
   }
-  function render() {renderAddCharacter();renderRound();renderPhaseCards();renderMap();renderLog();$('#encounter-scale').value=String(state.scale);}
+  function render() {renderCharacterButtons();renderRound();renderPhaseCards();renderMap();renderLog();$('#encounter-scale').value=String(state.scale);}
   function returnToActivePhase(){[...document.querySelectorAll('.encounter-phase-form')].find(form=>form.dataset.actor===state.selected&&form.dataset.phase===activePhase)?.scrollIntoView({behavior:'smooth',block:'center'});}
   function moveResult(total,difficulty) {
     const row=movingRows.find(([low,high])=>total>=low&&total<=high);
@@ -262,6 +298,19 @@
     if (total<=175) return 'Success · 100%';
     return 'Absolute success · 120%';
   }
+  function staticNarrative(outcome) {
+    return {
+      'Spectacular failure':'You make a thorough mess of your attempt. You are at -20 to your next two actions.',
+      'Absolute failure':'Your remarkable failure marks you for ridicule. Hope your parents weren’t watching…',
+      'Failure':'You fail. Your skill is not up to the task. Maybe next time.',
+      'Unusual event':'Your maneuver is beset by an unusual event. The GM determines what happens.',
+      'Partial success':'Your attempt bears little fruit, but you appear to be on the right track.',
+      'Near success':'You are within sight of your goal. You may attempt to complete it with another roll at +10.',
+      'Unusual success':'You have achieved a remarkable success in an unusual fashion.',
+      'Success':'Congratulations! You are completely successful in your attempt. Carry on.',
+      'Absolute success':'You operate at +10 to future attempts with this skill until an Absolute or Spectacular Failure.'
+    }[outcome.split(' · ')[0]]||'';
+  }
   function spellResult(total,unmodified) {
     if (unmodified&&total===66) return 'Unusual event';
     if (unmodified&&total===100) return 'Unusual success';
@@ -272,6 +321,19 @@
     if (total<=60) return 'Near success';
     if (total<=125) return 'Success';
     return 'Absolute success';
+  }
+  function spellNarrative(outcome) {
+    return {
+      'Spectacular failure':'The spell fails; roll on the Spell Failure Table with triple the applicable spell-casting modifiers subtracted.',
+      'Absolute failure':'The spell fails; roll on the Spell Failure Table with twice the applicable spell-casting modifiers subtracted.',
+      'Failure':'The spell fails; roll on the Spell Failure Table with the applicable spell-casting modifiers subtracted.',
+      'Unusual event':'You cast the wrong spell. The GM chooses one of your other spells.',
+      'Partial success':'You may cast the spell normally next round as a 50% activity action.',
+      'Near success':'The spell is cast at the end of the deliberate phase this round.',
+      'Unusual success':'The spell is cast. Gain +30 to your next spell-casting maneuver within 10 minutes.',
+      'Success':'The spell is cast normally.',
+      'Absolute success':'The spell is cast. Gain +10 to your next spell-casting maneuver within 10 minutes.'
+    }[outcome]||'';
   }
   function resistanceThreshold(attackLevel,targetLevel) {
     const base=[0,50,45,40,35,30,27,24,21,18,15,13,11,9,7,5];
@@ -308,8 +370,7 @@
     const roll=openEnded(),activityMax=declaration.type==='melee'?100:60;
     const modified=roll.total+weapon.bonus-foe.db+phaseModifier(declaration.phase)-Math.max(0,activityMax-declaration.activity)+declaration.modifier;
     try {
-      const response=await fetch(`tables/${code}.json`); if(!response.ok) throw new Error('Table unavailable');
-      const table=await response.json(),regular=table.rows.filter(row=>!row.unmodified);
+      const table=await loadTable(code),regular=table.rows.filter(row=>!row.unmodified);
       const row=regular.find(item=>{const [a,b]=item.roll.split('-');return modified>=(a==='XX'?-Infinity:Number(a))&&modified<=Number(b||a);})||(modified>150?regular[0]:regular.at(-1));
       const column=table.columns.findIndex(item=>item.label===`AT ${foe.at}`);
       const result=row?.values[column]||'–';
@@ -318,7 +379,14 @@
       const critical=/[A-E]/.exec(result)?.[0];
       const criticalTable=code==='A-10.9.1'||code==='A-10.9.3'?'A-10.10.3':code==='A-10.9.2'?'A-10.10.5':'A-10.10.4';
       const actionPenalty=phaseModifier(declaration.phase)-Math.max(0,activityMax-declaration.activity);
-      return `${esc(weapon.name)} vs ${esc(foe.name)}: ${diceText(roll)} ${roll.total} + ${weapon.bonus} OB − ${foe.db} DB ${actionPenalty>=0?'+':'−'} ${Math.abs(actionPenalty)} action ${declaration.modifier>=0?'+':'−'} ${Math.abs(declaration.modifier)} other = ${modified}. ${tableLink(code)} result <strong>${esc(result)}</strong>${hits?` · ${hits} hits applied`:''}${critical?` · ${critical} critical; check ${tableLink(criticalTable,'critical table')}`:''}${roll.first<=2||result==='F'?` · check ${tableLink('A-10.11.1','weapon fumble')}`:''}.`;
+      let criticalText='',fumbleText='';
+      if(critical){
+        const outcome=await narrativeRoll(criticalTable,critical.charCodeAt(0)-65,`${critical} critical`);
+        if(outcome.extraHits)foeToken.hits=foe.hitsMax>0?Math.min(foe.hitsMax,foeToken.hits+outcome.extraHits):foeToken.hits+outcome.extraHits;
+        criticalText=` · ${outcome.html}${outcome.extraHits?` · ${outcome.extraHits} extra hits applied`:''}`;
+      }
+      if(roll.first<=2||result==='F')fumbleText=` · ${(await narrativeRoll('A-10.11.1',weaponFumbleColumn(weapon.category),'weapon fumble')).html}`;
+      return `${esc(weapon.name)} vs ${esc(foe.name)}: ${diceText(roll)} ${roll.total} + ${weapon.bonus} OB − ${foe.db} DB ${actionPenalty>=0?'+':'−'} ${Math.abs(actionPenalty)} action ${declaration.modifier>=0?'+':'−'} ${Math.abs(declaration.modifier)} other = ${modified}. ${tableLink(code)} result <strong>${esc(result)}</strong>${hits?` · ${hits} hits applied`:''}${criticalText}${fumbleText}.`;
     } catch { return `Attack roll ${modified}. ${esc(code)} could not be loaded; use the Tables page.`; }
   }
   async function spellAttackResult(who,declaration,spellSkill) {
@@ -330,8 +398,7 @@
     if(lineTo(origin,foeToken).slice(0,-1).some(hex=>state.terrain[keyOf(hex.q,hex.r)]==='blocked'))return 'Blocked terrain obscures the spell target.';
     const kind=declaration.spellAttack,code=kind==='basic'?'A-10.9.11':kind==='bolt'?'A-10.9.9':'A-10.9.10';
     try {
-      const response=await fetch(`tables/${code}.json`);if(!response.ok)throw new Error('Table unavailable');
-      const table=await response.json();
+      const table=await loadTable(code);
       const first=d100(),unmodified=table.rows.some(item=>item.unmodified&&rollInRow(item.roll,first));
       const dice=[first];
       if(!unmodified&&(first<=5||first>=96)) {let next;do {next=d100();dice.push(first<=5?-next:next);}while(next>=96);}
@@ -341,7 +408,7 @@
         const row=(unmodified&&table.rows.find(item=>item.unmodified&&rollInRow(item.roll,first)))||regular.find(item=>rollInRow(item.roll,roll.total))||(roll.total>95?regular[0]:regular.at(-1));
         const possible=table.columns.map((column,index)=>({column,index})).filter(({column})=>column.group===who.realm&&(column.label==='Other'||column.label==='Metal armor'&&foe.at>=13||column.label==='Leather armor'&&foe.at>=5&&foe.at<=12||column.label==='Metal shield'&&foe.shieldBonus>0));
         const chosen=possible.sort((a,b)=>(Number(row.values[b.index])||0)-(Number(row.values[a.index])||0))[0];
-        if(row.values[chosen?.index] === 'F')return `Basic spell vs ${esc(foe.name)}: ${diceText(roll)} → <strong>Spell failure</strong> · ${tableLink(code)} · ${tableLink('A-10.11.2','spell failure')}.`;
+        if(row.values[chosen?.index] === 'F')return `Basic spell vs ${esc(foe.name)}: ${diceText(roll)} → <strong>Spell failure</strong> · ${tableLink(code)} · ${(await narrativeRoll('A-10.11.2',spellFailureColumn(spellSkill,kind),'spell failure')).html}.`;
         const rrModifier=Number(row?.values[chosen?.index??table.columns.findIndex(column=>column.group===who.realm&&column.label==='Other')])||0;
         const resist=openEnded(),resistType=who.realm.toLowerCase(),sameRealm=foe.realm===who.realm?15:0;
         const rrTotal=resist.total+(foe.resistances[resistType]||0)+rrModifier+sameRealm;
@@ -355,7 +422,8 @@
       const column=table.columns.findIndex(item=>item.label===`AT ${foe.at}`),result=row?.values[column]||'–';
       const hits=Number(/^\d+/.exec(result)?.[0])||0;
       foeToken.hits=foe.hitsMax>0?Math.min(foe.hitsMax,(foeToken.hits||0)+hits):(foeToken.hits||0)+hits;
-      return `${kind} spell vs ${esc(foe.name)}: ${diceText(roll)} + ${bonus} OB − ${foe.db} DB ${declaration.modifier>=0?'+':'−'} ${Math.abs(declaration.modifier)} other = ${modified}. ${tableLink(code)} result <strong>${esc(result)}</strong>${hits?` · ${hits} hits applied`:''}${/[A-E]/.test(result)?' · resolve the critical type named by the spell in Tables':''}${result==='F'?` · ${tableLink('A-10.11.2','spell failure')}`:''}.`;
+      const failure=result==='F'?` · ${(await narrativeRoll('A-10.11.2',spellFailureColumn(spellSkill,kind),'spell failure')).html}`:'';
+      return `${kind} spell vs ${esc(foe.name)}: ${diceText(roll)} + ${bonus} OB − ${foe.db} DB ${declaration.modifier>=0?'+':'−'} ${Math.abs(declaration.modifier)} other = ${modified}. ${tableLink(code)} result <strong>${esc(result)}</strong>${hits?` · ${hits} hits applied`:''}${/[A-E]/.test(result)?' · resolve the critical type named by the spell in Tables':''}${failure}.`;
     }catch{return `${kind} spell attack table could not be loaded; use the Tables page.`;}
   }
   async function resolveAction(id,declaration) {
@@ -369,7 +437,8 @@
     else if(['melee','missile'].includes(declaration.type)) detail=await attackResult(who,value,declaration);
     else if(declaration.type==='static') {
       const roll=openEnded(true),total=roll.unmodified?roll.total:roll.total+skillBonus+staticDifficulty[difficulties.indexOf(declaration.difficulty)]+phase+modifier-(100-declaration.activity);
-      detail=`${esc(declaration.description||skill?.name||'Static maneuver')}${targetText}: ${diceText(roll)} → ${total}. <strong>${staticResult(total,roll.unmodified)}</strong> · ${tableLink('T-4.3')}.`;
+      const outcome=staticResult(total,roll.unmodified);
+      detail=`${esc(declaration.description||skill?.name||'Static maneuver')}${targetText}: ${diceText(roll)} → ${total}. <strong>${outcome}</strong> · ${tableLink('T-4.3')}. ${esc(staticNarrative(outcome))}`;
     } else if(declaration.type==='moving') {
       const roll=openEnded(),total=roll.total+skillBonus+phase+modifier;
       const result=moveResult(total,declaration.difficulty);
@@ -408,8 +477,9 @@
           const roll=openEnded(true),total=roll.unmodified?roll.total:roll.total+skill.bonus+mods;
           const outcome=spellResult(total,roll.unmodified);
           cast=['Success','Absolute success','Unusual success'].includes(outcome);
-          detail=`${esc(declaration.description||skill.name)}${targetText} (level ${declaration.spellLevel}): ${diceText(roll)} → ${total}. <strong>${outcome}</strong> · ${tableLink('T-4.5')}${/Failure/.test(outcome)?` · ${tableLink('A-10.11.2','spell failure')}`:''}. ${declaration.spellLevel} PP used.`;
-        } else {const roll=d100(),failed=roll<=2;cast=!failed;detail=`${esc(declaration.description||skill.name)}${targetText} (level ${declaration.spellLevel}): automatic cast check ${roll}. <strong>${failed?'Fails':'Cast'}</strong> · ${declaration.spellLevel} PP used${failed?` · ${tableLink('A-10.11.2','spell failure')}`:''}.`;}
+          const failure=/failure/i.test(outcome)?` · ${(await narrativeRoll('A-10.11.2',spellFailureColumn(skill,declaration.spellAttack),'spell failure',-mods*(outcome==='Spectacular failure'?3:outcome==='Absolute failure'?2:1))).html}`:'';
+          detail=`${esc(declaration.description||skill.name)}${targetText} (level ${declaration.spellLevel}): ${diceText(roll)} → ${total}. <strong>${outcome}</strong> · ${tableLink('T-4.5')}. ${esc(spellNarrative(outcome))}${failure} ${declaration.spellLevel} PP used.`;
+        } else {const roll=d100(),failed=roll<=2;cast=!failed;const failure=failed?` · ${(await narrativeRoll('A-10.11.2',spellFailureColumn(skill,declaration.spellAttack),'spell failure')).html}`:'';detail=`${esc(declaration.description||skill.name)}${targetText} (level ${declaration.spellLevel}): automatic cast check ${roll}. <strong>${failed?'Fails':'Cast'}</strong> · ${declaration.spellLevel} PP used${failure}.`;}
         if(cast&&declaration.spellAttack==='ball'&&declaration.targetHex) {
           const caster=token(who.id),center=declaration.targetHex;
           if(!caster||!within(caster.q,caster.r)||declaration.range&&distance(caster,center)*state.scale>declaration.range)detail+=' Ball spell center is out of range.';
@@ -531,11 +601,7 @@
     if(state.terrain[keyOf(q,r)]==='blocked')return message('That hex is blocked.');
     origin.q=q;origin.r=r;save();render();
   });
-  $('#encounter-add-button').addEventListener('click',()=>{
-    if(resolving||state.phase>=0)return;
-    const id=$('#encounter-add-character').value;if(!actor(id)||token(id))return;
-    state.tokens[id]={q:null,r:null,hits:0,pp:0,initiative:null,actions:{}};state.selected=id;ensureInitiative();save();render();
-  });
+  $('#encounter-character-buttons').addEventListener('click',event=>{const button=event.target.closest('[data-toggle-character]');if(button)toggleCharacter(button.dataset.toggleCharacter);});
   $('#encounter-phase-cards').addEventListener('focusin',event=>{
     const form=event.target.closest('form');if(!form)return;
     if(state.selected===form.dataset.actor&&activePhase===form.dataset.phase)return;
@@ -553,19 +619,18 @@
     const form=event.target.closest('form');
     if(form){state.selected=id;activePhase=form.dataset.phase;readDraft(form,event.target.name);ensureInitiative();save();renderPhaseCards();renderMap();return;}
     if(event.target.dataset.vital){const who=actor(id),max=event.target.dataset.vital==='hits'?who.hitsMax:who.ppMax;value[event.target.dataset.vital]=Math.max(0,Math.min(max,Number(event.target.value)||0));}
-    if(event.target.hasAttribute('data-surprised'))value.surprised=event.target.checked;
     if(event.target.hasAttribute('data-initiative-mod'))value.initiativeMod=Number(event.target.value)||0;
     ensureInitiative();save();renderPhaseCards();renderMap();
   });
   $('#encounter-phase-cards').addEventListener('click',event=>{
-    const remove=event.target.closest('[data-remove-actor]');
-    if(remove){
+    const status=event.target.closest('[data-status]');
+    if(status){
       if(resolving||state.phase>=0)return;
-      const id=remove.dataset.removeActor;delete state.tokens[id];
-      for(const key of Object.keys(drafts))if(key.startsWith(`${id}:`))delete drafts[key];
-      for(const draft of Object.values(drafts))if(draft.target===id)draft.target='';
-      if(state.selected===id)state.selected=Object.keys(state.tokens)[0]||'';
-      state.drafts=drafts;save();render();return;
+      const id=status.closest('[data-actor-card]').dataset.actorCard,value=token(id),name=status.dataset.status;
+      if(!value)return;
+      if(name==='Surprised')value.surprised=!value.surprised;
+      else {value.statuses=Array.isArray(value.statuses)?value.statuses:[];value.statuses=value.statuses.includes(name)?value.statuses.filter(item=>item!==name):[...value.statuses,name];}
+      ensureInitiative();save();renderPhaseCards();renderMap();return;
     }
     const place=event.target.closest('[data-place-actor]');
     if(place){state.selected=place.dataset.placeActor;placingActor=true;$('#encounter-map-tool').value='position';save();renderMap();$('#encounter-map').scrollIntoView({behavior:'smooth',block:'center'});return;}
