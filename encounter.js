@@ -43,7 +43,7 @@
     return [];
   }
   let encounters=readEncounters(),activeEncounterId=null,state=blankState();
-  let activePhase='normal',drafts={},resolving=false,placingActor=false;
+  let activePhase='normal',drafts={},resolving=false,placingActorId='';
   let roster = [];
   const persist = () => localStorage.setItem(storageKey,JSON.stringify(encounters));
   const save = () => { const current=encounters.find(item=>item.id===activeEncounterId);if(!current)return;current.state=state;current.updatedAt=Date.now();persist(); };
@@ -64,6 +64,19 @@
   const phaseModifier = phase => phase === 'snap' ? -20 : phase === 'deliberate' ? 10 : 0;
   const tableLink = (code,label=code) => `<button type="button" class="encounter-table-link" data-table="${esc(code)}">${esc(label)}</button>`;
   const rollInRow = (label,roll) => { const [low,high]=label.split('-').map(Number);return roll>=low&&roll<=(high||low); };
+  function expandTableSymbols(value) {
+    const rounds=(count,meaning)=>{const amount=Number(count)||1;return `${amount} round${amount===1?'':'s'} ${meaning}`;};
+    return String(value||'')
+      .replace(/\+(\d+)H\b/g,(_,hits)=>`${hits} extra hits`)
+      .replace(/(\d*)∑∏/g,(_,count)=>rounds(count,'stunned and unable to parry'))
+      .replace(/(\d*)\(\s*(\d*)π\s*[-−–]\s*(\d+)\s*\)/g,(_,outer,inner,penalty)=>`${rounds(outer||inner,'must parry')} at −${penalty}`)
+      .replace(/(\d*)∑/g,(_,count)=>rounds(count,'stunned'))
+      .replace(/(\d*)∏/g,(_,count)=>rounds(count,'unable to parry'))
+      .replace(/(\d*)π/g,(_,count)=>rounds(count,'must parry'))
+      .replace(/(\d*)∫/g,(_,count)=>{const amount=Number(count)||1;return `${amount} hit${amount===1?'':'s'} per round from bleeding`;})
+      .replace(/(\d*)\(\s*([-−–+])\s*(\d+)\s*\)/g,(_,count,sign,amount)=>sign==='+'?`${rounds(count,'attacker gains')} +${amount} bonus`:`${count?rounds(count,'foe suffers'):'Foe suffers'} −${amount} penalty`)
+      .replace(/\s+[–—]\s+/g,'; ');
+  }
   const tableCache=new Map();
   async function loadTable(code) {
     if(!tableCache.has(code))tableCache.set(code,fetch(`tables/${code}.json`).then(response=>{if(!response.ok)throw new Error(`Table ${code} unavailable`);return response.json();}));
@@ -78,9 +91,10 @@
       const cell=row?.cells?.[columnIndex];
       const dice=`${roll}${modifier?` ${modifier>=0?'+':'−'} ${Math.abs(modifier)} = ${total}`:''}`;
       if(!cell)return {html:`${tableLink(code,label)} roll ${dice}: no matching entry.`,extraHits:0};
-      const effect=cell.effect?` <strong>${esc(cell.effect)}</strong>`:'';
-      const extraHits=Number(/\+(\d+)H\b/.exec(cell.effect||'')?.[1])||0;
-      return {html:`${tableLink(code,label)} roll ${dice}: ${esc(cell.description)}${effect}`,extraHits};
+      const effect=cell.effect?` <strong>${esc(expandTableSymbols(cell.effect))}</strong>`:'';
+      const conditional=/\b(?:with|without|w\/o|if)\b/i.test(cell.effect||'');
+      const extraHits=conditional?0:Number(/\+(\d+)H\b/.exec(cell.effect||'')?.[1])||0;
+      return {html:`${tableLink(code,label)} roll ${dice}: ${esc(expandTableSymbols(cell.description))}${effect}${conditional?' (Apply the matching condition manually.)':''}`,extraHits};
     } catch {return {html:`${tableLink(code,label)} roll ${roll}: table unavailable.`,extraHits:0};}
   }
   const weaponFumbleColumn=category=>category==='Weapon • 2-Handed'?1:category==='Weapon • Pole Arms'?2:category==='Weapon • Thrown'?4:category==='Weapon • Missile'||category==='Weapon • Missile Artillery'?5:0;
@@ -101,6 +115,7 @@
     if(resolving)return message('Finish resolving the round before leaving this encounter.');
     if(activeEncounterId)save();
     activeEncounterId=null;
+    placingActorId='';
     $('#encounter-workspace').hidden=true;
     $('#encounter-list-view').hidden=false;
     renderList();
@@ -109,7 +124,7 @@
   function openEncounter(id) {
     if(resolving)return;
     const current=encounters.find(item=>item.id===id);if(!current)return;
-    activeEncounterId=id;state=normalizeState(current.state);drafts=state.drafts;activePhase='normal';placingActor=false;
+    activeEncounterId=id;state=normalizeState(current.state);drafts=state.drafts;activePhase='normal';placingActorId='';
     $('#encounter-list-view').hidden=true;
     $('#encounter-workspace').hidden=false;
     $('#encounter-current-name').textContent=current.name;
@@ -120,6 +135,7 @@
     roster = window.RolemasterEncounter?.roster() || [];
     if(!activeEncounterId){renderList();return;}
     Object.keys(state.tokens).filter(id => !actor(id)).forEach(id => delete state.tokens[id]);
+    if(!token(placingActorId))placingActorId='';
     ensureInitiative();
     if (!state.tokens[state.selected]) state.selected = Object.keys(state.tokens)[0] || '';
     save(); render();
@@ -200,14 +216,14 @@
     return true;
   }
   function renderMap() {
-    const who=selected(),origin=token(state.selected),draft=who?draftFor(who.id,activePhase):null;
-    const kind=draft&&!placingActor?targetKindFor(draft,who):'none';
+    const placing=!!token(placingActorId),who=placing?actor(placingActorId):selected(),origin=who?token(who.id):null,draft=who?draftFor(who.id,activePhase):null;
+    const kind=draft&&!placing?targetKindFor(draft,who):'none';
     const vertices=Array.from({length:6},(_,index)=>{const angle=Math.PI/180*(60*index-30);return `${(size*Math.cos(angle)).toFixed(1)},${(size*Math.sin(angle)).toFixed(1)}`;}).join(' ');
     const cells=[];
     for(let r=0;r<rows;r++)for(let q=0;q<columns;q++) {
       const terrain=state.terrain[keyOf(q,r)]||'clear';
-      const valid=kind==='hex'&&validHex(q,r,draft,who,origin);
-      const aimed=draft?.hex?.q===q&&draft?.hex?.r===r;
+      const valid=placing?terrain!=='blocked':kind==='hex'&&validHex(q,r,draft,who,origin);
+      const aimed=!placing&&draft?.hex?.q===q&&draft?.hex?.r===r;
       cells.push(`<g data-hex="${q},${r}" class="encounter-hex ${terrain}${valid?' valid-target':''}${aimed?' destination':''}" transform="translate(${xOf(q,r)},${yOf(r)})"><polygon points="${vertices}"></polygon>${terrain!=='clear'?`<text text-anchor="middle" y="4">${terrain==='blocked'?'■':'◆'}</text>`:''}</g>`);
     }
     const placed=Object.entries(state.tokens).filter(([,value])=>within(value.q,value.r));
@@ -221,7 +237,7 @@
     $('#encounter-map').setAttribute('viewBox','0 0 970 480');
     $('#encounter-map').innerHTML=cells.join('')+pieces;
     const tool=$('#encounter-map-tool').value;
-    $('#encounter-map-status').textContent=!who?'Add a character to start.':placingActor||!origin||!within(origin.q,origin.r)?`Tap a hex to place ${who.name}.`:kind==='creature'?`${who.name} · ${activePhase}: tap a highlighted creature to target it.`:kind==='hex'?`${who.name} · ${activePhase}: tap a highlighted hex to target it.`:tool==='position'?`${who.name} at hex ${origin.q},${origin.r}. Tap another hex to move their token.`:`Tap hexes to ${tool==='clear'?'clear':`paint ${tool}`} terrain.`;
+    $('#encounter-map-status').textContent=!who?'Add a character to start.':placing?`Tap a highlighted hex to place ${who.name}.`:!origin||!within(origin.q,origin.r)?`Tap a hex to place ${who.name}.`:kind==='creature'?`${who.name} · ${activePhase}: tap a highlighted creature to target it.`:kind==='hex'?`${who.name} · ${activePhase}: tap a highlighted hex to target it.`:tool==='position'?`${who.name} at hex ${origin.q},${origin.r}. Tap another hex to move their token.`:`Tap hexes to ${tool==='clear'?'clear':`paint ${tool}`} terrain.`;
   }
   function renderCharacterButtons() {
     $('#encounter-character-buttons').innerHTML=roster.length?roster.map(who=>{
@@ -233,6 +249,7 @@
     if(resolving||state.phase>=0||!actor(id))return;
     if(token(id)) {
       delete state.tokens[id];
+      if(placingActorId===id)placingActorId='';
       for(const key of Object.keys(drafts))if(key.startsWith(`${id}:`))delete drafts[key];
       for(const draft of Object.values(drafts))if(draft.target===id)draft.target='';
       if(state.selected===id)state.selected=Object.keys(state.tokens)[0]||'';
@@ -578,13 +595,18 @@
   $('#encounter-map').addEventListener('click',event=>{
     if(resolving)return;
     const who=selected(),origin=token(state.selected),draft=who?draftFor(who.id,activePhase):null;
-    const kind=draft&&state.phase<0&&!placingActor?targetKindFor(draft,who):'none';
+    const kind=draft&&state.phase<0&&!placingActorId?targetKindFor(draft,who):'none';
     const piece=event.target.closest('[data-token]'),cell=event.target.closest('[data-hex]');
     if(!piece&&!cell)return;
     const targetId=piece?.dataset.token;
     const position=piece?token(targetId):(()=>{const[q,r]=cell.dataset.hex.split(',').map(Number);return{q,r};})();
     const {q,r}=position;
-    if(origin&&(placingActor||!within(origin.q,origin.r))&&who&&!piece){if(state.terrain[keyOf(q,r)]==='blocked')return message('That hex is blocked.');origin.q=q;origin.r=r;placingActor=false;save();render();return;}
+    if(placingActorId){
+      const placing=token(placingActorId);if(!placing)return;
+      if(state.terrain[keyOf(q,r)]==='blocked')return message('That hex is blocked.');
+      placing.q=q;placing.r=r;state.selected=placingActorId;placingActorId='';save();render();return message(`${selected()?.name||'Character'} placed at hex ${q},${r}.`);
+    }
+    if(origin&&!within(origin.q,origin.r)&&who){if(state.terrain[keyOf(q,r)]==='blocked')return message('That hex is blocked.');origin.q=q;origin.r=r;save();render();return;}
     if(kind==='creature') {
       const candidate=targetId||Object.keys(state.tokens).find(id=>token(id)?.q===q&&token(id)?.r===r&&validCreature(id,draft,who,origin));
       if(!candidate||!validCreature(candidate,draft,who,origin))return message('Choose a highlighted creature.');
@@ -633,7 +655,7 @@
       ensureInitiative();save();renderPhaseCards();renderMap();return;
     }
     const place=event.target.closest('[data-place-actor]');
-    if(place){state.selected=place.dataset.placeActor;placingActor=true;$('#encounter-map-tool').value='position';save();renderMap();$('#encounter-map').scrollIntoView({behavior:'smooth',block:'center'});return;}
+    if(place){placingActorId=place.dataset.placeActor;state.selected=placingActorId;$('#encounter-map-tool').value='position';save();renderMap();$('#encounter-map').scrollIntoView({behavior:'smooth',block:'center'});return;}
     const button=event.target.closest('[data-focus-target]');if(!button)return;
     state.selected=button.closest('[data-actor-card]').dataset.actorCard;activePhase=button.dataset.focusTarget;save();renderMap();$('#encounter-map').scrollIntoView({behavior:'smooth',block:'center'});
   });
