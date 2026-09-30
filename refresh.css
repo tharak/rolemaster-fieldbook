@@ -432,8 +432,9 @@ input::placeholder, textarea::placeholder { color: #82998a; opacity: 1; }
 .category-record-row .record-total { font-weight: 700; color: var(--accent-text); }
 .category-record-row input, .category-record-row select { width: 100%; min-width: 0; height: 25px; padding: 2px; border: 1px solid var(--line); border-radius: 3px; background: var(--input); color: var(--ink); text-align: center; font: 10px var(--mono); }
 .category-record-row .not-applicable { color: var(--muted); }
-.a4-skill-container > td { padding: 2px 8px 8px; background: color-mix(in srgb, var(--soft) 25%, var(--card)); }
-.a4-skill-head, .a4-skill-row { display: grid; grid-template-columns: minmax(190px, 2fr) repeat(6, minmax(55px, .65fr)); align-items: center; gap: 5px; padding: 4px 0; }
+.a4-skill-container > td { padding: 2px 0 8px; background: color-mix(in srgb, var(--soft) 25%, var(--card)); }
+.a4-skill-head, .a4-skill-row { display: grid; grid-template-columns: 24% 8% repeat(5, minmax(0, 1fr)); align-items: center; gap: 0; padding: 4px 0; }
+.a4-skill-head > *, .a4-skill-row > * { min-width: 0; padding-right: 4px; padding-left: 4px; }
 .a4-skill-head { color: var(--muted); font: 9px var(--mono); border-bottom: 1px solid var(--line); }
 .a4-skill-head span:not(:first-child), .a4-skill-row > :not(:first-child) { text-align: center; }
 .a4-skill-row { border-bottom: 1px solid var(--line); color: var(--ink); font: 10px var(--mono); }
