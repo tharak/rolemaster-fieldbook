@@ -6,6 +6,10 @@
   const tableCache = new Map();
   let developmentRules = null;
   let trainingPackages = [];
+  let equipmentCatalog = [];
+  let equipmentCategory = 'All';
+  let equipmentSearch = '';
+  let equipmentMessage = '';
   const realmByProfession = {Fighter:'Choose at table',Thief:'Choose at table',Rogue:'Choose at table',Cleric:'Channeling',Magician:'Essence',Mentalist:'Mentalism',Ranger:'Channeling',Dabbler:'Essence',Bard:'Mentalism'};
   const $ = (selector, root = document) => root.querySelector(selector);
   const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
@@ -2152,12 +2156,65 @@
   function playRollTile({category, name, ranks, total, favorite = false, kind = 'skill'}) {
     return `<button type="button" class="play-skill-tile" data-play-roll="${kind}" data-category="${esc(category)}" data-name="${esc(name)}" data-bonus="${esc(total)}" aria-label="Roll ${esc(name)}, ${esc(category)}, bonus ${playValue(total)}"><span class="play-tile-name">${favorite ? '<b aria-hidden="true">★</b> ' : ''}${esc(name)}</span><span class="play-tile-detail">${ranks === undefined ? 'Resistance' : `${ranks} rank${ranks === 1 ? '' : 's'}`}</span><strong>${playValue(total)}</strong></button>`;
   }
+  const coinUnits = [['gp',10000],['sp',1000],['bp',100],['cp',10],['tp',1]];
+  function formatMoney(tin) {
+    const amount = Math.abs(Math.trunc(tin));
+    let remaining = amount;
+    const parts = coinUnits.flatMap(([unit, value]) => {
+      const count = Math.floor(remaining / value);
+      remaining %= value;
+      return count ? [`${count} ${unit}`] : [];
+    });
+    return `${tin < 0 ? '−' : ''}${parts.join(' · ') || '0 tp'}`;
+  }
+  function readEquipmentLedger() {
+    try {
+      const value = JSON.parse(form.elements.equipmentLedger.value || '{}');
+      return {adjustment:Number.isSafeInteger(value.adjustment) ? value.adjustment : 0,
+        items:Array.isArray(value.items) ? value.items.filter(item => typeof item.id === 'string' && Number.isSafeInteger(item.quantity) && item.quantity > 0 && Number.isSafeInteger(item.priceTin) && item.priceTin >= 0).map(item => ({id:item.id, name:String(item.name || ''), priceTin:item.priceTin, quantity:item.quantity})) : []};
+    } catch { return {adjustment:0, items:[]}; }
+  }
+  function startingMoneyTin() {
+    const details = readBackgroundDetails(), selections = readBackgroundSelections();
+    let gold = 2;
+    for (const key of ['rolledMoney','chosenMoney']) for (let index = 0; index < (Number(selections[key]) || 0); index++) gold += Number(backgroundEntry(details, key, index).amount) || 0;
+    const benefits = readTrainingBenefits();
+    for (const name of readTrainingSelections()) gold += Number(benefits[name]?.money?.total) || 0;
+    return gold * 10000;
+  }
+  function equipmentBalance(ledger = readEquipmentLedger()) { return startingMoneyTin() + ledger.adjustment; }
+  function writeEquipmentLedger(ledger) {
+    form.elements.equipmentLedger.value = JSON.stringify(ledger);
+    saveCurrent();
+    renderPlayEquipment();
+  }
+  function renderEquipmentCatalog() {
+    const category = equipmentCategory;
+    const needle = equipmentSearch.trim().toLowerCase();
+    const shown = equipmentCatalog.filter(item => (category === 'All' || item.category === category) && (!needle || `${item.name} ${item.id}`.toLowerCase().includes(needle)));
+    const balance = equipmentBalance();
+    $('#equipment-catalog').innerHTML = equipmentCatalog.length ? shown.map(item => `<article class="equipment-item"><div><strong>${esc(item.name)}</strong><small>${esc(item.category)} · A-7 #${esc(item.id)}</small></div><span>${esc(item.price)}</span><div class="equipment-item-actions"><button type="button" data-equipment-buy="${esc(item.id)}"${balance < item.priceTin ? ' disabled' : ''}>Buy</button><button type="button" data-equipment-own="${esc(item.id)}">Add owned</button></div></article>`).join('') || '<p class="play-muted">No matching equipment.</p>' : '<p class="play-muted">Equipment prices are loading.</p>';
+    $('#equipment-catalog-count').textContent = `${shown.length} item${shown.length === 1 ? '' : 's'}`;
+    $$('[data-equipment-category]').forEach(button => button.setAttribute('aria-pressed', String(button.dataset.equipmentCategory === category)));
+  }
+  function renderPlayEquipment() {
+    const ledger = readEquipmentLedger();
+    const balance = equipmentBalance(ledger);
+    $('#equipment-balance').textContent = formatMoney(balance);
+    $('#equipment-message').textContent = equipmentMessage;
+    $('#equipment-inventory').innerHTML = ledger.items.length ? ledger.items.map(item => `<div class="equipment-owned"><span><strong>${esc(item.name)}</strong><small>× ${item.quantity} · sell for ${formatMoney(Math.floor(item.priceTin / 2))} each</small></span><button type="button" data-equipment-sell="${esc(item.id)}">Sell one</button></div>`).join('') : '<p class="play-muted">No equipment recorded here yet. Add starting gear or buy from the list below.</p>';
+    for (const [unit, value] of coinUnits) $(`[name="equipment-cash-${unit}"]`).value = String(Math.floor(Math.max(0, balance) / value) % 10 || 0);
+    const gpField = $('[name="equipment-cash-gp"]');
+    gpField.value = String(Math.floor(Math.max(0, balance) / 10000));
+    renderEquipmentCatalog();
+  }
   function renderPlayCharacter() {
     const stats = statNames.map((name, index) => `<tr><th scope="row">${esc(name)}</th><td>${playValue(form.elements.namedItem(`stat-temp-${index}`).value)}</td><td>${playValue(form.elements.namedItem(`stat-pot-${index}`).value)}</td><td>${playValue(form.elements.namedItem(`stat-total-${index}`).value)}</td></tr>`).join('');
     const physical = [['Age','roleAge'],['Gender','roleGender'],['Appearance','appearanceTemp'],['Demeanor','roleDemeanor'],['Build','roleBuild'],['Height','roleHeight'],['Weight','roleWeight'],['Skin','roleSkin'],['Hair','roleHair'],['Eyes','roleEyes']].map(([label, name]) => playFact(label, form.elements[name].value)).join('');
     const traits = [['Personality','rolePersonality'],['Motivation','roleMotivation'],['Alignment','roleAlignment']].map(([label, name]) => playFact(label, form.elements[name].value)).join('');
     const equipment = [$('#starting-outfit-summary').textContent, $('#background-rewards-summary').textContent, $('#training-rewards-summary').textContent, form.elements.notes.value, form.elements.outfitPurchases.value].filter(Boolean).join('\n');
-    $('#play-character-content').innerHTML = `<div class="play-summary"><div><span>Hits max.</span><strong>${playValue(form.elements.hits.value)}</strong></div><div><span>Power points max.</span><strong>${playValue(form.elements.powerPoints.value)}</strong></div><div><span>Experience</span><strong>${playValue(form.elements.xp.value)}</strong></div><div><span>Realm</span><strong>${playValue(form.elements.realm.value)}</strong></div></div><div class="play-card-grid"><section class="play-card"><h2>Stats & bonuses</h2><div class="play-table-scroll"><table class="play-table"><thead><tr><th>Stat</th><th>Temp</th><th>Pot</th><th>Bonus</th></tr></thead><tbody>${stats}</tbody></table></div></section><section class="play-card"><h2>Physical details</h2><dl class="play-facts">${physical}</dl></section><section class="play-card"><h2>Role</h2><dl class="play-facts">${traits}</dl></section><section class="play-card"><h2>Equipment & money</h2><p class="play-prose">${esc($('#final-money').textContent)}${equipment ? `\n${esc(equipment)}` : ''}</p></section></div><div class="play-card-grid">${playNote('Background & history', form.elements.roleHistory.value)}${playNote('Other bonuses', form.elements.bonuses.value)}</div>`;
+    $('#play-character-content').innerHTML = `<div class="play-summary"><div><span>Hits max.</span><strong>${playValue(form.elements.hits.value)}</strong></div><div><span>Power points max.</span><strong>${playValue(form.elements.powerPoints.value)}</strong></div><div><span>Experience</span><strong>${playValue(form.elements.xp.value)}</strong></div><div><span>Realm</span><strong>${playValue(form.elements.realm.value)}</strong></div></div><div class="play-card-grid"><section class="play-card"><h2>Stats & bonuses</h2><div class="play-table-scroll"><table class="play-table"><thead><tr><th>Stat</th><th>Temp</th><th>Pot</th><th>Bonus</th></tr></thead><tbody>${stats}</tbody></table></div></section><section class="play-card"><h2>Physical details</h2><dl class="play-facts">${physical}</dl></section><section class="play-card"><h2>Role</h2><dl class="play-facts">${traits}</dl></section><section class="play-card play-equipment-card"><h2>Equipment & money</h2><div class="equipment-wallet"><div><span>Cash available</span><strong id="equipment-balance"></strong></div><details><summary>Set cash balance</summary><form id="equipment-cash-form" class="equipment-cash-form">${coinUnits.map(([unit]) => `<label>${unit}<input name="equipment-cash-${unit}" type="number" min="0" step="1" required></label>`).join('')}<button type="submit" class="button button-quiet">Save cash</button></form></details></div><p id="equipment-message" class="equipment-message" role="status"></p><details class="equipment-starting"><summary>Starting outfit & notes</summary><p class="play-prose">${esc($('#final-money').textContent)}${equipment ? `\n${esc(equipment)}` : ''}</p></details><div class="equipment-sections"><section><h3>Owned equipment</h3><div id="equipment-inventory"></div></section><section><h3>Buy equipment <small>Appendix A-7</small></h3><p class="play-muted">Standard resale is half the listed price, rounded down to a tin piece. Use Add owned for starting gear or GM awards.</p><label class="equipment-search">Find equipment<input id="equipment-search" type="search" placeholder="Search items or A-7 number" value="${esc(equipmentSearch)}"></label><div class="equipment-categories" role="group" aria-label="Equipment category">${['All','Accessories','Armor','Provisions','Transport','Weapons'].map(category => `<button type="button" data-equipment-category="${category}">${category}</button>`).join('')}</div><p id="equipment-catalog-count" class="play-count"></p><div id="equipment-catalog" class="equipment-catalog"></div></section></div></section></div><div class="play-card-grid">${playNote('Background & history', form.elements.roleHistory.value)}${playNote('Other bonuses', form.elements.bonuses.value)}</div>`;
+    renderPlayEquipment();
   }
   function renderPlaySkills() {
     const favorites = readFavoriteSkills();
@@ -2276,6 +2333,7 @@
   }
   function openCharacter(id) {
     const character = characters.find(item => item.id === id); if (!character) return;
+    equipmentMessage = ''; equipmentSearch = ''; equipmentCategory = 'All';
     currentId = id; fillForm(character);
     const generated = ensureStatRoll();
     const missingMode = !form.elements.statPoolMode.value;
@@ -2284,6 +2342,7 @@
     renderPlay(); selectPlayTab('character'); showView('play');
   }
   function newCharacter() {
+    equipmentMessage = ''; equipmentSearch = ''; equipmentCategory = 'All';
     currentId = crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random()}`;
     fillForm({realm:'None'});
     applyRaceAdolescence(form.elements.race.value);
@@ -2322,22 +2381,25 @@
       }
       if (activeTable.code !== reference.code) return;
       activeTable = detail;
-      if (detail.kind === 'critical') {
+      if (detail.kind === 'critical' || detail.kind === 'fumble') {
+        const isFumble = detail.kind === 'fumble';
         const select = $('#table-column');
         select.innerHTML = detail.columns.map((column, index) => `<option value="${index}">${esc(column.group === 'Critical severity' || column.group === 'Weapon' ? column.label : `${column.group} · ${column.label}`)}</option>`).join('');
-        $('#roll-label').textContent = 'Critical roll';
-        $('#table-roll').max = detail.code.endsWith('.7') || detail.code.endsWith('.8') || detail.code.endsWith('.9') ? '999' : '100';
+        $('#roll-label').textContent = isFumble ? detail.code === 'A-10.11.1' ? 'Fumble roll' : 'Failure roll' : 'Critical roll';
+        const extendedRolls = isFumble ? detail.code === 'A-10.11.2' : ['.7','.8','.9'].some(suffix => detail.code.endsWith(suffix));
+        $('#table-roll').max = extendedRolls ? '999' : '100';
         if (Number($('#table-roll').value) > Number($('#table-roll').max)) $('#table-roll').value = $('#table-roll').max;
-        $('#column-select-field').firstChild.textContent = 'Critical type';
+        $('#column-select-field').firstChild.textContent = isFumble ? detail.code === 'A-10.11.1' ? 'Weapon type' : 'Spell type' : 'Critical type';
         $('.table-scroll').hidden = false; $('.lookup-controls').hidden = false; $('#lookup-result').hidden = false; $('#table-source').hidden = true;
-        $('.table-scroll').innerHTML = '<details class="full-critical-table" open><summary>Full critical table</summary><div class="table-scroll-inner"><table id="attack-grid" class="critical-grid"></table></div></details>';
+        $('.table-scroll').innerHTML = `<details class="full-critical-table" open><summary>Full ${isFumble ? detail.title.toLowerCase() : 'critical'} table</summary><div class="table-scroll-inner"><table id="attack-grid" class="critical-grid"></table></div></details>`;
         renderCriticalGrid(); updateCriticalLookup();
-        $('#table-note').textContent = 'H = hits · π = must parry · ∏ = no parry · ∑ = stunned · ∫ = bleed per round. A number before a symbol gives its amount or duration.';
+        $('#table-note').textContent = isFumble ? 'Choose the roll and weapon or spell type to see its result.' : 'H = hits · π = must parry · ∏ = no parry · ∑ = stunned · ∫ = bleed per round. A number before a symbol gives its amount or duration.';
       } else if (detail.columns && detail.rows) {
         const select = $('#table-column');
         select.innerHTML = detail.columns.map((column, index) => `<option value="${index}">${esc(column.group)} · ${esc(column.label)}</option>`).join('');
         $('#roll-label').textContent = 'Modified roll';
         $('#table-roll').max = '300';
+        if (Number($('#table-roll').value) > 300) $('#table-roll').value = '300';
         $('#column-select-field').firstChild.textContent = detail.code === 'A-10.9.11' ? 'Target' : 'Target armor';
         $('.table-scroll').hidden = false; $('.lookup-controls').hidden = false; $('#lookup-result').hidden = false; $('#table-source').hidden = true;
         $('.table-scroll').innerHTML = `<details class="full-attack-table" open><summary>Full attack table</summary><div class="table-scroll-inner"><table id="attack-grid" class="attack-grid"></table></div></details>`;
@@ -2383,11 +2445,11 @@
   }
   function renderCriticalGrid() {
     const columns = activeTable.columns.map(column => `<th scope="col">${esc(column.group === 'Critical severity' || column.group === 'Weapon' ? column.label : `${column.group} · ${column.label}`)}</th>`).join('');
-    const rows = activeTable.rows.map((row, rowIndex) => `<tr class="critical-row" data-row="${rowIndex}"><th scope="row">${esc(row.roll)}</th>${row.cells.map((cell, columnIndex) => `<td data-column="${columnIndex}"><p>${esc(cell.description)}</p><span class="critical-effect">${esc(cell.effect || '—')}</span></td>`).join('')}</tr>`).join('');
+    const rows = activeTable.rows.map((row, rowIndex) => `<tr class="critical-row" data-row="${rowIndex}"><th scope="row">${esc(row.roll)}</th>${row.cells.map((cell, columnIndex) => `<td data-column="${columnIndex}"><p>${esc(cell.description)}</p>${cell.effect ? `<span class="critical-effect">${esc(cell.effect)}</span>` : ''}</td>`).join('')}</tr>`).join('');
     $('#attack-grid').innerHTML = `<thead><tr><th scope="col">Roll</th>${columns}</tr></thead><tbody>${rows}</tbody>`;
   }
   function updateCriticalLookup() {
-    if (activeTable?.kind !== 'critical') return;
+    if (activeTable?.kind !== 'critical' && activeTable?.kind !== 'fumble') return;
     const roll = Math.max(1, Number($('#table-roll').value) || 1);
     const columnIndex = Number($('#table-column').value) || 0;
     const row = activeTable.rows.find(item => {
@@ -2396,7 +2458,7 @@
     }) || activeTable.rows[activeTable.rows.length - 1];
     const column = activeTable.columns[columnIndex];
     const cell = row.cells[columnIndex];
-    $('#lookup-result').innerHTML = `<div class="critical-lookup"><div class="critical-lookup-heading"><span>ROLL ${esc(roll)}${row.roll === String(roll) ? '' : ` · ${esc(row.roll)}`}</span><strong>${esc(column.group === 'Critical severity' || column.group === 'Weapon' ? column.label : `${column.group} · ${column.label}`)}</strong></div><p>${esc(cell.description)}</p><div class="critical-lookup-effect">${esc(cell.effect || '—')}</div></div>`;
+    $('#lookup-result').innerHTML = `<div class="critical-lookup"><div class="critical-lookup-heading"><span>ROLL ${esc(roll)}${row.roll === String(roll) ? '' : ` · ${esc(row.roll)}`}</span><strong>${esc(column.group === 'Critical severity' || column.group === 'Weapon' ? column.label : `${column.group} · ${column.label}`)}</strong></div><p>${esc(cell.description)}</p>${cell.effect ? `<div class="critical-lookup-effect">${esc(cell.effect)}</div>` : ''}</div>`;
     $$('.critical-row', $('#attack-grid')).forEach(element => {
       const selected = Number(element.dataset.row) === activeTable.rows.indexOf(row);
       element.classList.toggle('selected-row', selected);
@@ -2455,11 +2517,12 @@
   }
   async function loadReferenceData() {
     try {
-      const [tableResponse, costResponse, packageResponse] = await Promise.all([fetch('tables/index.json'), fetch('tables/T-2.8.json'), fetch('tables/apprenticeship-packages.json')]);
+      const [tableResponse, costResponse, packageResponse, equipmentResponse] = await Promise.all([fetch('tables/index.json'), fetch('tables/T-2.8.json'), fetch('tables/apprenticeship-packages.json'), fetch('tables/A-7-equipment.json')]);
       if (!tableResponse.ok || !costResponse.ok || !packageResponse.ok) throw new Error('Reference files could not be loaded');
       tables = await tableResponse.json();
       developmentRules = await costResponse.json();
       trainingPackages = await packageResponse.json();
+      if (equipmentResponse.ok) equipmentCatalog = (await equipmentResponse.json()).items || [];
       const draft = formData();
       renderCategoryRecord(draft);
       renderSkillTree(draft);
@@ -2507,6 +2570,46 @@
   $('#play-view').addEventListener('click', event => {
     const tile = event.target.closest('[data-play-roll]');
     if (tile) openPlayRoll(tile);
+  });
+  $('#play-character-content').addEventListener('click', event => {
+    const categoryButton = event.target.closest('[data-equipment-category]');
+    if (categoryButton) { equipmentCategory = categoryButton.dataset.equipmentCategory; renderEquipmentCatalog(); return; }
+    const buy = event.target.closest('[data-equipment-buy]');
+    const own = event.target.closest('[data-equipment-own]');
+    const sell = event.target.closest('[data-equipment-sell]');
+    if (!buy && !own && !sell) return;
+    const ledger = readEquipmentLedger();
+    if (sell) {
+      const item = ledger.items.find(entry => entry.id === sell.dataset.equipmentSell);
+      if (!item) return;
+      ledger.adjustment += Math.floor(item.priceTin / 2);
+      item.quantity--;
+      ledger.items = ledger.items.filter(entry => entry.quantity > 0);
+      equipmentMessage = `Sold one ${item.name} for ${formatMoney(Math.floor(item.priceTin / 2))}.`;
+    } else {
+      const id = buy?.dataset.equipmentBuy || own.dataset.equipmentOwn;
+      const item = equipmentCatalog.find(entry => entry.id === id);
+      if (!item) return;
+      if (buy && equipmentBalance(ledger) < item.priceTin) { equipmentMessage = 'Not enough cash for this item.'; renderPlayEquipment(); return; }
+      if (buy) ledger.adjustment -= item.priceTin;
+      const owned = ledger.items.find(entry => entry.id === id);
+      if (owned) owned.quantity++; else ledger.items.push({id, name:item.name, priceTin:item.priceTin, quantity:1});
+      equipmentMessage = buy ? `Bought one ${item.name} for ${item.price}.` : `Added one ${item.name} to owned equipment.`;
+    }
+    writeEquipmentLedger(ledger);
+  });
+  $('#play-character-content').addEventListener('input', event => {
+    if (event.target.id === 'equipment-search') { equipmentSearch = event.target.value; renderEquipmentCatalog(); }
+  });
+  $('#play-character-content').addEventListener('submit', event => {
+    if (event.target.id !== 'equipment-cash-form') return;
+    event.preventDefault();
+    const cash = coinUnits.reduce((sum, [unit, value]) => sum + Number(event.target.elements[`equipment-cash-${unit}`].value) * value, 0);
+    if (!Number.isSafeInteger(cash) || cash < 0) return;
+    const ledger = readEquipmentLedger();
+    ledger.adjustment = cash - startingMoneyTin();
+    equipmentMessage = `Cash set to ${formatMoney(cash)}.`;
+    writeEquipmentLedger(ledger);
   });
   $('#close-play-skill-roll').addEventListener('click', () => $('#play-skill-roll').close());
   $('#roll-play-skill').addEventListener('click', () => {
@@ -2961,6 +3064,6 @@
     if (window.confirm(`Delete ${character.name}?`)) { characters = characters.filter(item => item.id !== currentId); writeCharacters(); renderRoster(); currentId = null; showView('home'); }
   });
   $('#table-search').addEventListener('input', event => renderTables(event.target.value));
-  $('#table-roll').addEventListener('input', () => activeTable?.kind === 'critical' ? updateCriticalLookup() : updateLookup());
-  $('#table-column').addEventListener('change', () => activeTable?.kind === 'critical' ? updateCriticalLookup() : updateLookup());
+  $('#table-roll').addEventListener('input', () => activeTable?.kind === 'critical' || activeTable?.kind === 'fumble' ? updateCriticalLookup() : updateLookup());
+  $('#table-column').addEventListener('change', () => activeTable?.kind === 'critical' || activeTable?.kind === 'fumble' ? updateCriticalLookup() : updateLookup());
 })();

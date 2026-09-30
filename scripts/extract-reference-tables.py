@@ -162,6 +162,11 @@ for entry in index:
         record['professions'] = old['professions']
         record['categories'] = old['categories']
         del record['tablePages']  # This table already has exact, usable cells.
+    if code in ('A-10.11.1', 'A-10.11.2'):
+        old = json.loads((TABLES / entry['file']).read_text())
+        for field in ('kind', 'columns', 'rows'):
+            if field in old:
+                record[field] = old[field]
     (TABLES / entry['file']).write_text(json.dumps(record, ensure_ascii=False, separators=(',', ':')) + '\n')
     entry['printedPages'] = pages
     print(f'{code}: {len(table_pages)} region(s), {sum(len(p["text"].splitlines()) for p in table_pages)} lines')

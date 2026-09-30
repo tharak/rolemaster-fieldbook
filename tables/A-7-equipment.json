@@ -1,0 +1,1406 @@
+{
+  "source": "Rolemaster Core Rules, Appendix A-7, pp. 145–148",
+  "currency": "tin pieces",
+  "items": [
+    {
+      "id": "001",
+      "category": "Accessories",
+      "name": "Arrows (20)",
+      "price": "4 bp",
+      "priceTin": 400
+    },
+    {
+      "id": "002",
+      "category": "Accessories",
+      "name": "Backpack",
+      "price": "2 bp",
+      "priceTin": 200
+    },
+    {
+      "id": "003",
+      "category": "Accessories",
+      "name": "Bedroll (light)",
+      "price": "2 bp",
+      "priceTin": 200
+    },
+    {
+      "id": "004",
+      "category": "Accessories",
+      "name": "Bedroll (heavy)",
+      "price": "7 bp",
+      "priceTin": 700
+    },
+    {
+      "id": "005",
+      "category": "Accessories",
+      "name": "Boots",
+      "price": "1 sp",
+      "priceTin": 1000
+    },
+    {
+      "id": "006",
+      "category": "Accessories",
+      "name": "Brush (writing)",
+      "price": "5 cp",
+      "priceTin": 50
+    },
+    {
+      "id": "007",
+      "category": "Accessories",
+      "name": "Bucket",
+      "price": "4 bp",
+      "priceTin": 400
+    },
+    {
+      "id": "008",
+      "category": "Accessories",
+      "name": "Caltrops (5)",
+      "price": "8 bp",
+      "priceTin": 800
+    },
+    {
+      "id": "009",
+      "category": "Accessories",
+      "name": "Candle",
+      "price": "4 cp",
+      "priceTin": 40
+    },
+    {
+      "id": "010",
+      "category": "Accessories",
+      "name": "Case",
+      "price": "4 sp",
+      "priceTin": 4000
+    },
+    {
+      "id": "011",
+      "category": "Accessories",
+      "name": "Cask",
+      "price": "24 bp",
+      "priceTin": 2400
+    },
+    {
+      "id": "012",
+      "category": "Accessories",
+      "name": "Chain",
+      "price": "6 bp",
+      "priceTin": 600
+    },
+    {
+      "id": "013",
+      "category": "Accessories",
+      "name": "Chalk (10)",
+      "price": "2 bp",
+      "priceTin": 200
+    },
+    {
+      "id": "014",
+      "category": "Accessories",
+      "name": "Charcoal",
+      "price": "22 cp",
+      "priceTin": 220
+    },
+    {
+      "id": "015",
+      "category": "Accessories",
+      "name": "Chisel",
+      "price": "9 bp",
+      "priceTin": 900
+    },
+    {
+      "id": "016",
+      "category": "Accessories",
+      "name": "Cloak",
+      "price": "9 bp",
+      "priceTin": 900
+    },
+    {
+      "id": "017",
+      "category": "Accessories",
+      "name": "Climbing pick",
+      "price": "28 bp",
+      "priceTin": 2800
+    },
+    {
+      "id": "018",
+      "category": "Accessories",
+      "name": "Coat",
+      "price": "15 bp",
+      "priceTin": 1500
+    },
+    {
+      "id": "019",
+      "category": "Accessories",
+      "name": "Crossbow bolts (20)",
+      "price": "11 bp",
+      "priceTin": 1100
+    },
+    {
+      "id": "020",
+      "category": "Accessories",
+      "name": "Fire-starting bow",
+      "price": "8 tp",
+      "priceTin": 8
+    },
+    {
+      "id": "021",
+      "category": "Accessories",
+      "name": "Flint and steel",
+      "price": "1 bp",
+      "priceTin": 100
+    },
+    {
+      "id": "022",
+      "category": "Accessories",
+      "name": "Framepack",
+      "price": "33 cp",
+      "priceTin": 330
+    },
+    {
+      "id": "023",
+      "category": "Accessories",
+      "name": "Gloves",
+      "price": "2 bp",
+      "priceTin": 200
+    },
+    {
+      "id": "024",
+      "category": "Accessories",
+      "name": "Grappling hook",
+      "price": "1 sp",
+      "priceTin": 1000
+    },
+    {
+      "id": "025",
+      "category": "Accessories",
+      "name": "Hammer",
+      "price": "1 sp",
+      "priceTin": 1000
+    },
+    {
+      "id": "026",
+      "category": "Accessories",
+      "name": "Hammock",
+      "price": "1 bp",
+      "priceTin": 100
+    },
+    {
+      "id": "027",
+      "category": "Accessories",
+      "name": "Harness",
+      "price": "1 sp",
+      "priceTin": 1000
+    },
+    {
+      "id": "028",
+      "category": "Accessories",
+      "name": "Hat",
+      "price": "6 bp",
+      "priceTin": 600
+    },
+    {
+      "id": "029",
+      "category": "Accessories",
+      "name": "Hood",
+      "price": "16 cp",
+      "priceTin": 160
+    },
+    {
+      "id": "030",
+      "category": "Accessories",
+      "name": "Ink",
+      "price": "14 cp",
+      "priceTin": 140
+    },
+    {
+      "id": "031",
+      "category": "Accessories",
+      "name": "Ladder",
+      "price": "32 cp",
+      "priceTin": 320
+    },
+    {
+      "id": "032",
+      "category": "Accessories",
+      "name": "Lantern",
+      "price": "12 bp",
+      "priceTin": 1200
+    },
+    {
+      "id": "033",
+      "category": "Accessories",
+      "name": "Lock pick kit",
+      "price": "1 sp",
+      "priceTin": 1000
+    },
+    {
+      "id": "034",
+      "category": "Accessories",
+      "name": "Mirror",
+      "price": "35 bp",
+      "priceTin": 3500
+    },
+    {
+      "id": "035",
+      "category": "Accessories",
+      "name": "Nails (20)",
+      "price": "9 tp",
+      "priceTin": 9
+    },
+    {
+      "id": "036",
+      "category": "Accessories",
+      "name": "Oar",
+      "price": "6 cp",
+      "priceTin": 60
+    },
+    {
+      "id": "037",
+      "category": "Accessories",
+      "name": "Oil flask",
+      "price": "3 bp",
+      "priceTin": 300
+    },
+    {
+      "id": "038",
+      "category": "Accessories",
+      "name": "Padded Undercoat",
+      "price": "6 bp",
+      "priceTin": 600
+    },
+    {
+      "id": "039",
+      "category": "Accessories",
+      "name": "Paddle",
+      "price": "5 cp",
+      "priceTin": 50
+    },
+    {
+      "id": "040",
+      "category": "Accessories",
+      "name": "Padlock",
+      "price": "23 bp",
+      "priceTin": 2300
+    },
+    {
+      "id": "041",
+      "category": "Accessories",
+      "name": "Pants",
+      "price": "25 cp",
+      "priceTin": 250
+    },
+    {
+      "id": "042",
+      "category": "Accessories",
+      "name": "Paper (10)",
+      "price": "12 bp",
+      "priceTin": 1200
+    },
+    {
+      "id": "043",
+      "category": "Accessories",
+      "name": "Parchment (10)",
+      "price": "2 sp",
+      "priceTin": 2000
+    },
+    {
+      "id": "044",
+      "category": "Accessories",
+      "name": "Pegs (10)",
+      "price": "9 tp",
+      "priceTin": 9
+    },
+    {
+      "id": "045",
+      "category": "Accessories",
+      "name": "Pitons (10)",
+      "price": "2 bp",
+      "priceTin": 200
+    },
+    {
+      "id": "046",
+      "category": "Accessories",
+      "name": "Plank",
+      "price": "6 tp",
+      "priceTin": 6
+    },
+    {
+      "id": "047",
+      "category": "Accessories",
+      "name": "Pole",
+      "price": "5 cp",
+      "priceTin": 50
+    },
+    {
+      "id": "048",
+      "category": "Accessories",
+      "name": "Pot (cooking)",
+      "price": "7 bp",
+      "priceTin": 700
+    },
+    {
+      "id": "049",
+      "category": "Accessories",
+      "name": "Quill-pens (10)",
+      "price": "4 cp",
+      "priceTin": 40
+    },
+    {
+      "id": "050",
+      "category": "Accessories",
+      "name": "Quiver",
+      "price": "1 bp",
+      "priceTin": 100
+    },
+    {
+      "id": "051",
+      "category": "Accessories",
+      "name": "Rope",
+      "price": "4 bp",
+      "priceTin": 400
+    },
+    {
+      "id": "052",
+      "category": "Accessories",
+      "name": "Rope (superior)",
+      "price": "12 bp",
+      "priceTin": 1200
+    },
+    {
+      "id": "053",
+      "category": "Accessories",
+      "name": "Sack (50 lb)",
+      "price": "8 cp",
+      "priceTin": 80
+    },
+    {
+      "id": "054",
+      "category": "Accessories",
+      "name": "Saddle",
+      "price": "5 sp",
+      "priceTin": 5000
+    },
+    {
+      "id": "055",
+      "category": "Accessories",
+      "name": "Saddle bag",
+      "price": "8 bp",
+      "priceTin": 800
+    },
+    {
+      "id": "056",
+      "category": "Accessories",
+      "name": "Saw",
+      "price": "23 bp",
+      "priceTin": 2300
+    },
+    {
+      "id": "057",
+      "category": "Accessories",
+      "name": "Scabbard (belt)",
+      "price": "25 bp",
+      "priceTin": 2500
+    },
+    {
+      "id": "058",
+      "category": "Accessories",
+      "name": "Scabbard (shoulder)",
+      "price": "3 sp",
+      "priceTin": 3000
+    },
+    {
+      "id": "059",
+      "category": "Accessories",
+      "name": "Shirt",
+      "price": "3 bp",
+      "priceTin": 300
+    },
+    {
+      "id": "060",
+      "category": "Accessories",
+      "name": "Spade",
+      "price": "16 bp",
+      "priceTin": 1600
+    },
+    {
+      "id": "061",
+      "category": "Accessories",
+      "name": "Sundial",
+      "price": "3 sp",
+      "priceTin": 3000
+    },
+    {
+      "id": "062",
+      "category": "Accessories",
+      "name": "Surcoat",
+      "price": "9 bp",
+      "priceTin": 900
+    },
+    {
+      "id": "063",
+      "category": "Accessories",
+      "name": "Tarp",
+      "price": "1 bp",
+      "priceTin": 100
+    },
+    {
+      "id": "064",
+      "category": "Accessories",
+      "name": "Tent",
+      "price": "2 sp",
+      "priceTin": 2000
+    },
+    {
+      "id": "065",
+      "category": "Accessories",
+      "name": "Tinderbox",
+      "price": "2 cp",
+      "priceTin": 20
+    },
+    {
+      "id": "066",
+      "category": "Accessories",
+      "name": "Torch",
+      "price": "3 tp",
+      "priceTin": 3
+    },
+    {
+      "id": "067",
+      "category": "Accessories",
+      "name": "Vial",
+      "price": "2 bp",
+      "priceTin": 200
+    },
+    {
+      "id": "068",
+      "category": "Accessories",
+      "name": "Water skin",
+      "price": "1 cp",
+      "priceTin": 10
+    },
+    {
+      "id": "069",
+      "category": "Accessories",
+      "name": "Weapon belt",
+      "price": "5 bp",
+      "priceTin": 500
+    },
+    {
+      "id": "070",
+      "category": "Accessories",
+      "name": "Wedge (staying)",
+      "price": "1 cp",
+      "priceTin": 10
+    },
+    {
+      "id": "071",
+      "category": "Accessories",
+      "name": "Wedge (splitting)",
+      "price": "3 cp",
+      "priceTin": 30
+    },
+    {
+      "id": "072",
+      "category": "Accessories",
+      "name": "Wire (10 gauge)",
+      "price": "9 bp",
+      "priceTin": 900
+    },
+    {
+      "id": "073",
+      "category": "Accessories",
+      "name": "Whistle",
+      "price": "2 sp",
+      "priceTin": 2000
+    },
+    {
+      "id": "101",
+      "category": "Armor",
+      "name": "Leather Jerkin",
+      "price": "1 sp",
+      "priceTin": 1000
+    },
+    {
+      "id": "102",
+      "category": "Armor",
+      "name": "Arm Greaves",
+      "price": "1 sp",
+      "priceTin": 1000
+    },
+    {
+      "id": "103",
+      "category": "Armor",
+      "name": "Leg Greaves",
+      "price": "1 sp",
+      "priceTin": 1000
+    },
+    {
+      "id": "104",
+      "category": "Armor",
+      "name": "Leather Coat",
+      "price": "6 sp",
+      "priceTin": 6000
+    },
+    {
+      "id": "105",
+      "category": "Armor",
+      "name": "Rein. Leather Coat",
+      "price": "9 sp",
+      "priceTin": 9000
+    },
+    {
+      "id": "106",
+      "category": "Armor",
+      "name": "Rein. Full Leather Coat",
+      "price": "11 sp",
+      "priceTin": 11000
+    },
+    {
+      "id": "107",
+      "category": "Armor",
+      "name": "Leather Breastplate",
+      "price": "45 bp",
+      "priceTin": 4500
+    },
+    {
+      "id": "108",
+      "category": "Armor",
+      "name": "Chain Shirt",
+      "price": "15 sp",
+      "priceTin": 15000
+    },
+    {
+      "id": "109",
+      "category": "Armor",
+      "name": "Full Chain",
+      "price": "65 sp",
+      "priceTin": 65000
+    },
+    {
+      "id": "110",
+      "category": "Armor",
+      "name": "Chain Hauberk",
+      "price": "55 sp",
+      "priceTin": 55000
+    },
+    {
+      "id": "111",
+      "category": "Armor",
+      "name": "Breastplate",
+      "price": "20 sp",
+      "priceTin": 20000
+    },
+    {
+      "id": "112",
+      "category": "Armor",
+      "name": "Half Plate",
+      "price": "100 sp",
+      "priceTin": 100000
+    },
+    {
+      "id": "113",
+      "category": "Armor",
+      "name": "Full Plate",
+      "price": "200 sp",
+      "priceTin": 200000
+    },
+    {
+      "id": "114",
+      "category": "Armor",
+      "name": "Target Shield",
+      "price": "35 bp",
+      "priceTin": 3500
+    },
+    {
+      "id": "115",
+      "category": "Armor",
+      "name": "Normal Shield",
+      "price": "55 bp",
+      "priceTin": 5500
+    },
+    {
+      "id": "116",
+      "category": "Armor",
+      "name": "Full Shield",
+      "price": "7 sp",
+      "priceTin": 7000
+    },
+    {
+      "id": "117",
+      "category": "Armor",
+      "name": "Wall Shield",
+      "price": "9 sp",
+      "priceTin": 9000
+    },
+    {
+      "id": "118",
+      "category": "Armor",
+      "name": "Leather Helmet",
+      "price": "15 bp",
+      "priceTin": 1500
+    },
+    {
+      "id": "119",
+      "category": "Armor",
+      "name": "Superior Leather Helm",
+      "price": "25 bp",
+      "priceTin": 2500
+    },
+    {
+      "id": "120",
+      "category": "Armor",
+      "name": "Plate Helm",
+      "price": "35 bp",
+      "priceTin": 3500
+    },
+    {
+      "id": "121",
+      "category": "Armor",
+      "name": "Pot Helm",
+      "price": "4 sp",
+      "priceTin": 4000
+    },
+    {
+      "id": "122",
+      "category": "Armor",
+      "name": "Full Helm",
+      "price": "9 sp",
+      "priceTin": 9000
+    },
+    {
+      "id": "123",
+      "category": "Armor",
+      "name": "Visored Helm",
+      "price": "125 bp",
+      "priceTin": 12500
+    },
+    {
+      "id": "124",
+      "category": "Armor",
+      "name": "Aventail",
+      "price": "3 sp",
+      "priceTin": 3000
+    },
+    {
+      "id": "125",
+      "category": "Armor",
+      "name": "Leather Barding",
+      "price": "35 sp",
+      "priceTin": 35000
+    },
+    {
+      "id": "126",
+      "category": "Armor",
+      "name": "Chain Barding",
+      "price": "150 sp",
+      "priceTin": 150000
+    },
+    {
+      "id": "127",
+      "category": "Armor",
+      "name": "Plate Barding",
+      "price": "300 sp",
+      "priceTin": 300000
+    },
+    {
+      "id": "128",
+      "category": "Armor",
+      "name": "Leather Chanfron",
+      "price": "6 sp",
+      "priceTin": 6000
+    },
+    {
+      "id": "129",
+      "category": "Armor",
+      "name": "Plate Chanfron",
+      "price": "9 sp",
+      "priceTin": 9000
+    },
+    {
+      "id": "130",
+      "category": "Armor",
+      "name": "Leather Crinet",
+      "price": "5 sp",
+      "priceTin": 5000
+    },
+    {
+      "id": "131",
+      "category": "Armor",
+      "name": "Chain Crinet",
+      "price": "27 sp",
+      "priceTin": 27000
+    },
+    {
+      "id": "132",
+      "category": "Armor",
+      "name": "Plate Crinet",
+      "price": "60 sp",
+      "priceTin": 60000
+    },
+    {
+      "id": "133",
+      "category": "Armor",
+      "name": "Leather Bracer",
+      "price": "1 sp",
+      "priceTin": 1000
+    },
+    {
+      "id": "134",
+      "category": "Armor",
+      "name": "Plate Bracer",
+      "price": "2 sp",
+      "priceTin": 2000
+    },
+    {
+      "id": "135",
+      "category": "Armor",
+      "name": "Metal Gauntlet",
+      "price": "2 sp",
+      "priceTin": 2000
+    },
+    {
+      "id": "309",
+      "category": "Provisions",
+      "name": "Week’s rations",
+      "price": "5 cp",
+      "priceTin": 50
+    },
+    {
+      "id": "310",
+      "category": "Provisions",
+      "name": "Trail rations",
+      "price": "1 bp",
+      "priceTin": 100
+    },
+    {
+      "id": "311",
+      "category": "Provisions",
+      "name": "Greatbread",
+      "price": "3 gp",
+      "priceTin": 30000
+    },
+    {
+      "id": "312",
+      "category": "Provisions",
+      "name": "Waybread",
+      "price": "15 gp",
+      "priceTin": 150000
+    },
+    {
+      "id": "401",
+      "category": "Transport",
+      "name": "Camel (draft)",
+      "price": "12 gp",
+      "priceTin": 120000
+    },
+    {
+      "id": "402",
+      "category": "Transport",
+      "name": "Camel (racing)",
+      "price": "40 gp",
+      "priceTin": 400000
+    },
+    {
+      "id": "403",
+      "category": "Transport",
+      "name": "Elephant",
+      "price": "50 gp",
+      "priceTin": 500000
+    },
+    {
+      "id": "404",
+      "category": "Transport",
+      "name": "Horse (light)",
+      "price": "45 sp",
+      "priceTin": 45000
+    },
+    {
+      "id": "405",
+      "category": "Transport",
+      "name": "Horse (medium)",
+      "price": "60 sp",
+      "priceTin": 60000
+    },
+    {
+      "id": "406",
+      "category": "Transport",
+      "name": "Horse (heavy)",
+      "price": "80 sp",
+      "priceTin": 80000
+    },
+    {
+      "id": "407",
+      "category": "Transport",
+      "name": "Llama/alpaca",
+      "price": "7 gp",
+      "priceTin": 70000
+    },
+    {
+      "id": "408",
+      "category": "Transport",
+      "name": "Mule/donkey",
+      "price": "32 sp",
+      "priceTin": 32000
+    },
+    {
+      "id": "409",
+      "category": "Transport",
+      "name": "Ox",
+      "price": "95 sp",
+      "priceTin": 95000
+    },
+    {
+      "id": "410",
+      "category": "Transport",
+      "name": "Pony (mature)",
+      "price": "40 sp",
+      "priceTin": 40000
+    },
+    {
+      "id": "411",
+      "category": "Transport",
+      "name": "Sled dog",
+      "price": "13 sp",
+      "priceTin": 13000
+    },
+    {
+      "id": "412",
+      "category": "Transport",
+      "name": "Warhorse (lesser)",
+      "price": "20 gp",
+      "priceTin": 200000
+    },
+    {
+      "id": "413",
+      "category": "Transport",
+      "name": "Warhorse (greater)",
+      "price": "75 gp",
+      "priceTin": 750000
+    },
+    {
+      "id": "414",
+      "category": "Transport",
+      "name": "Boat (small)",
+      "price": "7 gp",
+      "priceTin": 70000
+    },
+    {
+      "id": "415",
+      "category": "Transport",
+      "name": "Boat (medium)",
+      "price": "11 gp",
+      "priceTin": 110000
+    },
+    {
+      "id": "416",
+      "category": "Transport",
+      "name": "Boat (large)",
+      "price": "40 gp",
+      "priceTin": 400000
+    },
+    {
+      "id": "417",
+      "category": "Transport",
+      "name": "Canoe",
+      "price": "8 gp",
+      "priceTin": 80000
+    },
+    {
+      "id": "418",
+      "category": "Transport",
+      "name": "Chariot (war)",
+      "price": "16 gp",
+      "priceTin": 160000
+    },
+    {
+      "id": "419",
+      "category": "Transport",
+      "name": "Coracle",
+      "price": "8 sp",
+      "priceTin": 8000
+    },
+    {
+      "id": "420",
+      "category": "Transport",
+      "name": "Dog-sled",
+      "price": "7 gp",
+      "priceTin": 70000
+    },
+    {
+      "id": "421",
+      "category": "Transport",
+      "name": "Hand-cart",
+      "price": "11 sp",
+      "priceTin": 11000
+    },
+    {
+      "id": "422",
+      "category": "Transport",
+      "name": "Horse-cart (open)",
+      "price": "4 gp",
+      "priceTin": 40000
+    },
+    {
+      "id": "423",
+      "category": "Transport",
+      "name": "Ship (small)",
+      "price": "80 gp",
+      "priceTin": 800000
+    },
+    {
+      "id": "424",
+      "category": "Transport",
+      "name": "Ship (medium)",
+      "price": "190 gp",
+      "priceTin": 1900000
+    },
+    {
+      "id": "425",
+      "category": "Transport",
+      "name": "Ship (large)",
+      "price": "650 gp",
+      "priceTin": 6500000
+    },
+    {
+      "id": "426",
+      "category": "Transport",
+      "name": "Skis",
+      "price": "7 cp",
+      "priceTin": 70
+    },
+    {
+      "id": "427",
+      "category": "Transport",
+      "name": "Sledge (covered)",
+      "price": "12 cp",
+      "priceTin": 120
+    },
+    {
+      "id": "428",
+      "category": "Transport",
+      "name": "Wagon (open)",
+      "price": "6 gp",
+      "priceTin": 60000
+    },
+    {
+      "id": "429",
+      "category": "Transport",
+      "name": "Wagon (closed)",
+      "price": "9 gp",
+      "priceTin": 90000
+    },
+    {
+      "id": "500",
+      "category": "Weapons",
+      "name": "Axe",
+      "price": "2 sp",
+      "priceTin": 2000
+    },
+    {
+      "id": "501",
+      "category": "Weapons",
+      "name": "Bastard Sword",
+      "price": "20 sp",
+      "priceTin": 20000
+    },
+    {
+      "id": "502",
+      "category": "Weapons",
+      "name": "Battle Axe",
+      "price": "13 sp",
+      "priceTin": 13000
+    },
+    {
+      "id": "503",
+      "category": "Weapons",
+      "name": "Blackjack",
+      "price": "2 cp",
+      "priceTin": 20
+    },
+    {
+      "id": "504",
+      "category": "Weapons",
+      "name": "Blowpipe",
+      "price": "12 sp",
+      "priceTin": 12000
+    },
+    {
+      "id": "505",
+      "category": "Weapons",
+      "name": "Boar Spear",
+      "price": "25 bp",
+      "priceTin": 2500
+    },
+    {
+      "id": "506",
+      "category": "Weapons",
+      "name": "Bola (2 handed)",
+      "price": "5 sp",
+      "priceTin": 5000
+    },
+    {
+      "id": "507",
+      "category": "Weapons",
+      "name": "Boomerang",
+      "price": "2 sp",
+      "priceTin": 2000
+    },
+    {
+      "id": "508",
+      "category": "Weapons",
+      "name": "Broadsword",
+      "price": "10 sp",
+      "priceTin": 10000
+    },
+    {
+      "id": "509",
+      "category": "Weapons",
+      "name": "Cat-o’-nine tails",
+      "price": "1 sp",
+      "priceTin": 1000
+    },
+    {
+      "id": "510",
+      "category": "Weapons",
+      "name": "Claymore",
+      "price": "20 sp",
+      "priceTin": 20000
+    },
+    {
+      "id": "511",
+      "category": "Weapons",
+      "name": "Club",
+      "price": "1 cp",
+      "priceTin": 10
+    },
+    {
+      "id": "512",
+      "category": "Weapons",
+      "name": "Composite Bow",
+      "price": "17 sp",
+      "priceTin": 17000
+    },
+    {
+      "id": "513",
+      "category": "Weapons",
+      "name": "Crossbow, Hvy",
+      "price": "25 sp",
+      "priceTin": 25000
+    },
+    {
+      "id": "514",
+      "category": "Weapons",
+      "name": "Crossbow, Lt.",
+      "price": "11 sp",
+      "priceTin": 11000
+    },
+    {
+      "id": "515",
+      "category": "Weapons",
+      "name": "Cudgel",
+      "price": "5 cp",
+      "priceTin": 50
+    },
+    {
+      "id": "516",
+      "category": "Weapons",
+      "name": "Cutlass",
+      "price": "9 sp",
+      "priceTin": 9000
+    },
+    {
+      "id": "517",
+      "category": "Weapons",
+      "name": "Dagger",
+      "price": "3 sp",
+      "priceTin": 3000
+    },
+    {
+      "id": "518",
+      "category": "Weapons",
+      "name": "Dart",
+      "price": "1 sp",
+      "priceTin": 1000
+    },
+    {
+      "id": "519",
+      "category": "Weapons",
+      "name": "Dirk",
+      "price": "4 sp",
+      "priceTin": 4000
+    },
+    {
+      "id": "520",
+      "category": "Weapons",
+      "name": "Falchion",
+      "price": "15 sp",
+      "priceTin": 15000
+    },
+    {
+      "id": "521",
+      "category": "Weapons",
+      "name": "Flail",
+      "price": "19 sp",
+      "priceTin": 19000
+    },
+    {
+      "id": "522",
+      "category": "Weapons",
+      "name": "Foil",
+      "price": "21 sp",
+      "priceTin": 21000
+    },
+    {
+      "id": "523",
+      "category": "Weapons",
+      "name": "Halbard",
+      "price": "14 sp",
+      "priceTin": 14000
+    },
+    {
+      "id": "524",
+      "category": "Weapons",
+      "name": "Handaxe",
+      "price": "5 sp",
+      "priceTin": 5000
+    },
+    {
+      "id": "525",
+      "category": "Weapons",
+      "name": "Harpoon",
+      "price": "25 bp",
+      "priceTin": 2500
+    },
+    {
+      "id": "526",
+      "category": "Weapons",
+      "name": "Javelin",
+      "price": "3 sp",
+      "priceTin": 3000
+    },
+    {
+      "id": "527",
+      "category": "Weapons",
+      "name": "Jo",
+      "price": "3 cp",
+      "priceTin": 30
+    },
+    {
+      "id": "528",
+      "category": "Weapons",
+      "name": "Katana",
+      "price": "23 sp",
+      "priceTin": 23000
+    },
+    {
+      "id": "529",
+      "category": "Weapons",
+      "name": "Lance",
+      "price": "5 sp",
+      "priceTin": 5000
+    },
+    {
+      "id": "530",
+      "category": "Weapons",
+      "name": "Lasso",
+      "price": "4 tp",
+      "priceTin": 4
+    },
+    {
+      "id": "531",
+      "category": "Weapons",
+      "name": "Long Bow",
+      "price": "10 sp",
+      "priceTin": 10000
+    },
+    {
+      "id": "532",
+      "category": "Weapons",
+      "name": "Long Sword",
+      "price": "18 sp",
+      "priceTin": 18000
+    },
+    {
+      "id": "533",
+      "category": "Weapons",
+      "name": "Mace",
+      "price": "6 sp",
+      "priceTin": 6000
+    },
+    {
+      "id": "534",
+      "category": "Weapons",
+      "name": "Main Gauche",
+      "price": "12 sp",
+      "priceTin": 12000
+    },
+    {
+      "id": "535",
+      "category": "Weapons",
+      "name": "Morning Star",
+      "price": "16 sp",
+      "priceTin": 16000
+    },
+    {
+      "id": "536",
+      "category": "Weapons",
+      "name": "Net (fishing)",
+      "price": "1 sp",
+      "priceTin": 1000
+    },
+    {
+      "id": "537",
+      "category": "Weapons",
+      "name": "Net (gladiator)",
+      "price": "7 sp",
+      "priceTin": 7000
+    },
+    {
+      "id": "538",
+      "category": "Weapons",
+      "name": "No-dachi",
+      "price": "25 sp",
+      "priceTin": 25000
+    },
+    {
+      "id": "539",
+      "category": "Weapons",
+      "name": "Nunchaku",
+      "price": "4 cp",
+      "priceTin": 40
+    },
+    {
+      "id": "540",
+      "category": "Weapons",
+      "name": "Pick",
+      "price": "4 sp",
+      "priceTin": 4000
+    },
+    {
+      "id": "541",
+      "category": "Weapons",
+      "name": "Pilum",
+      "price": "10 sp",
+      "priceTin": 10000
+    },
+    {
+      "id": "542",
+      "category": "Weapons",
+      "name": "Quarterstaff",
+      "price": "5 cp",
+      "priceTin": 50
+    },
+    {
+      "id": "543",
+      "category": "Weapons",
+      "name": "Rapier",
+      "price": "22 sp",
+      "priceTin": 22000
+    },
+    {
+      "id": "544",
+      "category": "Weapons",
+      "name": "Sabre",
+      "price": "9 sp",
+      "priceTin": 9000
+    },
+    {
+      "id": "545",
+      "category": "Weapons",
+      "name": "Sai",
+      "price": "13 sp",
+      "priceTin": 13000
+    },
+    {
+      "id": "546",
+      "category": "Weapons",
+      "name": "Scimitar",
+      "price": "10 sp",
+      "priceTin": 10000
+    },
+    {
+      "id": "547",
+      "category": "Weapons",
+      "name": "Short Bow",
+      "price": "6 sp",
+      "priceTin": 6000
+    },
+    {
+      "id": "548",
+      "category": "Weapons",
+      "name": "Short Sword",
+      "price": "7 sp",
+      "priceTin": 7000
+    },
+    {
+      "id": "549",
+      "category": "Weapons",
+      "name": "Shuriken",
+      "price": "4 sp",
+      "priceTin": 4000
+    },
+    {
+      "id": "550",
+      "category": "Weapons",
+      "name": "Sling",
+      "price": "9 bp",
+      "priceTin": 900
+    },
+    {
+      "id": "551",
+      "category": "Weapons",
+      "name": "Spear",
+      "price": "23 bp",
+      "priceTin": 2300
+    },
+    {
+      "id": "552",
+      "category": "Weapons",
+      "name": "Tomahawk",
+      "price": "4 cp",
+      "priceTin": 40
+    },
+    {
+      "id": "553",
+      "category": "Weapons",
+      "name": "Tonfa",
+      "price": "9 cp",
+      "priceTin": 90
+    },
+    {
+      "id": "554",
+      "category": "Weapons",
+      "name": "Trident",
+      "price": "4 sp",
+      "priceTin": 4000
+    },
+    {
+      "id": "555",
+      "category": "Weapons",
+      "name": "Two-Hand Sword",
+      "price": "20 sp",
+      "priceTin": 20000
+    },
+    {
+      "id": "556",
+      "category": "Weapons",
+      "name": "War Hammer",
+      "price": "15 sp",
+      "priceTin": 15000
+    },
+    {
+      "id": "557",
+      "category": "Weapons",
+      "name": "War Mattock",
+      "price": "15 sp",
+      "priceTin": 15000
+    },
+    {
+      "id": "558",
+      "category": "Weapons",
+      "name": "Whip",
+      "price": "2 sp",
+      "priceTin": 2000
+    }
+  ]
+}
