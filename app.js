@@ -2204,6 +2204,7 @@
   function showView(name) {
     $$('.view').forEach(view => view.classList.toggle('active', view.id === `${name}-view`));
     $$('.nav-link').forEach(button => button.classList.toggle('active', button.dataset.view === name || button.dataset.view === 'home' && ['play','editor'].includes(name)));
+    window.dispatchEvent(new CustomEvent('rolemaster-view-changed', {detail:name}));
     window.scrollTo({top: 0, behavior: 'smooth'});
   }
   function renderRoster() {
@@ -2781,7 +2782,7 @@
     showView('tables');
   }
   $$('.nav-link').forEach(button => button.addEventListener('click', () => showView(button.dataset.view)));
-  $('.brand').addEventListener('click', event => { event.preventDefault(); showView('home'); });
+  $('.brand').addEventListener('click', event => { event.preventDefault(); showView('encounter'); });
   $('#new-character').addEventListener('click', newCharacter);
   $('#empty-new-character').addEventListener('click', newCharacter);
   $('#back-play-roster').addEventListener('click', () => showView('home'));

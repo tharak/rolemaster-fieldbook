@@ -766,6 +766,23 @@ input::placeholder, textarea::placeholder { color: #82998a; opacity: 1; }
 
 /* Encounter map and Part III action flow. */
 .encounter-shell { max-width: 1440px; margin: 0 auto; padding: 22px 18px 50px; }
+.encounter-list-header { margin-bottom: 14px; padding: 26px; border-radius: 7px; background: #24372f; color: #fff; }
+.encounter-list-header h1 { margin: 4px 0; font: 700 28px var(--sans); }
+.encounter-list-header p { margin: 0; color: #c9d9cf; font-size: 12px; }
+.encounter-list-header .play-eyebrow { color: #9bc7a8; }
+.encounter-create { display: flex; align-items: end; gap: 9px; margin-bottom: 16px; padding: 18px; border: 1px solid var(--line); border-radius: 6px; background: var(--card); }
+.encounter-create label { display: grid; gap: 5px; flex: 1; color: var(--muted); font-size: 11px; font-weight: 700; }
+.encounter-create input { width: 100%; padding: 10px; border: 1px solid var(--line); border-radius: 4px; background: var(--input); color: var(--ink); font-size: 13px; }
+.encounter-create button { flex: none; }
+.encounter-list { display: grid; grid-template-columns: repeat(auto-fill,minmax(280px,1fr)); gap: 12px; }
+.encounter-list-card, .encounter-list-empty { min-width: 0; padding: 20px; border: 1px solid var(--line); border-radius: 6px; background: var(--card); }
+.encounter-list-card { display: flex; flex-direction: column; gap: 22px; }
+.encounter-list-card h2, .encounter-list-empty h2 { margin: 0 0 7px; color: var(--ink); font-size: 18px; overflow-wrap: anywhere; }
+.encounter-list-card p, .encounter-list-empty p { margin: 0 0 5px; color: var(--muted); font-size: 12px; }
+.encounter-list-card small { color: var(--muted); font-size: 10px; }
+.encounter-list-actions { display: flex; gap: 8px; margin-top: auto; }
+.encounter-list-actions button:first-child { flex: 1; }
+.encounter-list-empty { grid-column: 1 / -1; }
 .encounter-header { display: flex; justify-content: space-between; align-items: center; gap: 16px; margin-bottom: 14px; padding: 23px 27px; border-radius: 7px; background: #24372f; color: #fff; }
 .encounter-header h1 { margin: 0 0 4px; font: 700 27px var(--sans); }
 .encounter-header p { margin: 0; color: #c9d9cf; font-size: 12px; }
@@ -857,4 +874,5 @@ input::placeholder, textarea::placeholder { color: #82998a; opacity: 1; }
 @media (max-width: 900px) { .encounter-guide ol { grid-template-columns: repeat(2,minmax(0,1fr)); } .encounter-layout { grid-template-columns: 1fr; } .encounter-sidebar { grid-template-columns: repeat(2,minmax(0,1fr)); } }
 @media (max-width: 600px) { .encounter-shell { padding: 12px 10px 35px; } .encounter-header { padding: 18px; } .encounter-sidebar { grid-template-columns: 1fr; } .encounter-phase-cards { grid-template-columns: 1fr; } .encounter-phase-card { min-height: 0; } .encounter-action-form { grid-template-columns: repeat(2,minmax(0,1fr)); } .encounter-action-description { grid-column: 1 / -1; } .encounter-round { text-align: right; } }
 @media (max-width: 390px) { .encounter-action-form { grid-template-columns: 1fr; } .encounter-header { align-items: flex-start; } }
+@media (max-width: 500px) { .encounter-create { align-items: stretch; flex-direction: column; } }
 @media (max-width: 540px) { .topbar { padding: 0 10px; gap: 6px; } .brand { font-size: 14px; } .topbar nav { gap: 7px; } .nav-link { font-size: 11px; } }

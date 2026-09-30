@@ -1,5 +1,6 @@
 (() => {
-  const storageKey = 'rolemaster-encounter-v1';
+  const storageKey = 'rolemaster-encounters-v2';
+  const legacyStorageKey = 'rolemaster-encounter-v1';
   const $ = selector => document.querySelector(selector);
   const esc = value => String(value ?? '').replace(/[&<>"']/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
   const phases = ['snap','normal','deliberate'];
@@ -23,11 +24,24 @@
   const keyOf = (q,r) => `${q},${r}`;
   const within = (q,r) => Number.isInteger(q) && Number.isInteger(r) && q >= 0 && q < columns && r >= 0 && r < rows;
   const distance = (a,b) => Math.max(Math.abs(a.q-b.q),Math.abs(a.r-b.r),Math.abs(a.q+a.r-b.q-b.r));
-  const readState = () => {
-    try { const saved = JSON.parse(localStorage.getItem(storageKey) || '{}'); return {round:Math.max(1,Number(saved.round)||1),phase:Number.isInteger(saved.phase)?saved.phase:-1,resolved:!!saved.resolved,scale:[5,10,20,50].includes(Number(saved.scale))?Number(saved.scale):5,terrain:saved.terrain||{},tokens:saved.tokens||{},selected:saved.selected||'',log:Array.isArray(saved.log)?saved.log:[]}; }
-    catch { return {round:1,phase:-1,resolved:false,scale:5,terrain:{},tokens:{},selected:'',log:[]}; }
-  };
-  let state = readState();
+  const blankState = () => ({round:1,phase:-1,resolved:false,scale:5,terrain:{},tokens:{},selected:'',log:[]});
+  const normalizeState = saved => ({round:Math.max(1,Number(saved?.round)||1),phase:Number.isInteger(saved?.phase)&&saved.phase>=-1&&saved.phase<=2?saved.phase:-1,resolved:!!saved?.resolved,scale:[5,10,20,50].includes(Number(saved?.scale))?Number(saved.scale):5,terrain:saved?.terrain||{},tokens:saved?.tokens||{},selected:saved?.selected||'',log:Array.isArray(saved?.log)?saved.log:[]});
+  function readEncounters() {
+    try {
+      const stored=localStorage.getItem(storageKey);
+      if(stored!==null) {const parsed=JSON.parse(stored);return Array.isArray(parsed)?parsed.filter(item=>item&&typeof item.id==='string'&&item.state).map(item=>({...item,state:normalizeState(item.state)})):[];}
+      const legacy=localStorage.getItem(legacyStorageKey);
+      if(legacy!==null) {
+        const previous=JSON.parse(legacy);
+        if(!previous||!Object.keys(previous.tokens||{}).length&&!Object.keys(previous.terrain||{}).length&&!previous.log?.length&&Number(previous.round||1)<=1)return [];
+        const migrated=[{id:crypto.randomUUID?.()||String(Date.now()),name:'Previous encounter',updatedAt:Date.now(),state:normalizeState(previous)}];
+        localStorage.setItem(storageKey,JSON.stringify(migrated));
+        return migrated;
+      }
+    } catch { /* Keep an empty list if saved data cannot be read. */ }
+    return [];
+  }
+  let encounters=readEncounters(),activeEncounterId=null,state=blankState();
   let destination = null;
   let roster = [];
   const form = $('#encounter-action-form');
@@ -35,7 +49,8 @@
   spellAttackField.className = 'encounter-field-spell';
   spellAttackField.innerHTML = 'Spell attack<select name="spellAttack"><option value="none">No attack</option><option value="basic">Basic spell</option><option value="bolt">Bolt</option><option value="ball">Ball</option></select>';
   form.querySelector('.encounter-field-resist').before(spellAttackField);
-  const save = () => localStorage.setItem(storageKey, JSON.stringify(state));
+  const persist = () => localStorage.setItem(storageKey,JSON.stringify(encounters));
+  const save = () => { const current=encounters.find(item=>item.id===activeEncounterId);if(!current)return;current.state=state;current.updatedAt=Date.now();persist(); };
   const message = value => { $('#encounter-message').textContent = value; };
   const actor = id => roster.find(item => item.id === id);
   const selected = () => actor(state.selected);
@@ -57,8 +72,34 @@
     state.log.unshift({round:state.round,phase:state.phase<0?'Declaration':phases[state.phase],actor:actor(id)?.name||'GM',detail});
     state.log = state.log.slice(0,80);
   }
+  function renderList() {
+    const sorted=[...encounters].sort((a,b)=>(b.updatedAt||0)-(a.updatedAt||0));
+    $('#encounter-list').innerHTML=sorted.length?sorted.map(item=>{
+      const count=Object.keys(item.state.tokens||{}).length;
+      const phase=item.state.phase<0?'Declaration':`${phases[item.state.phase]||'Snap'} phase`;
+      return `<article class="encounter-list-card"><div><h2>${esc(item.name)}</h2><p>Round ${item.state.round} · ${esc(phase)} · ${count} character${count===1?'':'s'}</p><small>Last played ${esc(new Date(item.updatedAt||Date.now()).toLocaleString())}</small></div><div class="encounter-list-actions"><button type="button" class="button button-dark" data-open-encounter="${esc(item.id)}">Continue</button><button type="button" class="button button-quiet" data-delete-encounter="${esc(item.id)}">Delete</button></div></article>`;
+    }).join(''):'<div class="encounter-list-empty"><h2>No encounters yet</h2><p>Name one above to start playing.</p></div>';
+  }
+  function showList() {
+    if(activeEncounterId)save();
+    activeEncounterId=null;
+    $('#encounter-workspace').hidden=true;
+    $('#encounter-list-view').hidden=false;
+    renderList();
+    window.scrollTo({top:0,behavior:'smooth'});
+  }
+  function openEncounter(id) {
+    const current=encounters.find(item=>item.id===id);if(!current)return;
+    activeEncounterId=id;state=normalizeState(current.state);destination=null;
+    $('#encounter-list-view').hidden=true;
+    $('#encounter-workspace').hidden=false;
+    $('#encounter-current-name').textContent=current.name;
+    refreshRoster();
+    window.scrollTo({top:0,behavior:'smooth'});
+  }
   function refreshRoster() {
     roster = window.RolemasterEncounter?.roster() || [];
+    if(!activeEncounterId){renderList();return;}
     Object.keys(state.tokens).filter(id => !actor(id)).forEach(id => delete state.tokens[id]);
     if (!state.tokens[state.selected]) state.selected = Object.keys(state.tokens)[0] || '';
     save(); render(); selectPhase(form.elements.phase.value);
@@ -411,7 +452,20 @@
   $('#encounter-initiative').addEventListener('click',rollInitiative);
   $('#encounter-resolve').addEventListener('click',resolvePhase);
   $('#encounter-next').addEventListener('click',nextPhase);
-  $('#encounter-reset').addEventListener('click',()=>{if(!confirm('Start a new encounter and clear the map and action log?'))return;localStorage.removeItem(storageKey);state=readState();destination=null;message('New encounter ready.');render();});
+  $('#encounter-reset').addEventListener('click',showList);
+  $('#new-encounter-form').addEventListener('submit',event=>{
+    event.preventDefault();
+    const name=String(new FormData(event.currentTarget).get('name')||'').trim();if(!name)return;
+    const id=crypto.randomUUID?.()||`${Date.now()}-${Math.random()}`;
+    encounters.push({id,name,updatedAt:Date.now(),state:blankState()});
+    persist();event.currentTarget.reset();openEncounter(id);
+  });
+  $('#encounter-list').addEventListener('click',event=>{
+    const open=event.target.closest('[data-open-encounter]'),remove=event.target.closest('[data-delete-encounter]');
+    if(open){openEncounter(open.dataset.openEncounter);return;}
+    if(remove){const item=encounters.find(entry=>entry.id===remove.dataset.deleteEncounter);if(!item)return;if(!confirm(`Delete ${item.name}? This removes its map, round, and action log.`))return;encounters=encounters.filter(entry=>entry.id!==item.id);persist();renderList();}
+  });
+  window.addEventListener('rolemaster-view-changed',event=>{if(event.detail==='encounter')showList();});
   window.addEventListener('rolemaster-roster-updated',refreshRoster);
   refreshRoster();
 })();

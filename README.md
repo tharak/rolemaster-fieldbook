@@ -14,7 +14,7 @@ Serve this folder with any static web server and open its root URL. Browser stor
 
 The character roster is stored in browser local storage. It is available in the same browser and on the same device where each character was created. The Tables page lists 65 tables and charts; each has a separate JSON source file in `tables/`. Attack tables support roll and armor lookup, and critical tables support roll and critical type lookup. Other tables preserve their source page text. The page never opens the PDF viewer.
 
-The Encounter page uses saved characters on a hex map and stores its map, round, and action log in local storage. It supports Part III action declaration, initiative, phase order, activity limits, movement, maneuvers, attacks, spells, and resistance rolls. The linked tables support manual resolution of critical effects, fumbles, spell failures, and special results.
+The Encounters page opens by default and lists saved encounters. Each encounter has its own hex map, round, and action log in browser local storage; the list can create, continue, and delete encounters. Existing single-encounter data is carried into the list. Encounter play supports Part III action declaration, initiative, phase order, activity limits, movement, maneuvers, attacks, spells, and resistance rolls. The linked tables support manual resolution of critical effects, fumbles, spell failures, and special results.
 
 ## Table source files
 
