@@ -865,7 +865,8 @@ input::placeholder, textarea::placeholder { color: #82998a; opacity: 1; }
 .encounter-valid-legend { color: #62c984; }
 .encounter-log article { padding: 9px 0; border-top: 1px solid var(--line); font-size: 12px; }
 .encounter-table-link { padding: 0; border: 0; background: none; color: var(--accent-text); font-size: inherit; font-weight: 700; cursor: pointer; text-decoration: underline; }
-.encounter-log { max-height: 450px; overflow: auto; }
+.encounter-log-card { display: flex; flex-direction: column; height: 340px; min-height: 0; }
+.encounter-log { flex: 1; min-height: 0; overflow-y: auto; }
 .encounter-log small { color: var(--muted); font: 10px var(--mono); }
 .encounter-log p { margin: 5px 0 0; line-height: 1.5; }
 .encounter-log-round { padding: 12px 0; border-top: 1px solid var(--line); }
