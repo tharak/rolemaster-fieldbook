@@ -2150,7 +2150,7 @@
   function playFact(label, value) { return `<div><dt>${esc(label)}</dt><dd>${playValue(value)}</dd></div>`; }
   function playNote(label, value) { return value?.trim() ? `<section class="play-card"><h2>${esc(label)}</h2><p class="play-prose">${esc(value.trim())}</p></section>` : ''; }
   function playRollTile({category, name, ranks, total, favorite = false, kind = 'skill'}) {
-    return `<button type="button" class="play-skill-tile" data-play-roll="${kind}" data-category="${esc(category)}" data-name="${esc(name)}" data-bonus="${esc(total)}" aria-label="Roll ${esc(name)}, bonus ${playValue(total)}"><span class="play-tile-name">${favorite ? '<b aria-hidden="true">★</b> ' : ''}${esc(name)}</span><span class="play-tile-detail">${ranks === undefined ? 'Resistance' : `${ranks} rank${ranks === 1 ? '' : 's'}`}</span><strong>${playValue(total)}</strong></button>`;
+    return `<button type="button" class="play-skill-tile" data-play-roll="${kind}" data-category="${esc(category)}" data-name="${esc(name)}" data-bonus="${esc(total)}" aria-label="Roll ${esc(name)}, ${esc(category)}, bonus ${playValue(total)}"><span class="play-tile-name">${favorite ? '<b aria-hidden="true">★</b> ' : ''}${esc(name)}</span><span class="play-tile-detail">${ranks === undefined ? 'Resistance' : `${ranks} rank${ranks === 1 ? '' : 's'}`}</span><strong>${playValue(total)}</strong></button>`;
   }
   function renderPlayCharacter() {
     const stats = statNames.map((name, index) => `<tr><th scope="row">${esc(name)}</th><td>${playValue(form.elements.namedItem(`stat-temp-${index}`).value)}</td><td>${playValue(form.elements.namedItem(`stat-pot-${index}`).value)}</td><td>${playValue(form.elements.namedItem(`stat-total-${index}`).value)}</td></tr>`).join('');
@@ -2163,9 +2163,13 @@
     const favorites = readFavoriteSkills();
     const rows = $$('.a4-skill-row[data-skill]').map(row => ({category:row.dataset.category, name:row.dataset.skill, ranks:Number($('.a4-start-text', row).textContent) || 0, total:$('.a4-total', row).textContent, favorite:favorites.has(favoriteSkillKey(row.dataset.category, row.dataset.skill))}));
     const shown = rows.filter(row => playSkillFilter === 'all' || (playSkillFilter === 'favorites' ? row.favorite : row.ranks > 0 || row.favorite));
-    const groups = new Map();
-    shown.forEach(row => { if (!groups.has(row.category)) groups.set(row.category, []); groups.get(row.category).push(row); });
-    $('#play-skills-content').innerHTML = groups.size ? `<p class="play-count">${shown.length} skill${shown.length === 1 ? '' : 's'} shown · select a skill to roll</p>${[...groups].map(([category, skills]) => `<section class="play-card play-skill-group"><div class="play-group-title"><h2>${esc(category)}</h2><span>Category ${playValue($$('.category-record-row').find(item => item.dataset.category === category)?.querySelector('.record-total')?.textContent)}</span></div><div class="play-skill-tiles">${skills.map(skill => playRollTile(skill)).join('')}</div></section>`).join('')}` : `<div class="play-empty">${playSkillFilter === 'favorites' ? 'No favorite skills yet. Mark them on the creation sheet.' : 'No skills match this view.'}</div>`;
+    let content = '';
+    if (playSkillFilter === 'all') {
+      const groups = new Map();
+      shown.forEach(row => { if (!groups.has(row.category)) groups.set(row.category, []); groups.get(row.category).push(row); });
+      content = [...groups].map(([category, skills]) => `<section class="play-card play-skill-group"><div class="play-group-title"><h2>${esc(category)}</h2><span>Category ${playValue($$('.category-record-row').find(item => item.dataset.category === category)?.querySelector('.record-total')?.textContent)}</span></div><div class="play-skill-tiles">${skills.map(skill => playRollTile(skill)).join('')}</div></section>`).join('');
+    } else content = `<div class="play-skill-tiles">${shown.sort((a, b) => a.name.localeCompare(b.name)).map(skill => playRollTile(skill)).join('')}</div>`;
+    $('#play-skills-content').innerHTML = shown.length ? `<p class="play-count">${shown.length} skill${shown.length === 1 ? '' : 's'} shown · select a skill to roll</p>${content}` : `<div class="play-empty">${playSkillFilter === 'favorites' ? 'No favorite skills yet. Mark them on the creation sheet.' : 'No skills match this view.'}</div>`;
     $$('[data-play-skill-filter]').forEach(button => button.setAttribute('aria-pressed', String(button.dataset.playSkillFilter === playSkillFilter)));
   }
   function renderPlayCombat() {
