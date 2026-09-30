@@ -12,6 +12,7 @@
   const form = $('#character-form');
   let characters = readCharacters();
   let currentId = null;
+  let playSkillFilter = 'active';
   let activeTableGroup = 'all';
   let skillCategoryPickerTarget = null;
   let skillChoiceTarget = null;
@@ -2131,7 +2132,7 @@
   }
   function showView(name) {
     $$('.view').forEach(view => view.classList.toggle('active', view.id === `${name}-view`));
-    $$('.nav-link').forEach(button => button.classList.toggle('active', button.dataset.view === name));
+    $$('.nav-link').forEach(button => button.classList.toggle('active', button.dataset.view === name || button.dataset.view === 'home' && ['play','editor'].includes(name)));
     window.scrollTo({top: 0, behavior: 'smooth'});
   }
   function renderRoster() {
@@ -2141,6 +2142,49 @@
     $$('.character-card').forEach(card => {
       card.addEventListener('click', () => openCharacter(card.dataset.id));
       card.addEventListener('keydown', event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); openCharacter(card.dataset.id); } });
+    });
+  }
+  function playValue(value) { return value === '' || value === null || value === undefined ? '—' : esc(value); }
+  function playFact(label, value) { return `<div><dt>${esc(label)}</dt><dd>${playValue(value)}</dd></div>`; }
+  function playNote(label, value) { return value?.trim() ? `<section class="play-card"><h2>${esc(label)}</h2><p class="play-prose">${esc(value.trim())}</p></section>` : ''; }
+  function renderPlayCharacter() {
+    const stats = statNames.map((name, index) => `<tr><th scope="row">${esc(name)}</th><td>${playValue(form.elements.namedItem(`stat-temp-${index}`).value)}</td><td>${playValue(form.elements.namedItem(`stat-pot-${index}`).value)}</td><td>${playValue(form.elements.namedItem(`stat-total-${index}`).value)}</td></tr>`).join('');
+    const physical = [['Age','roleAge'],['Gender','roleGender'],['Appearance','appearanceTemp'],['Demeanor','roleDemeanor'],['Build','roleBuild'],['Height','roleHeight'],['Weight','roleWeight'],['Skin','roleSkin'],['Hair','roleHair'],['Eyes','roleEyes']].map(([label, name]) => playFact(label, form.elements[name].value)).join('');
+    const traits = [['Personality','rolePersonality'],['Motivation','roleMotivation'],['Alignment','roleAlignment']].map(([label, name]) => playFact(label, form.elements[name].value)).join('');
+    const equipment = [$('#starting-outfit-summary').textContent, $('#background-rewards-summary').textContent, $('#training-rewards-summary').textContent, form.elements.notes.value, form.elements.outfitPurchases.value].filter(Boolean).join('\n');
+    $('#play-character-content').innerHTML = `<div class="play-summary"><div><span>Hits max.</span><strong>${playValue(form.elements.hits.value)}</strong></div><div><span>Power points max.</span><strong>${playValue(form.elements.powerPoints.value)}</strong></div><div><span>Experience</span><strong>${playValue(form.elements.xp.value)}</strong></div><div><span>Realm</span><strong>${playValue(form.elements.realm.value)}</strong></div></div><div class="play-card-grid"><section class="play-card"><h2>Stats & bonuses</h2><div class="play-table-scroll"><table class="play-table"><thead><tr><th>Stat</th><th>Temp</th><th>Pot</th><th>Bonus</th></tr></thead><tbody>${stats}</tbody></table></div></section><section class="play-card"><h2>Physical details</h2><dl class="play-facts">${physical}</dl></section><section class="play-card"><h2>Role</h2><dl class="play-facts">${traits}</dl></section><section class="play-card"><h2>Equipment & money</h2><p class="play-prose">${esc($('#final-money').textContent)}${equipment ? `\n${esc(equipment)}` : ''}</p></section></div><div class="play-card-grid">${playNote('Background & history', form.elements.roleHistory.value)}${playNote('Other bonuses', form.elements.bonuses.value)}</div>`;
+  }
+  function renderPlaySkills() {
+    const favorites = readFavoriteSkills();
+    const rows = $$('.a4-skill-row[data-skill]').map(row => ({category:row.dataset.category, name:row.dataset.skill, ranks:Number($('.a4-start-text', row).textContent) || 0, total:$('.a4-total', row).textContent, favorite:favorites.has(favoriteSkillKey(row.dataset.category, row.dataset.skill))}));
+    const shown = rows.filter(row => playSkillFilter === 'all' || (playSkillFilter === 'favorites' ? row.favorite : row.ranks > 0 || row.favorite));
+    const groups = new Map();
+    shown.forEach(row => { if (!groups.has(row.category)) groups.set(row.category, []); groups.get(row.category).push(row); });
+    $('#play-skills-content').innerHTML = groups.size ? `<p class="play-count">${shown.length} skill${shown.length === 1 ? '' : 's'} shown</p>${[...groups].map(([category, skills]) => `<section class="play-card play-skill-group"><div class="play-group-title"><h2>${esc(category)}</h2><span>Category ${playValue($$('.category-record-row').find(item => item.dataset.category === category)?.querySelector('.record-total')?.textContent)}</span></div><div class="play-skill-heading"><span>Skill</span><span>Ranks</span><span>Total</span></div>${skills.map(skill => `<div class="play-skill-item"><span>${skill.favorite ? '<b aria-label="Favorite">★</b> ' : ''}${esc(skill.name)}</span><span>${skill.ranks}</span><strong>${playValue(skill.total)}</strong></div>`).join('')}</section>`).join('')}` : `<div class="play-empty">${playSkillFilter === 'favorites' ? 'No favorite skills yet. Mark them on the creation sheet.' : 'No skills match this view.'}</div>`;
+    $$('[data-play-skill-filter]').forEach(button => button.setAttribute('aria-pressed', String(button.dataset.playSkillFilter === playSkillFilter)));
+  }
+  function renderPlayCombat() {
+    const metric = (label, id) => `<div><span>${esc(label)}</span><strong>${playValue($(id).textContent)}</strong></div>`;
+    const starting = new Set(readStartingWeapons());
+    const attacks = $$('.a4-skill-row[data-skill]').filter(row => row.dataset.category.startsWith('Weapon') && (Number($('.a4-start-text', row).textContent) > 0 || starting.has(favoriteSkillKey(row.dataset.category, row.dataset.skill)))).map(row => `<tr><th scope="row">${esc(row.dataset.skill)}</th><td>${playValue($('.a4-start-text', row).textContent)}</td><td>${playValue($('.a4-total', row).textContent)}</td></tr>`).join('');
+    const rolls = resistanceTypes.map(([key, label]) => `<tr><th scope="row">${esc(label)}</th><td>${playValue($(`#rr-race-${key}`).textContent)}</td><td>${playValue($(`#rr-stat-${key}`).textContent)}</td><td>${playValue($(`#rr-total-${key}`).textContent)}</td></tr>`).join('');
+    const combatNotes = form.elements.attacks.value.trim();
+    const spells = form.elements.spells.value.trim();
+    $('#play-combat-content').innerHTML = `<div class="play-summary play-combat-summary">${metric('Hits max.', '#final-hits')}${metric('Power points', '#final-pp')}${metric('Normal DB', '#final-db')}${metric('Armor type', '#final-at')}${metric('Base movement', '#final-move')}${metric('Moving maneuver', '#final-mmp')}${metric('Weight penalty', '#final-weight-penalty')}${metric('Missile penalty', '#final-missile')}</div><div class="play-card-grid"><section class="play-card"><h2>Attacks</h2>${attacks ? `<div class="play-table-scroll"><table class="play-table"><thead><tr><th>Weapon skill</th><th>Ranks</th><th>Bonus</th></tr></thead><tbody>${attacks}</tbody></table></div>` : '<p class="play-muted">No weapon skills recorded.</p>'}${combatNotes ? `<p class="play-prose">${esc(combatNotes)}</p>` : ''}</section><section class="play-card"><h2>Defense & movement</h2><p class="play-prose">${esc($('#final-defense-detail').textContent)}\n${esc($('#final-load-detail').textContent)}</p></section><section class="play-card"><h2>Resistance rolls</h2><div class="play-table-scroll"><table class="play-table"><thead><tr><th>Type</th><th>Race</th><th>Stat</th><th>Total</th></tr></thead><tbody>${rolls}</tbody></table></div></section><section class="play-card"><h2>Recovery & spells</h2><p class="play-prose">${esc($('#final-recovery').textContent)}\n${esc($('#final-known-spells').textContent)}${spells ? `\n${esc(spells)}` : ''}</p></section></div>`;
+  }
+  function renderPlay() {
+    updateDevelopment();
+    $('#play-character-name').textContent = form.elements.name.value || 'Unnamed character';
+    $('#play-character-subtitle').textContent = [form.elements.race.value, form.elements.profession.value, form.elements.player.value ? `Player: ${form.elements.player.value}` : '', form.elements.campaign.value].filter(Boolean).join(' · ');
+    $('#play-character-level').textContent = form.elements.level.value || '1';
+    renderPlayCharacter(); renderPlaySkills(); renderPlayCombat();
+  }
+  function selectPlayTab(name) {
+    $$('[data-play-tab]').forEach(button => {
+      const selected = button.dataset.playTab === name;
+      button.setAttribute('aria-selected', String(selected));
+      button.tabIndex = selected ? 0 : -1;
+      $(`#play-panel-${button.dataset.playTab}`).hidden = !selected;
     });
   }
   function formData() {
@@ -2206,7 +2250,7 @@
     const missingMode = !form.elements.statPoolMode.value;
     if (missingMode) form.elements.statPoolMode.value = 'roll';
     if (generated || missingMode) saveCurrent();
-    showView('editor'); revealSelectedChoices();
+    renderPlay(); selectPlayTab('character'); showView('play');
   }
   function newCharacter() {
     currentId = crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random()}`;
@@ -2390,6 +2434,7 @@
       renderSkillTree(draft);
       renderTables();
       updateDevelopment();
+      if ($('#play-view').classList.contains('active')) renderPlay();
     } catch (error) {
       $('#table-list').innerHTML = '<p class="table-load-error">Table data could not be loaded. Serve this folder over HTTP and reload.</p>';
     }
@@ -2410,6 +2455,24 @@
   $('.brand').addEventListener('click', event => { event.preventDefault(); showView('home'); });
   $('#new-character').addEventListener('click', newCharacter);
   $('#empty-new-character').addEventListener('click', newCharacter);
+  $('#back-play-roster').addEventListener('click', () => showView('home'));
+  $('#edit-character').addEventListener('click', () => { showView('editor'); revealSelectedChoices(); });
+  $('#open-play-view').addEventListener('click', () => {
+    if (!form.elements.name.value.trim()) { form.elements.name.focus(); return; }
+    saveCurrent(); renderPlay(); selectPlayTab('character'); showView('play');
+  });
+  $$('[data-play-tab]').forEach(button => button.addEventListener('click', () => selectPlayTab(button.dataset.playTab)));
+  $('.play-tabs').addEventListener('keydown', event => {
+    if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return;
+    const tabs = $$('[data-play-tab]');
+    const current = tabs.findIndex(tab => tab === document.activeElement);
+    if (current < 0) return;
+    event.preventDefault();
+    const next = event.key === 'Home' ? 0 : event.key === 'End' ? tabs.length - 1 : (current + (event.key === 'ArrowRight' ? 1 : -1) + tabs.length) % tabs.length;
+    selectPlayTab(tabs[next].dataset.playTab);
+    tabs[next].focus();
+  });
+  $$('[data-play-skill-filter]').forEach(button => button.addEventListener('click', () => { playSkillFilter = button.dataset.playSkillFilter; renderPlaySkills(); }));
   $$('.filter-chip').forEach(button => button.addEventListener('click', () => openTableGroup(button.dataset.group)));
   $('#back-roster').addEventListener('click', () => { saveCurrent(); renderRoster(); showView('home'); });
   $('#cancel-skill-category').addEventListener('click', () => { $('#skill-category-picker').hidden = true; skillCategoryPickerTarget = null; });

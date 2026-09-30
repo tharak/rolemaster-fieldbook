@@ -27,8 +27,23 @@
       <div class="empty-state" id="empty-state"><h2>No characters yet</h2><p>Create a character to get started.</p><button id="empty-new-character" class="button button-dark">Create character</button></div>
     </section>
 
+    <section id="play-view" class="view" aria-labelledby="play-character-name">
+      <div class="play-shell">
+        <div class="play-toolbar"><button type="button" class="back-link" id="back-play-roster">← All characters</button><button type="button" class="button button-quiet" id="edit-character">Edit character</button></div>
+        <header class="play-header"><div><p class="play-eyebrow">Character sheet</p><h1 id="play-character-name"></h1><p id="play-character-subtitle"></p></div><div class="play-header-level"><span>Level</span><strong id="play-character-level"></strong></div></header>
+        <div class="play-tabs" role="tablist" aria-label="Character play views">
+          <button type="button" role="tab" id="play-tab-character" aria-controls="play-panel-character" aria-selected="true" data-play-tab="character">Character info</button>
+          <button type="button" role="tab" id="play-tab-skills" aria-controls="play-panel-skills" aria-selected="false" data-play-tab="skills">Skills</button>
+          <button type="button" role="tab" id="play-tab-combat" aria-controls="play-panel-combat" aria-selected="false" data-play-tab="combat">Combat</button>
+        </div>
+        <section class="play-panel" id="play-panel-character" role="tabpanel" aria-labelledby="play-tab-character"><div id="play-character-content"></div></section>
+        <section class="play-panel" id="play-panel-skills" role="tabpanel" aria-labelledby="play-tab-skills" hidden><div class="play-skill-filters" role="group" aria-label="Skills to show"><button type="button" data-play-skill-filter="active" aria-pressed="true">Trained & favorites</button><button type="button" data-play-skill-filter="favorites" aria-pressed="false">Favorites</button><button type="button" data-play-skill-filter="all" aria-pressed="false">All skills</button></div><div id="play-skills-content"></div></section>
+        <section class="play-panel" id="play-panel-combat" role="tabpanel" aria-labelledby="play-tab-combat" hidden><div id="play-combat-content"></div></section>
+      </div>
+    </section>
+
     <section id="editor-view" class="view">
-      <div class="editor-top"><button class="back-link" id="back-roster">← All characters</button><div class="editor-actions"><button class="button button-quiet" id="print-character">Print sheet</button><button class="button button-quiet danger" id="delete-character">Delete</button></div></div>
+      <div class="editor-top"><button class="back-link" id="back-roster">← All characters</button><div class="editor-actions"><button class="button button-quiet" id="open-play-view">Play view</button><button class="button button-quiet" id="print-character">Print sheet</button><button class="button button-quiet danger" id="delete-character">Delete</button></div></div>
       <form id="character-form" class="record-sheet">
         <div class="record-header">
           <h1 class="record-title">Character Record Sheet <span>T-6.1</span></h1>
