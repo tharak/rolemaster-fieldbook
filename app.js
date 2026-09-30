@@ -22,6 +22,7 @@
   let activeTableGroup = 'all';
   let skillCategoryPickerTarget = null;
   let skillChoiceTarget = null;
+  let trainingItemTarget = null;
   const primeStats = {Fighter:['Strength','Constitution'], Thief:['Agility','Quickness'], Rogue:['Agility','Strength'], Cleric:['Intuition','Memory'], Magician:['Empathy','Reasoning'], Mentalist:['Presence','Self Discipline'], Ranger:['Intuition','Constitution'], Dabbler:['Empathy','Agility'], Bard:['Presence','Memory']};
   // The ends of each range in the Core Rules role trait table T-1.7.
   const personalityRanges = [
@@ -547,6 +548,7 @@
       row.dataset.raceBase = String(Number(saved[row.dataset.category]?.raceBase) || 0);
       row.dataset.hobbySpent = String(Number(saved[row.dataset.category]?.hobbySpent) || 0);
       row.dataset.packageBase = String(Number(saved[row.dataset.category]?.packageBase) || 0);
+      row.dataset.trainingItemBase = String(Number(saved[row.dataset.category]?.trainingItemBase) || 0);
       row.dataset.backgroundSpecialBase = String(Number(saved[row.dataset.category]?.backgroundSpecialBase) || 0);
       if ($('[name="record-buy"]', row)) {
         if (!developmentRules && saved[row.dataset.category]?.buy) row.dataset.pendingBuy = saved[row.dataset.category].buy;
@@ -1148,6 +1150,49 @@
     trainingSpecialAwards(pack, special).forEach(index => { special.itemDice[index] = rollItemDice(pack.specialItems[index][0]); });
     return special;
   }
+  function trainingItemEffect(label) {
+    const bonus = Number(/\+(\d+)/.exec(label)?.[1]) || 0;
+    if (!bonus || /spell adder|spell multiplier|daily /i.test(label)) return null;
+    const fixed = [];
+    if (/lockpicks and disarm/i.test(label)) fixed.push('Subterfuge • Mechanics:Picking Locks', 'Subterfuge • Mechanics:Disarming Traps');
+    else if (/lockpick kit/i.test(label)) fixed.push('Subterfuge • Mechanics:Picking Locks');
+    else if (/disarm trap kit/i.test(label)) fixed.push('Subterfuge • Mechanics:Disarming Traps');
+    else if (/medical kit/i.test(label)) fixed.push('Technical/Trade • General:First Aid');
+    else if (/traps \(/i.test(label)) fixed.push('Subterfuge • Mechanics:Setting Traps');
+    else if (/disguise kit|make-up kit/i.test(label)) fixed.push('Subterfuge • Mechanics:Disguise');
+    else if (/warhorse/i.test(label)) fixed.push('Combat Maneuvers:Mounted Combat');
+    if (/armor|shield|helm/i.test(label) && !/weapon/i.test(label)) return null;
+    const kind = /lore category/i.test(label) ? 'category'
+      : /warhorse|riding horse|riding beast/i.test(label) ? 'riding'
+      : /lore skill/i.test(label) ? 'lore'
+      : /missile weapon/i.test(label) ? 'missile'
+      : /melee weapon/i.test(label) ? 'melee'
+      : /weapon/i.test(label) ? 'weapon'
+      : /performance props/i.test(label) ? 'performance'
+      : fixed.length ? 'fixed' : 'skill';
+    return {bonus, kind, fixed};
+  }
+  function trainingItemCandidates(kind) {
+    if (kind === 'category') return Object.keys(skillCategoryRules).filter(category => category.startsWith('Lore •')).map(category => [`category:${category}`, category]);
+    const candidates = backgroundSkillCandidates(true);
+    if (kind === 'riding' && !candidates.some(skill => skill.category === 'Outdoor • Animal' && skill.name === 'Riding (horse)')) candidates.push({category:'Outdoor • Animal', name:'Riding (horse)'});
+    return candidates.filter(skill => kind === 'weapon' ? skill.category.startsWith('Weapon •')
+      : kind === 'missile' ? ['Weapon • Missile','Weapon • Thrown','Weapon • Missile Artillery'].includes(skill.category)
+      : kind === 'melee' ? skill.category.startsWith('Weapon •') && !['Weapon • Missile','Weapon • Thrown','Weapon • Missile Artillery'].includes(skill.category)
+      : kind === 'lore' ? skill.category.startsWith('Lore •')
+      : kind === 'riding' ? skill.category === 'Outdoor • Animal' && skill.name.startsWith('Riding')
+      : kind === 'performance' ? skill.category === 'Artistic • Active'
+      : true).map(skill => [`${skill.category}:${skill.name}`, `${skill.name} · ${skill.category}`]).sort((a, b) => a[1].localeCompare(b[1]));
+  }
+  function renderTrainingItemAssignment(pack, special, index) {
+    const item = pack.specialItems[index][0];
+    const dice = special.itemDice?.[index]?.map(result => `${result.dice}: ${result.rolls.join('+')} = ${result.total}`).join(' · ');
+    const effect = trainingItemEffect(item);
+    const target = special.targets?.[index] || '';
+    const chosen = effect && effect.kind !== 'fixed' ? `<button type="button" class="training-item-target" data-training-item-target="${esc(pack.name)}" data-item-index="${index}">${target ? `+${effect.bonus} to ${esc(trainingItemCandidates(effect.kind).find(([key]) => key === target)?.[1] || target)}` : `Choose skill for +${effect.bonus} item bonus`}</button>` : '';
+    const automatic = effect?.fixed.length ? `<small>+${effect.bonus} to ${esc(effect.fixed.map(key => key.split(':').at(-1)).join(' and '))}</small>` : '';
+    return `<div class="training-item-assignment"><label class="training-item-note">${esc(item)}${dice ? ` · ${dice}` : ''} · GM details<input type="text" data-training-benefit-note="${esc(pack.name)}" data-item-index="${index}" value="${esc(special.notes?.[index] || '')}" maxlength="150" placeholder="Name, form, or other detail"></label>${automatic}${chosen}</div>`;
+  }
   function changeTrainingBenefit(name, change) {
     const pack = trainingPackages.find(item => item.name === name);
     if (!pack || !readTrainingSelections().includes(name)) return;
@@ -1286,7 +1331,7 @@
       }).join('')}</div><label class="training-grant-last"><input type="checkbox" data-training-grant-last="${esc(pack.name)}"${special.grantLast ? ' checked' : ''}> GM grants the final item as well</label>`
       : special.mode === 'last' ? `<p>Taking the final item: <strong>${esc(pack.specialItems.at(-1)[0])}</strong></p>`
       : `<p>Roll d100 open-ended for each item in order. After each gain, later chances are halved. If none succeed, the final item is granted.</p><ul>${pack.specialItems.map(([item, chance]) => `<li>${esc(item)} · +${chance}</li>`).join('')}</ul>`;
-    return `<details class="training-benefits" data-training-benefits="${esc(pack.name)}"${wasOpen ? ' open' : ''}><summary>Starting money and special items · A-5</summary><div class="training-benefit-block"><strong>Starting money</strong>${moneyMarkup}</div><div class="training-benefit-block"><strong>Special items</strong>${specialMarkup}<div class="choice-strip"><button type="button" data-training-special-roll="${esc(pack.name)}">${special.mode === 'rolled' ? 'Reroll specials' : 'Roll specials'}</button><button type="button" data-training-special-last="${esc(pack.name)}" aria-pressed="${special.mode === 'last'}">Take final item</button></div>${awards.map(index => `<label class="training-item-note">${esc(pack.specialItems[index][0])}${special.itemDice?.[index]?.length ? ` · ${special.itemDice[index].map(result => `${result.dice}: ${result.rolls.join('+')} = ${result.total}`).join(' · ')}` : ''} · GM details<input type="text" data-training-benefit-note="${esc(pack.name)}" data-item-index="${index}" value="${esc(special.notes?.[index] || '')}" maxlength="150" placeholder="Name, form, or other detail"></label>`).join('')}</div></details>`;
+    return `<details class="training-benefits" data-training-benefits="${esc(pack.name)}"${wasOpen ? ' open' : ''}><summary>Starting money and special items · A-5</summary><div class="training-benefit-block"><strong>Starting money</strong>${moneyMarkup}</div><div class="training-benefit-block"><strong>Special items</strong>${specialMarkup}<div class="choice-strip"><button type="button" data-training-special-roll="${esc(pack.name)}">${special.mode === 'rolled' ? 'Reroll specials' : 'Roll specials'}</button><button type="button" data-training-special-last="${esc(pack.name)}" aria-pressed="${special.mode === 'last'}">Take final item</button></div>${awards.map(index => renderTrainingItemAssignment(pack, special, index)).join('')}</div></details>`;
   }
   function renderTrainingPackages() {
     const selected = readTrainingSelections();
@@ -1441,7 +1486,7 @@
   function applyBackgroundEffects() {
     const details = readBackgroundDetails();
     const selected = readBackgroundSelections();
-    const languageRanks = new Map(), skillSpecial = new Map(), skillItem = new Map(), categorySpecial = new Map();
+    const languageRanks = new Map(), skillSpecial = new Map(), skillItem = new Map(), categorySpecial = new Map(), categoryItem = new Map();
     const add = (map, key, amount) => map.set(key, (map.get(key) || 0) + amount);
     for (let index = 0; index < (Number(selected.extraLanguages) || 0); index++) {
       Object.entries(backgroundEntry(details, 'extraLanguages', index).allocations || {}).forEach(([name, ranks]) => {
@@ -1463,6 +1508,21 @@
         if (effect.target && Number.isFinite(Number(effect.bonus))) add(skillItem, effect.target, Number(effect.bonus));
       });
     }
+    const benefits = readTrainingBenefits();
+    readTrainingSelections().forEach(name => {
+      const pack = trainingPackages.find(item => item.name === name);
+      if (!pack) return;
+      const special = benefits[name]?.special || {};
+      trainingSpecialAwards(pack, special).forEach(index => {
+        const effect = trainingItemEffect(pack.specialItems[index][0]);
+        if (!effect) return;
+        effect.fixed.forEach(key => add(skillItem, key, effect.bonus));
+        const target = special.targets?.[index];
+        if (!target || !trainingItemCandidates(effect.kind).some(([key]) => key === target)) return;
+        if (target.startsWith('category:')) add(categoryItem, target.slice(9), effect.bonus);
+        else add(skillItem, target, effect.bonus);
+      });
+    });
     skillItem.forEach((amount, key) => skillItem.set(key, Math.min(30, amount)));
     $$('.category-record-row').forEach(row => {
       const field = $('[name="record-special"]', row);
@@ -1470,6 +1530,11 @@
       const next = categorySpecial.get(row.dataset.category) || 0;
       field.value = String((Number(field.value) || 0) - previous + next);
       row.dataset.backgroundSpecialBase = String(next);
+      const itemField = $('[name="record-special2"]', row);
+      const previousItem = Number(row.dataset.trainingItemBase) || 0;
+      const nextItem = categoryItem.get(row.dataset.category) || 0;
+      itemField.value = String((Number(itemField.value) || 0) - previousItem + nextItem);
+      row.dataset.trainingItemBase = String(nextItem);
     });
     const pending = new Set([...languageRanks.keys(), ...skillSpecial.keys(), ...skillItem.keys()]);
     $$('.skill-row', $('#skills-list')).forEach(row => {
@@ -2187,6 +2252,7 @@
     form.elements.equipmentLedger.value = JSON.stringify(ledger);
     saveCurrent();
     renderPlayEquipment();
+    renderPlayCombat();
   }
   function renderEquipmentCatalog() {
     const category = equipmentCategory;
@@ -2231,12 +2297,39 @@
   }
   function renderPlayCombat() {
     const metric = (label, id) => `<div><span>${esc(label)}</span><strong>${playValue($(id).textContent)}</strong></div>`;
-    const starting = new Set(readStartingWeapons());
-    const attacks = $$('.a4-skill-row[data-skill]').filter(row => row.dataset.category.startsWith('Weapon') && (Number($('.a4-start-text', row).textContent) > 0 || starting.has(favoriteSkillKey(row.dataset.category, row.dataset.skill)))).map(row => playRollTile({category:row.dataset.category, name:row.dataset.skill, ranks:Number($('.a4-start-text', row).textContent) || 0, total:$('.a4-total', row).textContent})).join('');
+    const weaponSkills = $$('.a4-skill-row[data-skill]').filter(row => row.dataset.category.startsWith('Weapon •')).map(row => ({category:row.dataset.category, name:row.dataset.skill, ranks:Number($('.a4-start-text', row).textContent) || 0, total:$('.a4-total', row).textContent}));
+    const normalizeWeapon = name => name.toLowerCase().replace(/[^a-z0-9]/g, '');
+    const attackItems = readStartingWeapons().flatMap(key => { try { const [category, name] = JSON.parse(key); return [{category, name, source:'Starting weapon'}]; } catch { return []; } });
+    const armorItems = [];
+    const startingArmor = readStartingArmor();
+    if (startingArmor) armorItems.push({name:startingArmor[0], detail:`Starting armor · AT ${startingArmor[1]}`});
+    readEquipmentLedger().items.forEach(entry => {
+      const item = equipmentCatalog.find(candidate => candidate.id === entry.id);
+      if (item?.category === 'Weapons') attackItems.push({name:item.name, source:`Owned${entry.quantity > 1 ? ` · ×${entry.quantity}` : ''}`});
+      if (item?.category === 'Armor') armorItems.push({name:item.name, detail:`Owned${entry.quantity > 1 ? ` · ×${entry.quantity}` : ''}`});
+    });
+    const benefits = readTrainingBenefits();
+    readTrainingSelections().forEach(name => {
+      const pack = trainingPackages.find(item => item.name === name);
+      if (!pack) return;
+      const special = benefits[name]?.special || {};
+      trainingSpecialAwards(pack, special).forEach(index => {
+        const label = pack.specialItems[index][0], note = special.notes?.[index]?.trim();
+        if (/weapon/i.test(label) && (!/or armor/i.test(label) || special.targets?.[index]?.startsWith('Weapon •'))) attackItems.push({name:note || label, source:`${name} award`, target:special.targets?.[index]});
+        else if (/armor|shield|helm/i.test(label)) armorItems.push({name:note || label, detail:`${name} award`});
+      });
+    });
+    const attacks = attackItems.map(item => {
+      const match = weaponSkills.find(skill => item.category === skill.category && item.name === skill.name)
+        || weaponSkills.find(skill => item.target === `${skill.category}:${skill.name}`)
+        || weaponSkills.find(skill => normalizeWeapon(skill.name) === normalizeWeapon(item.name));
+      return playRollTile({category:match ? `${item.source} · ${match.category}` : item.source, name:item.name, ranks:match?.ranks ?? 0, total:match?.total ?? '—'});
+    }).join('');
+    const armors = armorItems.map(item => `<div class="equipment-owned"><span><strong>${esc(item.name)}</strong><small>${esc(item.detail)}</small></span></div>`).join('');
     const rolls = resistanceTypes.map(([key, label]) => playRollTile({category:'Resistance roll', name:label, total:$(`#rr-total-${key}`).textContent, kind:'resistance'})).join('');
     const combatNotes = form.elements.attacks.value.trim();
     const spells = form.elements.spells.value.trim();
-    $('#play-combat-content').innerHTML = `<div class="play-summary play-combat-summary">${metric('Hits max.', '#final-hits')}${metric('Power points', '#final-pp')}${metric('Normal DB', '#final-db')}${metric('Armor type', '#final-at')}${metric('Base movement', '#final-move')}${metric('Moving maneuver', '#final-mmp')}${metric('Weight penalty', '#final-weight-penalty')}${metric('Missile penalty', '#final-missile')}</div><div class="play-card-grid"><section class="play-card"><h2>Attacks</h2>${attacks ? `<div class="play-skill-tiles">${attacks}</div>` : '<p class="play-muted">No weapon skills recorded.</p>'}${combatNotes ? `<p class="play-prose">${esc(combatNotes)}</p>` : ''}</section><section class="play-card"><h2>Defense & movement</h2><p class="play-prose">${esc($('#final-defense-detail').textContent)}\n${esc($('#final-load-detail').textContent)}</p></section><section class="play-card"><h2>Resistance rolls</h2><div class="play-skill-tiles">${rolls}</div></section><section class="play-card"><h2>Recovery & spells</h2><p class="play-prose">${esc($('#final-recovery').textContent)}\n${esc($('#final-known-spells').textContent)}${spells ? `\n${esc(spells)}` : ''}</p></section></div>`;
+    $('#play-combat-content').innerHTML = `<div class="play-summary play-combat-summary">${metric('Hits max.', '#final-hits')}${metric('Power points', '#final-pp')}${metric('Normal DB', '#final-db')}${metric('Armor type', '#final-at')}${metric('Base movement', '#final-move')}${metric('Moving maneuver', '#final-mmp')}${metric('Weight penalty', '#final-weight-penalty')}${metric('Missile penalty', '#final-missile')}</div><div class="play-card-grid"><section class="play-card"><h2>Attacks</h2>${attacks ? `<div class="play-skill-tiles">${attacks}</div>` : '<p class="play-muted">No attack items recorded.</p>'}${combatNotes ? `<p class="play-prose">${esc(combatNotes)}</p>` : ''}</section><section class="play-card"><h2>Armor</h2>${armors || '<p class="play-muted">No armor recorded.</p>'}</section><section class="play-card"><h2>Defense & movement</h2><p class="play-prose">${esc($('#final-defense-detail').textContent)}\n${esc($('#final-load-detail').textContent)}</p></section><section class="play-card"><h2>Resistance rolls</h2><div class="play-skill-tiles">${rolls}</div></section><section class="play-card"><h2>Recovery & spells</h2><p class="play-prose">${esc($('#final-recovery').textContent)}\n${esc($('#final-known-spells').textContent)}${spells ? `\n${esc(spells)}` : ''}</p></section></div>`;
   }
   function renderPlay() {
     updateDevelopment();
@@ -2305,8 +2398,9 @@
       const hobbySpent = Number(row.dataset.hobbySpent) || 0;
       const packageBase = Number(row.dataset.packageBase) || 0;
       const backgroundSpecialBase = Number(row.dataset.backgroundSpecialBase) || 0;
-      return visibleCategories.has(row.dataset.category) || Number(start) || Number(buy) || Number(special) || Number(special2) || raceBase || hobbySpent || packageBase || backgroundSpecialBase
-        ? [[row.dataset.category, {start, buy, special, special2, raceBase, hobbySpent, packageBase, backgroundSpecialBase}]] : [];
+      const trainingItemBase = Number(row.dataset.trainingItemBase) || 0;
+      return visibleCategories.has(row.dataset.category) || Number(start) || Number(buy) || Number(special) || Number(special2) || raceBase || hobbySpent || packageBase || backgroundSpecialBase || trainingItemBase
+        ? [[row.dataset.category, {start, buy, special, special2, raceBase, hobbySpent, packageBase, backgroundSpecialBase, trainingItemBase}]] : [];
     }));
     ['skill-name','skill-start','skill-buy','skill-item','skill-special','record-start','record-buy','record-special','record-special2','a4-start','a4-buy','a4-item','a4-special'].forEach(key => delete data[key]);
     data.stats = Object.fromEntries(statNames.map((name, index) => [name, Object.fromEntries(['temp','pot','basic','racial','special','total'].map(part => [part, data[`stat-${part}-${index}`] || '']))]));
@@ -2738,6 +2832,21 @@
     saveCurrent();
   });
   $('#apprenticeship-package-list').addEventListener('click', event => {
+    const itemButton = event.target.closest('button[data-training-item-target]');
+    if (itemButton) {
+      const pack = trainingPackages.find(entry => entry.name === itemButton.dataset.trainingItemTarget);
+      const index = Number(itemButton.dataset.itemIndex);
+      const special = readTrainingBenefits()[pack?.name]?.special;
+      const effect = pack && trainingSpecialAwards(pack, special).includes(index) && trainingItemEffect(pack.specialItems[index][0]);
+      if (!effect || effect.kind === 'fixed') return;
+      trainingItemTarget = {pack:pack.name, index, kind:effect.kind};
+      $('#training-item-subtitle').textContent = `${pack.specialItems[index][0]} · +${effect.bonus}`;
+      $('#training-item-search').value = '';
+      $('#training-item-options').innerHTML = trainingItemCandidates(effect.kind).map(([key, label]) => `<button type="button" data-training-target="${esc(key)}" aria-pressed="${special.targets?.[index] === key}">${esc(label)}</button>`).join('');
+      $('#training-item-picker').showModal();
+      $('#training-item-search').focus();
+      return;
+    }
     const benefitButton = event.target.closest('button[data-training-money-roll], button[data-training-money-fixed], button[data-training-special-roll], button[data-training-special-last]');
     if (benefitButton) {
       if (benefitButton.hasAttribute('data-training-money-roll')) {
@@ -2752,7 +2861,7 @@
       } else if (benefitButton.hasAttribute('data-training-special-last')) {
         changeTrainingBenefit(benefitButton.dataset.trainingSpecialLast, (entry, pack) => {
           const last = pack.specialItems.length - 1;
-          entry.special = {mode:'last', rows:[], notes:entry.special?.notes?.[last] ? {[last]:entry.special.notes[last]} : {}, itemDice:{[last]:rollItemDice(pack.specialItems[last][0])}};
+          entry.special = {mode:'last', rows:[], notes:entry.special?.notes?.[last] ? {[last]:entry.special.notes[last]} : {}, targets:entry.special?.targets?.[last] ? {[last]:entry.special.targets[last]} : {}, itemDice:{[last]:rollItemDice(pack.specialItems[last][0])}};
         });
       }
       return;
@@ -2772,6 +2881,22 @@
     }
     const button = event.target.closest('button[data-package]');
     if (button) toggleTrainingPackage(button.dataset.package);
+  });
+  $('#close-training-item-picker').addEventListener('click', () => $('#training-item-picker').close());
+  $('#training-item-picker').addEventListener('close', () => { trainingItemTarget = null; });
+  $('#training-item-search').addEventListener('input', event => {
+    const needle = event.target.value.trim().toLowerCase();
+    $$('#training-item-options button').forEach(button => { button.hidden = !button.textContent.toLowerCase().includes(needle); });
+  });
+  $('#training-item-options').addEventListener('click', event => {
+    const button = event.target.closest('button[data-training-target]');
+    if (!button || !trainingItemTarget) return;
+    const {pack, index} = trainingItemTarget;
+    changeTrainingBenefit(pack, entry => {
+      entry.special.targets ||= {};
+      entry.special.targets[index] = button.dataset.trainingTarget;
+    });
+    $('#training-item-picker').close();
   });
   $('#weapon-cost-picker-list').addEventListener('click', event => {
     const button = event.target.closest('button[data-weapon-cost-source]');
@@ -2948,6 +3073,11 @@
       changeBackgroundEntry(key, index, entry => {
         entry.choice = button.dataset.backgroundItemChoice;
         entry.description = ''; entry.effects = [];
+        const bonus = Number(/\+(\d+)\s+(?:non-magic|magic)\s+items?/i.exec(entry.choice)?.[1]) || 0;
+        if (bonus) {
+          const count = /^Two\b/i.test(entry.choice) ? 2 : /^Three\b/i.test(entry.choice) ? 3 : 1;
+          entry.effects = Array.from({length:count}, () => ({target:'', bonus}));
+        }
       });
     } else if (button.hasAttribute('data-background-add-effect')) {
       changeBackgroundEntry(key, index, entry => {
