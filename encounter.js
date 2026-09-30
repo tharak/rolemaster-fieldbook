@@ -4,7 +4,7 @@
   const $ = selector => document.querySelector(selector);
   const esc = value => String(value ?? '').replace(/[&<>"']/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
   const phases = ['snap','normal','deliberate'];
-  const statusChoices = ['Surprised','Stunned','Prone','Bleeding','Unconscious','Dead'];
+  const statusChoices = ['Surprised','Stunned','Prone','Bleeding','Wet','Unconscious','Dead'];
   const difficulties = ['Routine','Easy','Light','Medium','Hard','Very Hard','Extremely Hard','Sheer Folly','Absurd'];
   const staticDifficulty = [30,20,10,0,-10,-20,-30,-50,-70];
   const attackTables = {'Weapon • 1-H Concussion':'A-10.9.1','Weapon • 1-H Edged':'A-10.9.2','Weapon • 2-Handed':'A-10.9.3','Weapon • Missile':'A-10.9.4','Weapon • Missile Artillery':'A-10.9.4','Weapon • Pole Arms':'A-10.9.5','Weapon • Thrown':'A-10.9.6'};
@@ -77,25 +77,103 @@
       .replace(/(\d*)\(\s*([-−–+])\s*(\d+)\s*\)/g,(_,count,sign,amount)=>sign==='+'?`${rounds(count,'attacker gains')} +${amount} bonus`:`${count?rounds(count,'foe suffers'):'Foe suffers'} −${amount} penalty`)
       .replace(/\s+[–—]\s+/g,'; ');
   }
-  const criticalPenalty=value=>(value?.criticalEffects||[]).reduce((sum,effect)=>sum-(effect.kind==='penalty'&&(effect.startsRound??state.round)<=state.round?Number(effect.amount)||0:0),0);
-  function criticalPenalties(effect) {
-    if(/\b(?:with|without|w\/o|if)\b/i.test(effect||''))return [];
-    return [...String(effect||'').matchAll(/(\d*)\(\s*[-−–]\s*(\d+)\s*\)/g)].map(([,rounds,amount])=>({kind:'penalty',amount:Number(amount),roundsLeft:rounds?Number(rounds):null}));
+  const activeCriticalEffects=value=>(value?.criticalEffects||[]).filter(effect=>(effect.startsRound??state.round)<=state.round);
+  const criticalPenalty=value=>activeCriticalEffects(value).reduce((sum,effect)=>sum-(effect.kind==='penalty'?Number(effect.amount)||0:0),0);
+  const criticalBonus=value=>activeCriticalEffects(value).reduce((sum,effect)=>sum+(effect.kind==='bonus'?Number(effect.amount)||0:0),0);
+  const criticalModifier=value=>criticalPenalty(value)+criticalBonus(value);
+  const criticalRounds=(value,kind)=>activeCriticalEffects(value).filter(effect=>effect.kind===kind).reduce((sum,effect)=>sum+(Number(effect.roundsLeft)||0),0);
+  function criticalEffectLabel(effect) {
+    const rounds=effect.roundsLeft===null?'until healed':`${effect.roundsLeft} round${effect.roundsLeft===1?'':'s'}`;
+    return ({penalty:`−${effect.amount} to rolls`,bonus:`+${effect.amount} to rolls`,stun:'Stunned',stunNoParry:'Stunned; cannot parry',noParry:'Cannot parry',mustParry:`Must parry${effect.amount?` at −${effect.amount}`:''}`,bleed:`Bleeding ${effect.amount} hit${effect.amount===1?'':'s'}/round`})[effect.kind]+` · ${rounds}`;
   }
-  function addCriticalPenalties(value,penalties) {
-    if(!penalties.length)return;
-    value.criticalEffects=Array.isArray(value.criticalEffects)?value.criticalEffects:[];
-    for(const effect of penalties)value.criticalEffects.push({...effect,startsRound:state.round+(effect.roundsLeft!==null&&(value.activityThisRound||0)>=50?1:0),id:crypto.randomUUID?.()||`${Date.now()}-${Math.random()}`});
+  function criticalFacts(who,value) {
+    const names=(who.equipmentNames||[]).join(' ').toLowerCase(),at=Number(who.at)||1;
+    const greaves=[10,14,18].includes(at)||/full chain|full plate|half plate|rein.*full/i.test(names);
+    return {
+      shield:(who.shieldBonus||0)>0||/shield/.test(names),
+      helmet:/helm|helmet/.test(names),
+      'nose guard':/visored|nose guard/.test(names),
+      'arm greaves':greaves||/arm greave/.test(names),
+      'leg greaves':greaves||/leg greave/.test(names),
+      'leg armor':greaves||[8,11,12,15,16,19,20].includes(at)||/leg greave/.test(names),
+      'thigh armor':greaves||[8,11,12,15,16,19,20].includes(at)||/thigh armor/.test(names),
+      'chest armor':at>=5,'abdomen armor':at>=5,'waist armor':at>=5,'shoulder armor':at>=6,
+      backpack:/backpack/.test(names),wet:(value.statuses||[]).includes('Wet')
+    };
   }
-  function advanceCriticalPenalties() {
-    for(const value of Object.values(state.tokens))value.criticalEffects=(value.criticalEffects||[]).filter(effect=>effect.kind!=='penalty'||effect.roundsLeft===null||(effect.startsRound??state.round)>state.round||--effect.roundsLeft>0);
+  function chooseCriticalBranch(raw,who,value) {
+    const marker=/\b(without|with|w\/o|w\/|if not|if)\s+(arm greaves|leg greaves?|leg armor|thigh armor|chest armor|ch\.? armor|abdom(?:en|inal) armor|waist armor|shoulder armor|nose guard|shield|helmet|helm|backpack|wet)\s*:+/gi;
+    const found=[...raw.matchAll(marker)];
+    if(!found.length)return /\b(?:w\/o|without)\b/i.test(raw)?{effect:'',unresolved:true}:{effect:raw,unresolved:false};
+    const facts=criticalFacts(who,value);
+    const prefix=raw.slice(0,found[0].index).trim();
+    if(/[∑∏π∫]|\+\d+H|\(\s*[-−–+]\s*\d+\s*\)/.test(prefix))return {effect:'',unresolved:true};
+    for(let index=0;index<found.length;index++) {
+      const [,word,item]=found[index];let key=item.toLowerCase();
+      if(key==='helm')key='helmet';
+      if(key==='leg greave')key='leg greaves';
+      if(/^ch\.? armor$/.test(key))key='chest armor';
+      if(key==='abdominal armor')key='abdomen armor';
+      const present=facts[key];
+      if(present===undefined)return {effect:'',unresolved:true};
+      const wantsAbsent=/without|w\/o|not/i.test(word);
+      if(present!==wantsAbsent) {
+        const effect=raw.slice(found[index].index+found[index][0].length,index+1<found.length?found[index+1].index:raw.length).trim();
+        return /\b(?:w\/o|without)\b/i.test(effect)?{effect:'',unresolved:true}:{effect,unresolved:false};
+      }
+    }
+    return {effect:'',unresolved:false};
+  }
+  function parseCriticalSymbols(raw) {
+    const effects=[];let rest=String(raw||'');
+    const take=(pattern,handler)=>{rest=rest.replace(pattern,(...match)=>{handler(...match);return ' ';});};
+    take(/\+(\d+)H\b/g,(_,amount)=>effects.push({kind:'hits',amount:Number(amount)}));
+    take(/(\d*)∑∏/g,(_,rounds)=>effects.push({kind:'stunNoParry',roundsLeft:Number(rounds)||1}));
+    take(/(\d*)\(\s*(\d*)π\s*[-−–]\s*(\d+)\s*\)/g,(_,outer,inner,penalty)=>effects.push({kind:'mustParry',roundsLeft:Number(outer||inner)||1,amount:Number(penalty)}));
+    take(/(\d*)∑/g,(_,rounds)=>effects.push({kind:'stun',roundsLeft:Number(rounds)||1}));
+    take(/(\d*)∏/g,(_,rounds)=>effects.push({kind:'noParry',roundsLeft:Number(rounds)||1}));
+    take(/(\d*)π/g,(_,rounds)=>effects.push({kind:'mustParry',roundsLeft:Number(rounds)||1,amount:0}));
+    take(/(\d*)∫/g,(_,amount)=>effects.push({kind:'bleed',amount:Number(amount)||1,roundsLeft:null}));
+    take(/(\d*)\(\s*[-−–]\s*(\d+)\s*\)/g,(_,rounds,amount)=>effects.push({kind:'penalty',amount:Number(amount),roundsLeft:rounds?Number(rounds):null}));
+    take(/(\d*)\(\s*\+\s*(\d+)\s*\)/g,(_,rounds,amount)=>effects.push({kind:'bonus',amount:Number(amount),roundsLeft:Number(rounds)||1}));
+    return effects;
+  }
+  function addCriticalEffects(target,attacker,effects) {
+    for(const effect of effects) {
+      if(effect.kind==='hits') {const who=actor(Object.keys(state.tokens).find(id=>token(id)===target));target.hits=who?.hitsMax>0?Math.min(who.hitsMax,(target.hits||0)+effect.amount):(target.hits||0)+effect.amount;continue;}
+      const receiver=effect.kind==='bonus'?attacker:target;
+      receiver.criticalEffects=Array.isArray(receiver.criticalEffects)?receiver.criticalEffects:[];
+      const startsRound=effect.kind==='bleed'||effect.kind==='bonus'?state.round+1:state.round+(effect.roundsLeft!==null&&(target.activityThisRound||0)>=50?1:0);
+      const existing=['stun','stunNoParry','noParry','mustParry'].includes(effect.kind)&&receiver.criticalEffects.find(item=>item.kind===effect.kind&&item.startsRound===startsRound&&item.amount===effect.amount);
+      if(existing){existing.roundsLeft+=effect.roundsLeft;continue;}
+      receiver.criticalEffects.push({...effect,startsRound,id:crypto.randomUUID?.()||`${Date.now()}-${Math.random()}`});
+    }
+    updateStunConsciousness(target);
+  }
+  function updateStunConsciousness(value) {
+    const who=actor(Object.keys(state.tokens).find(id=>token(id)===value));
+    const total=(value.criticalEffects||[]).filter(effect=>['stun','stunNoParry'].includes(effect.kind)).reduce((sum,effect)=>sum+(effect.roundsLeft||0),0);
+    const threshold=10+2*(who?.stats?.[1]||0);
+    value.statuses=Array.isArray(value.statuses)?value.statuses:[];
+    if(total>0&&total>threshold&&!value.statuses.includes('Unconscious')){value.statuses.push('Unconscious');value.stunUnconscious=true;}
+    else if(total<=threshold&&value.stunUnconscious){value.statuses=value.statuses.filter(item=>item!=='Unconscious');delete value.stunUnconscious;}
+  }
+  function advanceCriticalEffects(completedRound) {
+    for(const [id,value] of Object.entries(state.tokens)) {
+      const stuns=(value.criticalEffects||[]).filter(effect=>['stun','stunNoParry'].includes(effect.kind)&&(effect.startsRound??completedRound)<=completedRound);
+      const spent=stuns.find(effect=>effect.kind==='stunNoParry')||stuns[0];
+      value.criticalEffects=(value.criticalEffects||[]).filter(effect=>effect.roundsLeft===null||(effect.startsRound??completedRound)>completedRound||(['stun','stunNoParry'].includes(effect.kind)?effect!==spent||--effect.roundsLeft>0:--effect.roundsLeft>0));
+      updateStunConsciousness(value);
+      const bleeding=activeCriticalEffects(value).filter(effect=>effect.kind==='bleed').reduce((sum,effect)=>sum+effect.amount,0);
+      if(bleeding){const who=actor(id);value.hits=who?.hitsMax>0?Math.min(who.hitsMax,(value.hits||0)+bleeding):(value.hits||0)+bleeding;appendLog(id,`Bleeding: ${bleeding} hit${bleeding===1?'':'s'} at the start of round ${state.round}.`);}
+    }
   }
   const tableCache=new Map();
   async function loadTable(code) {
     if(!tableCache.has(code))tableCache.set(code,fetch(`tables/${code}.json`).then(response=>{if(!response.ok)throw new Error(`Table ${code} unavailable`);return response.json();}));
     return tableCache.get(code);
   }
-  async function narrativeRoll(code,columnIndex,label,modifier=0) {
+  async function narrativeRoll(code,columnIndex,label,modifier=0,criticalTarget=null) {
     const roll=d100(),total=roll+modifier;
     try {
       const table=await loadTable(code);
@@ -103,12 +181,12 @@
       const row=table.rows.find(item=>item.roll.endsWith('+')?lookup>=Number.parseInt(item.roll,10):rollInRow(item.roll,lookup));
       const cell=row?.cells?.[columnIndex];
       const dice=`${roll}${modifier?` ${modifier>=0?'+':'−'} ${Math.abs(modifier)} = ${total}`:''}`;
-      if(!cell)return {html:`${tableLink(code,label)} roll ${dice}: no matching entry.`,extraHits:0,penalties:[]};
-      const effect=cell.effect?` <strong>${esc(expandTableSymbols(cell.effect))}</strong>`:'';
-      const conditional=/\b(?:with|without|w\/o|if)\b/i.test(cell.effect||'');
-      const extraHits=conditional?0:Number(/\+(\d+)H\b/.exec(cell.effect||'')?.[1])||0;
-      return {html:`${tableLink(code,label)} roll ${dice}: ${esc(expandTableSymbols(cell.description))}${effect}${conditional?' (Apply the matching condition manually.)':''}`,extraHits,penalties:criticalPenalties(cell.effect)};
-    } catch {return {html:`${tableLink(code,label)} roll ${roll}: table unavailable.`,extraHits:0,penalties:[]};}
+      if(!cell)return {html:`${tableLink(code,label)} roll ${dice}: no matching entry.`,effects:[]};
+      const choice=criticalTarget?chooseCriticalBranch(cell.effect||'',criticalTarget.who,criticalTarget.value):{effect:cell.effect||'',unresolved:false};
+      const effect=choice.effect?` <strong>${esc(expandTableSymbols(choice.effect))}</strong>`:'';
+      const effects=criticalTarget&&!choice.unresolved?parseCriticalSymbols(choice.effect):[];
+      return {html:`${tableLink(code,label)} roll ${dice}: ${esc(expandTableSymbols(cell.description))}${effect}${choice.unresolved?` <strong>Condition needs review: ${esc(expandTableSymbols(cell.effect))}</strong>`:''}`,effects,unresolved:choice.unresolved,rawEffect:cell.effect||''};
+    } catch {return {html:`${tableLink(code,label)} roll ${roll}: table unavailable.`,effects:[]};}
   }
   const weaponFumbleColumn=category=>category==='Weapon • 2-Handed'?1:category==='Weapon • Pole Arms'?2:category==='Weapon • Thrown'?4:category==='Weapon • Missile'||category==='Weapon • Missile Artillery'?5:0;
   const spellFailureColumn=(skill,attack)=>attack==='bolt'||attack==='ball'?0:attack==='basic'?1:/inform|divin|detect|sense/i.test(skill?.name||'')?2:3;
@@ -178,7 +256,7 @@
     for(const [id,value] of Object.entries(state.tokens)) {
       const who=actor(id);if(!who)continue;
       if(reroll||!Array.isArray(value.initiativeRoll))value.initiativeRoll=[d10(),d10()];
-      const mod=(value.surprised?-4:0)+(who.hitsMax>0&&(value.hits||0)>who.hitsMax/2?-4:0)-Math.floor(movementActivity(id)/10)+(Number(value.initiativeMod)||0)+criticalPenalty(value);
+      const mod=(value.surprised?-4:0)+(who.hitsMax>0&&(value.hits||0)>who.hitsMax/2?-4:0)-Math.floor(movementActivity(id)/10)+(Number(value.initiativeMod)||0)+criticalModifier(value);
       value.initiative=value.initiativeRoll[0]+value.initiativeRoll[1]+(who.stats[8]||0)+mod;
     }
   }
@@ -296,8 +374,8 @@
       const who=actor(id);
       const used=phases.reduce((sum,phase)=>{const draft=draftFor(id,phase);return sum+(draft.choice==='none'?0:Number(draft.activity)||0);},0);
       const statuses=statusChoices.map(status=>{const active=status==='Surprised'?!!value.surprised:(value.statuses||[]).includes(status);return `<button type="button" data-status="${status}" aria-pressed="${active}" class="${active?'selected':''}">${status}</button>`;}).join('');
-      const effects=(value.criticalEffects||[]).filter(effect=>effect.kind==='penalty').map(effect=>`<span>−${esc(effect.amount)} to rolls · ${(effect.startsRound??state.round)>state.round?'starts next round · ':''}${effect.roundsLeft===null?'until healed':`${effect.roundsLeft} round${effect.roundsLeft===1?'':'s'}`}<button type="button" data-clear-effect="${esc(effect.id)}" aria-label="Clear −${esc(effect.amount)} critical penalty">×</button></span>`).join('');
-      const header=`<header class="encounter-actor-header"><div class="encounter-actor-initiative"><small>Initiative</small><strong>${value.initiative}</strong><small>${value.initiativeRoll?.join(' + ')||''} + Qu/mods</small></div><div class="encounter-actor-name"><small>Name</small><strong>${esc(who.name)}</strong><small>DB ${who.db} · AT ${who.at} · ${who.baseMove} ft/round</small></div><label><span>Hits</span><span class="encounter-vital-input"><input type="number" min="0" max="${Math.max(0,who.hitsMax)}" data-vital="hits" value="${value.hits||0}"><small>/ ${who.hitsMax||'—'}</small></span></label><label><span>PP</span><span class="encounter-vital-input"><input type="number" min="0" max="${Math.max(0,who.ppMax)}" data-vital="pp" value="${value.pp||0}"><small>/ ${who.ppMax||'—'}</small></span></label></header><div class="encounter-actor-tools"><span>${used} / 100% activity</span><label>Initiative modifier <input type="number" data-initiative-mod value="${value.initiativeMod||0}"></label><button type="button" data-place-actor="${esc(id)}">Place on map</button></div><div class="encounter-status"><strong>Status</strong><div class="encounter-status-options">${statuses}</div></div>${effects?`<div class="encounter-critical-effects" aria-label="Critical penalties">${effects}</div>`:''}`;
+      const effects=(value.criticalEffects||[]).map(effect=>`<span>${(effect.startsRound??state.round)>state.round?'Starts next round · ':''}${esc(criticalEffectLabel(effect))}<button type="button" data-clear-effect="${esc(effect.id)}" aria-label="Clear ${esc(criticalEffectLabel(effect))}">×</button></span>`).join('');
+      const header=`<header class="encounter-actor-header"><div class="encounter-actor-initiative"><small>Initiative</small><strong>${value.initiative}</strong><small>${value.initiativeRoll?.join(' + ')||''} + Qu/mods</small></div><div class="encounter-actor-name"><small>Name</small><strong>${esc(who.name)}</strong><small>DB ${who.db} · AT ${who.at} · ${who.baseMove} ft/round</small></div><label><span>Hits</span><span class="encounter-vital-input"><input type="number" min="0" max="${Math.max(0,who.hitsMax)}" data-vital="hits" value="${value.hits||0}"><small>/ ${who.hitsMax||'—'}</small></span></label><label><span>PP</span><span class="encounter-vital-input"><input type="number" min="0" max="${Math.max(0,who.ppMax)}" data-vital="pp" value="${value.pp||0}"><small>/ ${who.ppMax||'—'}</small></span></label></header><div class="encounter-actor-tools"><span>${used} / 100% activity</span><label>Initiative modifier <input type="number" data-initiative-mod value="${value.initiativeMod||0}"></label><button type="button" data-place-actor="${esc(id)}">Place on map</button></div><div class="encounter-status"><strong>Status</strong><div class="encounter-status-options">${statuses}</div></div>${effects?`<div class="encounter-critical-effects" aria-label="Critical effects">${effects}</div>`:''}`;
       const cards=phases.map((phase,index)=>{
       const draft=draftFor(who.id,phase),type=draftType(draft,who),kind=targetKindFor(draft,who);
       const target=kind==='creature'?(actor(draft.target)?.name||'Tap a highlighted creature on the map'):kind==='hex'?(draft.hex?`Hex ${draft.hex.q},${draft.hex.r} · ${token(who.id)?.q!=null?distance(token(who.id),draft.hex)*state.scale:0} ft`:'Tap a highlighted hex on the map'):'';
@@ -398,7 +476,7 @@
     if(lineTo(value,foeToken).slice(0,-1).some(hex=>state.terrain[keyOf(hex.q,hex.r)]==='blocked'))return 'Blocked terrain obscures the target.';
     const code=attackTables[weapon.category];
     if(!code) return 'No matching attack table for this item. Use the Tables page.';
-    const roll=openEnded(),activityMax=declaration.type==='melee'?100:60,penalty=criticalPenalty(value);
+    const roll=openEnded(),activityMax=declaration.type==='melee'?100:60,penalty=criticalModifier(value);
     const modified=roll.total+weapon.bonus-foe.db+phaseModifier(declaration.phase)-Math.max(0,activityMax-declaration.activity)+declaration.modifier+penalty;
     try {
       const table=await loadTable(code),regular=table.rows.filter(row=>!row.unmodified);
@@ -412,13 +490,12 @@
       const actionPenalty=phaseModifier(declaration.phase)-Math.max(0,activityMax-declaration.activity);
       let criticalText='',fumbleText='';
       if(critical){
-        const outcome=await narrativeRoll(criticalTable,critical.charCodeAt(0)-65,`${critical} critical`);
-        if(outcome.extraHits)foeToken.hits=foe.hitsMax>0?Math.min(foe.hitsMax,foeToken.hits+outcome.extraHits):foeToken.hits+outcome.extraHits;
-        addCriticalPenalties(foeToken,outcome.penalties);
-        criticalText=` · ${outcome.html}${outcome.extraHits?` · ${outcome.extraHits} extra hits applied`:''}${outcome.penalties.length?' · critical penalty recorded':''}`;
+        const outcome=await narrativeRoll(criticalTable,critical.charCodeAt(0)-65,`${critical} critical`,0,{who:foe,value:foeToken});
+        addCriticalEffects(foeToken,value,outcome.effects);
+        criticalText=` · ${outcome.html}${outcome.effects.length?' · critical effects applied':''}`;
       }
       if(roll.first<=2||result==='F')fumbleText=` · ${(await narrativeRoll('A-10.11.1',weaponFumbleColumn(weapon.category),'weapon fumble')).html}`;
-      return `${esc(weapon.name)} vs ${esc(foe.name)}: ${diceText(roll)} ${roll.total} + ${weapon.bonus} OB − ${foe.db} DB ${actionPenalty>=0?'+':'−'} ${Math.abs(actionPenalty)} action ${declaration.modifier>=0?'+':'−'} ${Math.abs(declaration.modifier)} other${penalty?` ${penalty} critical penalty`:''} = ${modified}. ${tableLink(code)} result <strong>${esc(result)}</strong>${hits?` · ${hits} hits applied`:''}${criticalText}${fumbleText}.`;
+      return `${esc(weapon.name)} vs ${esc(foe.name)}: ${diceText(roll)} ${roll.total} + ${weapon.bonus} OB − ${foe.db} DB ${actionPenalty>=0?'+':'−'} ${Math.abs(actionPenalty)} action ${declaration.modifier>=0?'+':'−'} ${Math.abs(declaration.modifier)} other${penalty?` ${penalty} critical modifier`:''} = ${modified}. ${tableLink(code)} result <strong>${esc(result)}</strong>${hits?` · ${hits} hits applied`:''}${criticalText}${fumbleText}.`;
     } catch { return `Attack roll ${modified}. ${esc(code)} could not be loaded; use the Tables page.`; }
   }
   async function spellAttackResult(who,declaration,spellSkill) {
@@ -426,7 +503,7 @@
     if(!foe||!foeToken||!within(foeToken.q,foeToken.r))return 'Choose and place a spell target to resolve its attack.';
     const origin=token(who.id);
     if(!origin||!within(origin.q,origin.r))return 'Place the caster on the map first.';
-    const penalty=criticalPenalty(origin);
+    const penalty=criticalModifier(origin);
     if(declaration.range&&distance(origin,foeToken)*state.scale>declaration.range)return 'Spell target is outside the selected range.';
     if(lineTo(origin,foeToken).slice(0,-1).some(hex=>state.terrain[keyOf(hex.q,hex.r)]==='blocked'))return 'Blocked terrain obscures the spell target.';
     const kind=declaration.spellAttack,code=kind==='basic'?'A-10.9.11':kind==='bolt'?'A-10.9.9':'A-10.9.10';
@@ -442,12 +519,12 @@
         const row=(unmodified&&table.rows.find(item=>item.unmodified&&rollInRow(item.roll,first)))||regular.find(item=>rollInRow(item.roll,modified))||(modified>95?regular[0]:regular.at(-1));
         const possible=table.columns.map((column,index)=>({column,index})).filter(({column})=>column.group===who.realm&&(column.label==='Other'||column.label==='Metal armor'&&foe.at>=13||column.label==='Leather armor'&&foe.at>=5&&foe.at<=12||column.label==='Metal shield'&&foe.shieldBonus>0));
         const chosen=possible.sort((a,b)=>(Number(row.values[b.index])||0)-(Number(row.values[a.index])||0))[0];
-        if(row.values[chosen?.index] === 'F')return `Basic spell vs ${esc(foe.name)}: ${diceText(roll)}${penalty?` ${penalty} critical penalty`:''} → ${modified}. <strong>Spell failure</strong> · ${tableLink(code)} · ${(await narrativeRoll('A-10.11.2',spellFailureColumn(spellSkill,kind),'spell failure')).html}.`;
+        if(row.values[chosen?.index] === 'F')return `Basic spell vs ${esc(foe.name)}: ${diceText(roll)}${penalty?` ${penalty} critical modifier`:''} → ${modified}. <strong>Spell failure</strong> · ${tableLink(code)} · ${(await narrativeRoll('A-10.11.2',spellFailureColumn(spellSkill,kind),'spell failure')).html}.`;
         const rrModifier=Number(row?.values[chosen?.index??table.columns.findIndex(column=>column.group===who.realm&&column.label==='Other')])||0;
         const resist=openEnded(),resistType=who.realm.toLowerCase(),sameRealm=foe.realm===who.realm?15:0;
         const rrTotal=resist.total+(foe.resistances[resistType]||0)+rrModifier+sameRealm;
         const threshold=resistanceThreshold(who.level,foe.level);
-        return `Basic spell vs ${esc(foe.name)}: ${diceText(roll)}${penalty?` ${penalty} critical penalty`:''} → ${modified}: ${rrModifier} RR modifier (${tableLink(code)}). ${esc(foe.name)} resists: ${diceText(resist)} → ${rrTotal}, needs ${threshold}; <strong>${rrTotal>=threshold?'resisted':'affected'}</strong> · ${tableLink('T-3.4')}.`;
+        return `Basic spell vs ${esc(foe.name)}: ${diceText(roll)}${penalty?` ${penalty} critical modifier`:''} → ${modified}: ${rrModifier} RR modifier (${tableLink(code)}). ${esc(foe.name)} resists: ${diceText(resist)} → ${rrTotal}, needs ${threshold}; <strong>${rrTotal>=threshold?'resisted':'affected'}</strong> · ${tableLink('T-3.4')}.`;
       }
       const bonus=kind==='bolt'?(who.skills.find(item=>item.category==='Directed Spells'&&item.ranks>0)?.bonus||0):spellSkill.ranks;
       const modified=roll.total+bonus-foe.db+declaration.modifier+penalty;
@@ -457,26 +534,38 @@
       const hits=Number(/^\d+/.exec(result)?.[0])||0;
       foeToken.hits=foe.hitsMax>0?Math.min(foe.hitsMax,(foeToken.hits||0)+hits):(foeToken.hits||0)+hits;
       const failure=result==='F'?` · ${(await narrativeRoll('A-10.11.2',spellFailureColumn(spellSkill,kind),'spell failure')).html}`:'';
-      return `${kind} spell vs ${esc(foe.name)}: ${diceText(roll)} + ${bonus} OB − ${foe.db} DB ${declaration.modifier>=0?'+':'−'} ${Math.abs(declaration.modifier)} other${penalty?` ${penalty} critical penalty`:''} = ${modified}. ${tableLink(code)} result <strong>${esc(result)}</strong>${hits?` · ${hits} hits applied`:''}${/[A-E]/.test(result)?' · resolve the critical type named by the spell in Tables':''}${failure}.`;
+      return `${kind} spell vs ${esc(foe.name)}: ${diceText(roll)} + ${bonus} OB − ${foe.db} DB ${declaration.modifier>=0?'+':'−'} ${Math.abs(declaration.modifier)} other${penalty?` ${penalty} critical modifier`:''} = ${modified}. ${tableLink(code)} result <strong>${esc(result)}</strong>${hits?` · ${hits} hits applied`:''}${/[A-E]/.test(result)?' · resolve the critical type named by the spell in Tables':''}${failure}.`;
     }catch{return `${kind} spell attack table could not be loaded; use the Tables page.`;}
   }
   async function resolveAction(id,declaration) {
     const who=actor(id),value=token(id); if(!who||!value) return;
+    const statuses=value.statuses||[];
+    if((statuses.includes('Dead')||statuses.includes('Unconscious'))&&declaration.type!=='resist') {
+      appendLog(id,`${esc(declaration.description||declaration.type)} cannot be performed while ${statuses.includes('Dead')?'dead':'unconscious'}.`);
+      return;
+    }
+    const stunned=statuses.includes('Stunned')||criticalRounds(value,'stun')>0||criticalRounds(value,'stunNoParry')>0;
+    const parryOnly=criticalRounds(value,'stunNoParry')>0||criticalRounds(value,'noParry')>0||criticalRounds(value,'mustParry')>0;
+    if((stunned||parryOnly)&&!['move','moving','static','resist'].includes(declaration.type)) {
+      appendLog(id,`${esc(declaration.description||declaration.type)} cannot be performed while ${stunned?'stunned':'restricted by a parry critical'}.`);
+      return;
+    }
+    const conditionModifier=parryOnly?-75:stunned?-50+3*(who.stats?.[4]||0):0;
     const skill=declaration.skill==='stat'?null:who.skills[Number(declaration.skill)];
     const skillBonus=declaration.skill==='stat'?3*(who.stats[declaration.statIndex]||0):skill?.bonus||0;
-    const phase=phaseModifier(declaration.phase),modifier=declaration.modifier||0,penalty=criticalPenalty(value);
+    const phase=phaseModifier(declaration.phase),modifier=declaration.modifier||0,penalty=criticalModifier(value);
     const targetText=declaration.targetHex?` at hex ${declaration.targetHex.q},${declaration.targetHex.r}`:declaration.target?` vs ${esc(actor(declaration.target)?.name||'target')}`:'';
     let detail='';
     if(declaration.type==='simple') detail=`${esc(declaration.description||'Simple action')}${targetText} · ${declaration.activity}% activity.`;
     else if(['melee','missile'].includes(declaration.type)) detail=await attackResult(who,value,declaration);
     else if(declaration.type==='static') {
-      const roll=openEnded(true),total=roll.unmodified?roll.total:roll.total+skillBonus+staticDifficulty[difficulties.indexOf(declaration.difficulty)]+phase+modifier+penalty-(100-declaration.activity);
+      const roll=openEnded(true),total=roll.unmodified?roll.total:roll.total+skillBonus+staticDifficulty[difficulties.indexOf(declaration.difficulty)]+phase+modifier+penalty+conditionModifier-(100-declaration.activity);
       const outcome=staticResult(total,roll.unmodified);
-      detail=`${esc(declaration.description||skill?.name||'Static maneuver')}${targetText}: ${diceText(roll)}${penalty&&!roll.unmodified?` ${penalty} critical penalty`:''} → ${total}. <strong>${outcome}</strong> · ${tableLink('T-4.3')}. ${esc(staticNarrative(outcome))}`;
+      detail=`${esc(declaration.description||skill?.name||'Static maneuver')}${targetText}: ${diceText(roll)}${penalty&&!roll.unmodified?` ${penalty} critical modifier`:''}${conditionModifier&&!roll.unmodified?` ${conditionModifier} condition`:''} → ${total}. <strong>${outcome}</strong> · ${tableLink('T-4.3')}. ${esc(staticNarrative(outcome))}`;
     } else if(declaration.type==='moving') {
-      const roll=openEnded(),total=roll.total+skillBonus+phase+modifier+penalty;
+      const roll=openEnded(),total=roll.total+skillBonus+phase+modifier+penalty+conditionModifier;
       const result=moveResult(total,declaration.difficulty);
-      detail=`${esc(declaration.description||skill?.name||'Moving maneuver')}${targetText}: ${diceText(roll)}${penalty?` ${penalty} critical penalty`:''} → ${total} (${esc(declaration.difficulty)}). <strong>${result===null?'Special result; consult table':`${result}%`}</strong> · ${tableLink('T-4.1')}.`;
+      detail=`${esc(declaration.description||skill?.name||'Moving maneuver')}${targetText}: ${diceText(roll)}${penalty?` ${penalty} critical modifier`:''}${conditionModifier?` ${conditionModifier} condition`:''} → ${total} (${esc(declaration.difficulty)}). <strong>${result===null?'Special result; consult table':`${result}%`}</strong> · ${tableLink('T-4.1')}.`;
     } else if(declaration.type==='move') {
       if(!declaration.destination||value.q==null) {detail='Movement needs a placed character and destination.';}
       else {
@@ -485,10 +574,10 @@
         if(pace>=3) {
           const difficulty=pace===3?'Easy':pace===4?'Light':'Medium';
           const sprint=who.skills.find(item=>item.name==='Sprinting');
-          const roll=openEnded(),total=roll.total+(sprint?.bonus||0)+modifier+penalty;
+          const roll=openEnded(),total=roll.total+(sprint?.bonus||0)+modifier+penalty+conditionModifier;
           const result=moveResult(total,difficulty);
           if(result===null) {detail=`Movement maneuver ${diceText(roll)} → ${total}. Special result; consult ${tableLink('T-4.1')} before moving.`;appendLog(id,detail);return;}
-          rate*=result/100;rollText=` · ${diceText(roll)}${penalty?` ${penalty} critical penalty`:''} → ${total} (${result}%)`;
+          rate*=result/100;rollText=` · ${diceText(roll)}${penalty?` ${penalty} critical modifier`:''}${conditionModifier?` ${conditionModifier} condition`:''} → ${total} (${result}%)`;
         }
         const path=lineTo(value,declaration.destination);let budget=rate;
         for(const hex of path) {const terrain=state.terrain[keyOf(hex.q,hex.r)]||'clear';const cost=state.scale*(terrain==='difficult'?2:1);if(terrain==='blocked'||budget<cost)break;value.q=hex.q;value.r=hex.r;budget-=cost;}
@@ -512,7 +601,7 @@
           const outcome=spellResult(total,roll.unmodified);
           cast=['Success','Absolute success','Unusual success'].includes(outcome);
           const failure=/failure/i.test(outcome)?` · ${(await narrativeRoll('A-10.11.2',spellFailureColumn(skill,declaration.spellAttack),'spell failure',-mods*(outcome==='Spectacular failure'?3:outcome==='Absolute failure'?2:1))).html}`:'';
-          detail=`${esc(declaration.description||skill.name)}${targetText} (level ${declaration.spellLevel}): ${diceText(roll)}${penalty&&!roll.unmodified?` ${penalty} critical penalty`:''} → ${total}. <strong>${outcome}</strong> · ${tableLink('T-4.5')}. ${esc(spellNarrative(outcome))}${failure} ${declaration.spellLevel} PP used.`;
+          detail=`${esc(declaration.description||skill.name)}${targetText} (level ${declaration.spellLevel}): ${diceText(roll)}${penalty&&!roll.unmodified?` ${penalty} critical modifier`:''} → ${total}. <strong>${outcome}</strong> · ${tableLink('T-4.5')}. ${esc(spellNarrative(outcome))}${failure} ${declaration.spellLevel} PP used.`;
         } else {const roll=d100(),failed=roll<=2;cast=!failed;const failure=failed?` · ${(await narrativeRoll('A-10.11.2',spellFailureColumn(skill,declaration.spellAttack),'spell failure')).html}`:'';detail=`${esc(declaration.description||skill.name)}${targetText} (level ${declaration.spellLevel}): automatic cast check ${roll}. <strong>${failed?'Fails':'Cast'}</strong> · ${declaration.spellLevel} PP used${failure}.`;}
         if(cast&&declaration.spellAttack==='ball'&&declaration.targetHex) {
           const caster=token(who.id),center=declaration.targetHex;
@@ -603,7 +692,7 @@
         if(!state.resolved){for(const [id,value] of order)if(value.actions?.[phases[index]]){const action=value.actions[phases[index]];await resolveAction(id,action);value.activityThisRound=(value.activityThisRound||0)+action.activity;}}
         state.resolved=false;save();render();
       }
-      advanceCriticalPenalties();state.round++;state.phase=-1;state.resolved=false;
+      const completedRound=state.round;state.round++;state.phase=-1;state.resolved=false;advanceCriticalEffects(completedRound);
       Object.values(state.tokens).forEach(value=>{value.actions={};value.surprised=false;delete value.activityThisRound;});
       drafts={};state.drafts=drafts;ensureInitiative(true);save();render();message(`Round ${state.round-1} resolved. Plan the next round.`);
     } catch(error){message(`Could not finish the round: ${error.message||error}`);}
@@ -667,6 +756,7 @@
       if(resolving||state.phase>=0)return;
       const id=clear.closest('[data-actor-card]').dataset.actorCard,value=token(id);if(!value)return;
       value.criticalEffects=(value.criticalEffects||[]).filter(effect=>effect.id!==clear.dataset.clearEffect);
+      updateStunConsciousness(value);
       ensureInitiative();save();renderPhaseCards();return;
     }
     const status=event.target.closest('[data-status]');

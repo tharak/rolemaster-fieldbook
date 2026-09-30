@@ -2746,6 +2746,7 @@
       const normalize = value => String(value || '').toLowerCase().replace(/[^a-z0-9]/g, '');
       const weapons = parse(character.startingWeapons, []).flatMap(key => { const value = parse(key, null); return Array.isArray(value) ? [{category:value[0], name:value[1], source:'Starting'}] : []; });
       const inventory = parse(character.equipmentLedger, {});
+      const equipmentNames = (inventory.items || []).map(entry => equipmentCatalog.find(candidate => candidate.id === entry.id)?.name || entry.name || '').filter(Boolean);
       (inventory.items || []).forEach(entry => {
         const item = equipmentCatalog.find(candidate => candidate.id === entry.id);
         if (item?.category === 'Weapons') weapons.push({name:item.name, source:'Owned'});
@@ -2765,7 +2766,7 @@
         return {...weapon, category:skill?.category || weapon.category || '', bonus:skill?.bonus || 0};
       });
       const height = strideBonus(character.roleHeight || '') || 0;
-      return {id:character.id, name:character.name || 'Unnamed', race:character.race || '', profession:character.profession || '', realm:character.realm || 'None', level:Number(character.level) || 1, stats:totals, skills, attacks, at, db, shieldBonus:Number(character.dbShield) || 0, baseMove:50 + quickness * 3 + height, hitsMax:Number(character.hits) || 0, ppMax:Number(character.powerPoints) || 0, resistances};
+      return {id:character.id, name:character.name || 'Unnamed', race:character.race || '', profession:character.profession || '', realm:character.realm || 'None', level:Number(character.level) || 1, stats:totals, skills, attacks, equipmentNames, at, db, shieldBonus:Number(character.dbShield) || 0, baseMove:50 + quickness * 3 + height, hitsMax:Number(character.hits) || 0, ppMax:Number(character.powerPoints) || 0, resistances};
     });
   }
   window.RolemasterEncounter = {roster:encounterRoster, openTable(code) { const reference = tables.find(item => item.code === code); if (reference) { showView('tables'); chooseTable(reference); } }};
