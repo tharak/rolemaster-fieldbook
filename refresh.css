@@ -790,14 +790,25 @@ input::placeholder, textarea::placeholder { color: #82998a; opacity: 1; }
 .encounter-round { display: grid; gap: 5px; flex: none; text-align: right; }
 .encounter-round span { color: #b7d0bd; font: 700 11px var(--mono); }
 .encounter-round strong { font: 700 17px var(--sans); }
-.encounter-layout { display: grid; grid-template-columns: 280px minmax(0,1fr); align-items: start; gap: 14px; }
-.encounter-sidebar, .encounter-main { display: grid; min-width: 0; align-content: start; gap: 14px; }
-.encounter-sidebar .play-card, .encounter-main .play-card { margin: 0; }
+.encounter-layout, .encounter-main { display: grid; min-width: 0; align-content: start; gap: 14px; }
+.encounter-main .play-card { margin: 0; }
 .encounter-plan-heading { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
 .encounter-plan-heading h2 { margin-bottom: 3px; }
 .encounter-plan-heading p { margin: 0; }
 .encounter-plan-heading > strong { flex: none; color: var(--accent-text); font: 700 12px var(--mono); }
 .encounter-phase-cards { display: grid; grid-template-columns: 1fr; gap: 10px; margin-top: 14px; }
+.encounter-actor-list { display: grid; gap: 18px; margin-top: 14px; }
+.encounter-actor-card { min-width: 0; padding: 15px; border: 1px solid var(--line); border-radius: 7px; background: var(--card); }
+.encounter-actor-header { display: grid; grid-template-columns: minmax(90px,.7fr) minmax(160px,2fr) minmax(115px,.9fr) minmax(115px,.9fr); gap: 12px; align-items: start; padding-bottom: 12px; border-bottom: 1px solid var(--line); }
+.encounter-actor-header > div, .encounter-actor-header > label { min-width: 0; }
+.encounter-actor-header small, .encounter-actor-header label > span:first-child { display: block; color: var(--muted); font-size: 10px; font-weight: 700; }
+.encounter-actor-header strong { display: block; margin-top: 4px; color: var(--ink); font-size: 18px; overflow-wrap: anywhere; }
+.encounter-actor-initiative strong { color: var(--accent-text); font-family: var(--mono); }
+.encounter-vital-input { display: flex; align-items: center; gap: 6px; margin-top: 4px; }
+.encounter-vital-input input, .encounter-actor-tools input[type="number"] { width: 72px; padding: 7px; border: 1px solid var(--line); border-radius: 4px; background: var(--input); color: var(--ink); }
+.encounter-actor-tools { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px; margin-top: 10px; color: var(--muted); font-size: 11px; }
+.encounter-actor-tools > span { margin-right: auto; color: var(--accent-text); font: 700 12px var(--mono); }
+.encounter-actor-tools button { padding: 6px 9px; border: 1px solid var(--line); border-radius: 4px; background: var(--soft); color: var(--accent-text); cursor: pointer; }
 .encounter-phase-card { min-width: 0; padding: 15px; border: 1px solid var(--line); border-radius: 5px; background: var(--input); }
 .encounter-phase-card.active { border-color: var(--accent-text); }
 .encounter-phase-card.current { box-shadow: inset 0 3px var(--accent-text); }
@@ -832,6 +843,7 @@ input::placeholder, textarea::placeholder { color: #82998a; opacity: 1; }
 .encounter-selected input[type="checkbox"] { vertical-align: middle; }
 .encounter-round-controls { display: flex; flex-wrap: wrap; gap: 7px; margin-bottom: 11px; }
 .encounter-round-controls button { flex: 1 1 auto; }
+.encounter-round-controls select { min-width: 170px; flex: 2 1 200px; padding: 8px; border: 1px solid var(--line); border-radius: 4px; background: var(--input); color: var(--ink); }
 .encounter-order { margin-top: 12px; }
 .encounter-order > div { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid var(--line); font-size: 11px; }
 .encounter-order strong { color: var(--accent-text); font-family: var(--mono); }
@@ -863,8 +875,7 @@ input::placeholder, textarea::placeholder { color: #82998a; opacity: 1; }
 .encounter-log { max-height: 450px; overflow: auto; }
 .encounter-log small { color: var(--muted); font: 10px var(--mono); }
 .encounter-log p { margin: 5px 0 0; line-height: 1.5; }
-@media (max-width: 900px) { .encounter-layout { grid-template-columns: 1fr; } .encounter-sidebar { grid-template-columns: repeat(2,minmax(0,1fr)); } }
-@media (max-width: 600px) { .encounter-shell { padding: 12px 10px 35px; } .encounter-header { padding: 18px; } .encounter-sidebar { grid-template-columns: 1fr; } .encounter-phase-form { grid-template-columns: repeat(2,minmax(0,1fr)); } .encounter-round { text-align: right; } }
+@media (max-width: 600px) { .encounter-shell { padding: 12px 10px 35px; } .encounter-header { padding: 18px; } .encounter-actor-header { grid-template-columns: repeat(2,minmax(0,1fr)); } .encounter-phase-form { grid-template-columns: repeat(2,minmax(0,1fr)); } .encounter-round { text-align: right; } }
 @media (max-width: 390px) { .encounter-phase-form { grid-template-columns: 1fr; } .encounter-header { align-items: flex-start; } }
 @media (max-width: 500px) { .encounter-create { align-items: stretch; flex-direction: column; } }
 @media (max-width: 540px) { .topbar { padding: 0 10px; gap: 6px; } .brand { font-size: 14px; } .topbar nav { gap: 7px; } .nav-link { font-size: 11px; } }
