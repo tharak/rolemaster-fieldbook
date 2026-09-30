@@ -773,6 +773,15 @@ input::placeholder, textarea::placeholder { color: #82998a; opacity: 1; }
 .encounter-round { display: grid; gap: 5px; flex: none; text-align: right; }
 .encounter-round span { color: #b7d0bd; font: 700 11px var(--mono); }
 .encounter-round strong { font: 700 17px var(--sans); }
+.encounter-guide { margin-bottom: 14px; padding: 16px; border: 1px solid var(--line); border-radius: 7px; background: var(--card); }
+.encounter-guide h2 { margin: 0 0 11px; font-size: 16px; }
+.encounter-guide ol { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: 9px; margin: 0; padding: 0; list-style: none; }
+.encounter-guide li { min-width: 0; padding: 11px; border: 1px solid var(--line); border-radius: 5px; background: var(--input); }
+.encounter-guide li.current { border-color: #9bc7a8; background: #294735; }
+.encounter-guide li strong, .encounter-guide li span { display: block; }
+.encounter-guide li strong { margin-bottom: 5px; color: var(--ink); font-size: 12px; }
+.encounter-guide li span { color: var(--muted); font-size: 11px; line-height: 1.45; }
+.encounter-guide-current, #encounter-guide-current { margin: 11px 0 0; color: var(--accent-text); font-size: 12px; font-weight: 700; }
 .encounter-layout { display: grid; grid-template-columns: 280px minmax(0,1fr); align-items: start; gap: 14px; }
 .encounter-sidebar, .encounter-main { display: grid; min-width: 0; align-content: start; gap: 14px; }
 .encounter-sidebar .play-card, .encounter-main .play-card { margin: 0; }
@@ -815,6 +824,7 @@ input::placeholder, textarea::placeholder { color: #82998a; opacity: 1; }
 .encounter-token.selected circle { fill: #e8c96d; stroke: #fff5ca; stroke-width: 3; }
 .encounter-token text { fill: #1d2a20; font: 700 11px var(--sans); pointer-events: none; }
 .encounter-legend { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 9px; color: var(--muted); font-size: 10px; }
+.encounter-action-help { margin: 9px 0 0; color: var(--accent-text); font-size: 12px; line-height: 1.45; }
 .encounter-action-form { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 10px; margin: 15px 0 0; }
 .encounter-action-form label { display: block; min-width: 0; color: var(--muted); font: 700 11px var(--sans); }
 .encounter-action-form input:not([type="checkbox"]), .encounter-action-form select { display: block; width: 100%; margin-top: 4px; padding: 8px; border: 1px solid var(--line); border-radius: 4px; background: var(--input); color: var(--ink); font: 12px var(--sans); }
@@ -830,7 +840,7 @@ input::placeholder, textarea::placeholder { color: #82998a; opacity: 1; }
 .encounter-log { max-height: 450px; overflow: auto; }
 .encounter-log small { color: var(--muted); font: 10px var(--mono); }
 .encounter-log p { margin: 5px 0 0; line-height: 1.5; }
-@media (max-width: 900px) { .encounter-layout { grid-template-columns: 1fr; } .encounter-sidebar { grid-template-columns: repeat(2,minmax(0,1fr)); } }
+@media (max-width: 900px) { .encounter-guide ol { grid-template-columns: repeat(2,minmax(0,1fr)); } .encounter-layout { grid-template-columns: 1fr; } .encounter-sidebar { grid-template-columns: repeat(2,minmax(0,1fr)); } }
 @media (max-width: 600px) { .encounter-shell { padding: 12px 10px 35px; } .encounter-header { padding: 18px; } .encounter-sidebar { grid-template-columns: 1fr; } .encounter-action-form { grid-template-columns: repeat(2,minmax(0,1fr)); } .encounter-action-description { grid-column: 1 / -1; } .encounter-round { text-align: right; } }
 @media (max-width: 390px) { .encounter-action-form { grid-template-columns: 1fr; } .encounter-header { align-items: flex-start; } }
 @media (max-width: 540px) { .topbar { padding: 0 10px; gap: 6px; } .brand { font-size: 14px; } .topbar nav { gap: 7px; } .nav-link { font-size: 11px; } }

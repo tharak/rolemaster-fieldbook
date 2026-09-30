@@ -101,6 +101,13 @@
     const ordered=Object.entries(state.tokens).filter(([,value])=>value.initiative!=null).sort((a,b)=>b[1].initiative-a[1].initiative);
     $('#encounter-order').innerHTML=ordered.map(([id,value])=>`<div><span>${esc(actor(id)?.name||id)}</span><strong>${value.initiative}</strong></div>`).join('');
   }
+  function renderGuide() {
+    const tokens=Object.values(state.tokens);
+    const declared=tokens.some(value=>Object.values(value.actions||{}).length);
+    const step=state.phase>=0?'resolve':!tokens.length||tokens.some(value=>!within(value.q,value.r))?'place':declared?'initiative':'declare';
+    document.querySelectorAll('[data-guide-step]').forEach(item=>item.classList.toggle('current',item.dataset.guideStep===step));
+    $('#encounter-guide-current').textContent=!roster.length?'Create a character on the Characters page to begin.':step==='place'?'Next: add characters and place every token on a hex.':step==='declare'?'Next: select a character and declare what they will do.':step==='initiative'?'Next: declare more actions, or roll initiative when ready.':state.resolved?'Next: tap Next phase to continue.':'Next: tap Resolve phase to see the results.';
+  }
   function renderActionForm() {
     const who=selected(),type=form.elements.type.value;
     form.querySelector('button[type="submit"]').disabled=!who||state.phase>=0;
@@ -116,6 +123,7 @@
     form.elements.target.innerHTML='<option value="">Choose target</option>'+Object.keys(state.tokens).filter(id=>id!==state.selected).map(id=>`<option value="${esc(id)}">${esc(actor(id)?.name||id)}</option>`).join('');
     if ([...form.elements.target.options].some(option=>option.value===oldTarget)) form.elements.target.value=oldTarget;
     $('#encounter-destination').textContent=type==='move'?(destination?`Destination: hex ${destination.q},${destination.r} · ${token(state.selected)?.q!=null?distance(token(state.selected),destination)*state.scale:0} ft`:'Choose Action destination in the map toolbar, then tap a hex.') : '';
+    $('#encounter-action-help').textContent={simple:'For drawing a weapon, opening a door, or another action with no roll. Describe it below.',move:'Choose Action destination in the map toolbar and tap the destination hex. Movement happens when its phase resolves.',static:'For actions such as searching or picking a lock. Choose a skill and difficulty.',moving:'For risky movement such as climbing or jumping. Choose a skill and difficulty.',melee:'Choose an attack item and another character as the target. Put both tokens on the map.',missile:'Choose a ranged attack item and target. Enter range and cover adjustments in Other modifier.',spell:'Choose a known spell list, its spell level, and optionally an attack type and target.',resist:'Choose the resistance type and the level of the attack being resisted.'}[type];
     $('#encounter-action-form').classList.toggle('locked',state.phase>=0);
   }
   function renderActions() {
@@ -124,7 +132,7 @@
   function renderLog() {
     $('#encounter-log').innerHTML=state.log.length?state.log.map(entry=>`<article><small>Round ${entry.round} · ${esc(entry.phase)} · ${esc(entry.actor)}</small><p>${entry.detail}</p></article>`).join(''):'<p class="play-muted">Resolved actions appear here.</p>';
   }
-  function render() { renderMap();renderRoster();renderRound();renderActionForm();renderActions();renderLog();$('#encounter-scale').value=String(state.scale); }
+  function render() { renderMap();renderRoster();renderRound();renderGuide();renderActionForm();renderActions();renderLog();$('#encounter-scale').value=String(state.scale); }
   function moveResult(total,difficulty) {
     const row=movingRows.find(([low,high])=>total>=low&&total<=high);
     return row?.[2]?.[difficulties.indexOf(difficulty)]??null;
