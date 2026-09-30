@@ -110,7 +110,6 @@
   }
   function renderActionForm() {
     const who=selected(),type=form.elements.type.value;
-    form.querySelector('button[type="submit"]').disabled=!who||state.phase>=0;
     for(const [field,show] of [['skill',['static','moving','melee','missile','spell'].includes(type)],['stat',['static','moving'].includes(type)&&form.elements.skill.value==='stat'],['target',['melee','missile','spell'].includes(type)],['difficulty',['static','moving'].includes(type)],['pace',type==='move'],['spell',type==='spell'],['resist',type==='resist']])
       document.querySelectorAll(`.encounter-field-${field}`).forEach(element=>element.hidden=!show);
     const skillSelect=form.elements.skill,old=skillSelect.value,oldTarget=form.elements.target.value;
@@ -123,7 +122,7 @@
     form.elements.target.innerHTML='<option value="">Choose target</option>'+Object.keys(state.tokens).filter(id=>id!==state.selected).map(id=>`<option value="${esc(id)}">${esc(actor(id)?.name||id)}</option>`).join('');
     if ([...form.elements.target.options].some(option=>option.value===oldTarget)) form.elements.target.value=oldTarget;
     $('#encounter-destination').textContent=type==='move'?(destination?`Destination: hex ${destination.q},${destination.r} · ${token(state.selected)?.q!=null?distance(token(state.selected),destination)*state.scale:0} ft`:'Choose Action destination in the map toolbar, then tap a hex.') : '';
-    $('#encounter-action-help').textContent={simple:'For drawing a weapon, opening a door, or another action with no roll. Describe it below.',move:'Choose Action destination in the map toolbar and tap the destination hex. Movement happens when its phase resolves.',static:'For actions such as searching or picking a lock. Choose a skill and difficulty.',moving:'For risky movement such as climbing or jumping. Choose a skill and difficulty.',melee:'Choose an attack item and another character as the target. Put both tokens on the map.',missile:'Choose a ranged attack item and target. Enter range and cover adjustments in Other modifier.',spell:'Choose a known spell list, its spell level, and optionally an attack type and target.',resist:'Choose the resistance type and the level of the attack being resisted.'}[type];
+    $('#encounter-action-help').textContent=!who?'Tap Add next to a saved character in the Characters panel first.':state.phase>=0?'Declarations are closed after initiative. Resolve the current phase and continue to the next round.':{simple:'For drawing a weapon, opening a door, or another action with no roll. Describe it below.',move:'Choose Action destination in the map toolbar and tap the destination hex. Movement happens when its phase resolves.',static:'For actions such as searching or picking a lock. Choose a skill and difficulty.',moving:'For risky movement such as climbing or jumping. Choose a skill and difficulty.',melee:'Choose an attack item and another character as the target. Put both tokens on the map.',missile:'Choose a ranged attack item and target. Enter range and cover adjustments in Other modifier.',spell:'Choose a known spell list, its spell level, and optionally an attack type and target.',resist:'Choose the resistance type and the level of the attack being resisted.'}[type];
     $('#encounter-action-form').classList.toggle('locked',state.phase>=0);
   }
   function renderActions() {
@@ -300,7 +299,9 @@
   }
   function declareAction(event) {
     event.preventDefault();
-    const who=selected(),value=token(state.selected);if(!who||!value||state.phase>=0)return;
+    const who=selected(),value=token(state.selected);
+    if(!who||!value)return message('Tap Add next to a saved character, then select them before declaring an action.');
+    if(state.phase>=0)return message('Declarations are closed for this round. Resolve each phase, then declare again in the next round.');
     const data=new FormData(form),phase=data.get('phase'),type=data.get('type'),activity=Number(data.get('activity'));
     const defaults={simple:20,move:20,static:100,moving:100,melee:100,missile:60,spell:data.get('instant')?10:75,resist:0};
     if(!Number.isInteger(activity)||activity<0||activity>100) return message('Activity must be from 0 to 100%.');
