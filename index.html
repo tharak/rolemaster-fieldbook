@@ -57,7 +57,7 @@
           <h1 class="record-title">Character Record Sheet <span>T-6.1</span></h1>
           <label class="sheet-field sheet-name">Character name<input name="name" required maxlength="50" placeholder="Name"></label>
           <label class="sheet-field">Experience points<input name="xp" type="number" min="0" value="10000"></label>
-          <label class="sheet-field">Level<input name="level" type="number" min="1" max="100" value="1"></label>
+          <label class="sheet-field">Level<input name="level" type="number" min="1" value="1" readonly></label>
           <label class="sheet-field">Player<input name="player" maxlength="50"></label>
           <label class="sheet-field">Campaign (GM)<input name="campaign" maxlength="50"></label>
         </div>
@@ -247,6 +247,9 @@
           <input name="startingArmor" type="hidden" value="">
           <input name="equipmentLedger" type="hidden" value="">
           <input name="spellDevelopmentOrder" type="hidden" value="[]">
+          <input name="developmentLevel" type="hidden" value="1">
+          <input name="xpHistory" type="hidden" value="[]">
+          <input name="levelHistory" type="hidden" value="[]">
           <div id="skill-category-picker" hidden><div id="skill-category-options"></div><button type="button" id="cancel-skill-category">Cancel</button></div>
           <div id="skills-list"></div>
         </div>

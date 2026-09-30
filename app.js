@@ -1405,7 +1405,7 @@
     const available = Number($('#dp-remaining').textContent);
     const canBuy = $('#dp-remaining').textContent !== '—' && available >= 8;
     const history = readStatGainHistory();
-    const freeRolls = readTrainingSelections().flatMap(packageName => packageStatGrantRules(packageName).map(([id, label, options]) => {
+    const freeRolls = (currentDevelopmentLevel() === 1 ? readTrainingSelections() : []).flatMap(packageName => packageStatGrantRules(packageName).map(([id, label, options]) => {
       const used = history.find(entry => entry.source === packageName && entry.grantId === id);
       const taken = packageName === 'Adventurer' ? history.filter(entry => entry.source === packageName).map(entry => entry.stat) : [];
       return `<div class="package-free-roll"><strong>${esc(packageName)} · ${esc(label)}</strong>${used ? `<span>Used for ${esc(used.stat)}</span>` : `<div class="choice-strip">${options.filter(name => !taken.includes(name)).map(name => `<button type="button" data-free-package="${esc(packageName)}" data-free-grant="${esc(id)}" data-stat-index="${statNames.indexOf(name)}"${Number(form.elements.namedItem(`stat-pot-${statNames.indexOf(name)}`).value) >= Number(form.elements.namedItem(`stat-temp-${statNames.indexOf(name)}`).value) && Number(form.elements.namedItem(`stat-temp-${statNames.indexOf(name)}`).value) >= 1 ? '' : ' disabled'}>${esc(name)}</button>`).join('') || '<span>Choose a realm of power first.</span>'}</div>`}</div>`;
@@ -1416,7 +1416,7 @@
       return `<div class="apprenticeship-stat-row"><span>${esc(name)} <small>${current} / ${potential || '—'}</small></span><button type="button" data-stat-index="${index}"${canBuy && potential >= current && current >= 1 ? '' : ' disabled'}>Buy & roll · 8 DP</button></div>`;
     }).join('');
     $('#apprenticeship-stat-history').innerHTML = history.length
-      ? `Recent rolls: ${history.slice(-4).map(entry => `${esc(entry.stat)} ${entry.before} → ${entry.after} (${entry.dice.join('+')}${entry.source ? `, ${esc(entry.source)}` : ', 8 DP'})`).join(' · ')} <button type="button" id="undo-stat-gain">Undo last roll</button>`
+      ? `Recent rolls: ${history.slice(-4).map(entry => `${esc(entry.stat)} ${entry.before} → ${entry.after} (${entry.dice.join('+')}${entry.source ? `, ${esc(entry.source)}` : ', 8 DP'})`).join(' · ')}${history.at(-1)?.source?.startsWith('level:') ? '' : ' <button type="button" id="undo-stat-gain">Undo last roll</button>'}`
       : 'No extra stat gain rolls purchased.';
   }
   function buyStatGain(index, source = '', grantId = '') {
@@ -1440,17 +1440,10 @@
     const potential = Number(pot.value);
     if (!Number.isInteger(before) || !Number.isInteger(potential) || potential < before) return;
     if (!source.startsWith('background:') && !form.elements.apprenticeshipDpBase.value) form.elements.apprenticeshipDpBase.value = $('#dp-available').textContent;
-    const dice = [Math.floor(Math.random() * 10) + 1, Math.floor(Math.random() * 10) + 1];
-    const [first, second] = dice;
-    const difference = potential - before;
-    const change = first === second && first <= 5 ? -first
-      : first === second ? first + second
-      : difference <= 0 ? 0 : difference <= 10 ? Math.min(first, second)
-      : difference <= 20 ? Math.max(first, second) : first + second;
-    const after = Math.max(1, Math.min(potential, before + change));
+    const {dice, after} = rollStatGain(before, potential);
     temp.value = String(after);
     const history = readStatGainHistory();
-    history.push({stat:statNames[index], before, after, dice, cost:source ? 0 : 8, source, grantId});
+    history.push({stat:statNames[index], before, after, dice, cost:source ? 0 : 8, source, grantId, level:currentDevelopmentLevel()});
     form.elements.statGainHistory.value = JSON.stringify(history);
     updateDevelopment();
     saveCurrent();
@@ -1887,7 +1880,7 @@
     const highestRanks = Math.max(0, ...armorSkills.map(skill => skill.ranks));
     const options = armorSkills.filter(skill => skill.ranks === highestRanks).flatMap(skill => armorSkillTypes[skill.name].map(type => [skill.name, type]));
     const chosen = readStartingArmor();
-    const armor = options.some(([name, type]) => chosen?.[0] === name && chosen?.[1] === type) ? chosen : null;
+    const armor = (currentDevelopmentLevel() > 1 && chosen || options.some(([name, type]) => chosen?.[0] === name && chosen?.[1] === type)) ? chosen : null;
     form.elements.startingArmor.value = armor ? JSON.stringify(armor) : '';
     const armorStrip = $('#final-armor-options'), armorScroll = armorStrip.scrollLeft;
     armorStrip.innerHTML = `<button type="button" data-starting-armor="" aria-pressed="${!armor}">No armor</button>` + (options.length ? options.map(([name, type]) => `<button type="button" data-starting-armor="${esc(JSON.stringify([name,type]))}" aria-pressed="${armor?.[0] === name && armor?.[1] === type}">${esc(name)} · AT ${type}</button>`).join('') : '<span class="sheet-hint">Develop an armor skill for a starting suit.</span>');
@@ -1897,7 +1890,7 @@
     const age = Number(form.elements.roleAge.value);
     const lifespanMaximum = {'Common Man':80, 'High Man':300, Dwarf:400, Halfling:110}[form.elements.race.value];
     const ageProblem = form.elements.roleAge.value && (age < minimumAge ? `age ${age} is below the minimum` : lifespanMaximum && age > lifespanMaximum ? `age ${age} exceeds the race’s usual lifespan` : '');
-    $('#final-level-age').textContent = `Starting level 1 · 10,000 XP · minimum age ${minimumAge}${months ? ` (${months} training months)` : ''}${ageProblem ? ` · ${ageProblem}` : ''}.`;
+    $('#final-level-age').textContent = `Level ${form.elements.level.value} · ${Number(form.elements.xp.value || 0).toLocaleString()} XP · minimum starting age ${minimumAge}${months ? ` (${months} training months)` : ''}${ageProblem ? ` · ${ageProblem}` : ''}.`;
     $('#final-level-age').classList.toggle('over-budget', !!ageProblem);
     const details = readBackgroundDetails(), selections = readBackgroundSelections();
     let extraGold = 0;
@@ -2029,8 +2022,8 @@
       $('.group-profession-bonus', group).textContent = bonus ? `+${bonus} profession` : '';
     });
     spent += Number(form.elements.otherDp.value) || 0;
-    spent += readStatGainHistory().reduce((sum, entry) => sum + (Number(entry.cost) || 0), 0);
-    spent += trainingPackageCost();
+    spent += readStatGainHistory().reduce((sum, entry) => sum + ((Number(entry.level) || 1) === currentDevelopmentLevel() ? Number(entry.cost) || 0 : 0), 0);
+    if (currentDevelopmentLevel() === 1) spent += trainingPackageCost();
     $('#dp-spent').textContent = String(spent);
     const remaining = hasStats ? available - spent : null;
     $('#dp-remaining').textContent = remaining === null ? '—' : String(remaining);
@@ -2038,6 +2031,13 @@
     renderBackgroundRewardsSummary();
     renderTrainingBenefitsSummary();
     updateSheetHints();
+    const advancing = currentDevelopmentLevel() > 1;
+    $('#creation-progress h2').textContent = advancing ? `Level ${currentDevelopmentLevel()} development` : 'Finish character creation';
+    $('#creation-progress .creation-pools').classList.toggle('is-advancing', advancing);
+    [...$('#creation-progress .creation-pools').children].forEach((pool, index) => { pool.hidden = advancing && index < 4; });
+    $('#creation-progress .creation-pool:last-child > span').textContent = advancing ? `Level ${currentDevelopmentLevel()} DP · 9.0` : 'Apprenticeship · 6.0';
+    $('#creation-progress .creation-next').hidden = advancing;
+    $('#creation-progress .creation-notes').hidden = advancing;
     updateApprenticeshipBudget();
   }
   function statCost(value) { return value <= 90 ? value : 90 + (value - 90) ** 2; }
@@ -2216,6 +2216,77 @@
     });
   }
   function playValue(value) { return value === '' || value === null || value === undefined ? '—' : esc(value); }
+  const xpThresholds = [0,10000,20000,30000,40000,50000,70000,90000,110000,130000,150000,180000,210000,240000,270000,300000,340000,380000,420000,460000,500000];
+  function xpForLevel(level) { return level <= 20 ? xpThresholds[Math.max(1, level)] : 500000 + (level - 20) * 50000; }
+  function levelForXp(xp) {
+    const total = Math.max(0, Math.trunc(Number(xp) || 0));
+    if (total >= 500000) return 20 + Math.floor((total - 500000) / 50000);
+    for (let level = 19; level >= 2; level--) if (total >= xpThresholds[level]) return level;
+    return 1;
+  }
+  function currentDevelopmentLevel() { return Math.max(1, Math.trunc(Number(form.elements.developmentLevel.value) || 1)); }
+  function syncLevelFromXp() { form.elements.level.value = String(levelForXp(form.elements.xp.value)); }
+  function readXpHistory() { try { const value = JSON.parse(form.elements.xpHistory.value || '[]'); return Array.isArray(value) ? value : []; } catch { return []; } }
+  function readLevelHistory() { try { const value = JSON.parse(form.elements.levelHistory.value || '[]'); return Array.isArray(value) ? value : []; } catch { return []; } }
+  function rollStatGain(before, potential) {
+    const dice = [rollD10(), rollD10()];
+    const [first, second] = dice;
+    const difference = potential - before;
+    const change = first === second && first <= 5 ? -first
+      : first === second ? first + second
+      : difference <= 0 ? 0 : difference <= 10 ? Math.min(first, second)
+      : difference <= 20 ? Math.max(first, second) : first + second;
+    return {dice, after:Math.max(1, Math.min(potential, before + change))};
+  }
+  function levelAdvanceIssue() {
+    if (Number($('#dp-remaining').textContent) < 0) return 'Resolve overspent development points before advancing.';
+    if (statNames.some((_, index) => {
+      const temp = Number(form.elements.namedItem(`stat-temp-${index}`).value);
+      const pot = Number(form.elements.namedItem(`stat-pot-${index}`).value);
+      return !Number.isInteger(temp) || temp < 1 || !Number.isInteger(pot) || pot < temp;
+    })) return 'Set all temporary and potential stats before advancing.';
+    return '';
+  }
+  function advanceLevel() {
+    const next = currentDevelopmentLevel() + 1;
+    if (next > levelForXp(form.elements.xp.value) || levelAdvanceIssue()) return;
+    const snapshot = {level:currentDevelopmentLevel(), xp:Number(form.elements.xp.value) || 0, skills:[], categories:[], remaining:Number($('#dp-remaining').textContent) || 0};
+    $$('.skill-row', $('#skills-list')).forEach(row => {
+      const buy = Number($('[name="skill-buy"]', row).value) || 0;
+      if (buy) snapshot.skills.push({category:row.dataset.category, name:$('[name="skill-name"]', row).value, bought:buy, gained:developedSkillRanks(row, buy)});
+      $('[name="skill-start"]', row).value = String((Number($('[name="skill-start"]', row).value) || 0) + developedSkillRanks(row, buy));
+      updateSkillBuyOptions(row, 0);
+      delete row.dataset.pendingBuy;
+    });
+    $$('.category-record-row', $('#category-record-list')).forEach(row => {
+      const buy = $('[name="record-buy"]', row);
+      if (!buy) return;
+      const count = Number(buy.value) || 0;
+      if (count) snapshot.categories.push({category:row.dataset.category, bought:count});
+      $('[name="record-start"]', row).value = String((Number($('[name="record-start"]', row).value) || 0) + count);
+      updateSkillBuyOptions(row, 0);
+      delete row.dataset.pendingBuy;
+    });
+    form.elements.levelHistory.value = JSON.stringify([...readLevelHistory(), snapshot]);
+    form.elements.spellDevelopmentOrder.value = '[]';
+    form.elements.otherDp.value = '0';
+    form.elements.developmentLevel.value = String(next);
+    const history = readStatGainHistory();
+    statNames.forEach((stat, index) => {
+      const temp = form.elements.namedItem(`stat-temp-${index}`), pot = form.elements.namedItem(`stat-pot-${index}`);
+      const before = Number(temp.value), potential = Number(pot.value);
+      if (!Number.isInteger(before) || before < 1 || !Number.isInteger(potential) || potential < 1) return;
+      const {dice, after} = rollStatGain(before, potential);
+      temp.value = String(after);
+      history.push({stat, before, after, dice, cost:0, source:`level:${next}`, level:next});
+    });
+    form.elements.statGainHistory.value = JSON.stringify(history);
+    form.elements.apprenticeshipDpBase.value = '';
+    updateDevelopment();
+    form.elements.apprenticeshipDpBase.value = $('#dp-available').textContent === '—' ? '' : $('#dp-available').textContent;
+    saveCurrent();
+    renderPlay();
+  }
   function playFact(label, value) { return `<div><dt>${esc(label)}</dt><dd>${playValue(value)}</dd></div>`; }
   function playNote(label, value) { return value?.trim() ? `<section class="play-card"><h2>${esc(label)}</h2><p class="play-prose">${esc(value.trim())}</p></section>` : ''; }
   function playRollTile({category, name, ranks, total, favorite = false, kind = 'skill'}) {
@@ -2274,12 +2345,23 @@
     gpField.value = String(Math.floor(Math.max(0, balance) / 10000));
     renderEquipmentCatalog();
   }
+  function renderPlayExperience() {
+    const xp = Math.max(0, Math.trunc(Number(form.elements.xp.value) || 0));
+    const level = levelForXp(xp), developed = currentDevelopmentLevel();
+    const start = xpForLevel(level), next = xpForLevel(level + 1);
+    const progress = Math.max(0, Math.min(100, (xp - start) / (next - start) * 100));
+    const history = readXpHistory().slice(-5).reverse();
+    const issue = levelAdvanceIssue();
+    const statRolls = readStatGainHistory().filter(entry => entry.source === `level:${developed}`);
+    return `<section class="play-card play-xp-card"><div class="play-xp-heading"><div><h2>Experience & level</h2><p class="play-muted">Level ${level} · ${xp.toLocaleString()} XP</p></div><strong>${Math.max(0, next - xp).toLocaleString()} to level ${level + 1}</strong></div><div class="play-xp-track" role="progressbar" aria-valuenow="${Math.max(start, xp)}" aria-valuemin="${start}" aria-valuemax="${next}" aria-label="Experience toward level ${level + 1}"><span style="width:${progress}%"></span></div><form id="play-xp-form" class="play-xp-form"><label>XP gained or lost<input name="amount" type="number" step="1" required placeholder="e.g. 250 or -100"></label><label>Reason<input name="reason" type="text" maxlength="100" placeholder="Session, quest, correction…"></label><button type="submit" class="button button-dark">Record XP</button></form>${level > developed ? `<div class="play-level-ready"><span>${level - developed} level${level - developed === 1 ? '' : 's'} ready to develop${issue ? `<small>${esc(issue)}</small>` : ''}</span><button type="button" class="button button-dark" id="advance-character-level"${issue ? ' disabled' : ''}>Advance to level ${developed + 1}</button></div>` : ''}${developed > 1 ? `<div class="play-level-ready"><span>Level ${developed} development · ${esc($('#dp-remaining').textContent)} DP remaining</span><button type="button" class="button button-quiet" id="spend-level-dp">Spend DP</button></div>` : ''}${statRolls.length ? `<details class="play-xp-history"><summary>Level ${developed} stat gain rolls</summary><ul>${statRolls.map(entry => `<li><span>${esc(entry.stat)} <small>${esc(entry.dice.join(' + '))}</small></span><strong>${esc(entry.before)} → ${esc(entry.after)}</strong></li>`).join('')}</ul></details>` : ''}${history.length ? `<details class="play-xp-history"><summary>Recent XP</summary><ul>${history.map(entry => `<li><span>${esc(entry.reason || 'XP adjustment')} <small>${esc(entry.date || '')}</small></span><strong>${entry.amount >= 0 ? '+' : ''}${Number(entry.amount).toLocaleString()}</strong></li>`).join('')}</ul><button type="button" id="undo-xp-award" class="button button-quiet">Undo latest XP entry</button></details>` : ''}</section>`;
+  }
   function renderPlayCharacter() {
     const stats = statNames.map((name, index) => `<tr><th scope="row">${esc(name)}</th><td>${playValue(form.elements.namedItem(`stat-temp-${index}`).value)}</td><td>${playValue(form.elements.namedItem(`stat-pot-${index}`).value)}</td><td>${playValue(form.elements.namedItem(`stat-total-${index}`).value)}</td></tr>`).join('');
     const physical = [['Age','roleAge'],['Gender','roleGender'],['Appearance','appearanceTemp'],['Demeanor','roleDemeanor'],['Build','roleBuild'],['Height','roleHeight'],['Weight','roleWeight'],['Skin','roleSkin'],['Hair','roleHair'],['Eyes','roleEyes']].map(([label, name]) => playFact(label, form.elements[name].value)).join('');
     const traits = [['Personality','rolePersonality'],['Motivation','roleMotivation'],['Alignment','roleAlignment']].map(([label, name]) => playFact(label, form.elements[name].value)).join('');
     const equipment = [$('#starting-outfit-summary').textContent, $('#background-rewards-summary').textContent, $('#training-rewards-summary').textContent, form.elements.notes.value, form.elements.outfitPurchases.value].filter(Boolean).join('\n');
     $('#play-character-content').innerHTML = `<div class="play-summary"><div><span>Hits max.</span><strong>${playValue(form.elements.hits.value)}</strong></div><div><span>Power points max.</span><strong>${playValue(form.elements.powerPoints.value)}</strong></div><div><span>Experience</span><strong>${playValue(form.elements.xp.value)}</strong></div><div><span>Realm</span><strong>${playValue(form.elements.realm.value)}</strong></div></div><div class="play-card-grid"><section class="play-card"><h2>Stats & bonuses</h2><div class="play-table-scroll"><table class="play-table"><thead><tr><th>Stat</th><th>Temp</th><th>Pot</th><th>Bonus</th></tr></thead><tbody>${stats}</tbody></table></div></section><section class="play-card"><h2>Physical details</h2><dl class="play-facts">${physical}</dl></section><section class="play-card"><h2>Role</h2><dl class="play-facts">${traits}</dl></section><section class="play-card play-equipment-card"><h2>Equipment & money</h2><div class="equipment-wallet"><div><span>Cash available</span><strong id="equipment-balance"></strong></div><details><summary>Set cash balance</summary><form id="equipment-cash-form" class="equipment-cash-form">${coinUnits.map(([unit]) => `<label>${unit}<input name="equipment-cash-${unit}" type="number" min="0" step="1" required></label>`).join('')}<button type="submit" class="button button-quiet">Save cash</button></form></details></div><p id="equipment-message" class="equipment-message" role="status"></p><details class="equipment-starting"><summary>Starting outfit & notes</summary><p class="play-prose">${esc($('#final-money').textContent)}${equipment ? `\n${esc(equipment)}` : ''}</p></details><div class="equipment-sections"><section><h3>Owned equipment</h3><div id="equipment-inventory"></div></section><section><h3>Buy equipment <small>Appendix A-7</small></h3><p class="play-muted">Standard resale is half the listed price, rounded down to a tin piece. Use Add owned for starting gear or GM awards.</p><label class="equipment-search">Find equipment<input id="equipment-search" type="search" placeholder="Search items or A-7 number" value="${esc(equipmentSearch)}"></label><div class="equipment-categories" role="group" aria-label="Equipment category">${['All','Accessories','Armor','Provisions','Transport','Weapons'].map(category => `<button type="button" data-equipment-category="${category}">${category}</button>`).join('')}</div><p id="equipment-catalog-count" class="play-count"></p><div id="equipment-catalog" class="equipment-catalog"></div></section></div></section></div><div class="play-card-grid">${playNote('Background & history', form.elements.roleHistory.value)}${playNote('Other bonuses', form.elements.bonuses.value)}</div>`;
+    $('#play-character-content').firstElementChild.insertAdjacentHTML('afterend', renderPlayExperience());
     renderPlayEquipment();
   }
   function renderPlaySkills() {
@@ -2413,6 +2495,8 @@
       const field = form.elements.namedItem(key);
       if (field && typeof value !== 'object') field.value = key === 'realm' && value === 'Choose at table' ? 'None' : value;
     }
+    if (!character.developmentLevel) form.elements.developmentLevel.value = String(Math.max(1, Number(character.level) || 1));
+    syncLevelFromXp();
     makeStats(character.stats || {});
     if (!character.rolePhysicalGenerated) randomizePhysicalDetails(false);
     renderCategoryRecord(character);
@@ -2449,6 +2533,7 @@
   }
   function saveCurrent() {
     if (!currentId) return;
+    syncLevelFromXp();
     updateDevelopment();
     const data = formData();
     if (!data.name.trim()) return;
@@ -2666,6 +2751,16 @@
     if (tile) openPlayRoll(tile);
   });
   $('#play-character-content').addEventListener('click', event => {
+    if (event.target.closest('#advance-character-level')) { advanceLevel(); return; }
+    if (event.target.closest('#spend-level-dp')) { showView('editor'); openApprenticeshipPicker(); return; }
+    if (event.target.closest('#undo-xp-award')) {
+      const history = readXpHistory(), latest = history.pop();
+      if (!latest) return;
+      form.elements.xp.value = String(latest.before);
+      form.elements.xpHistory.value = JSON.stringify(history);
+      saveCurrent(); renderPlay();
+      return;
+    }
     const categoryButton = event.target.closest('[data-equipment-category]');
     if (categoryButton) { equipmentCategory = categoryButton.dataset.equipmentCategory; renderEquipmentCatalog(); return; }
     const buy = event.target.closest('[data-equipment-buy]');
@@ -2696,6 +2791,18 @@
     if (event.target.id === 'equipment-search') { equipmentSearch = event.target.value; renderEquipmentCatalog(); }
   });
   $('#play-character-content').addEventListener('submit', event => {
+    if (event.target.id === 'play-xp-form') {
+      event.preventDefault();
+      const amount = Number(event.target.elements.amount.value);
+      const before = Number(form.elements.xp.value) || 0;
+      if (!Number.isSafeInteger(amount) || !amount || !Number.isSafeInteger(before + amount) || before + amount < 0) return;
+      const history = readXpHistory();
+      history.push({before, amount, reason:event.target.elements.reason.value.trim(), date:new Date().toLocaleDateString()});
+      form.elements.xpHistory.value = JSON.stringify(history);
+      form.elements.xp.value = String(before + amount);
+      saveCurrent(); renderPlay();
+      return;
+    }
     if (event.target.id !== 'equipment-cash-form') return;
     event.preventDefault();
     const cash = coinUnits.reduce((sum, [unit, value]) => sum + Number(event.target.elements[`equipment-cash-${unit}`].value) * value, 0);
@@ -2777,6 +2884,10 @@
   const openLanguagePicker = () => { renderLanguagePicker(); $('#language-picker').showModal(); };
   const openHobbyPicker = () => { renderHobbyPicker(); $('#hobby-picker').showModal(); };
   const openApprenticeshipPicker = () => {
+    const advancing = currentDevelopmentLevel() > 1;
+    $('#apprenticeship-picker-title').textContent = advancing ? `Level ${currentDevelopmentLevel()} development` : 'Apprenticeship development';
+    $('#apprenticeship-picker-subtitle').textContent = advancing ? 'Section 9.0 · Spend this level’s development points' : 'Section 6.0 · One level of development';
+    $('#apprenticeship-package-list').closest('details').hidden = advancing;
     $('#apprenticeship-search').value = '';
     $('#apprenticeship-add-message').textContent = '';
     $('#apprenticeship-category-options').innerHTML = Object.keys(skillCategoryRules).map((category, index) => `<label class="choice-tile"><input type="radio" name="apprenticeshipCategory" value="${esc(category)}"${index === 0 ? ' checked' : ''}><span>${esc(category)}</span></label>`).join('');
@@ -2784,7 +2895,7 @@
     $('#apprenticeship-picker').showModal();
     renderApprenticeshipStatGains();
     renderTrainingPackages();
-    $('#apprenticeship-package-list').closest('details').open = readTrainingSelections().length > 0;
+    $('#apprenticeship-package-list').closest('details').open = !advancing && readTrainingSelections().length > 0;
     renderWeaponCostAssignments();
   };
   const openBackgroundPicker = () => { renderBackgroundPicker(); $('#background-picker').showModal(); };
@@ -2958,6 +3069,7 @@
     const history = readStatGainHistory();
     const last = history.pop();
     if (!last) return;
+    if (last.source?.startsWith('level:') || (Number(last.level) || 1) !== currentDevelopmentLevel()) return;
     form.elements.namedItem(`stat-temp-${statNames.indexOf(last.stat)}`).value = String(last.before);
     form.elements.statGainHistory.value = JSON.stringify(history);
     updateDevelopment();
@@ -3161,6 +3273,7 @@
   });
   form.addEventListener('submit', event => event.preventDefault());
   form.addEventListener('input', event => {
+    if (event.target.name === 'xp') syncLevelFromXp();
     const match = /^stat-temp-(\d+)$/.exec(event.target.name || '');
     if (match) updatePotentialStat(Number(match[1]), form.elements.potentialMethod.value === 'roll' ? rolledPotential : fixedPotential);
     showEditedCategory(event.target);
