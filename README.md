@@ -6,6 +6,14 @@ A static Rolemaster FRP companion for character creation and table lookup. It ru
 
 Serve this folder with any static web server and open its root URL. Browser storage and reference-data loading do not work reliably from a `file://` URL. No build step or package install is needed.
 
+## Check rules
+
+Run `node tests/rules.test.mjs` and `node tests/encounter-roster.test.mjs` to check open-ended rolls, rank bonuses, development point costs, critical effect symbols, and the encounter actor projection. No package install is needed.
+
+## JavaScript layout
+
+The browser loads `encounter.js` as an ES module. It imports `app.js` first, so the character roster is available when encounters start. Both views import `rules.js` and `dom.js`. `app-data.js` holds the Core Rules catalogs and character creation constants; `character-form.js` converts between the sheet and saved records; `encounter-roster.js` prepares saved characters for encounters; and `table-browser.js` owns table search, loading, and lookup UI. `app.js` still contains character creation, development, play, and event wiring. All imports use relative paths and work on a static server without a build step.
+
 ## Publish with GitHub Pages
 
 1. Push the files in this folder to a GitHub repository.

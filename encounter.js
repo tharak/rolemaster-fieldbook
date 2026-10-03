@@ -1,8 +1,10 @@
+import './app.js';
+import {$, esc} from './dom.js';
+import {openEndedD100, parseCriticalSymbols} from './rules.js';
+
 (() => {
   const storageKey = 'rolemaster-encounters-v2';
   const legacyStorageKey = 'rolemaster-encounter-v1';
-  const $ = selector => document.querySelector(selector);
-  const esc = value => String(value ?? '').replace(/[&<>"']/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
   const phases = ['snap','normal','deliberate'];
   const statusChoices = ['Surprised','Stunned','Prone','Bleeding','Wet','Unconscious','Dead'];
   const difficulties = ['Routine','Easy','Light','Medium','Hard','Very Hard','Extremely Hard','Sheer Folly','Absurd'];
@@ -54,11 +56,7 @@
   const d100 = () => Math.floor(Math.random()*100)+1;
   const d10 = () => Math.floor(Math.random()*10)+1;
   function openEnded(unmodifiedExceptions = false) {
-    const first = d100(), dice = [first];
-    if (unmodifiedExceptions && (first === 66 || first === 100)) return {first,dice,total:first,unmodified:true};
-    if (first <= 5) { let next; do { next = d100(); dice.push(-next); } while (next >= 96); }
-    else if (first >= 96) { let next; do { next = d100(); dice.push(next); } while (next >= 96); }
-    return {first,dice,total:dice.reduce((sum,value)=>sum+value,0),unmodified:false};
+    return openEndedD100(d100, unmodifiedExceptions);
   }
   const diceText = roll => roll.dice.map((value,index)=>index===0?String(value):value<0?`−${-value}`:`+${value}`).join(' ');
   const phaseModifier = phase => phase === 'snap' ? -20 : phase === 'deliberate' ? 10 : 0;
@@ -123,20 +121,6 @@
       }
     }
     return {effect:'',unresolved:false};
-  }
-  function parseCriticalSymbols(raw) {
-    const effects=[];let rest=String(raw||'');
-    const take=(pattern,handler)=>{rest=rest.replace(pattern,(...match)=>{handler(...match);return ' ';});};
-    take(/\+(\d+)H\b/g,(_,amount)=>effects.push({kind:'hits',amount:Number(amount)}));
-    take(/(\d*)∑∏/g,(_,rounds)=>effects.push({kind:'stunNoParry',roundsLeft:Number(rounds)||1}));
-    take(/(\d*)\(\s*(\d*)π\s*[-−–]\s*(\d+)\s*\)/g,(_,outer,inner,penalty)=>effects.push({kind:'mustParry',roundsLeft:Number(outer||inner)||1,amount:Number(penalty)}));
-    take(/(\d*)∑/g,(_,rounds)=>effects.push({kind:'stun',roundsLeft:Number(rounds)||1}));
-    take(/(\d*)∏/g,(_,rounds)=>effects.push({kind:'noParry',roundsLeft:Number(rounds)||1}));
-    take(/(\d*)π/g,(_,rounds)=>effects.push({kind:'mustParry',roundsLeft:Number(rounds)||1,amount:0}));
-    take(/(\d*)∫/g,(_,amount)=>effects.push({kind:'bleed',amount:Number(amount)||1,roundsLeft:null}));
-    take(/(\d*)\(\s*[-−–]\s*(\d+)\s*\)/g,(_,rounds,amount)=>effects.push({kind:'penalty',amount:Number(amount),roundsLeft:rounds?Number(rounds):null}));
-    take(/(\d*)\(\s*\+\s*(\d+)\s*\)/g,(_,rounds,amount)=>effects.push({kind:'bonus',amount:Number(amount),roundsLeft:Number(rounds)||1}));
-    return effects;
   }
   function addCriticalEffects(target,attacker,effects) {
     for(const effect of effects) {

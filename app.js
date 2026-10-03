@@ -1,89 +1,38 @@
+import {
+  statNames, realmByProfession, primeStats, personalityRanges, motivationRanges, alignmentRanges,
+  skillCategoryRules, weaponCategories, meleeWeaponCategories, specialSkillClasses,
+  packageChoiceRules, a4Skills, statAbbreviations, professionSkillBonuses, raceAllowances,
+  adolescenceRaces, adolescenceCategoryRanks, adolescenceSkillRanks, raceStartingLanguages,
+  raceAdolescenceLanguages, backgroundChoices, backgroundExtraLanguages, backgroundMoney,
+  backgroundItems, raceBackgroundNotes, racePhysicalProfiles, armorTypes, armorSkillTypes,
+  raceWeaponChoices, openSpellLists, raceStats, raceResistances, resistanceTypes,
+  xpThresholds, coinUnits
+} from './app-data.js';
+import {createTableBrowser} from './table-browser.js';
+import {createCharacterForm} from './character-form.js';
+import {buildEncounterRoster} from './encounter-roster.js';
+import {$, $$, esc} from './dom.js';
+import {rankBonus, rankCost, openEndedD100} from './rules.js';
+
 (() => {
   const STORAGE_KEY = 'rolemaster-fieldbook-characters-v1';
-  const statNames = ['Agility', 'Constitution', 'Memory', 'Reasoning', 'Self Discipline', 'Empathy', 'Intuition', 'Presence', 'Quickness', 'Strength'];
-  let tables = [];
-  let activeTable = null;
-  const tableCache = new Map();
   let developmentRules = null;
   let trainingPackages = [];
   let equipmentCatalog = [];
   let equipmentCategory = 'All';
   let equipmentSearch = '';
   let equipmentMessage = '';
-  const realmByProfession = {Fighter:'Choose at table',Thief:'Choose at table',Rogue:'Choose at table',Cleric:'Channeling',Magician:'Essence',Mentalist:'Mentalism',Ranger:'Channeling',Dabbler:'Essence',Bard:'Mentalism'};
-  const $ = (selector, root = document) => root.querySelector(selector);
-  const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
   const form = $('#character-form');
+  const {formData, fillForm} = createCharacterForm({form, developedSkillRanks, syncLevelFromXp, makeStats, randomizePhysicalDetails, renderCategoryRecord, renderSkillTree, updateDevelopment});
+  const tableBrowser = createTableBrowser({showView});
   let characters = readCharacters();
   let currentId = null;
   let playSkillFilter = 'active';
   let activePlayRoll = null;
   let playDice = null;
-  let activeTableGroup = 'all';
   let skillCategoryPickerTarget = null;
   let skillChoiceTarget = null;
   let trainingItemTarget = null;
-  const primeStats = {Fighter:['Strength','Constitution'], Thief:['Agility','Quickness'], Rogue:['Agility','Strength'], Cleric:['Intuition','Memory'], Magician:['Empathy','Reasoning'], Mentalist:['Presence','Self Discipline'], Ranger:['Intuition','Constitution'], Dabbler:['Empathy','Agility'], Bard:['Presence','Memory']};
-  // The ends of each range in the Core Rules role trait table T-1.7.
-  const personalityRanges = [
-    ['Serious','Joyous'],['Kind','Cruel'],['Restrained','Indulgent'],['Cooperative','Obstinate'],
-    ['Protective','Overbearing'],['Open-minded','Reactionary'],['Friendly','Antagonistic'],['Cautious','Reckless'],
-    ['Confident','Nervous'],['Outgoing','Introvert'],['Peaceful','Belligerent'],['Humble','Arrogant'],
-    ['Laid back','Ambitious'],['Courteous','Rude'],['Forgiving','Vengeful'],['Generous','Greedy'],
-    ['Honest','Dishonest'],['Honorable','Dishonorable'],['Loyal','Disloyal'],['Lawful','Chaotic'],
-    ['Principled','Immoral'],['Devout','Impious'],['Idealistic','Cynical'],['Trusting','Paranoid'],
-    ['Curious','Incurious'],['Attentive','Absentminded'],['Chaste','Licentious'],['Quiet','Loud'],
-    ['Brave','Cowardly'],['Calm','Excitable'],['Even-tempered','Hot-headed'],['Stoic','Complaining'],
-    ['Sociable','Antisocial'],['Optimistic','Pessimistic'],['Creative','Uncreative'],['Tolerant','Intolerant'],
-    ['Messy','Perfectionist'],['Understanding','Jealous'],['Dependent','Independent']
-  ];
-  const motivationRanges = [
-    'Destroy…','Hate and work against…','Hate…','Dislike…','Seek revenge against…',
-    'Preserve…','Protect…','Serve…','Promote…','Rebuild or restart…',
-    'Fanatic about…','Compulsive about…','Fear of…','Acquire something for someone…','Acquire personal power, knowledge, or wealth…',
-    'Acquire and maintain personal honor','Seek adventure, thrills, and excitement','Pursue self-interest','Heroism','Make the world a better place'
-  ];
-  const alignmentRanges = [
-    ['Good','Evil'],['Law and government','Anarchy'],['Government','Opposing government'],
-    ['Laws and principles','Opportunism'],['Religion','Atheism'],['Religion','Opposing religion'],
-    ['Free enterprise','Cartels and monopolies'],['Free enterprise','Socialism'],['Asceticism','Hedonism'],
-    ['Altruism','Egoism'],['Spiritual','Materialist'],['Metaphorical','Literal']
-  ];
-  // Category stats and rank progressions from Core Rules T-2.5.
-  const skillCategoryRules = {
-    'Armor • Heavy':['St/Ag/St'], 'Armor • Light':['Ag/St/Ag'], 'Armor • Medium':['St/Ag/St'],
-    'Artistic • Active':['Pr/Em/Ag'], 'Artistic • Passive':['Em/In/Pr'],
-    'Athletic • Brawn':['St/Co/Ag'], 'Athletic • Endurance':['Co/Ag/St'], 'Athletic • Gymnastics':['Ag/Qu/Ag'],
-    'Awareness • Perceptions':['In/SD/In','limited'], 'Awareness • Searching':['In/Re/SD'], 'Awareness • Senses':['In/SD/In'],
-    'Body Development':['Co/SD/Co','special'], 'Combat Maneuvers':['Ag/Qu/SD','combined'],
-    Communications:['Re/Me/Em'], Crafts:['Ag/Me/SD','combined'], 'Directed Spells':['Ag/SD/Ag'], Influence:['Pr/Em/In'],
-    'Lore • General':['Me/Re/Me'], 'Lore • Magical':['Me/Re/Me'], 'Lore • Obscure':['Me/Re/Me'], 'Lore • Technical':['Me/Re/Me'],
-    'Martial Arts • Striking':['St/Ag/St'], 'Outdoor • Animal':['Em/Ag/Em'], 'Outdoor • Environmental':['SD/In/Me'],
-    'Power Awareness':['Em/In/Pr'], 'Power Point Development':['realm','special'],
-    'Science/Analytic • Basic':['Re/Me/Re'], 'Science/Analytic • Specialized':['Re/Me/Re','combined'],
-    'Self Control':['SD/Pr/SD'],
-    'Spells • Own Realm Closed Lists':['realm','limited'], 'Spells • Own Realm Open Lists':['realm','limited'], 'Spells • Own Realm Own Base Lists':['realm','limited'],
-    'Subterfuge • Attack':['Ag/SD/In'], 'Subterfuge • Mechanics':['In/Ag/Re'], 'Subterfuge • Stealth':['Ag/SD/In'],
-    'Technical/Trade • General':['Re/Me/SD'], 'Technical/Trade • Professional':['Re/Me/In','combined'], 'Technical/Trade • Vocational':['Me/In/Re','combined'],
-    Urban:['In/Pr/Re'], 'Weapon • 1-H Concussion':['St/Ag/St'], 'Weapon • 1-H Edged':['St/Ag/St'],
-    'Weapon • 2-Handed':['St/Ag/St'], 'Weapon • Missile':['Ag/St/Ag'], 'Weapon • Missile Artillery':['In/Ag/Re'],
-    'Weapon • Pole Arms':['St/Ag/St'], 'Weapon • Thrown':['Ag/St/Ag']
-  };
-  const weaponCategories = Object.keys(skillCategoryRules).filter(category => category.startsWith('Weapon •'));
-  const meleeWeaponCategories = ['Weapon • 1-H Concussion','Weapon • 1-H Edged','Weapon • 2-Handed','Weapon • Pole Arms'];
-  const specialSkillClasses = {
-    Dwarf: {everyman:['Caving','Leather-crafts','Metal-crafts','Mining','Stone-crafts'], restricted:['Swimming']},
-    'Wood Elf': {everyman:['Music','Trickery']},
-    Halfling: {everyman:['Horticulture']},
-    Fighter: {everyman:['Leadership','Frenzy','Boxing','Tackling','Situational Awareness (Combat)']},
-    Thief: {everyman:['Duping','Operating Equipment'], occupational:['Lock Lore']},
-    Rogue: {everyman:['Duping','Lock Lore']},
-    Magician: {everyman:['Time Sense','Meditation']},
-    Cleric: {everyman:['Time Sense','Meditation'], occupational:['Religion','Divination']},
-    Mentalist: {everyman:['Lie Perception','Time Sense','Seduction']},
-    Dabbler: {everyman:['Sense Ambush','Time Sense','Detect Traps','Locate Hidden'], occupational:['Lock Lore']},
-    Bard: {everyman:['Time Sense']}
-  };
   function skillClass(row) {
     if (row?.dataset.skillClass && row.dataset.skillClass !== 'auto') return row.dataset.skillClass;
     const name = $('[name="skill-name"]', row)?.value || '';
@@ -102,22 +51,6 @@
     const kind = skillClass(row);
     return kind === 'occupational' ? buy * 3 : kind === 'everyman' ? buy * 2 : kind === 'restricted' ? Math.floor(buy / 2) : buy;
   }
-  const packageChoiceRules = {
-    Adventurer:[['weapon-category','category',weaponCategories,1,1],['weapon-skill','skill','@weapon-category',1,1]],
-    'Amateur Mage':[['open-lists','skill','Spells • Own Realm Open Lists',3,3],['magical-lore','skill','Lore • Magical',2,1],['technical-lore','skill','Lore • Technical',1,1]],
-    'Animal Friend':[['environmental','skill','Outdoor • Environmental',2,2],['animal','skill','Outdoor • Animal',4,3]],
-    Burglar:[['mechanics','skill','Subterfuge • Mechanics',2,2],['gymnastics','skill','Athletic • Gymnastics',1,1],['weapon-category','category',weaponCategories,1,1],['weapon-skill','skill','@weapon-category',1,1]],
-    'City Guard':[['weapon-category','category',weaponCategories,2,1],['weapon-skill','skill','@weapon-category',2,1]],
-    Herbalist:[['environmental','skill','Outdoor • Environmental',1,1]],
-    Hunter:[['missile','skill','Weapon • Missile',1,1],['environmental','skill','Outdoor • Environmental',2,2]],
-    Knight:[['melee-category','category',meleeWeaponCategories,2,1],['melee-skill','skill','@melee-category',2,1],['maneuver','skill','Combat Maneuvers',1,1]],
-    Loremaster:[['general','skill','Lore • General',6,3],['technical','skill','Lore • Technical',1,1],['obscure','skill','Lore • Obscure',1,1],['magical','skill','Lore • Magical',3,2]],
-    Merchant:[['language','skill','Communications',3,3],['vocation','skill','Technical/Trade • Vocational',1,1]],
-    Performer:[['active','skill','Artistic • Active',3,1],['gymnastics','skill','Athletic • Gymnastics',1,1],['language','skill','Communications',5,5],['influence','skill','Influence',2,2]],
-    Scout:[['environmental','skill','Outdoor • Environmental',3,3],['animal','skill','Outdoor • Animal',2,2],['weapon-category','category',weaponCategories,1,1],['weapon-skill','skill','@weapon-category',1,1]],
-    Soldier:[['weapon-category','category',weaponCategories,2,1],['weapon-skill','skill','@weapon-category',2,1],['light-armor','skill','Armor • Light',2,1]],
-    Traveller:[['environmental','skill','Outdoor • Environmental',1,1]]
-  };
   function weaponCostAssignments() {
     let saved;
     try { saved = JSON.parse(form.elements.weaponCostAssignments.value || '{}'); } catch { saved = {}; }
@@ -230,198 +163,12 @@
     }
     return result;
   }
-  // Appendix A-4 skill names. A trailing * marks a skill developed separately for each instance.
-  const a4Skills = {
-    'Armor • Heavy':'Plate',
-    'Armor • Light':'Soft Leather|Rigid Leather',
-    'Armor • Medium':'Chain',
-    'Artistic • Active':'Acting|Dancing|Mimery|Mimicry|Play Instrument*|Poetic Improvisation|Singing|Tale Telling|Ventriloquism',
-    'Artistic • Passive':'Music|Painting|Poetry|Sculpting',
-    'Athletic • Brawn':'Athletic Games (Brawn)*|Jumping|Weight-lifting',
-    'Athletic • Endurance':'Athletic Games (Endurance)*|Distance Running|Rowing|Scaling|Sprinting|Swimming',
-    'Athletic • Gymnastics':'Acrobatics|Athletic Games (Gymnastics)*|Climbing|Contortions|Diving|Flying/Gliding|Juggling|Tumbling',
-    'Awareness • Perceptions':'Alertness|Sense Ambush',
-    'Awareness • Searching':'Detect Traps|Lie Perception|Locate Hidden|Observation|Poison Perception|Reading Tracks|Surveillance|Tracking',
-    'Awareness • Senses':'Direction Sense|Sense Awareness*|Situational Awareness*|Time Sense',
-    'Body Development':'Body Development',
-    'Combat Maneuvers':'Mounted Combat|Quickdraw|Swashbuckling|Two-weapon Combat',
-    Communications:'Language (spoken)*|Language (written)*|Lip Reading|Signaling',
-    Crafts:'Cooking|Leather-crafts|Metal-crafts|Rope Mastery|Stone-crafts|Wood-crafts|Other craft*',
-    'Directed Spells':'Directed attack*',
-    Influence:'Bribery|Diplomacy|Duping|Interrogation|Leadership|Public Speaking|Seduction|Trading',
-    'Lore • General':'Fauna Lore|Flora Lore|Heraldry|History*|Philosophy|Race Lore*|Region Lore*|Religion',
-    'Lore • Magical':'Artifact Lore|Spell Lore|Undead Lore',
-    'Lore • Obscure':'Demon/Devil Lore|Dragon Lore|Faerie Lore|Xeno-Lores*',
-    'Lore • Technical':'Herb Lore|Lock Lore|Metal Lore|Poison Lore|Stone Lore|Trading Lore',
-    'Martial Arts • Striking':'Boxing|Tackling',
-    'Outdoor • Animal':'Animal Handling*|Animal Training*|Driving*|Riding*',
-    'Outdoor • Environmental':'Caving|Foraging|Hunting|Star-gazing|Survival*|Weather Watching',
-    'Power Awareness':'Attunement|Read Runes',
-    'Power Point Development':'Power Point Development',
-    'Science/Analytic • Basic':'Basic Math|Research',
-    'Science/Analytic • Specialized':'Advanced Math|Alchemy|Anthropology|Other specialized science*',
-    'Self Control':'Frenzy|Meditation|Mnemonics|Stun Removal',
-    'Spells • Own Realm Closed Lists':'Spell list*',
-    'Spells • Own Realm Open Lists':'Spell list*',
-    'Spells • Own Realm Own Base Lists':'Spell list*',
-    'Subterfuge • Attack':'Ambush|Silent Attack',
-    'Subterfuge • Mechanics':'Camouflage|Disarming Traps|Disguise|Picking Locks|Setting Traps|Using/Removing Poison',
-    'Subterfuge • Stealth':'Hiding|Picking Pockets|Stalking|Trickery',
-    'Technical/Trade • General':'Begging|First Aid|Gambling|Mapping|Operating Equipment|Orienteering|Sailing|Tactical Games|Using Prepared Herbs',
-    'Technical/Trade • Professional':'Diagnostics*|Engineering|Mechanition|Mining|Second Aid',
-    'Technical/Trade • Vocational':'Administration|Appraisal|Boat Pilot|Evaluate Armor|Evaluate Metal|Evaluate Stone|Evaluate Weapon|Navigation|Tactics*',
-    Urban:'Contacting|Mingling|Scrounging|Streetwise',
-    'Weapon • 1-H Concussion':'Weapon*', 'Weapon • 1-H Edged':'Weapon*', 'Weapon • 2-Handed':'Weapon*',
-    'Weapon • Missile':'Weapon*', 'Weapon • Missile Artillery':'Weapon*', 'Weapon • Pole Arms':'Weapon*', 'Weapon • Thrown':'Weapon*'
-  };
-  const statAbbreviations = {Ag:0,Co:1,Me:2,Re:3,SD:4,Em:5,In:6,Pr:7,Qu:8,St:9};
-  // Profession bonuses for categories and groups of categories from T-1.4.
-  const professionSkillBonuses = {
-    Fighter:{Armor:10,'Body Development':10,'Combat Maneuvers':10,Weapon:20},
-    Thief:{'Athletic • Gymnastics':5,Awareness:10,'Body Development':5,'Self Control':5,Subterfuge:15,Weapon:10},
-    Rogue:{Armor:5,'Athletic • Gymnastics':5,Awareness:5,'Body Development':5,'Combat Maneuvers':5,Subterfuge:10,Weapon:15},
-    Cleric:{Awareness:5,Influence:5,'Lore • Magical':5,Outdoor:5,'Power Awareness':15,'Power Point Development':5,Spells:5,Weapon:5},
-    Magician:{'Directed Spells':10,'Lore • Magical':10,'Power Awareness':20,'Power Point Development':5,Spells:5},
-    Mentalist:{Awareness:5,'Body Development':5,Influence:10,'Lore • Magical':5,'Power Awareness':10,'Power Point Development':5,'Self Control':5,Spells:5},
-    Ranger:{Athletic:5,Awareness:10,'Body Development':5,Outdoor:20,'Subterfuge • Stealth':5,Weapon:5},
-    Dabbler:{Awareness:10,'Body Development':5,Influence:5,'Lore • Magical':5,'Power Awareness':10,Subterfuge:5,Urban:5,Weapon:5},
-    Bard:{'Artistic • Active':5,Awareness:5,'Body Development':5,Communications:5,Influence:5,Lore:10,'Power Awareness':5,'Self Control':5,Weapon:5}
-  };
-  const raceAllowances = {'Common Man':[12,8,6], 'High Man':[10,12,4], 'Wood Elf':[10,12,4], Dwarf:[12,8,5], Halfling:[12,6,5]};
-  const adolescenceRaces = ['Common Man','High Man','Wood Elf','Dwarf','Halfling'];
-  // Fixed adolescence ranks from T-1.6, in the race order above.
-  const adolescenceCategoryRanks = {
-    'Armor • Light':[1,1,0,1,0], 'Armor • Medium':[0,2,0,3,0],
-    'Athletic • Brawn':[1,1,1,1,1], 'Athletic • Endurance':[1,1,1,1,1], 'Athletic • Gymnastics':[1,1,1,1,1],
-    'Awareness • Searching':[1,1,1,1,1], Communications:[1,3,2,1,1], 'Lore • General':[3,3,3,3,2],
-    'Outdoor • Animal':[1,1,1,0,0], 'Outdoor • Environmental':[2,1,5,2,1], 'Power Awareness':[0,1,1,0,0],
-    'Science/Analytic • Basic':[0,1,1,1,0], 'Subterfuge • Stealth':[1,0,4,0,5],
-    'Technical/Trade • General':[1,1,1,1,1],
-    'Weapon • 1-H Concussion':[0,0,0,4,0], 'Weapon • 1-H Edged':[1,2,1,0,0],
-    'Weapon • 2-Handed':[0,1,0,0,0], 'Weapon • Missile':[1,1,3,0,2],
-    'Weapon • Pole Arms':[1,1,0,0,0], 'Weapon • Thrown':[1,0,0,1,2]
-  };
-  const adolescenceSkillRanks = [
-    ['Armor • Light','Soft Leather',[1,0,0,0,0]], ['Armor • Light','Rigid Leather',[1,1,0,1,0]],
-    ['Armor • Medium','Chain',[0,2,0,3,0]], ['Athletic • Endurance','Swimming',[1,1,3,0,0]],
-    ['Athletic • Gymnastics','Climbing',[0,0,2,1,2]], ['Awareness • Perceptions','Alertness',[2,2,6,4,8]],
-    ['Body Development','Body Development',[2,3,1,3,2]],
-    ['Lore • General','Own Region Lore',[3,3,3,3,3]], ['Lore • General','Own Race Lore',[3,3,3,3,3]],
-    ['Outdoor • Animal','Riding (horse)',[1,1,1,0,0]],
-    ['Subterfuge • Stealth','Stalking',[1,0,4,0,5]], ['Subterfuge • Stealth','Hiding',[1,0,4,0,5]]
-  ];
-  // Starting spoken/written language ranks from the matching A-1 race entries (A-1.1–A-1.5).
-  const raceStartingLanguages = {
-    'Common Man':[['Common-speech',8,6]],
-    'High Man':[['High-speech',8,6],['Common-speech',8,6],['Grey-elvish',6,6],['High-elvish',2,2]],
-    'Wood Elf':[['Elvish',10,10],['Grey-elvish',8,6],['Common-speech',8,6],['High-elvish',4,4]],
-    Dwarf:[['Dwarvish',8,6],['Common-speech',5,5],['Elvish',4,4]],
-    Halfling:[['Small-speech',8,6],['Common-speech',8,6]]
-  };
-  // A-1 allowed adolescence development, with separate spoken and written rank caps.
-  const raceAdolescenceLanguages = {
-    'Common Man':[['High-speech',6,6],['Common-speech',10,10],['Small-speech',6,6]],
-    'High Man':[['High-speech',10,10],['Common-speech',10,10],['Grey-elvish',8,8],['High-elvish',6,6],['Hill-speech',6,6],['Sea-speech',8,8],['Small-speech',6,6],['Plains-speech',6,6]],
-    'Wood Elf':[['Grey-elvish',10,10],['Common-speech',10,10],['High-elvish',10,10],['High-speech',4,4],['Plains-speech',8,8],['Wood-speech',8,8]],
-    Dwarf:[['Dwarvish',10,10],['Common-speech',10,10],['Hill-speech',2,2],['Plains-speech',6,6],['Wood-speech',6,6]],
-    Halfling:[['Small-speech',10,10],['Common-speech',10,10],['High-speech',8,8],['Grey-elvish',8,8]]
-  };
-  const backgroundChoices = [
-    ['extraLanguages','Extra languages',1,'20 ranks in the extra languages listed for your race.'],
-    ['extraStatRolls','Extra stat gain rolls',1,'One extra stat gain roll for each stat.'],
-    ['skillBonus','Special +10 skill bonus',1,'Choose one skill.'],
-    ['categoryBonus','Special +5 category bonus',1,'Choose one skill category.'],
-    ['rolledItem','Roll for a special item',1,'Roll on T-1.5.'],
-    ['chosenItem','Choose a special item',2,'Choose a result from T-1.5 with your GM.'],
-    ['rolledMoney','Roll for extra money',1,'Roll on T-1.5.'],
-    ['chosenMoney','Choose extra money',2,'Choose an amount from T-1.5 with your GM.']
-  ];
-  const backgroundExtraLanguages = {
-    'Common Man':[['High-speech',8,8],['Small-speech',8,8],['Hill-speech',8,8]],
-    'High Man':[['High-elvish',8,8],['Hill-speech',8,8],['Plains-speech',8,8],['North-speech',8,8],['Wood-speech',8,8]],
-    'Wood Elf':[['High-speech',8,8],['South-speech',6,6],['Black-speech',6,6]],
-    Dwarf:[['High-speech',5,5],['South-speech',4,4],['North-speech',5,5]],
-    Halfling:[['Hill-speech',4,4],['Wood-speech',6,6],['Orcish',2,2],['Elvish',8,8]]
-  };
-  const backgroundMoney = [[2,1],[5,2],[15,5],[25,10],[35,15],[45,20],[55,30],[65,35],[70,40],[75,50],[80,60],[85,70],[90,80],[94,100],[97,125],[99,150],[100,200]];
-  const backgroundItems = [
-    [5,'01–05',['+1 spell adder','One special bread, poison, or herb']],
-    [10,'06–10',['+1 spell adder','Two +5 non-magic items']],
-    [20,'11–20',['+1 spell adder','One +10 non-magic item']],
-    [30,'21–30',['+1 spell adder','Two +5 magic items']],
-    [65,'31–65',['+1 spell adder','One +10 magic item']],
-    [66,'66',['+3 spell adder','Loyal domesticated animal','One +20 non-magic item']],
-    [75,'67–75',['Daily III spell item','+2 spell adder','Three +5 non-magic items','Three doses of a level 1–5 potion']],
-    [80,'76–80',['Daily III spell item','+2 spell adder','One +15 non-magic item','Three doses of a level 1–5 potion']],
-    [85,'81–85',['Daily IV spell item','+2 spell adder','Three +5 magic items','Five doses of a level 1–5 potion']],
-    [90,'86–90',['Daily IV spell item','+2 spell adder','One +15 magic item','Five doses of a level 1–5 potion']],
-    [95,'91–95',['+3 spell adder','Two +10 magic items','Two Daily III spell items']],
-    [97,'96–97',['+3 spell adder','One +20 magic item','Daily IV spell item']],
-    [98,'98',['+3 spell adder','Daily VI spell item','Three +10 magic items']],
-    [99,'99',['+3 spell adder','Daily VII spell item','Two +20 magic items']],
-    [100,'100',['+3 spell adder','Daily VIII spell item','Loyal unusual creature']]
-  ];
-  const raceBackgroundNotes = {
-    'Common Man':'Extra languages: High-speech, Small-speech, Hill-speech. Money: silver and bronze pieces.',
-    'High Man':'Extra languages: High-elvish, Hill-speech, Plains-speech, North-speech, Wood-speech. Money: gold pieces.',
-    'Wood Elf':'Extra languages: High-speech, South-speech, Black-speech. Money: gems.',
-    Dwarf:'Extra languages: High-speech, South-speech, North-speech. Spell items may contain only Channeling spells.',
-    Halfling:'Extra languages: Hill-speech, Wood-speech, Orcish, Elvish. Spell adders and items that cast spells are unavailable.'
-  };
-  // Appendix A-1 race descriptions give averages and typical traits, not dice tables.
-  const racePhysicalProfiles = {
-    'Common Man':{source:'A-1.1', heights:[70,64], weights:[160,125], age:[16,60], builds:['Medium','Lean','Broad'], skin:['Fair','Tan','Olive'], hair:['Black','Dark brown','Brown','Blond','Red','Grey'], eyes:['Brown','Hazel','Blue','Green','Grey'], demeanor:['Practical','Hard-working','Quiet','Loyal','Shy']},
-    'High Man':{source:'A-1.2', heights:[77,70], weights:[225,150], age:[16,200], builds:['Tall and strong'], skin:['Fair'], hair:['Black','Dark brown'], eyes:['Grey','Hazel','Blue','Green'], demeanor:['Noble','Confident','Impatient','Proud','Haughty']},
-    'Wood Elf':{source:'A-1.3', heights:[72,69], weights:[150,125], age:[16,500], builds:['Slight and slender'], skin:['Ruddy'], hair:['Sandy'], eyes:['Blue','Green'], demeanor:['Fun-loving','Guarded','Mirthful'], immortal:true},
-    Dwarf:{source:'A-1.4', heights:[57,53], weights:[150,135], age:[16,300], builds:['Short and stocky','Strong-limbed'], skin:['Fair','Ruddy'], hair:['Black','Red','Dark brown'], eyes:[], demeanor:['Sober','Quiet','Possessive','Suspicious','Pugnacious','Introspective']},
-    Halfling:{source:'A-1.5', heights:[41,39], weights:[54,51], age:[30,100], builds:['Small and pudgy','Small and stout'], skin:['Brown'], hair:['Brown'], eyes:[], demeanor:['Cheery','Conservative','Unassuming','Peaceful']}
-  };
-  const armorTypes = {
-    5:[0,0,0,0], 6:[0,-20,5,0], 7:[-10,-40,15,10], 8:[-15,-50,15,15],
-    9:[-5,-50,0,0], 10:[-10,-70,10,5], 11:[-15,-90,20,15], 12:[-15,-110,30,15],
-    13:[-10,-70,0,5], 14:[-15,-90,10,10], 15:[-25,-120,20,20], 16:[-25,-130,20,20],
-    17:[-15,-90,0,10], 18:[-20,-110,10,20], 19:[-35,-150,30,30], 20:[-45,-165,40,40]
-  };
-  const armorSkillTypes = {'Soft Leather':[5,6,7,8], 'Rigid Leather':[9,10,11,12], Chain:[13,14,15,16], Plate:[17,18,19,20]};
-  // Weapon choices from the outfitting lists in the matching A-1 race entries.
-  const raceWeaponChoices = {
-    'Common Man':{'Weapon • 1-H Edged':['Dagger','Handaxe','Throwing dagger'],'Weapon • Missile':['Sling'],'Weapon • Pole Arms':['Fishing spear'],'Weapon • Thrown':['Dagger','Handaxe','Throwing dagger','Fishing spear']},
-    'High Man':{'Weapon • 1-H Edged':['Battle axe','Broadsword','Dagger','Short sword','Bastard sword','Falchion','Foil','Kynac','Long kynac','Main gauche','Rapier'],'Weapon • 2-Handed':['Flail','Quarterstaff','Two-handed sword','War mattock'],'Weapon • Missile':['Composite bow','Long bow'],'Weapon • Pole Arms':['Halbard','Lance','Spear','Boar spear']},
-    'Wood Elf':{'Weapon • 1-H Edged':['Dagger','Handaxe','Broadsword','Short sword','Whip','Main gauche','Shang','Rapier','Gé','Kynac'],'Weapon • Missile':['Long bow','Short bow']},
-    Dwarf:{'Weapon • 1-H Concussion':['Club','War hammer','Mace'],'Weapon • Thrown':['Dagger','Handaxe','Spear']},
-    Halfling:{'Weapon • Missile':['Short bow','Sling'],'Weapon • Thrown':['Dagger','Handaxe','Pilum']}
-  };
-  const openSpellLists = {
-    Essence:['Delving Ways','Detecting Ways','Elemental Shields','Essence Hand','Essence’s Perceptions','Lesser Illusions','Physical Enhancement','Rune Mastery','Spell Wall','Unbarring Ways'],
-    Channeling:['Barrier Law','Concussion’s Ways','Detection Mastery','Light’s Way','Lofty Movements','Nature’s Law','Purifications','Sound’s Way','Spell Defense','Weather Ways'],
-    Mentalism:['Anticipations','Attack Avoidance','Brilliance','Cloaking','Damage Resistance','Delving','Detections','Illusions','Self Healing','Spell Resistance']
-  };
-  const raceStats = {
-    'Common Man':[0,0,0,0,2,0,0,0,0,2],
-    'High Man':[-2,4,0,0,0,0,0,4,-2,4],
-    'Wood Elf':[4,0,2,0,-5,2,0,2,2,0],
-    Dwarf:[-2,6,0,0,2,-4,0,-4,-2,2],
-    Halfling:[6,6,0,0,-4,-2,0,-6,4,-8]
-  };
-  const raceResistances = {
-    'Common Man':[0,0,0,0,0,0],
-    'High Man':[-5,-5,-5,0,0,0],
-    'Wood Elf':[-5,-5,-5,10,100,0],
-    Dwarf:[40,0,40,20,15,0],
-    Halfling:[50,0,40,30,15,0]
-  };
-  const resistanceTypes = [
-    ['channeling','Channeling',6,1], ['essence','Essence',5,0],
-    ['mentalism','Mentalism',7,2], ['poison','Poison',1,3],
-    ['disease','Disease',1,4], ['fear','Fear',4,5]
-  ];
 
   function readCharacters() {
     try { const data = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); return Array.isArray(data) ? data : []; }
     catch { return []; }
   }
   function writeCharacters() { localStorage.setItem(STORAGE_KEY, JSON.stringify(characters)); window.dispatchEvent(new Event('rolemaster-roster-updated')); }
-  function esc(value) { return String(value ?? '').replace(/[&<>"']/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char])); }
   function makeStats(stats = {}) {
     $('#stats-list').innerHTML = statNames.map((name, index) => {
       const value = stats[name] || {};
@@ -432,15 +179,6 @@
     $('#resistance-grid').innerHTML = `<div class="rr-head"><span>Type</span><span>Race</span><span>Stat</span><span>Other</span><span>Total</span></div>${resistanceTypes.map(([key, label]) => `<div class="rr-row"><span>${label}</span><output id="rr-race-${key}">—</output><output id="rr-stat-${key}">—</output><input aria-label="${label} other resistance bonus" name="rr-other-${key}" type="number" value="0"><output id="rr-total-${key}">—</output></div>`).join('')}`;
   }
   function categoryGroup(category) { return category.includes(' • ') ? category.split(' • ')[0] : ''; }
-  function rankBonus(ranks, progression) {
-    const n = Math.max(0, Number(ranks) || 0);
-    const rounded = value => Math.floor(value + 0.5);
-    if (progression === 'category') return n ? rounded(2 * Math.min(n, 10) + Math.min(Math.max(n - 10, 0), 10) + .5 * Math.min(Math.max(n - 20, 0), 10)) : -15;
-    if (progression === 'limited') return rounded(Math.min(n, 20) + .5 * Math.min(Math.max(n - 20, 0), 10));
-    if (progression === 'special') return 6 * Math.min(n, 10) + 5 * Math.min(Math.max(n - 10, 0), 10) + 4 * Math.min(Math.max(n - 20, 0), 10) + 3 * Math.max(n - 30, 0);
-    if (progression === 'combined') return n ? rounded(5 * Math.min(n, 10) + 3 * Math.min(Math.max(n - 10, 0), 10) + 1.5 * Math.min(Math.max(n - 20, 0), 10) + .5 * Math.max(n - 30, 0)) : -30;
-    return n ? rounded(3 * Math.min(n, 10) + 2 * Math.min(Math.max(n - 10, 0), 10) + Math.min(Math.max(n - 20, 0), 10) + .5 * Math.max(n - 30, 0)) : -15;
-  }
   function categoryStatBonus(category) {
     const rule = skillCategoryRules[category];
     if (!rule) return null;
@@ -1107,16 +845,8 @@
     return {rolls, total:rolls.reduce((sum, value) => sum + (value === 10 ? 9 : value), 0)};
   }
   function rollOpenEndedD100() {
-    const first = rollD100();
-    const rolls = [first];
-    if (first <= 5) {
-      let next;
-      do { next = rollD100(); rolls.push(-next); } while (next >= 96);
-    } else if (first >= 96) {
-      let next;
-      do { next = rollD100(); rolls.push(next); } while (next >= 96);
-    }
-    return {rolls, total:rolls.reduce((sum, value) => sum + value, 0)};
+    const result = openEndedD100(rollD100);
+    return {rolls:result.dice, total:result.total};
   }
   function formatRolls(rolls) {
     return (rolls || []).map((value, index) => index === 0 ? String(value) : value < 0 ? ` − ${-value}` : ` + ${value}`).join('');
@@ -1969,7 +1699,7 @@
       updateSkillBuyOptions(row);
       const costs = costForSkill(row, profession);
       const ranks = Number($('[name="skill-buy"]', row).value) || 0;
-      const cost = costs ? costs.slice(0, ranks).reduce((sum, value) => sum + value, 0) : 0;
+      const cost = rankCost(costs, ranks);
       const start = Number($('[name="skill-start"]', row).value) || 0;
       spent += cost;
       $('.rank-cost', row).textContent = `${cost} DP · ${start + developedSkillRanks(row, ranks)} ranks`;
@@ -1982,7 +1712,7 @@
       const buy = $('[name="record-buy"]', record);
       if (buy) {
         updateSkillBuyOptions(record);
-        spent += costs ? costs.slice(0, Number(buy.value) || 0).reduce((sum, value) => sum + value, 0) : 0;
+        spent += rankCost(costs, buy.value);
       }
       const categoryRanks = buy ? (Number($('[name="record-start"]', record).value) || 0) + (Number(buy.value) || 0) : 0;
       const rank = rule[1] && rule[1] !== 'standard' ? 0 : rankBonus(categoryRanks, 'category');
@@ -2217,7 +1947,6 @@
     });
   }
   function playValue(value) { return value === '' || value === null || value === undefined ? '—' : esc(value); }
-  const xpThresholds = [0,10000,20000,30000,40000,50000,70000,90000,110000,130000,150000,180000,210000,240000,270000,300000,340000,380000,420000,460000,500000];
   function xpForLevel(level) { return level <= 20 ? xpThresholds[Math.max(1, level)] : 500000 + (level - 20) * 50000; }
   function levelForXp(xp) {
     const total = Math.max(0, Math.trunc(Number(xp) || 0));
@@ -2293,7 +2022,6 @@
   function playRollTile({category, name, ranks, total, favorite = false, kind = 'skill'}) {
     return `<button type="button" class="play-skill-tile" data-play-roll="${kind}" data-category="${esc(category)}" data-name="${esc(name)}" data-bonus="${esc(total)}" aria-label="Roll ${esc(name)}, ${esc(category)}, bonus ${playValue(total)}"><span class="play-tile-name">${favorite ? '<b aria-hidden="true">★</b> ' : ''}${esc(name)}</span><span class="play-tile-detail">${ranks === undefined ? 'Resistance' : `${ranks} rank${ranks === 1 ? '' : 's'}`}</span><strong>${playValue(total)}</strong></button>`;
   }
-  const coinUnits = [['gp',10000],['sp',1000],['bp',100],['cp',10],['tp',1]];
   function formatMoney(tin) {
     const amount = Math.abs(Math.trunc(tin));
     let remaining = amount;
@@ -2451,59 +2179,6 @@
     const bonusLabel = activePlayRoll.kind === 'resistance' ? 'Resistance' : 'Skill';
     $('#play-skill-roll-result').innerHTML = `<span>Dice: ${esc(formatRolls(playDice.rolls))} = ${playDice.total}</span><strong>${total}</strong><span>${validBonus ? `${bonusLabel} ${bonus >= 0 ? '+' : ''}${bonus}` : 'Bonus unavailable; using 0'} · modifier ${modifier >= 0 ? '+' : ''}${modifier}</span>`;
   }
-  function formData() {
-    const data = Object.fromEntries(new FormData(form).entries());
-    data.skills = $$('.skill-row', $('#skills-list')).map(row => ({
-      name: $('[name="skill-name"]', row).value,
-      category: row.dataset.category,
-      start: $('[name="skill-start"]', row).value,
-      buy: row.dataset.pendingBuy || $('[name="skill-buy"]', row).value || '0',
-      item: $('[name="skill-item"]', row).value,
-      special: $('[name="skill-special"]', row).value,
-      raceGrant: row.dataset.raceGrant || '',
-      raceBase: Number(row.dataset.raceBase) || 0,
-      languageSpent: Number(row.dataset.languageSpent) || 0,
-      hobbySpent: Number(row.dataset.hobbySpent) || 0,
-      packageBase: Number(row.dataset.packageBase) || 0,
-      backgroundLanguageBase: Number(row.dataset.backgroundLanguageBase) || 0,
-      backgroundSpecialBase: Number(row.dataset.backgroundSpecialBase) || 0,
-      backgroundItemBase: Number(row.dataset.backgroundItemBase) || 0,
-      skillClass: row.dataset.skillClass || 'auto',
-      ranks: (Number($('[name="skill-start"]', row).value) || 0) + developedSkillRanks(row, Number(row.dataset.pendingBuy || $('[name="skill-buy"]', row).value) || 0)
-    })).filter(skill => skill.name || Number(skill.start) || Number(skill.buy));
-    const visibleCategories = new Set($$('.category-row', $('#skills-list')).map(row => row.dataset.category));
-    data.categoryRanks = Object.fromEntries($$('.category-record-row').flatMap(row => {
-      const start = $('[name="record-start"]', row)?.value || '0';
-      const buy = row.dataset.pendingBuy || $('[name="record-buy"]', row)?.value || '0';
-      const special = $('[name="record-special"]', row).value;
-      const special2 = $('[name="record-special2"]', row).value;
-      const raceBase = Number(row.dataset.raceBase) || 0;
-      const hobbySpent = Number(row.dataset.hobbySpent) || 0;
-      const packageBase = Number(row.dataset.packageBase) || 0;
-      const backgroundSpecialBase = Number(row.dataset.backgroundSpecialBase) || 0;
-      const trainingItemBase = Number(row.dataset.trainingItemBase) || 0;
-      return visibleCategories.has(row.dataset.category) || Number(start) || Number(buy) || Number(special) || Number(special2) || raceBase || hobbySpent || packageBase || backgroundSpecialBase || trainingItemBase
-        ? [[row.dataset.category, {start, buy, special, special2, raceBase, hobbySpent, packageBase, backgroundSpecialBase, trainingItemBase}]] : [];
-    }));
-    ['skill-name','skill-start','skill-buy','skill-item','skill-special','record-start','record-buy','record-special','record-special2','a4-start','a4-buy','a4-item','a4-special'].forEach(key => delete data[key]);
-    data.stats = Object.fromEntries(statNames.map((name, index) => [name, Object.fromEntries(['temp','pot','basic','racial','special','total'].map(part => [part, data[`stat-${part}-${index}`] || '']))]));
-    Object.keys(data).filter(key => /^stat-(temp|pot|basic|racial|special|total)-\d+$/.test(key)).forEach(key => delete data[key]);
-    return data;
-  }
-  function fillForm(character = {}) {
-    form.reset();
-    for (const [key, value] of Object.entries(character)) {
-      const field = form.elements.namedItem(key);
-      if (field && typeof value !== 'object') field.value = key === 'realm' && value === 'Choose at table' ? 'None' : value;
-    }
-    if (!character.developmentLevel) form.elements.developmentLevel.value = String(Math.max(1, Number(character.level) || 1));
-    syncLevelFromXp();
-    makeStats(character.stats || {});
-    if (!character.rolePhysicalGenerated) randomizePhysicalDetails(false);
-    renderCategoryRecord(character);
-    renderSkillTree(character);
-    updateDevelopment();
-  }
   function revealSelectedChoices() {
     $$('.choice-strip').forEach(strip => {
       const selected = $('input:checked', strip)?.closest('.choice-tile');
@@ -2543,170 +2218,17 @@
     if (previous < 0) characters.unshift(saved); else characters[previous] = saved;
     writeCharacters(); renderRoster();
   }
-  async function chooseTable(reference) {
-    if (!reference) return;
-    activeTable = reference;
-    $('#table-current').textContent = reference.title;
-    $('#table-code').textContent = `${reference.code} · CORE PAGE${reference.printedPages.length > 1 ? 'S' : ''} ${reference.printedPages.join(', ')}`;
-    $$('.table-choice').forEach(button => button.classList.toggle('active', button.dataset.code === reference.code));
-    $('#table-source').hidden = false;
-    $('#table-source').innerHTML = '<p class="table-load-error">Loading table data…</p>';
-    $('.table-scroll').hidden = true; $('#lookup-result').hidden = true; $('.lookup-controls').hidden = true;
-    try {
-      let detail = tableCache.get(reference.code);
-      if (!detail) {
-        const response = await fetch(`tables/${encodeURIComponent(reference.file)}`);
-        if (!response.ok) throw new Error('Table data was not found');
-        detail = await response.json(); tableCache.set(reference.code, detail);
-      }
-      if (activeTable.code !== reference.code) return;
-      activeTable = detail;
-      if (detail.kind === 'critical' || detail.kind === 'fumble') {
-        const isFumble = detail.kind === 'fumble';
-        const select = $('#table-column');
-        select.innerHTML = detail.columns.map((column, index) => `<option value="${index}">${esc(column.group === 'Critical severity' || column.group === 'Weapon' ? column.label : `${column.group} · ${column.label}`)}</option>`).join('');
-        $('#roll-label').textContent = isFumble ? detail.code === 'A-10.11.1' ? 'Fumble roll' : 'Failure roll' : 'Critical roll';
-        const extendedRolls = isFumble ? detail.code === 'A-10.11.2' : ['.7','.8','.9'].some(suffix => detail.code.endsWith(suffix));
-        $('#table-roll').max = extendedRolls ? '999' : '100';
-        if (Number($('#table-roll').value) > Number($('#table-roll').max)) $('#table-roll').value = $('#table-roll').max;
-        $('#column-select-field').firstChild.textContent = isFumble ? detail.code === 'A-10.11.1' ? 'Weapon type' : 'Spell type' : 'Critical type';
-        $('.table-scroll').hidden = false; $('.lookup-controls').hidden = false; $('#lookup-result').hidden = false; $('#table-source').hidden = true;
-        $('.table-scroll').innerHTML = `<details class="full-critical-table" open><summary>Full ${isFumble ? detail.title.toLowerCase() : 'critical'} table</summary><div class="table-scroll-inner"><table id="attack-grid" class="critical-grid"></table></div></details>`;
-        renderCriticalGrid(); updateCriticalLookup();
-        $('#table-note').textContent = isFumble ? 'Choose the roll and weapon or spell type to see its result.' : 'H = hits · π = must parry · ∏ = no parry · ∑ = stunned · ∫ = bleed per round. A number before a symbol gives its amount or duration.';
-      } else if (detail.columns && detail.rows) {
-        const select = $('#table-column');
-        select.innerHTML = detail.columns.map((column, index) => `<option value="${index}">${esc(column.group)} · ${esc(column.label)}</option>`).join('');
-        $('#roll-label').textContent = 'Modified roll';
-        $('#table-roll').max = '300';
-        if (Number($('#table-roll').value) > 300) $('#table-roll').value = '300';
-        $('#column-select-field').firstChild.textContent = detail.code === 'A-10.9.11' ? 'Target' : 'Target armor';
-        $('.table-scroll').hidden = false; $('.lookup-controls').hidden = false; $('#lookup-result').hidden = false; $('#table-source').hidden = true;
-        $('.table-scroll').innerHTML = `<details class="full-attack-table" open><summary>Full attack table</summary><div class="table-scroll-inner"><table id="attack-grid" class="attack-grid"></table></div></details>`;
-        renderGrid(); updateLookup();
-        $('#table-note').textContent = 'Hits and criticals are shown together (for example, 12E).';
-      } else if (detail.categories && detail.professions) {
-        $('.table-scroll').hidden = false; $('#table-source').hidden = true;
-        $('#attack-grid').innerHTML = `<thead><tr><th>Skill category</th>${detail.professions.map(profession => `<th>${esc(profession)}</th>`).join('')}</tr></thead><tbody>${Object.entries(detail.categories).map(([category, costs]) => `<tr><th scope="row">${esc(category)}</th>${detail.professions.map(profession => `<td>${costs[profession] ? costs[profession].join('/') : '—'}</td>`).join('')}</tr>`).join('')}</tbody>`;
-        $('#table-note').textContent = 'Rank costs by profession. Weapon costs may appear in a different category on a character sheet. A dash means unavailable.';
-      } else renderSource(detail);
-    } catch {
-      if (activeTable.code === reference.code) $('#table-source').innerHTML = '<p class="table-load-error">Could not load this table file. Reload the page to try again.</p>';
-    }
-  }
-  function renderSource(table) {
-    $('.table-scroll').hidden = true;
-    $('#table-source').hidden = false;
-    $('#table-source').innerHTML = (table.tablePages || []).map(page => `<section class="source-page"><div class="source-page-head"><span>${esc(table.code)}</span><span>CORE PAGE ${page.printedPage}</span></div><pre>${esc(page.text)}</pre></section>`).join('');
-    $('#table-note').textContent = '';
-  }
-  function renderGrid() {
-    if (!activeTable?.columns || !activeTable?.rows) return;
-    const groups = [];
-    activeTable.columns.forEach((column, index) => {
-      const previous = groups[groups.length - 1];
-      if (previous?.group === column.group) previous.count++;
-      else groups.push({group: column.group, count: 1, start: index});
-    });
-    const headerGroups = groups.map(group => `<th colspan="${group.count}">${esc(group.group)}</th>`).join('');
-    const columnHeaders = activeTable.columns.map(column => `<th>${esc(column.label)}</th>`).join('');
-    let previousSection = null;
-    const body = activeTable.rows.map((row, rowIndex) => {
-      let section = '';
-      if (row.section && row.section !== previousSection) {
-        section = `<tr class="table-section"><th colspan="${activeTable.columns.length + 1}">${esc(row.section)}</th></tr>`;
-        previousSection = row.section;
-      }
-      const values = row.values.map((value, columnIndex) => `<td data-column="${columnIndex}" class="${value === '–' ? 'no-result' : value === 'F' ? 'failure-result' : value.endsWith('A') || value.endsWith('B') || value.endsWith('C') || value.endsWith('D') || value.endsWith('E') ? 'critical-result' : ''}">${esc(value)}</td>`).join('');
-      const unmodified = row.unmodified ? ' unmodified-row' : '';
-      return `${section}<tr class="attack-row${unmodified}" data-row="${rowIndex}"><th scope="row">${row.unmodified ? 'UM ' : ''}${esc(row.roll)}</th>${values}</tr>`;
-    }).join('');
-    $('#attack-grid').innerHTML = `<thead><tr><th rowspan="2" class="roll-heading">Modified<br>roll</th>${headerGroups}</tr><tr>${columnHeaders}</tr></thead><tbody>${body}</tbody>`;
-  }
-  function renderCriticalGrid() {
-    const columns = activeTable.columns.map(column => `<th scope="col">${esc(column.group === 'Critical severity' || column.group === 'Weapon' ? column.label : `${column.group} · ${column.label}`)}</th>`).join('');
-    const rows = activeTable.rows.map((row, rowIndex) => `<tr class="critical-row" data-row="${rowIndex}"><th scope="row">${esc(row.roll)}</th>${row.cells.map((cell, columnIndex) => `<td data-column="${columnIndex}"><p>${esc(cell.description)}</p>${cell.effect ? `<span class="critical-effect">${esc(cell.effect)}</span>` : ''}</td>`).join('')}</tr>`).join('');
-    $('#attack-grid').innerHTML = `<thead><tr><th scope="col">Roll</th>${columns}</tr></thead><tbody>${rows}</tbody>`;
-  }
-  function updateCriticalLookup() {
-    if (activeTable?.kind !== 'critical' && activeTable?.kind !== 'fumble') return;
-    const roll = Math.max(1, Number($('#table-roll').value) || 1);
-    const columnIndex = Number($('#table-column').value) || 0;
-    const row = activeTable.rows.find(item => {
-      const [start, end] = item.roll.split('-');
-      return roll >= Number.parseInt(start, 10) && roll <= (end ? Number.parseInt(end, 10) : item.roll.endsWith('+') ? Infinity : Number.parseInt(start, 10));
-    }) || activeTable.rows[activeTable.rows.length - 1];
-    const column = activeTable.columns[columnIndex];
-    const cell = row.cells[columnIndex];
-    $('#lookup-result').innerHTML = `<div class="critical-lookup"><div class="critical-lookup-heading"><span>ROLL ${esc(roll)}${row.roll === String(roll) ? '' : ` · ${esc(row.roll)}`}</span><strong>${esc(column.group === 'Critical severity' || column.group === 'Weapon' ? column.label : `${column.group} · ${column.label}`)}</strong></div><p>${esc(cell.description)}</p>${cell.effect ? `<div class="critical-lookup-effect">${esc(cell.effect)}</div>` : ''}</div>`;
-    $$('.critical-row', $('#attack-grid')).forEach(element => {
-      const selected = Number(element.dataset.row) === activeTable.rows.indexOf(row);
-      element.classList.toggle('selected-row', selected);
-      $$('td', element).forEach((tableCell, index) => tableCell.classList.toggle('selected-cell', selected && index === columnIndex));
-    });
-  }
-  function rowContainsModifiedRoll(row, roll) {
-    if (row.unmodified) return false;
-    const parts = row.roll.split('-');
-    let low = parts.length === 1 ? Number(parts[0]) : (parts[0] === 'XX' ? 1 : Number(parts[0]));
-    const high = parts.length === 1 ? low : Number(parts[1]);
-    if (!Number.isFinite(low) || !Number.isFinite(high)) return false;
-    return roll >= low && roll <= high;
-  }
-  function updateLookup() {
-    if (!activeTable?.rows) return;
-    const roll = Number($('#table-roll').value) || 1;
-    const columnIndex = Number($('#table-column').value) || 0;
-    const regularRows = activeTable.rows.filter(row => !row.unmodified);
-    let row = regularRows.find(item => rowContainsModifiedRoll(item, roll));
-    if (!row) row = roll > 150 ? regularRows[0] : regularRows[regularRows.length - 1];
-    const value = row?.values[columnIndex] ?? '–';
-    const column = activeTable.columns[columnIndex];
-    const lookup = $('#lookup-result');
-    lookup.innerHTML = `Roll <strong>${esc(roll)}</strong> vs. <strong>${esc(column.group)} ${esc(column.label)}</strong><span>${esc(value)}</span>`;
-    $$('.attack-row', $('#attack-grid')).forEach(element => {
-      const selected = Number(element.dataset.row) === activeTable.rows.indexOf(row);
-      element.classList.toggle('selected-row', selected);
-      $$('td', element).forEach((cell, index) => cell.classList.toggle('selected-cell', selected && index === columnIndex));
-    });
-  }
-  function renderTables(filter = '') {
-    const needle = filter.trim().toLowerCase();
-    const shown = tables.filter(table => {
-      const matchesSearch = `${table.title} ${table.code}`.toLowerCase().includes(needle);
-      const group = table.code.startsWith('A-10.9') ? 'attacks' : table.code.startsWith('A-10.10') ? 'criticals' : /^T-[12]\./.test(table.code) || table.code === 'chart-special-progression' ? 'character' : 'play';
-      return matchesSearch && (activeTableGroup === 'all' || activeTableGroup === group);
-    });
-    $('#table-list').innerHTML = shown.map(table => `<button class="table-choice" data-code="${table.code}"><span>${esc(table.title)}</span><span>${table.code}</span></button>`).join('');
-    $('#table-count').textContent = `${shown.length} of ${tables.length} tables and charts`;
-    if (!shown.length) {
-      $('#table-list').innerHTML = '<p class="table-list-empty">No tables match this search.</p>';
-      activeTable = null;
-      $('#table-current').textContent = 'No matching table';
-      $('#table-code').textContent = '';
-      $('.lookup-controls').hidden = true;
-      $('#lookup-result').hidden = true;
-      $('.table-scroll').hidden = true;
-      $('#table-source').hidden = false;
-      $('#table-source').innerHTML = '<p class="table-list-empty">Try another search or category.</p>';
-      $('#table-note').textContent = '';
-    }
-    $$('.table-choice').forEach(button => button.addEventListener('click', () => chooseTable(tables.find(table => table.code === button.dataset.code))));
-    if (shown.length && !shown.some(table => table.code === activeTable?.code)) chooseTable(shown[0]);
-    else $$('.table-choice').forEach(button => button.classList.toggle('active', button.dataset.code === activeTable?.code));
-  }
   async function loadReferenceData() {
     try {
       const [tableResponse, costResponse, packageResponse, equipmentResponse] = await Promise.all([fetch('tables/index.json'), fetch('tables/T-2.8.json'), fetch('tables/apprenticeship-packages.json'), fetch('tables/A-7-equipment.json')]);
       if (!tableResponse.ok || !costResponse.ok || !packageResponse.ok) throw new Error('Reference files could not be loaded');
-      tables = await tableResponse.json();
+      tableBrowser.setTables(await tableResponse.json());
       developmentRules = await costResponse.json();
       trainingPackages = await packageResponse.json();
       if (equipmentResponse.ok) equipmentCatalog = (await equipmentResponse.json()).items || [];
       const draft = formData();
       renderCategoryRecord(draft);
       renderSkillTree(draft);
-      renderTables();
       updateDevelopment();
       if ($('#play-view').classList.contains('active')) renderPlay();
       window.dispatchEvent(new Event('rolemaster-roster-updated'));
@@ -2714,74 +2236,9 @@
       $('#table-list').innerHTML = '<p class="table-load-error">Table data could not be loaded. Serve this folder over HTTP and reload.</p>';
     }
   }
-  function encounterRoster() {
-    const parse = (value, fallback) => { try { return JSON.parse(value || ''); } catch { return fallback; } };
-    return characters.map(character => {
-      const totals = statNames.map((name, index) => {
-        const stat = character.stats?.[name] || {};
-        if (stat.total !== '' && stat.total !== undefined) return Number(stat.total) || 0;
-        const temporary = Number(stat.temp);
-        return temporary >= 1 ? basicStatBonus(temporary) + (raceStats[character.race]?.[index] || 0) + (Number(stat.special) || 0) : 0;
-      });
-      const categoryTotals = new Map();
-      Object.entries(skillCategoryRules).forEach(([category, [stats, progression]]) => {
-        const record = character.categoryRanks?.[category] || {};
-        const ranks = (Number(record.start) || 0) + (Number(record.buy) || 0);
-        const codes = stats === 'realm' ? [{Channeling:'In',Essence:'Em',Mentalism:'Pr'}[character.realm]] : stats.split('/');
-        const statBonus = codes.reduce((sum, code) => sum + (totals[statAbbreviations[code]] || 0), 0);
-        const profession = professionSkillBonuses[character.profession] || {};
-        const group = categoryGroup(category);
-        categoryTotals.set(category, (progression && progression !== 'standard' ? 0 : rankBonus(ranks, 'category')) + statBonus + (profession[category] ?? profession[group] ?? 0) + (Number(record.special) || 0) + (Number(record.special2) || 0));
-      });
-      const skills = (character.skills || []).filter(skill => skill.name && !skill.name.startsWith('Choose ')).map(skill => ({
-        category:skill.category, name:skill.name, ranks:Number(skill.ranks) || 0,
-        bonus:rankBonus(skill.ranks, skillCategoryRules[skill.category]?.[1] || 'standard') + (categoryTotals.get(skill.category) || 0) + (Number(skill.item) || 0) + (Number(skill.special) || 0)
-      }));
-      const armor = parse(character.startingArmor, null);
-      const at = Array.isArray(armor) ? Number(armor[1]) || 1 : 1;
-      const quickness = totals[8];
-      const armorPenalty = armorTypes[at]?.[3] || 0;
-      const db = (quickness > 0 ? Math.max(0, quickness * 3 - armorPenalty) : quickness * 3) + (Number(character.dbShield) || 0) + (Number(character.dbMagic) || 0) + (Number(character.dbSpecial) || 0);
-      const resistances = Object.fromEntries(resistanceTypes.map(([key, , statIndex, raceIndex]) => [key, (raceResistances[character.race]?.[raceIndex] || 0) + 3 * totals[statIndex] + (Number(character[`rr-other-${key}`]) || 0)]));
-      const normalize = value => String(value || '').toLowerCase().replace(/[^a-z0-9]/g, '');
-      const weapons = parse(character.startingWeapons, []).flatMap(key => { const value = parse(key, null); return Array.isArray(value) ? [{category:value[0], name:value[1], source:'Starting'}] : []; });
-      const inventory = parse(character.equipmentLedger, {});
-      const equipmentNames = (inventory.items || []).map(entry => equipmentCatalog.find(candidate => candidate.id === entry.id)?.name || entry.name || '').filter(Boolean);
-      (inventory.items || []).forEach(entry => {
-        const item = equipmentCatalog.find(candidate => candidate.id === entry.id);
-        if (item?.category === 'Weapons') weapons.push({name:item.name, source:'Owned'});
-      });
-      const benefits = parse(character.trainingBenefits, {});
-      parse(character.trainingSelections, []).forEach(name => {
-        const pack = trainingPackages.find(item => item.name === name);
-        const special = benefits[name]?.special || {};
-        if (!pack) return;
-        trainingSpecialAwards(pack, special).forEach(index => {
-          const label = pack.specialItems[index][0], target = special.targets?.[index];
-          if (/weapon/i.test(label) && (!/or armor/i.test(label) || target?.startsWith('Weapon •'))) weapons.push({name:special.notes?.[index] || label, category:target?.split(':')[0] || '', target, source:`${name} award`});
-        });
-      });
-      const attacks = weapons.map(weapon => {
-        const skill = skills.find(item => `${item.category}:${item.name}` === weapon.target) || skills.find(item => item.category === weapon.category && item.name === weapon.name) || skills.find(item => item.category.startsWith('Weapon •') && normalize(item.name) === normalize(weapon.name));
-        return {...weapon, category:skill?.category || weapon.category || '', bonus:skill?.bonus || 0};
-      });
-      const height = strideBonus(character.roleHeight || '') || 0;
-      return {id:character.id, name:character.name || 'Unnamed', race:character.race || '', profession:character.profession || '', realm:character.realm || 'None', level:Number(character.level) || 1, stats:totals, constitution:Number(character.stats?.Constitution?.temp) || 0, skills, attacks, equipmentNames, at, db, shieldBonus:Number(character.dbShield) || 0, baseMove:50 + quickness * 3 + height, hitsMax:Number(character.hits) || 0, ppMax:Number(character.powerPoints) || 0, resistances};
-    });
-  }
-  window.RolemasterEncounter = {roster:encounterRoster, openTable(code) { const reference = tables.find(item => item.code === code); if (reference) { showView('tables'); chooseTable(reference); } }};
+  const encounterRoster = () => buildEncounterRoster(characters, {equipmentCatalog, trainingPackages, basicStatBonus, strideBonus, trainingSpecialAwards, rankBonus});
+  window.RolemasterEncounter = {roster:encounterRoster, openTable:tableBrowser.openTable};
   makeStats(); makeResistances(); renderRoster(); loadReferenceData();
-  function openTableGroup(group) {
-    activeTableGroup = group;
-    $$('.filter-chip').forEach(button => {
-      const active = button.dataset.group === group;
-      button.classList.toggle('active', active);
-      button.setAttribute('aria-pressed', String(active));
-    });
-    $('#table-search').value = '';
-    renderTables();
-    showView('tables');
-  }
   $$('.nav-link').forEach(button => button.addEventListener('click', () => showView(button.dataset.view)));
   $('.brand').addEventListener('click', event => { event.preventDefault(); showView('encounter'); });
   $('#new-character').addEventListener('click', newCharacter);
@@ -2880,7 +2337,7 @@
     updatePlayRollResult();
   });
   $('#play-skill-roll-modifier').addEventListener('input', updatePlayRollResult);
-  $$('.filter-chip').forEach(button => button.addEventListener('click', () => openTableGroup(button.dataset.group)));
+  $$('.filter-chip').forEach(button => button.addEventListener('click', () => tableBrowser.openTableGroup(button.dataset.group)));
   $('#back-roster').addEventListener('click', () => { saveCurrent(); renderRoster(); showView('home'); });
   $('#cancel-skill-category').addEventListener('click', () => { $('#skill-category-picker').hidden = true; skillCategoryPickerTarget = null; });
   $('#skill-category-options').addEventListener('click', event => {
@@ -3364,7 +2821,4 @@
     if (!character) { showView('home'); return; }
     if (window.confirm(`Delete ${character.name}?`)) { characters = characters.filter(item => item.id !== currentId); writeCharacters(); renderRoster(); currentId = null; showView('home'); }
   });
-  $('#table-search').addEventListener('input', event => renderTables(event.target.value));
-  $('#table-roll').addEventListener('input', () => activeTable?.kind === 'critical' || activeTable?.kind === 'fumble' ? updateCriticalLookup() : updateLookup());
-  $('#table-column').addEventListener('change', () => activeTable?.kind === 'critical' || activeTable?.kind === 'fumble' ? updateCriticalLookup() : updateLookup());
 })();
