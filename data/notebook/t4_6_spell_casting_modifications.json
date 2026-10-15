@@ -1,0 +1,14 @@
+{
+  "table_id": "T-4.6",
+  "title": "Spell Casting Modifications Table",
+  "page": 47,
+  "description": "Modifiers applied to spell casting static maneuvers (helmets, armor, distraction, prep rounds).",
+  "modifiers": {
+    "Prepared 1 Round": 10,
+    "Prepared 2 Rounds": 20,
+    "Unarmored": 0,
+    "Metal Armor": -20,
+    "Metal Helmet": -15,
+    "Wounded": "-1 per % hits taken"
+  }
+}

@@ -1,0 +1,56 @@
+{
+  "table_ids": [
+    "T-3.2",
+    "T-3.5",
+    "Pace Chart",
+    "Encumbrance Chart"
+  ],
+  "title": "Combat Capabilities, Actions, Pace & Encumbrance",
+  "pace_chart": [
+    {
+      "pace": "Walk",
+      "multiplier": "1x",
+      "maneuver_difficulty": "none",
+      "exhaustion_cost": "1 per 60 rnds"
+    },
+    {
+      "pace": "Fast Walk / Jog",
+      "multiplier": "1.5x",
+      "maneuver_difficulty": "none",
+      "exhaustion_cost": "1 per 30 rnds"
+    },
+    {
+      "pace": "Run",
+      "multiplier": "2x",
+      "maneuver_difficulty": "none",
+      "exhaustion_cost": "1 per 12 rnds"
+    },
+    {
+      "pace": "Sprint / Fast Run",
+      "multiplier": "3x",
+      "maneuver_difficulty": "easy",
+      "exhaustion_cost": "2 per rnd"
+    },
+    {
+      "pace": "Fast Sprint",
+      "multiplier": "4x",
+      "maneuver_difficulty": "light",
+      "exhaustion_cost": "6 per rnd"
+    },
+    {
+      "pace": "Dash",
+      "multiplier": "5x",
+      "maneuver_difficulty": "medium",
+      "exhaustion_cost": "50 per rnd"
+    }
+  ],
+  "encumbrance_penalty_formula": "Encumbrance Penalty = -8 * truncated[10 * (equipment_weight / character_weight)]",
+  "offensive_capability_mods": {
+    "flank_attack": "+15 Melee",
+    "rear_attack": "+20 Melee",
+    "surprise_attack": "+20 Melee",
+    "stunned_target": "+20 Melee / Missile",
+    "downed_target": "+30 Melee / Missile",
+    "prone_target": "+50 Melee / Missile"
+  }
+}

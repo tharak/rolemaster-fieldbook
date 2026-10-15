@@ -1,0 +1,86 @@
+{
+  "table_id": "T-1.4",
+  "title": "Profession Table",
+  "page": 15,
+  "description": "Classifies professions by Realm of Power and Prime Requisites.",
+  "professions": [
+    {
+      "name": "Fighter",
+      "realm": "Arms",
+      "prime_requisites": [
+        "Strength",
+        "Agility"
+      ],
+      "type": "Non-Spell User"
+    },
+    {
+      "name": "Thief",
+      "realm": "Arms",
+      "prime_requisites": [
+        "Agility",
+        "Quickness"
+      ],
+      "type": "Non-Spell User"
+    },
+    {
+      "name": "Rogue",
+      "realm": "Arms",
+      "prime_requisites": [
+        "Agility",
+        "Strength"
+      ],
+      "type": "Non-Spell User"
+    },
+    {
+      "name": "Cleric",
+      "realm": "Channeling",
+      "prime_requisites": [
+        "Intuition"
+      ],
+      "type": "Pure Spell User"
+    },
+    {
+      "name": "Magician",
+      "realm": "Essence",
+      "prime_requisites": [
+        "Empathy"
+      ],
+      "type": "Pure Spell User"
+    },
+    {
+      "name": "Mentalist",
+      "realm": "Mentalism",
+      "prime_requisites": [
+        "Presence"
+      ],
+      "type": "Pure Spell User"
+    },
+    {
+      "name": "Ranger",
+      "realm": "Channeling",
+      "prime_requisites": [
+        "Intuition",
+        "Constitution"
+      ],
+      "type": "Semi Spell User"
+    },
+    {
+      "name": "Dabbler",
+      "realm": "Essence",
+      "prime_requisites": [
+        "Empathy",
+        "Skill"
+      ],
+      "type": "Semi Spell User"
+    },
+    {
+      "name": "Bard",
+      "realm": "Mentalism",
+      "prime_requisites": [
+        "Presence",
+        "Memory"
+      ],
+      "type": "Semi Spell User"
+    }
+  ]
+}

@@ -1,0 +1,48 @@
+{
+  "table_id": "T-3.3",
+  "title": "Armor Table",
+  "page": 35,
+  "description": "Minimum and maximum maneuver modifications, missile attack penalties, and quickness penalties for Armor Types 1-20.",
+  "armor_types": [
+    {
+      "at": "1-4",
+      "group": "No Armor",
+      "min_mod": 0,
+      "max_mod": 0,
+      "missile_pen": 0,
+      "qu_pen": 0
+    },
+    {
+      "at": "5-8",
+      "group": "Soft Leather",
+      "min_mod": -15,
+      "max_mod": -50,
+      "missile_pen": 15,
+      "qu_pen": 15
+    },
+    {
+      "at": "9-12",
+      "group": "Rigid Leather",
+      "min_mod": -15,
+      "max_mod": -110,
+      "missile_pen": 30,
+      "qu_pen": 15
+    },
+    {
+      "at": "13-16",
+      "group": "Chain",
+      "min_mod": -25,
+      "max_mod": -130,
+      "missile_pen": 20,
+      "qu_pen": 20
+    },
+    {
+      "at": "17-20",
+      "group": "Plate",
+      "min_mod": -45,
+      "max_mod": -165,
+      "missile_pen": 40,
+      "qu_pen": 40
+    }
+  ]
+}

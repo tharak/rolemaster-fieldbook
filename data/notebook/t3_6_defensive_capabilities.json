@@ -1,0 +1,13 @@
+{
+  "table_id": "T-3.6",
+  "title": "Defensive Capabilities Table",
+  "page": 214,
+  "description": "Situational Defensive Bonus (DB) modifiers including cover, shield, and positioning.",
+  "modifiers": {
+    "Target Shield (Full)": 25,
+    "Target Shield (Target)": 20,
+    "Half Cover": 20,
+    "Full Cover": 50,
+    "Higher Ground": 10
+  }
+}

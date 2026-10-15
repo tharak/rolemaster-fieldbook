@@ -4,10 +4,12 @@ export function createTableBrowser({showView}) {
   let tables = [];
   let activeTable = null;
   let activeTableGroup = 'all';
+  let selectionVersion = 0;
   const tableCache = new Map();
 
   async function chooseTable(reference) {
     if (!reference) return;
+    const version = ++selectionVersion;
     activeTable = reference;
     $('#table-current').textContent = reference.title;
     $('#table-code').textContent = `${reference.code} · CORE PAGE${reference.printedPages.length > 1 ? 'S' : ''} ${reference.printedPages.join(', ')}`;
@@ -22,7 +24,7 @@ export function createTableBrowser({showView}) {
         if (!response.ok) throw new Error('Table data was not found');
         detail = await response.json(); tableCache.set(reference.code, detail);
       }
-      if (activeTable.code !== reference.code) return;
+      if (version !== selectionVersion) return;
       activeTable = detail;
       if (detail.kind === 'critical' || detail.kind === 'fumble') {
         const isFumble = detail.kind === 'fumble';
@@ -50,11 +52,12 @@ export function createTableBrowser({showView}) {
         $('#table-note').textContent = 'Hits and criticals are shown together (for example, 12E).';
       } else if (detail.categories && detail.professions) {
         $('.table-scroll').hidden = false; $('#table-source').hidden = true;
+        $('.table-scroll').innerHTML = '<table id="attack-grid" class="attack-grid"></table>';
         $('#attack-grid').innerHTML = `<thead><tr><th>Skill category</th>${detail.professions.map(profession => `<th>${esc(profession)}</th>`).join('')}</tr></thead><tbody>${Object.entries(detail.categories).map(([category, costs]) => `<tr><th scope="row">${esc(category)}</th>${detail.professions.map(profession => `<td>${costs[profession] ? costs[profession].join('/') : '—'}</td>`).join('')}</tr>`).join('')}</tbody>`;
         $('#table-note').textContent = 'Rank costs by profession. Weapon costs may appear in a different category on a character sheet. A dash means unavailable.';
       } else renderSource(detail);
     } catch {
-      if (activeTable.code === reference.code) $('#table-source').innerHTML = '<p class="table-load-error">Could not load this table file. Reload the page to try again.</p>';
+      if (version === selectionVersion) $('#table-source').innerHTML = '<p class="table-load-error">Could not load this table file. Reload the page to try again.</p>';
     }
   }
   function renderSource(table) {
@@ -140,11 +143,12 @@ export function createTableBrowser({showView}) {
       const group = table.code.startsWith('A-10.9') ? 'attacks' : table.code.startsWith('A-10.10') ? 'criticals' : /^T-[12]\./.test(table.code) || table.code === 'chart-special-progression' ? 'character' : 'play';
       return matchesSearch && (activeTableGroup === 'all' || activeTableGroup === group);
     });
-    $('#table-list').innerHTML = shown.map(table => `<button class="table-choice" data-code="${table.code}"><span>${esc(table.title)}</span><span>${table.code}</span></button>`).join('');
+    $('#table-list').innerHTML = shown.map(table => `<button class="table-choice" data-code="${esc(table.code)}"><span>${esc(table.title)}</span><span>${esc(table.code)}</span></button>`).join('');
     $('#table-count').textContent = `${shown.length} of ${tables.length} tables and charts`;
     if (!shown.length) {
       $('#table-list').innerHTML = '<p class="table-list-empty">No tables match this search.</p>';
       activeTable = null;
+      selectionVersion++;
       $('#table-current').textContent = 'No matching table';
       $('#table-code').textContent = '';
       $('.lookup-controls').hidden = true;
@@ -180,5 +184,6 @@ export function createTableBrowser({showView}) {
   $('#table-search').addEventListener('input', event => renderTables(event.target.value));
   $('#table-roll').addEventListener('input', () => activeTable?.kind === 'critical' || activeTable?.kind === 'fumble' ? updateCriticalLookup() : updateLookup());
   $('#table-column').addEventListener('change', () => activeTable?.kind === 'critical' || activeTable?.kind === 'fumble' ? updateCriticalLookup() : updateLookup());
+  $$('.filter-chip').forEach(button => button.addEventListener('click', () => openTableGroup(button.dataset.group)));
   return {setTables, openTable, openTableGroup};
 }

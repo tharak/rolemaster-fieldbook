@@ -1,0 +1,17 @@
+{
+  "table_id": "T-4.1",
+  "title": "Moving Maneuver Table",
+  "page": 49,
+  "description": "Success percentage and difficulty thresholds for physical moving maneuvers.",
+  "difficulty_tiers": [
+    "Routine",
+    "Easy",
+    "Light",
+    "Medium",
+    "Hard",
+    "Very Hard",
+    "Extremely Hard",
+    "Sheer Folly",
+    "Absurd"
+  ]
+}

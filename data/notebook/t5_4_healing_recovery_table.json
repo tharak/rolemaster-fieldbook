@@ -1,0 +1,7 @@
+{
+  "table_id": "T-5.4",
+  "title": "Healing Recovery Table",
+  "page": 75,
+  "description": "Natural recovery times for concussion hits, organ damage, fractures, and muscle/tendon wounds.",
+  "recovery_rates": "Hits recover at 1 per hour of rest or 1 per day of light activity."
+}

@@ -1,0 +1,13 @@
+{
+  "table_id": "T-5.5",
+  "title": "Race Healing Factors Table",
+  "page": 78,
+  "description": "Multipliers applied to standard healing times based on racial physiology.",
+  "factors": {
+    "Common Men": 1.0,
+    "High Men": 1.0,
+    "Wood Elves": 2.0,
+    "Dwarves": 1.0,
+    "Halflings": 0.5
+  }
+}

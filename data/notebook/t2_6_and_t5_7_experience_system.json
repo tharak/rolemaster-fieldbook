@@ -1,0 +1,174 @@
+{
+  "table_id": "T-2.6 & T-5.7",
+  "title": "Experience Point Table and Award Charts",
+  "level_experience_table_t2_6": [
+    {
+      "level": 1,
+      "eps_required": 10000
+    },
+    {
+      "level": 2,
+      "eps_required": 20000
+    },
+    {
+      "level": 3,
+      "eps_required": 30000
+    },
+    {
+      "level": 4,
+      "eps_required": 40000
+    },
+    {
+      "level": 5,
+      "eps_required": 50000
+    },
+    {
+      "level": 6,
+      "eps_required": 70000
+    },
+    {
+      "level": 7,
+      "eps_required": 90000
+    },
+    {
+      "level": 8,
+      "eps_required": 110000
+    },
+    {
+      "level": 9,
+      "eps_required": 130000
+    },
+    {
+      "level": 10,
+      "eps_required": 150000
+    },
+    {
+      "level": 11,
+      "eps_required": 180000
+    },
+    {
+      "level": 12,
+      "eps_required": 210000
+    },
+    {
+      "level": 13,
+      "eps_required": 240000
+    },
+    {
+      "level": 14,
+      "eps_required": 270000
+    },
+    {
+      "level": 15,
+      "eps_required": 300000
+    },
+    {
+      "level": 16,
+      "eps_required": 340000
+    },
+    {
+      "level": 17,
+      "eps_required": 380000
+    },
+    {
+      "level": 18,
+      "eps_required": 420000
+    },
+    {
+      "level": 19,
+      "eps_required": 460000
+    },
+    {
+      "level": 20,
+      "eps_required": 500000
+    },
+    {
+      "level": "21+",
+      "eps_required": "500,000 + 50,000 per level over 20th"
+    }
+  ],
+  "maneuver_ep_chart": {
+    "Routine": 0,
+    "Easy": 5,
+    "Light": 10,
+    "Medium": 50,
+    "Hard": 100,
+    "Very Hard": 150,
+    "Extremely Hard": 200,
+    "Sheer Folly": 300,
+    "Absurd": 500,
+    "danger_multipliers": {
+      "no_danger": 0.5,
+      "some_danger": 1.0,
+      "danger": 2.0,
+      "extreme_danger": 3.0,
+      "foe_defeated_directly": 5.0
+    }
+  },
+  "critical_ep_chart": {
+    "A": {
+      "lvl_0": 3,
+      "lvl_1": 5,
+      "lvl_2": 10,
+      "lvl_3": 15,
+      "lvl_4": 20,
+      "lvl_5": 25,
+      "lvl_10": 50,
+      "per_lvl_above_10": "+5"
+    },
+    "B": {
+      "lvl_0": 5,
+      "lvl_1": 10,
+      "lvl_2": 20,
+      "lvl_3": 30,
+      "lvl_4": 40,
+      "lvl_5": 50,
+      "lvl_10": 100,
+      "per_lvl_above_10": "+10"
+    },
+    "C": {
+      "lvl_0": 8,
+      "lvl_1": 15,
+      "lvl_2": 30,
+      "lvl_3": 45,
+      "lvl_4": 60,
+      "lvl_5": 75,
+      "lvl_10": 150,
+      "per_lvl_above_10": "+15"
+    },
+    "D": {
+      "lvl_0": 10,
+      "lvl_1": 20,
+      "lvl_2": 40,
+      "lvl_3": 60,
+      "lvl_4": 80,
+      "lvl_5": 100,
+      "lvl_10": 200,
+      "per_lvl_above_10": "+20"
+    },
+    "E": {
+      "lvl_0": 13,
+      "lvl_1": 25,
+      "lvl_2": 50,
+      "lvl_3": 75,
+      "lvl_4": 100,
+      "lvl_5": 125,
+      "lvl_10": 250,
+      "per_lvl_above_10": "+25"
+    },
+    "critical_taken_by_self": "Level of foe treated as 20; A: 100, B: 200, C: 300, D: 400, E: 500"
+  },
+  "spell_ep_chart": {
+    "formula_above_level_10": "100 - (10 * (caster_level - spell_level)), min 0, max 200",
+    "sample_base_values": "Spell Lvl 1 cast by Lvl 1 = 100 EPs; Lvl 5 cast by Lvl 1 = 140 EPs; Lvl 10 cast by Lvl 1 = 190 EPs"
+  },
+  "travel_ep_chart": {
+    "land_unfamiliar": "1 EP / mile",
+    "sea_or_flying": "1 EP / 10 miles",
+    "multipliers": {
+      "civilized": 0.5,
+      "moderately_dangerous": 2.0,
+      "extremely_dangerous": 3.0
+    }
+  }
+}

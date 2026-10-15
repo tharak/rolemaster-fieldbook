@@ -1,0 +1,17 @@
+{
+  "table_id": "T-4.4",
+  "title": "Standard Static Maneuver Modifications Table",
+  "page": 45,
+  "description": "General difficulty modifiers for static maneuver checks.",
+  "modifiers": {
+    "Routine (+30)": 30,
+    "Easy (+20)": 20,
+    "Light (+10)": 10,
+    "Medium (0)": 0,
+    "Hard (-10)": -10,
+    "Very Hard (-20)": -20,
+    "Extremely Hard (-30)": -30,
+    "Sheer Folly (-50)": -50,
+    "Absurd (-70)": -70
+  }
+}

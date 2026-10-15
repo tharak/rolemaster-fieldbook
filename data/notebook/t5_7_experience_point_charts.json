@@ -1,0 +1,13 @@
+{
+  "table_id": "T-5.7",
+  "title": "Experience Point Charts",
+  "page": "71-73",
+  "description": "Detailed XP award matrices for damage taken, criticals inflicted, spells cast, maneuvers executed, and travel.",
+  "award_categories": [
+    "Hit Points Taken",
+    "Critical Strikes",
+    "Spells Cast",
+    "Maneuvers Completed",
+    "Travel & Exploration"
+  ]
+}

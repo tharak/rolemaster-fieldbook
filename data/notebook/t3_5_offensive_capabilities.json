@@ -1,0 +1,14 @@
+{
+  "table_id": "T-3.5",
+  "title": "Offensive Capabilities Table",
+  "page": 211,
+  "description": "Situational Offensive Bonus (OB) modifiers for combat tactics and positioning.",
+  "modifiers": {
+    "Flank Attack": 15,
+    "Rear Attack": 35,
+    "Surprise/Ambush": 20,
+    "Target Prone": 50,
+    "Charging": 20,
+    "Higher Elevation": 10
+  }
+}

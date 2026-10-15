@@ -1,0 +1,28 @@
+{
+  "table_id": "T-4.7",
+  "title": "Language Rank Table",
+  "page": 115,
+  "description": "Comprehension and fluency levels associated with Spoken and Written language skill ranks 1 to 10.",
+  "rank_levels": [
+    {
+      "rank": 1,
+      "spoken": "Basic words",
+      "written": "Basic alphabet"
+    },
+    {
+      "rank": 5,
+      "spoken": "Fluent conversation",
+      "written": "Fluent reading"
+    },
+    {
+      "rank": 8,
+      "spoken": "Native dialect fluency",
+      "written": "Literary analysis"
+    },
+    {
+      "rank": 10,
+      "spoken": "Flawless mastery",
+      "written": "Flawless calligraphic mastery"
+    }
+  ]
+}

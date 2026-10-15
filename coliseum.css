@@ -1,0 +1,58 @@
+.coliseum-shell { max-width:1120px; margin:0 auto; padding:32px 20px 60px; }
+.coliseum-heading,.coliseum-log-heading { display:flex; align-items:center; justify-content:space-between; gap:20px; }
+.coliseum-heading h1 { font-size:clamp(2.5rem,5vw,4rem); margin:4px 0; }
+.coliseum-heading p { color:var(--muted); }
+.coliseum-badge { border:1px solid #ad8c56; border-radius:100%; padding:26px 16px; text-transform:uppercase; letter-spacing:.15em; color:#dabd77; font-size:.7rem; }
+.coliseum-pickers { display:grid; grid-template-columns:1fr 1fr; gap:24px; margin:26px 0; }
+.coliseum-picker { display:grid; gap:8px; }
+.coliseum-picker label { font-weight:600; font-size:.85rem; }
+.coliseum-picker input,.coliseum-picker select { width:100%; min-width:0; padding:12px; border:1px solid #cbd1c8; border-radius:7px; background:#fffef9; color:#263d2e; font:inherit; }
+.coliseum-picker select option { background:#fffef9; color:#263d2e; }
+.coliseum-picker p { margin:0; font-size:.8rem; }
+.coliseum-arena { display:grid; grid-template-columns:minmax(0,1fr) 120px minmax(0,1fr); align-items:stretch; padding:26px; border:1px solid #ccc3ad; border-radius:18px; background:radial-gradient(ellipse at center,#ece1c8,#f6f2e7 70%); }
+.coliseum-fighter { background:#fffef9; color:#263d2e; border:1px solid #d5d9cb; border-top:4px solid #376448; border-radius:12px; padding:24px; min-width:0; transition:opacity .2s; }
+.coliseum-fighter:last-child { border-top-color:#975b3f; }
+.coliseum-fighter.defeated { opacity:.65; }
+.coliseum-fighter.winner { box-shadow:0 0 0 2px #b28d45; }
+.coliseum-fighter h2 { color:inherit; font-size:1.6rem; line-height:1.15; margin:10px 0; overflow-wrap:anywhere; }
+.coliseum-fighter .coliseum-kind { text-transform:uppercase; letter-spacing:.12em; font-size:.7rem; color:#697465; }
+.coliseum-crest { display:grid; place-items:center; width:58px; height:64px; background:#e2eade; color:#2c5237; border-radius:6px 6px 28px 28px; font-family:Georgia,serif; font-size:2rem; margin-bottom:18px; }
+.coliseum-fighter:last-child .coliseum-crest { color:#82482c; background:#f1e2d7; }
+.coliseum-health-label { display:flex; justify-content:space-between; gap:8px; margin:20px 0 8px; font-size:.85rem; }
+.coliseum-fighter progress { width:100%; height:12px; accent-color:#376448; }
+.coliseum-fighter:last-child progress { accent-color:#975b3f; }
+.coliseum-stats { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin:20px 0; }
+.coliseum-stats div { display:grid; gap:3px; }
+.coliseum-stats dt { color:#697465; font-size:.72rem; text-transform:uppercase; }
+.coliseum-stats dd { margin:0; font-weight:650; font-size:1.2rem; }
+.coliseum-attacks { font-size:.8rem; line-height:1.7; padding:0; list-style:none; }
+.coliseum-notes { font-size:.8rem; line-height:1.5; color:#687166; border-top:1px solid #e1e2d7; padding-top:12px; }
+.coliseum-effects { color:#925b34; font-size:.85rem; min-height:1.3em; }
+.coliseum-center { display:flex; flex-direction:column; gap:12px; align-items:center; justify-content:center; text-align:center; color:#263d2e; }
+.coliseum-center > span { font-size:2.5rem; color:#8b7446; }
+.coliseum-center small { max-width:90px; color:#697465; }
+.coliseum-controls { display:flex; justify-content:center; flex-wrap:wrap; gap:10px; margin:24px 0 12px; }
+.coliseum-status { text-align:center; font-weight:600; min-height:1.5em; }
+.coliseum-rules { color:var(--muted); margin:24px 0; font-size:.85rem; line-height:1.6; }
+.coliseum-rules summary { cursor:pointer; font-weight:600; }
+.coliseum-log-card { border-top:1px solid #ced2c5; padding-top:24px; }
+.coliseum-log-heading h2 { margin:0 0 18px; }
+.coliseum-log-heading span { font-size:.75rem; color:var(--muted); }
+.coliseum-log-round { border:1px solid #d6dacd; background:#fffef9; color:#263d2e; border-radius:9px; margin:12px 0; padding:15px 20px; }
+.coliseum-log-round summary { cursor:pointer; font-weight:650; }
+.coliseum-log-round p { line-height:1.5; font-size:.85rem; margin:12px 0; }
+.coliseum-initiative { color:#687166; }
+.coliseum-critical { border-left:2px solid #aa8951; padding-left:12px; color:#755735; }
+.coliseum-rules a,.coliseum-log-round a { color:inherit; }
+@media(max-width:700px) {
+  .coliseum-shell { padding:22px 14px 40px; }
+  .coliseum-badge { display:none; }
+  .coliseum-pickers { gap:14px; }
+  .coliseum-arena { grid-template-columns:minmax(0,1fr) minmax(0,1fr); padding:12px; gap:12px; }
+  .coliseum-center { grid-column:1/-1; grid-row:1; flex-direction:row; gap:15px; }
+  .coliseum-center small { max-width:none; }
+  .coliseum-fighter { padding:14px; }
+  .coliseum-fighter h2 { font-size:1.2rem; }
+  .coliseum-stats { gap:6px; }
+}
+@media print { #coliseum-view { display:none; } }

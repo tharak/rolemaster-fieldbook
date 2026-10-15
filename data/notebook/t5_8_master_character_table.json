@@ -1,0 +1,17 @@
+{
+  "table_id": "T-5.8",
+  "title": "Master Character Table",
+  "page": 61,
+  "description": "Average combat, skill, and spell statistics for non-player characters levels 1-20 across all professions.",
+  "professions_covered": [
+    "Fighter",
+    "Thief",
+    "Rogue",
+    "Cleric",
+    "Magician",
+    "Mentalist",
+    "Ranger",
+    "Dabbler",
+    "Bard"
+  ]
+}

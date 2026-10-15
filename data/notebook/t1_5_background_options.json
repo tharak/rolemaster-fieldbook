@@ -1,0 +1,33 @@
+{
+  "table_id": "T-1.5",
+  "title": "Background Options Table",
+  "page": 21,
+  "description": "Selection table for spending Background Options during character creation.",
+  "categories": [
+    {
+      "option": "Special Items",
+      "cost": "1 or 2 BOs",
+      "details": "+1 Spell Adder, +5/+10 non-magic items, or daily spell items."
+    },
+    {
+      "option": "Special Skill Bonuses",
+      "cost": "1 BO",
+      "details": "+10 bonus to a specific skill or +5 to a skill category."
+    },
+    {
+      "option": "Stat Gain Rolls",
+      "cost": "1 BO",
+      "details": "Extra stat gain rolls during character creation."
+    },
+    {
+      "option": "Extra Money",
+      "cost": "1 BO",
+      "details": "Additional starting gold/silver standard funds."
+    },
+    {
+      "option": "Extra Languages",
+      "cost": "1 BO",
+      "details": "Additional language ranks for speech or literacy."
+    }
+  ]
+}

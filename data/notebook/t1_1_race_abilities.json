@@ -1,0 +1,161 @@
+{
+  "table": "T-1.1 & Appendix A-1",
+  "title": "Race Abilities & Statistics",
+  "races": [
+    {
+      "name": "Common Men",
+      "stat_bonuses": {
+        "Ag": 0,
+        "Co": 0,
+        "Me": 0,
+        "Re": 0,
+        "SD": 2,
+        "Em": 0,
+        "In": 0,
+        "Pr": 0,
+        "Qu": 0,
+        "St": 2
+      },
+      "rr_bonuses": {
+        "Essence": 0,
+        "Channeling": 0,
+        "Mentalism": 0,
+        "Poison": 0,
+        "Disease": 0
+      },
+      "background_options": 6,
+      "soul_departure_rounds": 12,
+      "recovery_multiplier": "1.0x",
+      "progressions": {
+        "body_development": "0.6.4.2.1",
+        "channeling_pp": "0.6.5.4.3",
+        "essence_pp": "0.6.5.4.3",
+        "mentalism_pp": "0.7.6.5.4"
+      }
+    },
+    {
+      "name": "High Men",
+      "stat_bonuses": {
+        "Ag": -2,
+        "Co": 4,
+        "Me": 0,
+        "Re": 0,
+        "SD": 0,
+        "Em": 0,
+        "In": 0,
+        "Pr": 4,
+        "Qu": -2,
+        "St": 4
+      },
+      "rr_bonuses": {
+        "Essence": -5,
+        "Channeling": -5,
+        "Mentalism": -5,
+        "Poison": 0,
+        "Disease": 0
+      },
+      "background_options": 4,
+      "soul_departure_rounds": 10,
+      "recovery_multiplier": "0.75x",
+      "progressions": {
+        "body_development": "0.7.5.3.1",
+        "channeling_pp": "0.6.5.4.3",
+        "essence_pp": "0.6.5.4.3",
+        "mentalism_pp": "0.7.6.5.4"
+      }
+    },
+    {
+      "name": "Wood Elves",
+      "stat_bonuses": {
+        "Ag": 4,
+        "Co": 0,
+        "Me": 2,
+        "Re": 0,
+        "SD": -5,
+        "Em": 2,
+        "In": 0,
+        "Pr": 2,
+        "Qu": 2,
+        "St": 0
+      },
+      "rr_bonuses": {
+        "Essence": -5,
+        "Channeling": -5,
+        "Mentalism": -5,
+        "Poison": 10,
+        "Disease": 100
+      },
+      "background_options": 4,
+      "soul_departure_rounds": 3,
+      "recovery_multiplier": "1.5x",
+      "progressions": {
+        "body_development": "0.6.3.1.1",
+        "channeling_pp": "0.6.5.4.3",
+        "essence_pp": "0.7.6.5.4",
+        "mentalism_pp": "0.6.5.4.3"
+      }
+    },
+    {
+      "name": "Dwarves",
+      "stat_bonuses": {
+        "Ag": -2,
+        "Co": 6,
+        "Me": 0,
+        "Re": 0,
+        "SD": 2,
+        "Em": -4,
+        "In": 0,
+        "Pr": -4,
+        "Qu": -2,
+        "St": 2
+      },
+      "rr_bonuses": {
+        "Essence": 40,
+        "Channeling": 0,
+        "Mentalism": 40,
+        "Poison": 20,
+        "Disease": 15
+      },
+      "background_options": 5,
+      "soul_departure_rounds": 21,
+      "recovery_multiplier": "0.5x",
+      "progressions": {
+        "body_development": "0.7.4.2.1",
+        "channeling_pp": "0.6.5.4.3",
+        "essence_pp": "0.3.2.1.1",
+        "mentalism_pp": "0.3.2.1.1"
+      }
+    },
+    {
+      "name": "Halflings",
+      "stat_bonuses": {
+        "Ag": 6,
+        "Co": 6,
+        "Me": 0,
+        "Re": 0,
+        "SD": 0,
+        "Em": -4,
+        "In": 0,
+        "Pr": -4,
+        "Qu": 2,
+        "St": -6
+      },
+      "rr_bonuses": {
+        "Essence": 50,
+        "Channeling": 0,
+        "Mentalism": 40,
+        "Poison": 30,
+        "Disease": 15
+      },
+      "background_options": 5,
+      "soul_departure_rounds": 18,
+      "recovery_multiplier": "0.5x",
+      "progressions": {
+        "body_development": "0.6.2.2.1",
+        "channeling_pp": "0.6.5.4.3",
+        "essence_pp": "0.2.1.1.1",
+        "mentalism_pp": "0.2.1.1.1"
+      }
+    }
+  ]
+}

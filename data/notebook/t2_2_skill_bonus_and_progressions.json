@@ -1,0 +1,55 @@
+{
+  "table_id": "T-2.2 & T-2.3",
+  "title": "Skill Bonus Progressions & Stat Gain Table",
+  "rank_bonus_progressions": {
+    "standard_skill_rank": {
+      "symbol": "None",
+      "formula_notation": "-15 \u00b7 3 \u00b7 2 \u00b7 1 \u00b7 0.5",
+      "rank_0": -15,
+      "rank_1": 3,
+      "ranks_2_to_10": "+3 per rank (max +30 at rank 10)",
+      "ranks_11_to_20": "+2 per rank (max +50 at rank 20)",
+      "ranks_21_to_30": "+1 per rank (max +60 at rank 30)",
+      "ranks_above_30": "+0.5 per rank"
+    },
+    "combined_progression": {
+      "symbol": "*",
+      "formula_notation": "-30 \u00b7 5 \u00b7 3 \u00b7 1.5 \u00b7 0.5",
+      "rank_0": -30,
+      "rank_1": 5,
+      "ranks_2_to_10": "+5 per rank (max +50 at rank 10)",
+      "ranks_11_to_20": "+3 per rank (max +80 at rank 20)",
+      "ranks_21_to_30": "+1.5 per rank (max +95 at rank 30)",
+      "ranks_above_30": "+0.5 per rank"
+    },
+    "limited_progression": {
+      "symbol": "\u2021",
+      "formula_notation": "0 \u00b7 1 \u00b7 1 \u00b7 0.5 \u00b7 0",
+      "rank_0": 0,
+      "rank_1": 1,
+      "ranks_2_to_20": "+1 per rank (max +20 at rank 20)",
+      "ranks_21_to_30": "+0.5 per rank (max +25 at rank 30)",
+      "ranks_above_30": "+0 per rank"
+    },
+    "special_progression": {
+      "symbol": "Special",
+      "formula_notation": "0 \u00b7 6 \u00b7 5 \u00b7 4 \u00b7 3",
+      "rank_0": 0,
+      "rank_1": 6,
+      "ranks_2_to_10": "+6 per rank (max +60 at rank 10)",
+      "ranks_11_to_20": "+5 per rank (max +110 at rank 20)",
+      "ranks_21_to_30": "+4 per rank (max +150 at rank 30)",
+      "ranks_above_30": "+3 per rank"
+    }
+  },
+  "stat_gain_table_t2_3": {
+    "description": "Determines stat gain results based on 2d10 open-ended roll or low/high die difference between Potential and Temporary Stat",
+    "rules": [
+      "If result is double 1s, 2s, 3s, 4s, 5s -> Temporary stat decreases by lower die (1, 2, 3, 4, 5 respectively)",
+      "If result is double 6s, 7s, 8s, 9s, 10s -> Temporary stat increases by sum of dice (12, 14, 16, 18, 20 respectively)",
+      "If diff (Potential - Temp) <= 10 -> Low die modification",
+      "If 10 < diff <= 20 -> High die modification",
+      "If diff > 20 -> Sum of dice modification"
+    ]
+  }
+}

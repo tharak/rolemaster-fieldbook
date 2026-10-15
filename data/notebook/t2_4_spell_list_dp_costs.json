@@ -1,0 +1,41 @@
+{
+  "table_id": "T-2.4",
+  "title": "Spell List Development Point Cost Table",
+  "description": "Development point costs for developing spell list ranks based on list type, realm, and number of lists/ranks developed in a level",
+  "base_costs_by_list_type": {
+    "own_realm_own_base_lists": "Standard DP cost per profession (Table T-2.8)",
+    "own_realm_open_lists": {
+      "ranks_1_to_5": 25,
+      "ranks_6_to_10": 50,
+      "ranks_11_to_15": 75,
+      "ranks_16_to_20": 100,
+      "ranks_21_plus": 125
+    },
+    "own_realm_closed_lists": {
+      "ranks_1_to_5": 40,
+      "ranks_6_to_10": 80,
+      "ranks_11_to_15": 120,
+      "ranks_16_to_20": 160,
+      "ranks_21_plus": 200
+    },
+    "other_realm_open_lists": {
+      "ranks_1_to_5": 45,
+      "ranks_6_to_10": 90,
+      "ranks_11_to_15": 135,
+      "ranks_16_to_20": 180,
+      "ranks_21_plus": 225
+    },
+    "other_realm_closed_lists": {
+      "ranks_1_to_5": 75,
+      "ranks_6_to_10": 150,
+      "ranks_11_to_15": 225,
+      "ranks_16_to_20": 300,
+      "ranks_21_plus": 375
+    }
+  },
+  "development_multipliers_per_level": {
+    "first_5_lists_developed": "1x cost",
+    "lists_6_to_10_developed": "2x cost",
+    "lists_11_plus_developed": "4x cost"
+  }
+}

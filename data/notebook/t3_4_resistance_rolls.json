@@ -1,0 +1,77 @@
+{
+  "table_id": "T-3.4",
+  "title": "Resistance Roll Table",
+  "description": "Base target number required on 1d100 open-ended + RR mods to resist spell/poison/disease",
+  "sample_matrix": [
+    {
+      "target_level": 1,
+      "attacker_levels": {
+        "1": 50,
+        "2": 55,
+        "3": 60,
+        "4": 65,
+        "5": 70,
+        "10": 85,
+        "15": 95
+      }
+    },
+    {
+      "target_level": 2,
+      "attacker_levels": {
+        "1": 45,
+        "2": 50,
+        "3": 55,
+        "4": 60,
+        "5": 65,
+        "10": 80,
+        "15": 90
+      }
+    },
+    {
+      "target_level": 5,
+      "attacker_levels": {
+        "1": 30,
+        "2": 35,
+        "3": 40,
+        "4": 45,
+        "5": 50,
+        "10": 65,
+        "15": 75
+      }
+    },
+    {
+      "target_level": 10,
+      "attacker_levels": {
+        "1": 15,
+        "2": 20,
+        "3": 25,
+        "4": 30,
+        "5": 35,
+        "10": 50,
+        "15": 60
+      }
+    },
+    {
+      "target_level": 15,
+      "attacker_levels": {
+        "1": 5,
+        "2": 10,
+        "3": 15,
+        "4": 20,
+        "5": 25,
+        "10": 40,
+        "15": 50
+      }
+    }
+  ],
+  "high_level_modifier": "For each level over 15, attacker level raises required RR by +1; target level lowers required RR by -1",
+  "standard_rr_mods": {
+    "channeling_spell": "3x Intuition Stat Bonus",
+    "essence_spell": "3x Empathy Stat Bonus",
+    "mentalism_spell": "3x Presence Stat Bonus",
+    "poison_disease": "3x Constitution Stat Bonus",
+    "fear": "3x Self Discipline Stat Bonus",
+    "willing_target": "-50",
+    "same_realm": "+15"
+  }
+}

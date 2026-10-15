@@ -1,0 +1,166 @@
+{
+  "table_id": "T-3.3",
+  "title": "Armor Table",
+  "armor_types": [
+    {
+      "at": 1,
+      "name": "Skin / Normal Clothes",
+      "min_maneuver_mod": 0,
+      "max_maneuver_mod": 0,
+      "missile_penalty": 0,
+      "quickness_penalty": 0
+    },
+    {
+      "at": 2,
+      "name": "Robes",
+      "min_maneuver_mod": 0,
+      "max_maneuver_mod": 0,
+      "missile_penalty": 0,
+      "quickness_penalty": 0
+    },
+    {
+      "at": 3,
+      "name": "Light Clothes",
+      "min_maneuver_mod": 0,
+      "max_maneuver_mod": 0,
+      "missile_penalty": 0,
+      "quickness_penalty": 0
+    },
+    {
+      "at": 4,
+      "name": "Heavy Clothes",
+      "min_maneuver_mod": 0,
+      "max_maneuver_mod": 0,
+      "missile_penalty": 0,
+      "quickness_penalty": 0
+    },
+    {
+      "at": 5,
+      "name": "Soft Leather Vest",
+      "min_maneuver_mod": 0,
+      "max_maneuver_mod": 0,
+      "missile_penalty": 0,
+      "quickness_penalty": 0
+    },
+    {
+      "at": 6,
+      "name": "Soft Leather Coat",
+      "min_maneuver_mod": 0,
+      "max_maneuver_mod": -20,
+      "missile_penalty": 5,
+      "quickness_penalty": 0
+    },
+    {
+      "at": 7,
+      "name": "Soft Leather Full",
+      "min_maneuver_mod": -10,
+      "max_maneuver_mod": -40,
+      "missile_penalty": 15,
+      "quickness_penalty": 10
+    },
+    {
+      "at": 8,
+      "name": "Reinforced Soft Leather",
+      "min_maneuver_mod": -15,
+      "max_maneuver_mod": -50,
+      "missile_penalty": 15,
+      "quickness_penalty": 15
+    },
+    {
+      "at": 9,
+      "name": "Rigid Leather Breastplate",
+      "min_maneuver_mod": -5,
+      "max_maneuver_mod": -50,
+      "missile_penalty": 0,
+      "quickness_penalty": 0
+    },
+    {
+      "at": 10,
+      "name": "Rigid Leather Coat",
+      "min_maneuver_mod": -10,
+      "max_maneuver_mod": -70,
+      "missile_penalty": 10,
+      "quickness_penalty": 5
+    },
+    {
+      "at": 11,
+      "name": "Rigid Leather Full",
+      "min_maneuver_mod": -15,
+      "max_maneuver_mod": -90,
+      "missile_penalty": 20,
+      "quickness_penalty": 15
+    },
+    {
+      "at": 12,
+      "name": "Reinforced Rigid Leather",
+      "min_maneuver_mod": -15,
+      "max_maneuver_mod": -110,
+      "missile_penalty": 30,
+      "quickness_penalty": 15
+    },
+    {
+      "at": 13,
+      "name": "Chain Shirt",
+      "min_maneuver_mod": -10,
+      "max_maneuver_mod": -70,
+      "missile_penalty": 0,
+      "quickness_penalty": 5
+    },
+    {
+      "at": 14,
+      "name": "Chain Coat",
+      "min_maneuver_mod": -15,
+      "max_maneuver_mod": -90,
+      "missile_penalty": 10,
+      "quickness_penalty": 10
+    },
+    {
+      "at": 15,
+      "name": "Chain Full",
+      "min_maneuver_mod": -25,
+      "max_maneuver_mod": -120,
+      "missile_penalty": 20,
+      "quickness_penalty": 20
+    },
+    {
+      "at": 16,
+      "name": "Reinforced Chain",
+      "min_maneuver_mod": -25,
+      "max_maneuver_mod": -130,
+      "missile_penalty": 20,
+      "quickness_penalty": 20
+    },
+    {
+      "at": 17,
+      "name": "Plate Breastplate",
+      "min_maneuver_mod": -15,
+      "max_maneuver_mod": -90,
+      "missile_penalty": 0,
+      "quickness_penalty": 10
+    },
+    {
+      "at": 18,
+      "name": "Plate Coat",
+      "min_maneuver_mod": -20,
+      "max_maneuver_mod": -110,
+      "missile_penalty": 10,
+      "quickness_penalty": 20
+    },
+    {
+      "at": 19,
+      "name": "Half Plate",
+      "min_maneuver_mod": -35,
+      "max_maneuver_mod": -150,
+      "missile_penalty": 30,
+      "quickness_penalty": 30
+    },
+    {
+      "at": 20,
+      "name": "Full Plate",
+      "min_maneuver_mod": -45,
+      "max_maneuver_mod": -165,
+      "missile_penalty": 40,
+      "quickness_penalty": 40
+    }
+  ]
+}

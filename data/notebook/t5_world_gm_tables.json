@@ -1,0 +1,49 @@
+{
+  "table_ids": [
+    "T-5.1",
+    "T-5.2",
+    "T-5.4",
+    "T-5.5",
+    "T-5.6",
+    "T-5.8"
+  ],
+  "title": "Gamemaster World & Strategic Campaign Tables",
+  "strategic_movement_rates_t5_2": [
+    {
+      "pace": "Sneaking",
+      "open_flat": 4,
+      "hilly": 3,
+      "mountainous": 2,
+      "swamp_jungle": 1.5
+    },
+    {
+      "pace": "Careful walk",
+      "open_flat": 8,
+      "hilly": 6,
+      "mountainous": 4,
+      "swamp_jungle": 3
+    },
+    {
+      "pace": "Normal walk",
+      "open_flat": 10,
+      "hilly": 8,
+      "mountainous": 6,
+      "swamp_jungle": 4
+    },
+    {
+      "pace": "Jog/Walk",
+      "open_flat": 15,
+      "hilly": 12,
+      "mountainous": 9,
+      "swamp_jungle": 6
+    },
+    {
+      "pace": "Fast Ride (Horse)",
+      "open_flat": 25,
+      "hilly": 18,
+      "mountainous": 12,
+      "swamp_jungle": 8
+    }
+  ],
+  "master_character_table_t5_8": "Averages non-prime stats at 50, prime requisites at 90 across levels for quick NPC creation."
+}

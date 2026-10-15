@@ -1,0 +1,12 @@
+{
+  "table_id": "T-1.2",
+  "title": "Stat Assignment Table",
+  "page": 16,
+  "description": "Stat point pool generation rules and allocation costs for character generation.",
+  "stat_point_pool": "600 base points + 10d10 open-ended dice roll",
+  "stat_assignment_rules": [
+    "Assign temporary stat values ranging between 20 and 100.",
+    "Maximum initial temporary stat prior to racial bonuses is 100.",
+    "Prime requisites for chosen profession should be prioritized."
+  ]
+}

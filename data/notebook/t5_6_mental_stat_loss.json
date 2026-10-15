@@ -1,0 +1,14 @@
+{
+  "table_id": "T-5.6",
+  "title": "Mental Stat Loss Table",
+  "page": 78,
+  "description": "Permanent or temporary stat reduction resulting from head trauma or severe spell criticals.",
+  "affected_stats": [
+    "Memory",
+    "Reasoning",
+    "Self Discipline",
+    "Empathy",
+    "Intuition",
+    "Presence"
+  ]
+}

@@ -1,0 +1,7 @@
+{
+  "table_id": "T-2.3",
+  "title": "Stat Gain Table",
+  "page": 25,
+  "description": "Rules for temporary stat advancement upon gaining levels or spending DP.",
+  "mechanic": "Roll d100 open-ended against the difference between Potential and Temporary stats."
+}

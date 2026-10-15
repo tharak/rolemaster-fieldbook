@@ -1,0 +1,7 @@
+{
+  "table_id": "T-4.5",
+  "title": "Spell Casting Static Maneuver Table",
+  "page": 46,
+  "description": "Static maneuver resolution when attempting non-standard spell casting or spell overcasting.",
+  "outcomes": "Failure, Spell Fumble, Success, Power Discount"
+}

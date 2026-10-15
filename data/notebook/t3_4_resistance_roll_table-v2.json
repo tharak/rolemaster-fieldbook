@@ -1,0 +1,7 @@
+{
+  "table_id": "T-3.4",
+  "title": "Resistance Roll Table",
+  "page": 52,
+  "description": "Matrix of target level vs. attacker level to determine base Resistance Roll targets.",
+  "standard_mods": "Basic spell roll modifications (-125 to +70) + Stat bonuses + Item bonuses"
+}

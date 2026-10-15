@@ -1,0 +1,12 @@
+{
+  "table_id": "T-4.2",
+  "title": "Standard Moving Maneuver Modifications Table",
+  "page": 50,
+  "description": "Environmental, pace, armor, and encumbrance modifiers for moving maneuvers.",
+  "modifiers": {
+    "Armor Penalty": "varies by AT",
+    "Encumbrance": "-1 per lb over allowance",
+    "Wounds/Hits Taken": "up to -30",
+    "Pace": "-20 to +20"
+  }
+}

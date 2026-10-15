@@ -1,18 +1,26 @@
 import {
-  statNames, realmByProfession, primeStats, personalityRanges, motivationRanges, alignmentRanges,
-  skillCategoryRules, weaponCategories, meleeWeaponCategories, specialSkillClasses,
+  statNames, realmByProfession, primeStats,
+  skillCategoryRules, weaponCategories,
   packageChoiceRules, a4Skills, statAbbreviations, professionSkillBonuses, raceAllowances,
   adolescenceRaces, adolescenceCategoryRanks, adolescenceSkillRanks, raceStartingLanguages,
   raceAdolescenceLanguages, backgroundChoices, backgroundExtraLanguages, backgroundMoney,
-  backgroundItems, raceBackgroundNotes, racePhysicalProfiles, armorTypes, armorSkillTypes,
-  raceWeaponChoices, openSpellLists, raceStats, raceResistances, resistanceTypes,
-  xpThresholds, coinUnits
+  backgroundItems, raceBackgroundNotes, armorTypes, armorSkillTypes,
+  raceWeaponChoices, openSpellLists, resistanceTypes,
+  coinUnits
 } from './app-data.js';
 import {createTableBrowser} from './table-browser.js';
 import {createCharacterForm} from './character-form.js';
 import {buildEncounterRoster} from './encounter-roster.js';
 import {$, $$, esc} from './dom.js';
-import {rankBonus, rankCost, openEndedD100} from './rules.js';
+import {rankBonus, rankCost, openEndedD100, rollD10, rollD100, rollOpenEndedD10, formatRolls} from './rules.js';
+import {
+  statCost, fixedPotential, strideBonus, rollStatGain, trainingSpecialAwards,
+  categoryGroup, classifySkill, developedRanks, spellListCostsFor
+} from './character-rules.js';
+import {createStatSheet} from './stat-sheet.js';
+import {createCharacterRole} from './character-role.js';
+import {createCharacterAdvancement} from './character-advancement.js';
+import {isRecord, equipmentLedger} from './character-record.js';
 
 (() => {
   const STORAGE_KEY = 'rolemaster-fieldbook-characters-v1';
@@ -23,6 +31,14 @@ import {rankBonus, rankCost, openEndedD100} from './rules.js';
   let equipmentSearch = '';
   let equipmentMessage = '';
   const form = $('#character-form');
+  const {currentDevelopmentLevel, syncLevelFromXp, readStatGainHistory, renderPlayExperience} = createCharacterAdvancement({
+    form, developedSkillRanks, updateSkillBuyOptions, updateDevelopment,
+    saveCurrent, renderPlay, showView, openApprenticeshipPicker:() => openApprenticeshipPicker()
+  });
+  const {makeStats, makeResistances, applyProfessionStatDefaults, setPotentialStats, updateRuleBonuses, ensureStatRoll} = createStatSheet({form, saveCurrent});
+  const {updateAppearance, updatePhysicalSource, randomizePhysicalDetails} = createCharacterRole({
+    form, getTrainingPackages:() => trainingPackages, readTrainingSelections, saveCurrent
+  });
   const {formData, fillForm} = createCharacterForm({form, developedSkillRanks, syncLevelFromXp, makeStats, randomizePhysicalDetails, renderCategoryRecord, renderSkillTree, updateDevelopment});
   const tableBrowser = createTableBrowser({showView});
   let characters = readCharacters();
@@ -34,22 +50,10 @@ import {rankBonus, rankCost, openEndedD100} from './rules.js';
   let skillChoiceTarget = null;
   let trainingItemTarget = null;
   function skillClass(row) {
-    if (row?.dataset.skillClass && row.dataset.skillClass !== 'auto') return row.dataset.skillClass;
-    const name = $('[name="skill-name"]', row)?.value || '';
-    const matches = entry => entry === name || (entry === 'Divination' && name.startsWith('Divination ('));
-    const classes = [specialSkillClasses[form.elements.race.value], specialSkillClasses[form.elements.profession.value]];
-    if (classes.some(group => group?.occupational?.some(matches))) return 'occupational';
-    if (classes.some(group => group?.restricted?.some(matches))) return 'restricted';
-    if (classes.some(group => group?.everyman?.some(matches))) return 'everyman';
-    if (form.elements.race.value === 'Wood Elf' && (name.startsWith('Play Instrument') || name.startsWith('Wood-crafts'))) return 'everyman';
-    if (form.elements.race.value === 'Dwarf' && name.startsWith('Survival (underground')) return 'everyman';
-    if (form.elements.race.value === 'Halfling' && name.startsWith('Caving (Halfling-holes')) return 'everyman';
-    if (form.elements.profession.value === 'Fighter' && name.startsWith('Situational Awareness') && name.includes('Combat')) return 'everyman';
-    return 'standard';
+    return classifySkill({name:$('[name="skill-name"]', row)?.value || '', race:form.elements.race.value, profession:form.elements.profession.value, override:row?.dataset.skillClass});
   }
   function developedSkillRanks(row, buy = Number($('[name="skill-buy"]', row)?.value) || 0) {
-    const kind = skillClass(row);
-    return kind === 'occupational' ? buy * 3 : kind === 'everyman' ? buy * 2 : kind === 'restricted' ? Math.floor(buy / 2) : buy;
+    return developedRanks(buy, skillClass(row));
   }
   function weaponCostAssignments() {
     let saved;
@@ -139,46 +143,13 @@ import {rankBonus, rankCost, openEndedD100} from './rules.js';
     return index < 5 ? 1 : index < 10 ? 2 : 4;
   }
   function spellListCosts(category, start, profession, multiplier) {
-    if (!category.startsWith('Spells • Own Realm')) return categoryCosts(category, profession);
-    const pure = ['Cleric','Magician','Mentalist'].includes(profession);
-    const semi = ['Ranger','Dabbler','Bard'].includes(profession);
-    const kind = category.includes('Open Lists') ? 'open' : category.includes('Closed Lists') ? 'closed' : 'base';
-    const tier = rank => {
-      if (kind === 'base') return categoryCosts(category, profession);
-      if (rank <= 5) return categoryCosts(category, profession);
-      const band = rank <= 10 ? 0 : rank <= 15 ? 1 : rank <= 20 ? 2 : 3;
-      if (pure) return kind === 'open' ? (band === 3 ? [6,6,6] : [4,4,4]) : (band === 3 ? [8,8] : [4,4,4]);
-      if (semi) return kind === 'open' ? [[8,8],[12],[18],[25]][band] : [[12],[25],[40],[60]][band];
-      const costs = kind === 'open' ? {Fighter:[50,75,100,125],Thief:[36,54,72,90],Rogue:[30,45,60,75]}
-        : {Fighter:[80,120,160,200],Thief:[70,105,140,175],Rogue:[50,75,100,125]};
-      return costs[profession] ? [costs[profession][band]] : null;
-    };
-    const first = tier(start + 1);
-    if (!first) return null;
-    const result = [];
-    for (let index = 0; index < first.length; index++) {
-      const current = tier(start + index + 1);
-      if (!current || index >= current.length) break;
-      result.push(current[index] * multiplier);
-    }
-    return result;
+    return spellListCostsFor({category, start, profession, multiplier, baseCosts:categoryCosts(category, profession)});
   }
-
   function readCharacters() {
-    try { const data = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); return Array.isArray(data) ? data : []; }
+    try { const data = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); return Array.isArray(data) ? data.filter(isRecord) : []; }
     catch { return []; }
   }
   function writeCharacters() { localStorage.setItem(STORAGE_KEY, JSON.stringify(characters)); window.dispatchEvent(new Event('rolemaster-roster-updated')); }
-  function makeStats(stats = {}) {
-    $('#stats-list').innerHTML = statNames.map((name, index) => {
-      const value = stats[name] || {};
-      return `<div class="stat-row"><span>${name}</span><input aria-label="${name} temporary stat" name="stat-temp-${index}" type="number" min="1" max="100" value="${esc(value.temp ?? '')}" placeholder="—"><input aria-label="${name} potential stat" name="stat-pot-${index}" type="number" min="20" max="101" value="${esc(value.pot ?? '')}" placeholder="—" readonly><input aria-label="${name} basic bonus" name="stat-basic-${index}" type="number" value="${esc(value.basic ?? '')}" placeholder="—" readonly><input aria-label="${name} racial bonus" name="stat-racial-${index}" type="number" value="${esc(value.racial ?? '')}" placeholder="—" readonly><input aria-label="${name} special bonus" name="stat-special-${index}" type="number" value="${esc(value.special ?? '')}" placeholder="—" readonly><input aria-label="${name} total bonus" name="stat-total-${index}" type="number" value="${esc(value.total ?? '')}" placeholder="—" readonly></div>`;
-    }).join('');
-  }
-  function makeResistances() {
-    $('#resistance-grid').innerHTML = `<div class="rr-head"><span>Type</span><span>Race</span><span>Stat</span><span>Other</span><span>Total</span></div>${resistanceTypes.map(([key, label]) => `<div class="rr-row"><span>${label}</span><output id="rr-race-${key}">—</output><output id="rr-stat-${key}">—</output><input aria-label="${label} other resistance bonus" name="rr-other-${key}" type="number" value="0"><output id="rr-total-${key}">—</output></div>`).join('')}`;
-  }
-  function categoryGroup(category) { return category.includes(' • ') ? category.split(' • ')[0] : ''; }
   function categoryStatBonus(category) {
     const rule = skillCategoryRules[category];
     if (!rule) return null;
@@ -717,12 +688,6 @@ import {rankBonus, rankCost, openEndedD100} from './rules.js';
     renderTrainingPackages();
     saveCurrent();
   }
-  function readStatGainHistory() {
-    try {
-      const history = JSON.parse(form.elements.statGainHistory.value || '[]');
-      return Array.isArray(history) ? history : [];
-    } catch { return []; }
-  }
   function packageStatGrantRules(name) {
     if (name === 'Adventurer') return [['choice-1','Choose one stat',statNames],['choice-2','Choose another stat',statNames]];
     if (name === 'Animal Friend') return [['empathy','Empathy',['Empathy']]];
@@ -753,113 +718,11 @@ import {rankBonus, rankCost, openEndedD100} from './rules.js';
     } catch { return {}; }
   }
   function writeTrainingBenefits(value) { form.elements.trainingBenefits.value = JSON.stringify(value); }
-  function rollD10() { return Math.floor(Math.random() * 10) + 1; }
-  function rollD100() { return Math.floor(Math.random() * 100) + 1; }
-  function rollRoleRange(kind) {
-    const limit = kind === 'personality' ? 78 : 72;
-    const ranges = kind === 'personality' ? personalityRanges : alignmentRanges;
-    const width = kind === 'personality' ? 2 : 6;
-    const firstRolls = [];
-    let modifier = 0;
-    let first;
-    do {
-      first = rollD100();
-      firstRolls.push(first);
-      if (first > limit) modifier += first <= (kind === 'personality' ? 89 : 86) ? -20 : 20;
-    } while (first > limit);
-    const [left, right] = ranges[Math.floor((first - 1) / width)];
-    const second = rollD100();
-    const position = Math.max(1, Math.min(100, second + modifier));
-    const trait = position <= 33 ? left : position >= 68 ? right : `Between ${left.toLowerCase()} and ${right.toLowerCase()}`;
-    return {trait, summary:`T-1.7 ${kind}: ${firstRolls.join(' → ')}; position ${second}${modifier ? ` ${modifier > 0 ? '+' : '−'} ${Math.abs(modifier)}` : ''} = ${position} · ${left} ↔ ${right}`};
-  }
-  function rollRoleTrait(kind) {
-    const field = form.elements[`role${kind[0].toUpperCase()}${kind.slice(1)}`];
-    const result = kind === 'motivation'
-      ? (() => { const roll = rollD100(); return {trait:motivationRanges[Math.floor((roll - 1) / 5)], summary:`T-1.7 motivation: ${roll}`}; })()
-      : rollRoleRange(kind);
-    field.value = [field.value.trim(), result.trait].filter(Boolean).join('; ').slice(0, field.maxLength);
-    form.elements.roleRollSummaryText.value = result.summary;
-    $('#role-roll-summary').textContent = result.summary;
-    saveCurrent();
-  }
-  function appearanceDice() {
-    const dice = form.elements.appearanceDice.value.split(',').map(Number);
-    return dice.length === 5 && dice.every(value => Number.isInteger(value) && value >= 1 && value <= 10) ? dice : null;
-  }
-  function updateAppearance() {
-    const dice = appearanceDice();
-    const presence = form.elements.namedItem('stat-pot-7').value;
-    const previous = form.elements.appearancePotential.value;
-    const potential = dice && presence !== '' ? Math.max(1, Math.min(100, Number(presence) - 25 + dice.reduce((sum, value) => sum + value, 0))) : null;
-    form.elements.appearancePotential.value = potential ?? '';
-    if (form.elements.appearanceTemp.value === '' || form.elements.appearanceTemp.value === previous) form.elements.appearanceTemp.value = potential ?? '';
-    $('#appearance-roll-summary').textContent = dice
-      ? `Potential Presence ${presence || '—'} − 25 + (${dice.join(' + ')}) = ${potential ?? '—'}${potential !== null ? ' (limited to 1–100)' : ''}. Temporary Appearance usually matches while well groomed and dressed.`
-      : 'Potential Presence − 25 + 5d10, limited to 1–100. Temporary Appearance usually matches while well groomed and dressed.';
-    $('#role-roll-summary').textContent = form.elements.roleRollSummaryText.value;
-  }
-  function updatePhysicalSource() {
-    const profile = racePhysicalProfiles[form.elements.race.value];
-    if (!profile) return;
-    $('#role-physical-source').textContent = `${profile.source} · Height and weight are varied around the race’s published averages. Age is a lifespan-based suggestion${profile.immortal ? ' (Wood Elves are immortal)' : ''}. ${profile.eyes.length ? '' : 'The race description does not specify eye color.'}`;
-  }
-  function randomPhysicalChoice(values) { return values[Math.floor(Math.random() * values.length)]; }
-  function randomizePhysicalDetails(force = true) {
-    const profile = racePhysicalProfiles[form.elements.race.value];
-    if (!profile) return;
-    let previous = {};
-    try { previous = JSON.parse(form.elements.rolePhysicalGenerated.value || '{}') || {}; } catch { /* Ignore old invalid data. */ }
-    const genderField = form.elements.roleGender;
-    if (!genderField.value) genderField.value = randomPhysicalChoice(['Male','Female']);
-    const gender = genderField.value.trim().toLowerCase();
-    const average = values => gender === 'female' ? values[1] : gender === 'male' ? values[0] : Math.round((values[0] + values[1]) / 2);
-    const height = average(profile.heights) + Math.floor(Math.random() * 9) - 4;
-    const weight = Math.round(average(profile.weights) * (0.85 + Math.random() * 0.3));
-    const months = readTrainingSelections().reduce((sum, name) => sum + (trainingPackages.find(pack => pack.name === name)?.months || 0), 0);
-    const minimumAge = Math.max(profile.age[0], 16 + Math.ceil(months / 12));
-    const maximumAge = Math.max(minimumAge, profile.age[1]);
-    const choices = {
-      roleAge:String(minimumAge + Math.floor(Math.random() * (maximumAge - minimumAge + 1))),
-      roleBuild:randomPhysicalChoice(profile.builds),
-      roleHeight:`${Math.floor(height / 12)}'${height % 12}"`,
-      roleWeight:`${weight} lb`,
-      roleSkin:randomPhysicalChoice(profile.skin),
-      roleHair:randomPhysicalChoice(profile.hair),
-      roleDemeanor:randomPhysicalChoice(profile.demeanor)
-    };
-    if (profile.eyes.length) choices.roleEyes = randomPhysicalChoice(profile.eyes);
-    else if (form.elements.roleEyes.value === previous.roleEyes) form.elements.roleEyes.value = '';
-    const generated = {};
-    Object.entries(choices).forEach(([name, value]) => {
-      const field = form.elements[name];
-      if (force || !field.value || field.value === previous[name]) { field.value = value; generated[name] = value; }
-    });
-    form.elements.rolePhysicalGenerated.value = JSON.stringify(generated);
-    updatePhysicalSource();
-  }
-  function rollOpenEndedD10() {
-    const rolls = [];
-    let roll;
-    do { roll = rollD10(); rolls.push(roll); } while (roll === 10);
-    return {rolls, total:rolls.reduce((sum, value) => sum + (value === 10 ? 9 : value), 0)};
-  }
   function rollOpenEndedD100() {
     const result = openEndedD100(rollD100);
     return {rolls:result.dice, total:result.total};
   }
-  function formatRolls(rolls) {
-    return (rolls || []).map((value, index) => index === 0 ? String(value) : value < 0 ? ` − ${-value}` : ` + ${value}`).join('');
-  }
   function packageMoneyNeedsRoll(pack) { return /d10/i.test(pack.startingMoney); }
-  function trainingSpecialAwards(pack, special = {}) {
-    const last = pack.specialItems.length - 1;
-    if (special.mode === 'last') return [last];
-    if (special.mode !== 'rolled') return [];
-    const awards = special.rows?.flatMap((row, index) => row.gained ? [index] : []) || [];
-    if (!awards.length || special.grantLast) awards.push(last);
-    return [...new Set(awards)];
-  }
   function rollItemDice(item) {
     return [...item.matchAll(/\b(\d*)d10\b/gi)].map(match => {
       const count = Number(match[1]) || 1;
@@ -1588,13 +1451,6 @@ import {rankBonus, rankCost, openEndedD100} from './rules.js';
       return Array.isArray(value) && value.length === 2 ? value : null;
     } catch { return null; }
   }
-  function strideBonus(heightText) {
-    const match = /^(\d+)'\s*(\d{1,2})(?:")?$/.exec(heightText.trim());
-    if (!match) return null;
-    const inches = Number(match[1]) * 12 + Number(match[2]);
-    if (Number(match[2]) >= 12 || inches < 22 || inches > 99) return null;
-    return [[94,20],[88,15],[82,10],[76,5],[70,0],[64,-5],[58,-10],[52,-15],[46,-20],[40,-25],[34,-30],[28,-35],[22,-40]].find(([minimum]) => inches >= minimum)[1];
-  }
   function updateStartingOutfit(skills) {
     const weaponSkills = skills.filter(skill => skill.category.startsWith('Weapon •') && skill.ranks >= 1);
     const weaponKeys = new Set(weaponSkills.map(skill => favoriteSkillKey(skill.category, skill.name)));
@@ -1770,78 +1626,6 @@ import {rankBonus, rankCost, openEndedD100} from './rules.js';
     $('#creation-progress .creation-notes').hidden = advancing;
     updateApprenticeshipBudget();
   }
-  function statCost(value) { return value <= 90 ? value : 90 + (value - 90) ** 2; }
-  function applyProfessionStatDefaults() {
-    const primes = primeStats[form.elements.profession.value] || [];
-    statNames.forEach((name, index) => {
-      form.elements.namedItem(`stat-temp-${index}`).value = primes.includes(name) ? '90' : '20';
-      form.elements.namedItem(`stat-pot-${index}`).value = '';
-    });
-  }
-  function fixedPotential(value) {
-    const bands = [[24,44],[34,39],[44,33],[54,28],[64,22],[74,17],[84,11],[91,6],[92,5],[94,4],[96,3],[98,2],[100,1]];
-    return Math.min(101, value + bands.find(([high]) => value <= high)[1]);
-  }
-  function rolledPotential(value) {
-    const bands = [[24,20,8],[34,30,7],[44,40,6],[54,50,5],[64,60,4],[74,70,3],[84,80,2],[91,90,1]];
-    const band = bands.find(([high]) => value <= high);
-    const [base, dice, sides] = band ? [band[1], band[2], 10] : [value - 1, 1, value === 100 ? 2 : 101 - value];
-    const result = base + Array.from({length: dice}, () => Math.floor(Math.random() * sides) + 1).reduce((sum, roll) => sum + roll, 0);
-    return Math.max(value, result);
-  }
-  function updatePotentialStat(index, calculate) {
-    const temporaryField = form.elements.namedItem(`stat-temp-${index}`);
-    const temporary = Number(temporaryField.value);
-    form.elements.namedItem(`stat-pot-${index}`).value = temporaryField.value !== '' && Number.isInteger(temporary) && temporary >= 20 && temporary <= 100
-      ? String(calculate(temporary)) : '';
-  }
-  function setPotentialStats(calculate, method) {
-    statNames.forEach((_, index) => updatePotentialStat(index, calculate));
-    form.elements.potentialMethod.value = method;
-  }
-  function basicStatBonus(value) {
-    if (value === 100) return 10;
-    if (value >= 90) return 5 + Math.floor((value - 90) / 2);
-    if (value >= 70) return 1 + Math.floor((value - 70) / 5);
-    if (value >= 31) return 0;
-    if (value >= 11) return -1 - Math.floor((30 - value) / 5);
-    return -5 - Math.floor((10 - value) / 2);
-  }
-  function updateRuleBonuses() {
-    const race = form.elements.race.value;
-    const racial = raceStats[race] || raceStats['Common Man'];
-    const totals = statNames.map((_, index) => {
-      const temporary = form.elements.namedItem(`stat-temp-${index}`).value;
-      const basic = form.elements.namedItem(`stat-basic-${index}`);
-      const raceField = form.elements.namedItem(`stat-racial-${index}`);
-      const special = form.elements.namedItem(`stat-special-${index}`);
-      const total = form.elements.namedItem(`stat-total-${index}`);
-      raceField.value = String(racial[index]);
-      const value = Number(temporary);
-      basic.value = temporary !== '' && Number.isInteger(value) && value >= 1 && value <= 100 ? String(basicStatBonus(value)) : '';
-      total.value = basic.value ? String(Number(basic.value) + racial[index] + (Number(special.value) || 0)) : '';
-      return total.value === '' ? null : Number(total.value);
-    });
-    const rr = raceResistances[race] || raceResistances['Common Man'];
-    resistanceTypes.forEach(([key, , statIndex, raceIndex]) => {
-      const stat = totals[statIndex] === null ? null : 3 * totals[statIndex];
-      const other = Number(form.elements.namedItem(`rr-other-${key}`).value) || 0;
-      $(`#rr-race-${key}`).textContent = String(rr[raceIndex]);
-      $(`#rr-stat-${key}`).textContent = stat === null ? '—' : String(stat);
-      $(`#rr-total-${key}`).textContent = stat === null ? '—' : String(rr[raceIndex] + stat + other);
-    });
-  }
-  function rollStatPool() {
-    const dice = Array.from({length: 10}, () => Math.floor(Math.random() * 10) + 1);
-    form.elements.statRoll.value = String(dice.reduce((sum, value) => sum + value, 0));
-    form.elements.statDice.value = dice.join(',');
-  }
-  function ensureStatRoll() {
-    const roll = Number(form.elements.statRoll.value);
-    if (Number.isInteger(roll) && roll >= 10 && roll <= 100) return false;
-    rollStatPool();
-    return true;
-  }
   function updateSheetHints() {
     updateRuleBonuses();
     updateAppearance();
@@ -1947,76 +1731,6 @@ import {rankBonus, rankCost, openEndedD100} from './rules.js';
     });
   }
   function playValue(value) { return value === '' || value === null || value === undefined ? '—' : esc(value); }
-  function xpForLevel(level) { return level <= 20 ? xpThresholds[Math.max(1, level)] : 500000 + (level - 20) * 50000; }
-  function levelForXp(xp) {
-    const total = Math.max(0, Math.trunc(Number(xp) || 0));
-    if (total >= 500000) return 20 + Math.floor((total - 500000) / 50000);
-    for (let level = 19; level >= 2; level--) if (total >= xpThresholds[level]) return level;
-    return 1;
-  }
-  function currentDevelopmentLevel() { return Math.max(1, Math.trunc(Number(form.elements.developmentLevel.value) || 1)); }
-  function syncLevelFromXp() { form.elements.level.value = String(levelForXp(form.elements.xp.value)); }
-  function readXpHistory() { try { const value = JSON.parse(form.elements.xpHistory.value || '[]'); return Array.isArray(value) ? value : []; } catch { return []; } }
-  function readLevelHistory() { try { const value = JSON.parse(form.elements.levelHistory.value || '[]'); return Array.isArray(value) ? value : []; } catch { return []; } }
-  function rollStatGain(before, potential) {
-    const dice = [rollD10(), rollD10()];
-    const [first, second] = dice;
-    const difference = potential - before;
-    const change = first === second && first <= 5 ? -first
-      : first === second ? first + second
-      : difference <= 0 ? 0 : difference <= 10 ? Math.min(first, second)
-      : difference <= 20 ? Math.max(first, second) : first + second;
-    return {dice, after:Math.max(1, Math.min(potential, before + change))};
-  }
-  function levelAdvanceIssue() {
-    if (Number($('#dp-remaining').textContent) < 0) return 'Resolve overspent development points before advancing.';
-    if (statNames.some((_, index) => {
-      const temp = Number(form.elements.namedItem(`stat-temp-${index}`).value);
-      const pot = Number(form.elements.namedItem(`stat-pot-${index}`).value);
-      return !Number.isInteger(temp) || temp < 1 || !Number.isInteger(pot) || pot < temp;
-    })) return 'Set all temporary and potential stats before advancing.';
-    return '';
-  }
-  function advanceLevel() {
-    const next = currentDevelopmentLevel() + 1;
-    if (next > levelForXp(form.elements.xp.value) || levelAdvanceIssue()) return;
-    const snapshot = {level:currentDevelopmentLevel(), xp:Number(form.elements.xp.value) || 0, skills:[], categories:[], remaining:Number($('#dp-remaining').textContent) || 0};
-    $$('.skill-row', $('#skills-list')).forEach(row => {
-      const buy = Number($('[name="skill-buy"]', row).value) || 0;
-      if (buy) snapshot.skills.push({category:row.dataset.category, name:$('[name="skill-name"]', row).value, bought:buy, gained:developedSkillRanks(row, buy)});
-      $('[name="skill-start"]', row).value = String((Number($('[name="skill-start"]', row).value) || 0) + developedSkillRanks(row, buy));
-      updateSkillBuyOptions(row, 0);
-      delete row.dataset.pendingBuy;
-    });
-    $$('.category-record-row', $('#category-record-list')).forEach(row => {
-      const buy = $('[name="record-buy"]', row);
-      if (!buy) return;
-      const count = Number(buy.value) || 0;
-      if (count) snapshot.categories.push({category:row.dataset.category, bought:count});
-      $('[name="record-start"]', row).value = String((Number($('[name="record-start"]', row).value) || 0) + count);
-      updateSkillBuyOptions(row, 0);
-      delete row.dataset.pendingBuy;
-    });
-    form.elements.levelHistory.value = JSON.stringify([...readLevelHistory(), snapshot]);
-    form.elements.spellDevelopmentOrder.value = '[]';
-    form.elements.otherDp.value = '0';
-    form.elements.developmentLevel.value = String(next);
-    const history = readStatGainHistory();
-    statNames.forEach((stat, index) => {
-      const temp = form.elements.namedItem(`stat-temp-${index}`), pot = form.elements.namedItem(`stat-pot-${index}`);
-      const before = Number(temp.value), potential = Number(pot.value);
-      if (!Number.isInteger(before) || before < 1 || !Number.isInteger(potential) || potential < 1) return;
-      const {dice, after} = rollStatGain(before, potential);
-      temp.value = String(after);
-      history.push({stat, before, after, dice, cost:0, source:`level:${next}`, level:next});
-    });
-    form.elements.statGainHistory.value = JSON.stringify(history);
-    form.elements.apprenticeshipDpBase.value = '';
-    updateDevelopment();
-    form.elements.apprenticeshipDpBase.value = $('#dp-available').textContent === '—' ? '' : $('#dp-available').textContent;
-    saveCurrent();
-    renderPlay();
-  }
   function playFact(label, value) { return `<div><dt>${esc(label)}</dt><dd>${playValue(value)}</dd></div>`; }
   function playNote(label, value) { return value?.trim() ? `<section class="play-card"><h2>${esc(label)}</h2><p class="play-prose">${esc(value.trim())}</p></section>` : ''; }
   function playRollTile({category, name, ranks, total, favorite = false, kind = 'skill'}) {
@@ -2032,13 +1746,7 @@ import {rankBonus, rankCost, openEndedD100} from './rules.js';
     });
     return `${tin < 0 ? '−' : ''}${parts.join(' · ') || '0 tp'}`;
   }
-  function readEquipmentLedger() {
-    try {
-      const value = JSON.parse(form.elements.equipmentLedger.value || '{}');
-      return {adjustment:Number.isSafeInteger(value.adjustment) ? value.adjustment : 0,
-        items:Array.isArray(value.items) ? value.items.filter(item => typeof item.id === 'string' && Number.isSafeInteger(item.quantity) && item.quantity > 0 && Number.isSafeInteger(item.priceTin) && item.priceTin >= 0).map(item => ({id:item.id, name:String(item.name || ''), priceTin:item.priceTin, quantity:item.quantity})) : []};
-    } catch { return {adjustment:0, items:[]}; }
-  }
+  function readEquipmentLedger() { return equipmentLedger(form.elements.equipmentLedger.value); }
   function startingMoneyTin() {
     const details = readBackgroundDetails(), selections = readBackgroundSelections();
     let gold = 2;
@@ -2073,16 +1781,6 @@ import {rankBonus, rankCost, openEndedD100} from './rules.js';
     const gpField = $('[name="equipment-cash-gp"]');
     gpField.value = String(Math.floor(Math.max(0, balance) / 10000));
     renderEquipmentCatalog();
-  }
-  function renderPlayExperience() {
-    const xp = Math.max(0, Math.trunc(Number(form.elements.xp.value) || 0));
-    const level = levelForXp(xp), developed = currentDevelopmentLevel();
-    const start = xpForLevel(level), next = xpForLevel(level + 1);
-    const progress = Math.max(0, Math.min(100, (xp - start) / (next - start) * 100));
-    const history = readXpHistory().slice(-5).reverse();
-    const issue = levelAdvanceIssue();
-    const statRolls = readStatGainHistory().filter(entry => entry.source === `level:${developed}`);
-    return `<section class="play-card play-xp-card"><div class="play-xp-heading"><div><h2>Experience & level</h2><p class="play-muted">Level ${level} · ${xp.toLocaleString()} XP</p></div><strong>${Math.max(0, next - xp).toLocaleString()} to level ${level + 1}</strong></div><div class="play-xp-track" role="progressbar" aria-valuenow="${Math.max(start, xp)}" aria-valuemin="${start}" aria-valuemax="${next}" aria-label="Experience toward level ${level + 1}"><span style="width:${progress}%"></span></div><form id="play-xp-form" class="play-xp-form"><label>XP gained or lost<input name="amount" type="number" step="1" required placeholder="e.g. 250 or -100"></label><label>Reason<input name="reason" type="text" maxlength="100" placeholder="Session, quest, correction…"></label><button type="submit" class="button button-dark">Record XP</button></form>${level > developed ? `<div class="play-level-ready"><span>${level - developed} level${level - developed === 1 ? '' : 's'} ready to develop${issue ? `<small>${esc(issue)}</small>` : ''}</span><button type="button" class="button button-dark" id="advance-character-level"${issue ? ' disabled' : ''}>Advance to level ${developed + 1}</button></div>` : ''}${developed > 1 ? `<div class="play-level-ready"><span>Level ${developed} development · ${esc($('#dp-remaining').textContent)} DP remaining</span><button type="button" class="button button-quiet" id="spend-level-dp">Spend DP</button></div>` : ''}${statRolls.length ? `<details class="play-xp-history"><summary>Level ${developed} stat gain rolls</summary><ul>${statRolls.map(entry => `<li><span>${esc(entry.stat)} <small>${esc(entry.dice.join(' + '))}</small></span><strong>${esc(entry.before)} → ${esc(entry.after)}</strong></li>`).join('')}</ul></details>` : ''}${history.length ? `<details class="play-xp-history"><summary>Recent XP</summary><ul>${history.map(entry => `<li><span>${esc(entry.reason || 'XP adjustment')} <small>${esc(entry.date || '')}</small></span><strong>${entry.amount >= 0 ? '+' : ''}${Number(entry.amount).toLocaleString()}</strong></li>`).join('')}</ul><button type="button" id="undo-xp-award" class="button button-quiet">Undo latest XP entry</button></details>` : ''}</section>`;
   }
   function renderPlayCharacter() {
     const stats = statNames.map((name, index) => `<tr><th scope="row">${esc(name)}</th><td>${playValue(form.elements.namedItem(`stat-temp-${index}`).value)}</td><td>${playValue(form.elements.namedItem(`stat-pot-${index}`).value)}</td><td>${playValue(form.elements.namedItem(`stat-total-${index}`).value)}</td></tr>`).join('');
@@ -2236,7 +1934,7 @@ import {rankBonus, rankCost, openEndedD100} from './rules.js';
       $('#table-list').innerHTML = '<p class="table-load-error">Table data could not be loaded. Serve this folder over HTTP and reload.</p>';
     }
   }
-  const encounterRoster = () => buildEncounterRoster(characters, {equipmentCatalog, trainingPackages, basicStatBonus, strideBonus, trainingSpecialAwards, rankBonus});
+  const encounterRoster = () => buildEncounterRoster(characters, {equipmentCatalog, trainingPackages});
   window.RolemasterEncounter = {roster:encounterRoster, openTable:tableBrowser.openTable};
   makeStats(); makeResistances(); renderRoster(); loadReferenceData();
   $$('.nav-link').forEach(button => button.addEventListener('click', () => showView(button.dataset.view)));
@@ -2266,16 +1964,6 @@ import {rankBonus, rankCost, openEndedD100} from './rules.js';
     if (tile) openPlayRoll(tile);
   });
   $('#play-character-content').addEventListener('click', event => {
-    if (event.target.closest('#advance-character-level')) { advanceLevel(); return; }
-    if (event.target.closest('#spend-level-dp')) { showView('editor'); openApprenticeshipPicker(); return; }
-    if (event.target.closest('#undo-xp-award')) {
-      const history = readXpHistory(), latest = history.pop();
-      if (!latest) return;
-      form.elements.xp.value = String(latest.before);
-      form.elements.xpHistory.value = JSON.stringify(history);
-      saveCurrent(); renderPlay();
-      return;
-    }
     const categoryButton = event.target.closest('[data-equipment-category]');
     if (categoryButton) { equipmentCategory = categoryButton.dataset.equipmentCategory; renderEquipmentCatalog(); return; }
     const buy = event.target.closest('[data-equipment-buy]');
@@ -2306,18 +1994,6 @@ import {rankBonus, rankCost, openEndedD100} from './rules.js';
     if (event.target.id === 'equipment-search') { equipmentSearch = event.target.value; renderEquipmentCatalog(); }
   });
   $('#play-character-content').addEventListener('submit', event => {
-    if (event.target.id === 'play-xp-form') {
-      event.preventDefault();
-      const amount = Number(event.target.elements.amount.value);
-      const before = Number(form.elements.xp.value) || 0;
-      if (!Number.isSafeInteger(amount) || !amount || !Number.isSafeInteger(before + amount) || before + amount < 0) return;
-      const history = readXpHistory();
-      history.push({before, amount, reason:event.target.elements.reason.value.trim(), date:new Date().toLocaleDateString()});
-      form.elements.xpHistory.value = JSON.stringify(history);
-      form.elements.xp.value = String(before + amount);
-      saveCurrent(); renderPlay();
-      return;
-    }
     if (event.target.id !== 'equipment-cash-form') return;
     event.preventDefault();
     const cash = coinUnits.reduce((sum, [unit, value]) => sum + Number(event.target.elements[`equipment-cash-${unit}`].value) * value, 0);
@@ -2337,7 +2013,6 @@ import {rankBonus, rankCost, openEndedD100} from './rules.js';
     updatePlayRollResult();
   });
   $('#play-skill-roll-modifier').addEventListener('input', updatePlayRollResult);
-  $$('.filter-chip').forEach(button => button.addEventListener('click', () => tableBrowser.openTableGroup(button.dataset.group)));
   $('#back-roster').addEventListener('click', () => { saveCurrent(); renderRoster(); showView('home'); });
   $('#cancel-skill-category').addEventListener('click', () => { $('#skill-category-picker').hidden = true; skillCategoryPickerTarget = null; });
   $('#skill-category-options').addEventListener('click', event => {
@@ -2750,27 +2425,6 @@ import {rankBonus, rankCost, openEndedD100} from './rules.js';
     form.elements.backgroundUsed.value = String(backgroundSelectionCost(readBackgroundSelections()));
     updateBackgroundLimits(); updateBackgroundPickerBudget(); saveCurrent();
   });
-  $('#rolled-stat-pool').addEventListener('click', () => {
-    rollStatPool();
-    form.elements.statPoolMode.value = 'roll';
-    saveCurrent();
-  });
-  $('#fixed-stat-pool').addEventListener('click', () => {
-    form.elements.statPoolMode.value = '660';
-    saveCurrent();
-  });
-  $('#roll-potentials').addEventListener('click', () => { setPotentialStats(rolledPotential, 'roll'); saveCurrent(); });
-  $('#fixed-potentials').addEventListener('click', () => { setPotentialStats(fixedPotential, 'fixed'); saveCurrent(); });
-  $('#character-role').addEventListener('click', event => {
-    const kind = event.target.closest('button[data-roll-role]')?.dataset.rollRole;
-    if (kind) rollRoleTrait(kind);
-  });
-  $('#roll-appearance').addEventListener('click', () => {
-    form.elements.appearanceDice.value = Array.from({length:5}, rollD10).join(',');
-    form.elements.appearanceTemp.value = '';
-    saveCurrent();
-  });
-  $('#randomize-physical').addEventListener('click', () => { randomizePhysicalDetails(); saveCurrent(); });
   $('#final-weapon-options').addEventListener('click', event => {
     const button = event.target.closest('button[data-starting-weapon]');
     if (!button) return;
@@ -2788,9 +2442,6 @@ import {rankBonus, rankCost, openEndedD100} from './rules.js';
   });
   form.addEventListener('submit', event => event.preventDefault());
   form.addEventListener('input', event => {
-    if (event.target.name === 'xp') syncLevelFromXp();
-    const match = /^stat-temp-(\d+)$/.exec(event.target.name || '');
-    if (match) updatePotentialStat(Number(match[1]), form.elements.potentialMethod.value === 'roll' ? rolledPotential : fixedPotential);
     showEditedCategory(event.target);
     syncA4SkillToTree(event.target);
     saveCurrent();

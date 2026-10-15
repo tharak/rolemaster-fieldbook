@@ -1,0 +1,16 @@
+{
+  "table_id": "T-1.6",
+  "title": "Adolescence Rank Table",
+  "page": 19,
+  "description": "Standard cultural skill ranks received during racial adolescence development.",
+  "cultural_skills": [
+    "Athletic Games",
+    "Body Development",
+    "Brawn",
+    "Climbing",
+    "Lores",
+    "Primary Weapon",
+    "Racial Language",
+    "Regional Culture"
+  ]
+}

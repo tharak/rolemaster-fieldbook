@@ -1,0 +1,32 @@
+{
+  "table_id": "T-3.1",
+  "title": "Battle Round Sequence Table",
+  "page": 40,
+  "description": "Defines tactical phases within a standard 10-second combat round.",
+  "phases": [
+    {
+      "phase": 1,
+      "name": "Spell Preparation Phase"
+    },
+    {
+      "phase": 2,
+      "name": "Initiative Determination Phase"
+    },
+    {
+      "phase": 3,
+      "name": "Snap Action Phase"
+    },
+    {
+      "phase": 4,
+      "name": "Normal Action Phase"
+    },
+    {
+      "phase": 5,
+      "name": "Deliberate Action Phase"
+    },
+    {
+      "phase": 6,
+      "name": "End of Round Phase"
+    }
+  ]
+}

@@ -1,0 +1,206 @@
+{
+  "table": "T-2.1 & T-1.2 & T-1.3",
+  "title": "Stat Assignment, Basic Stat Bonuses, and Potential Stats",
+  "basic_stat_bonus_table_t2_1": [
+    {
+      "stat_range": "102+",
+      "basic_bonus": 14,
+      "formula": "(Stat - 95) * 2"
+    },
+    {
+      "stat_range": "101",
+      "basic_bonus": 12,
+      "formula": "(Stat - 95) * 2"
+    },
+    {
+      "stat_range": "100",
+      "basic_bonus": 10,
+      "formula": "+10"
+    },
+    {
+      "stat_range": "98-99",
+      "basic_bonus": 8,
+      "formula": "+8"
+    },
+    {
+      "stat_range": "96-97",
+      "basic_bonus": 6,
+      "formula": "+6"
+    },
+    {
+      "stat_range": "90-95",
+      "basic_bonus": 5,
+      "formula": "+5"
+    },
+    {
+      "stat_range": "85-89",
+      "basic_bonus": 4,
+      "formula": "+4"
+    },
+    {
+      "stat_range": "80-84",
+      "basic_bonus": 3,
+      "formula": "+3"
+    },
+    {
+      "stat_range": "75-79",
+      "basic_bonus": 2,
+      "formula": "+2"
+    },
+    {
+      "stat_range": "70-74",
+      "basic_bonus": 1,
+      "formula": "+1"
+    },
+    {
+      "stat_range": "31-69",
+      "basic_bonus": 0,
+      "formula": "0"
+    },
+    {
+      "stat_range": "26-30",
+      "basic_bonus": -1,
+      "formula": "-1"
+    },
+    {
+      "stat_range": "21-25",
+      "basic_bonus": -2,
+      "formula": "-2"
+    },
+    {
+      "stat_range": "16-20",
+      "basic_bonus": -3,
+      "formula": "-3"
+    },
+    {
+      "stat_range": "11-15",
+      "basic_bonus": -4,
+      "formula": "-4"
+    },
+    {
+      "stat_range": "6-10",
+      "basic_bonus": -5,
+      "formula": "-5"
+    },
+    {
+      "stat_range": "4-5",
+      "basic_bonus": -6,
+      "formula": "-6"
+    },
+    {
+      "stat_range": "2-3",
+      "basic_bonus": -8,
+      "formula": "-8"
+    },
+    {
+      "stat_range": "1",
+      "basic_bonus": -10,
+      "formula": "-10"
+    }
+  ],
+  "stat_assignment_cost_table_t1_2": {
+    "rule": "Points required for a stat above 90 are equal to 90 + (stat_value - 90)^2.",
+    "sample_costs": [
+      {
+        "stat": 100,
+        "points": 190
+      },
+      {
+        "stat": 99,
+        "points": 171
+      },
+      {
+        "stat": 98,
+        "points": 154
+      },
+      {
+        "stat": 97,
+        "points": 139
+      },
+      {
+        "stat": 96,
+        "points": 126
+      },
+      {
+        "stat": 95,
+        "points": 115
+      },
+      {
+        "stat": 94,
+        "points": 106
+      },
+      {
+        "stat": 93,
+        "points": 99
+      },
+      {
+        "stat": 92,
+        "points": 94
+      },
+      {
+        "stat": 91,
+        "points": 91
+      },
+      {
+        "stat": "20-90",
+        "points": "Equal to stat value (e.g. 75 costs 75 points)"
+      }
+    ]
+  },
+  "potential_stat_table_t1_3": [
+    {
+      "temp_stat": "20-24",
+      "base_potential": 20,
+      "dice_roll": "8d10",
+      "mod": 44
+    },
+    {
+      "temp_stat": "25-34",
+      "base_potential": 30,
+      "dice_roll": "7d10",
+      "mod": 39
+    },
+    {
+      "temp_stat": "35-44",
+      "base_potential": 40,
+      "dice_roll": "6d10",
+      "mod": 34
+    },
+    {
+      "temp_stat": "45-54",
+      "base_potential": 50,
+      "dice_roll": "5d10",
+      "mod": 29
+    },
+    {
+      "temp_stat": "55-64",
+      "base_potential": 60,
+      "dice_roll": "4d10",
+      "mod": 24
+    },
+    {
+      "temp_stat": "65-74",
+      "base_potential": 70,
+      "dice_roll": "3d10",
+      "mod": 19
+    },
+    {
+      "temp_stat": "75-84",
+      "base_potential": 80,
+      "dice_roll": "2d10",
+      "mod": 14
+    },
+    {
+      "temp_stat": "85-94",
+      "base_potential": 90,
+      "dice_roll": "1d10",
+      "mod": 9
+    },
+    {
+      "temp_stat": "95-99",
+      "base_potential": 95,
+      "dice_roll": "1d10",
+      "mod": 4
+    }
+  ]
+}

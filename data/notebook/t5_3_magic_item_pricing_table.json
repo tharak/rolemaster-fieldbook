@@ -1,0 +1,13 @@
+{
+  "table_id": "T-5.3",
+  "title": "Magic Item Pricing Table",
+  "page": 81,
+  "description": "Base values in gold pieces for spell adders, multipliers, bonus items, and daily spell items.",
+  "sample_prices": {
+    "+1 Spell Adder": "100 gp",
+    "+2 Spell Adder": "400 gp",
+    "+10 Bonus Item": "200 gp",
+    "+20 Bonus Item": "1,000 gp",
+    "x2 Spell Multiplier": "500 gp"
+  }
+}

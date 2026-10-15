@@ -1,0 +1,152 @@
+{
+  "table": "T-2.8",
+  "title": "Standard Development Point (DP) Costs by Profession",
+  "professions": [
+    "Fighter",
+    "Thief",
+    "Rogue",
+    "Cleric",
+    "Magician",
+    "Mentalist",
+    "Ranger",
+    "Dabbler",
+    "Bard"
+  ],
+  "categories": [
+    {
+      "category": "Armor \u2022 Heavy",
+      "stats": "St/Ag/St",
+      "costs": {
+        "Fighter": "1/5",
+        "Thief": "3/9",
+        "Rogue": "2/7",
+        "Cleric": "2/6",
+        "Magician": "9",
+        "Mentalist": "9",
+        "Ranger": "2/7",
+        "Dabbler": "3/9",
+        "Bard": "3/8"
+      }
+    },
+    {
+      "category": "Armor \u2022 Light",
+      "stats": "Ag/St/Ag",
+      "costs": {
+        "Fighter": "1/3",
+        "Thief": "1/4",
+        "Rogue": "1/3",
+        "Cleric": "2/5",
+        "Magician": "6",
+        "Mentalist": "6",
+        "Ranger": "1/4",
+        "Dabbler": "1/4",
+        "Bard": "2/5"
+      }
+    },
+    {
+      "category": "Armor \u2022 Medium",
+      "stats": "St/Ag/St",
+      "costs": {
+        "Fighter": "1/4",
+        "Thief": "2/7",
+        "Rogue": "1/5",
+        "Cleric": "2/5",
+        "Magician": "7",
+        "Mentalist": "8",
+        "Ranger": "2/5",
+        "Dabbler": "2/7",
+        "Bard": "2/6"
+      }
+    },
+    {
+      "category": "Athletic \u2022 Gymnastics",
+      "stats": "Ag/Qu/Ag",
+      "costs": {
+        "Fighter": "2/7",
+        "Thief": "1/4",
+        "Rogue": "1/4",
+        "Cleric": "3/8",
+        "Magician": "4/10",
+        "Mentalist": "3/9",
+        "Ranger": "2/6",
+        "Dabbler": "2/5",
+        "Bard": "2/6"
+      }
+    },
+    {
+      "category": "Body Development",
+      "stats": "Co/SD/Co",
+      "costs": {
+        "Fighter": "2/5",
+        "Thief": "3/8",
+        "Rogue": "2/6",
+        "Cleric": "3/9",
+        "Magician": "8",
+        "Mentalist": "6",
+        "Ranger": "2/5",
+        "Dabbler": "4/10",
+        "Bard": "3/9"
+      }
+    },
+    {
+      "category": "Combat Maneuvers",
+      "stats": "Ag/Qu/SD",
+      "costs": {
+        "Fighter": "2/5",
+        "Thief": "2/6",
+        "Rogue": "2/5",
+        "Cleric": "4/10",
+        "Magician": "7",
+        "Mentalist": "6",
+        "Ranger": "2/6",
+        "Dabbler": "3/8",
+        "Bard": "3/8"
+      }
+    },
+    {
+      "category": "Subterfuge \u2022 Stealth",
+      "stats": "Ag/SD/In",
+      "costs": {
+        "Fighter": "2/7",
+        "Thief": "1/3",
+        "Rogue": "1/4",
+        "Cleric": "3/8",
+        "Magician": "5",
+        "Mentalist": "3/8",
+        "Ranger": "1/4",
+        "Dabbler": "2/5",
+        "Bard": "2/5"
+      }
+    },
+    {
+      "category": "Weapon \u2022 1-H Edged",
+      "stats": "St/Ag/St",
+      "costs": {
+        "Fighter": "2/5",
+        "Thief": "3/7",
+        "Rogue": "2/5",
+        "Cleric": "4/9",
+        "Magician": "7",
+        "Mentalist": "6",
+        "Ranger": "2/6",
+        "Dabbler": "3/7",
+        "Bard": "3/7"
+      }
+    },
+    {
+      "category": "Weapon \u2022 Missile",
+      "stats": "Ag/St/Ag",
+      "costs": {
+        "Fighter": "2/5",
+        "Thief": "2/6",
+        "Rogue": "2/5",
+        "Cleric": "5/11",
+        "Magician": "8",
+        "Mentalist": "7",
+        "Ranger": "2/4",
+        "Dabbler": "3/8",
+        "Bard": "3/8"
+      }
+    }
+  ]
+}

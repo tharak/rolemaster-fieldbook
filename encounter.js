@@ -1,6 +1,6 @@
 import './app.js';
 import {$, esc} from './dom.js';
-import {openEndedD100, parseCriticalSymbols} from './rules.js';
+import {openEndedD100, parseCriticalSymbols, rollD10 as d10, rollD100 as d100} from './rules.js';
 
 (() => {
   const storageKey = 'rolemaster-encounters-v2';
@@ -53,8 +53,6 @@ import {openEndedD100, parseCriticalSymbols} from './rules.js';
   const actor = id => roster.find(item => item.id === id);
   const selected = () => actor(state.selected);
   const token = id => state.tokens[id];
-  const d100 = () => Math.floor(Math.random()*100)+1;
-  const d10 = () => Math.floor(Math.random()*10)+1;
   function openEnded(unmodifiedExceptions = false) {
     return openEndedD100(d100, unmodifiedExceptions);
   }

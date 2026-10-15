@@ -1,0 +1,30 @@
+{
+  "table_id": "T-2.5",
+  "title": "Skill Summary Table",
+  "page": 27,
+  "description": "Comprehensive index listing all skill categories, applicable stats, progressions, and groups.",
+  "total_categories": 50,
+  "groups": [
+    "Armor",
+    "Artistic",
+    "Athletic",
+    "Awareness",
+    "Body Development",
+    "Combat Maneuvers",
+    "Communications",
+    "Crafts",
+    "Directed Spells",
+    "Influence",
+    "Lore",
+    "Martial Arts",
+    "Outdoor",
+    "Power Development",
+    "Science",
+    "Self Control",
+    "Spells",
+    "Subterfuge",
+    "Technical/Trade",
+    "Urban",
+    "Weapon"
+  ]
+}

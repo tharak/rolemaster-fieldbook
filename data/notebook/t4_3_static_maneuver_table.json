@@ -1,0 +1,14 @@
+{
+  "table_id": "T-4.3",
+  "title": "Static Maneuver Table",
+  "page": 45,
+  "description": "Outcome resolution chart for static skills (picking locks, perception, attunement, etc.).",
+  "result_categories": [
+    "Spectacular Failure",
+    "Absolute Failure",
+    "Fail",
+    "Partial Success",
+    "Success",
+    "Absolute Success"
+  ]
+}

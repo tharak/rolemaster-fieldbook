@@ -1,0 +1,231 @@
+{
+  "table_id": "T-2.7",
+  "title": "Training Package Development Point Cost Table",
+  "packages": [
+    {
+      "package": "Adventurer (L)",
+      "months": 24,
+      "costs": {
+        "Fighter": 29,
+        "Thief": 29,
+        "Rogue": 29,
+        "Magician": 34,
+        "Cleric": 32,
+        "Mentalist": 31,
+        "Ranger": 29,
+        "Dabbler": 29,
+        "Bard": 29
+      }
+    },
+    {
+      "package": "Amateur Mage (L)",
+      "months": 53,
+      "costs": {
+        "Fighter": 43,
+        "Thief": 37,
+        "Rogue": 36,
+        "Magician": 24,
+        "Cleric": 26,
+        "Mentalist": 26,
+        "Ranger": 31,
+        "Dabbler": 29,
+        "Bard": 29
+      }
+    },
+    {
+      "package": "Animal Friend (L)",
+      "months": 102,
+      "costs": {
+        "Fighter": 26,
+        "Thief": 26,
+        "Rogue": 24,
+        "Magician": 33,
+        "Cleric": 31,
+        "Mentalist": 33,
+        "Ranger": 22,
+        "Dabbler": 28,
+        "Bard": 28
+      }
+    },
+    {
+      "package": "Burglar (V)",
+      "months": 33,
+      "costs": {
+        "Fighter": 21,
+        "Thief": 16,
+        "Rogue": 19,
+        "Magician": 31,
+        "Cleric": 30,
+        "Mentalist": 29,
+        "Ranger": 26,
+        "Dabbler": 22,
+        "Bard": 25
+      }
+    },
+    {
+      "package": "City Guard (V)",
+      "months": 25,
+      "costs": {
+        "Fighter": 15,
+        "Thief": 17,
+        "Rogue": 16,
+        "Magician": 31,
+        "Cleric": 28,
+        "Mentalist": 29,
+        "Ranger": 20,
+        "Dabbler": 20,
+        "Bard": 21
+      }
+    },
+    {
+      "package": "Doctor (V)",
+      "months": 18,
+      "costs": {
+        "Fighter": 23,
+        "Thief": 23,
+        "Rogue": 23,
+        "Magician": 23,
+        "Cleric": 23,
+        "Mentalist": 23,
+        "Ranger": 23,
+        "Dabbler": 23,
+        "Bard": 23
+      }
+    },
+    {
+      "package": "Herbalist (V)",
+      "months": 33,
+      "costs": {
+        "Fighter": 23,
+        "Thief": 23,
+        "Rogue": 23,
+        "Magician": 26,
+        "Cleric": 23,
+        "Mentalist": 23,
+        "Ranger": 20,
+        "Dabbler": 23,
+        "Bard": 23
+      }
+    },
+    {
+      "package": "Hunter (L)",
+      "months": 18,
+      "costs": {
+        "Fighter": 29,
+        "Thief": 27,
+        "Rogue": 27,
+        "Magician": 36,
+        "Cleric": 32,
+        "Mentalist": 35,
+        "Ranger": 25,
+        "Dabbler": 29,
+        "Bard": 30
+      }
+    },
+    {
+      "package": "Knight (L)",
+      "months": 69,
+      "costs": {
+        "Fighter": 25,
+        "Thief": 29,
+        "Rogue": 28,
+        "Magician": 46,
+        "Cleric": 40,
+        "Mentalist": 40,
+        "Ranger": 31,
+        "Dabbler": 36,
+        "Bard": 32
+      }
+    },
+    {
+      "package": "Loremaster (V)",
+      "months": 40,
+      "costs": {
+        "Fighter": 29,
+        "Thief": 28,
+        "Rogue": 26,
+        "Magician": 19,
+        "Cleric": 20,
+        "Mentalist": 20,
+        "Ranger": 24,
+        "Dabbler": 20,
+        "Bard": 18
+      }
+    },
+    {
+      "package": "Merchant (V)",
+      "months": 23,
+      "costs": {
+        "Fighter": 25,
+        "Thief": 25,
+        "Rogue": 25,
+        "Magician": 20,
+        "Cleric": 20,
+        "Mentalist": 20,
+        "Ranger": 24,
+        "Dabbler": 21,
+        "Bard": 21
+      }
+    },
+    {
+      "package": "Performer (V)",
+      "months": 40,
+      "costs": {
+        "Fighter": 28,
+        "Thief": 28,
+        "Rogue": 28,
+        "Magician": 26,
+        "Cleric": 26,
+        "Mentalist": 26,
+        "Ranger": 28,
+        "Dabbler": 25,
+        "Bard": 16
+      }
+    },
+    {
+      "package": "Scout (V)",
+      "months": 33,
+      "costs": {
+        "Fighter": 21,
+        "Thief": 20,
+        "Rogue": 19,
+        "Magician": 31,
+        "Cleric": 28,
+        "Mentalist": 30,
+        "Ranger": 16,
+        "Dabbler": 25,
+        "Bard": 25
+      }
+    },
+    {
+      "package": "Soldier (V)",
+      "months": 26,
+      "costs": {
+        "Fighter": 15,
+        "Thief": 22,
+        "Rogue": 19,
+        "Magician": 37,
+        "Cleric": 29,
+        "Mentalist": 31,
+        "Ranger": 23,
+        "Dabbler": 28,
+        "Bard": 25
+      }
+    },
+    {
+      "package": "Traveller (V)",
+      "months": 18,
+      "costs": {
+        "Fighter": 13,
+        "Thief": 12,
+        "Rogue": 10,
+        "Magician": 20,
+        "Cleric": 18,
+        "Mentalist": 20,
+        "Ranger": 10,
+        "Dabbler": 14,
+        "Bard": 14
+      }
+    }
+  ]
+}

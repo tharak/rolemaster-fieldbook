@@ -1,0 +1,63 @@
+{
+  "table_ids": [
+    "T-4.1",
+    "T-4.2",
+    "T-4.3",
+    "T-4.4",
+    "T-4.5",
+    "T-4.6"
+  ],
+  "title": "Moving and Static Maneuver Resolution Tables",
+  "difficulty_modifiers": {
+    "Routine": "+30",
+    "Easy": "+20",
+    "Light": "+10",
+    "Medium": "+0",
+    "Hard": "-10",
+    "Very Hard": "-20",
+    "Extremely Hard": "-30",
+    "Sheer Folly": "-50",
+    "Absurd": "-70"
+  },
+  "static_maneuver_table_t4_3": [
+    {
+      "range": "-26 down",
+      "result": "Spectacular Failure",
+      "description": "-20 modification to next 2 actions"
+    },
+    {
+      "range": "-25 to 04",
+      "result": "Absolute Failure",
+      "description": "Remarkable failure"
+    },
+    {
+      "range": "05 to 75",
+      "result": "Failure",
+      "description": "Maneuver fails"
+    },
+    {
+      "range": "76 to 90",
+      "result": "Partial Success",
+      "description": "50% success or minor progress"
+    },
+    {
+      "range": "91 to 110",
+      "result": "Near Success",
+      "description": "80% success or minor setback"
+    },
+    {
+      "range": "111 to 175",
+      "result": "Success",
+      "description": "100% complete success"
+    },
+    {
+      "range": "176 up",
+      "result": "Absolute Success",
+      "description": "120% success with additional bonuses"
+    }
+  ],
+  "unmodified_roll_exceptions": {
+    "66": "Immediate special failure/success result without modifications",
+    "100": "Immediate special success without open-ended re-roll"
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "table_id": "T-2.4",
+  "title": "Spell List DP Cost Table",
+  "page": 103,
+  "description": "Development point cost matrix for learning spell lists by Realm and Profession type.",
+  "costs_by_type": {
+    "Own Base Lists": {
+      "Pure": "3/3/3",
+      "Semi": "6/6/6",
+      "Non-Spell": "N/A"
+    },
+    "Open Lists (1-5)": {
+      "Pure": "4/4/4",
+      "Semi": "8/8",
+      "Fighter": 25,
+      "Thief": 18,
+      "Rogue": 15
+    },
+    "Closed Lists (1-5)": {
+      "Pure": "4/4/4",
+      "Semi": "10/10",
+      "Fighter": 40,
+      "Thief": 35,
+      "Rogue": 25
+    }
+  }
+}

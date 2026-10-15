@@ -1,0 +1,92 @@
+{
+  "table_id": "T-2.1",
+  "title": "Basic Stat Bonus Table",
+  "page": 17,
+  "description": "Derives basic stat bonuses from temporary stat values.",
+  "bonus_mapping": [
+    {
+      "stat_range": "100",
+      "bonus": 10
+    },
+    {
+      "stat_range": "98-99",
+      "bonus": 9
+    },
+    {
+      "stat_range": "96-97",
+      "bonus": 8
+    },
+    {
+      "stat_range": "93-95",
+      "bonus": 7
+    },
+    {
+      "stat_range": "89-92",
+      "bonus": 6
+    },
+    {
+      "stat_range": "85-88",
+      "bonus": 5
+    },
+    {
+      "stat_range": "81-84",
+      "bonus": 4
+    },
+    {
+      "stat_range": "77-80",
+      "bonus": 3
+    },
+    {
+      "stat_range": "73-76",
+      "bonus": 2
+    },
+    {
+      "stat_range": "69-72",
+      "bonus": 1
+    },
+    {
+      "stat_range": "33-68",
+      "bonus": 0
+    },
+    {
+      "stat_range": "29-32",
+      "bonus": -1
+    },
+    {
+      "stat_range": "25-28",
+      "bonus": -2
+    },
+    {
+      "stat_range": "21-24",
+      "bonus": -3
+    },
+    {
+      "stat_range": "17-20",
+      "bonus": -4
+    },
+    {
+      "stat_range": "13-16",
+      "bonus": -5
+    },
+    {
+      "stat_range": "9-12",
+      "bonus": -6
+    },
+    {
+      "stat_range": "5-8",
+      "bonus": -7
+    },
+    {
+      "stat_range": "3-4",
+      "bonus": -8
+    },
+    {
+      "stat_range": "2",
+      "bonus": -9
+    },
+    {
+      "stat_range": "1",
+      "bonus": -10
+    }
+  ]
+}

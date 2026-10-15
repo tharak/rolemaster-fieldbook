@@ -1,0 +1,16 @@
+{
+  "table_id": "T-1.7",
+  "title": "Random Role Trait Table",
+  "page": 29,
+  "description": "Personality traits, motivations, physical appearance percentile rolls, and alignments.",
+  "appearance_range": "1 to 100 percentile score",
+  "sample_traits": [
+    "Stoic",
+    "Devout",
+    "Idealistic",
+    "Proud",
+    "Cautious",
+    "Reckless",
+    "Curious"
+  ]
+}

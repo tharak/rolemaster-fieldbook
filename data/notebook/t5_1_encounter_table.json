@@ -1,0 +1,12 @@
+{
+  "table_id": "T-5.1",
+  "title": "Encounter Table",
+  "page": 68,
+  "description": "Strategic encounter probability determination based on activity vs avoidance rolls and population density.",
+  "population_densities": [
+    "Deserted",
+    "Rural",
+    "Populated",
+    "Urban"
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "table_id": "T-3.2",
+  "title": "Common Actions Table",
+  "page": 39,
+  "description": "Percentage activity costs for standard combat and movement actions.",
+  "action_costs": {
+    "Melee Attack": "50% to 100%",
+    "Missile Fire": "50% to 100%",
+    "Spell Casting": "100%",
+    "Movement": "varies by pace",
+    "Draw Weapon": "20%",
+    "Mount/Dismount": "50%",
+    "Change Stance": "10%"
+  }
+}

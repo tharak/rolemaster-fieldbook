@@ -10,6 +10,7 @@
   <link rel="stylesheet" href="styles.css">
   <link rel="stylesheet" href="enhancements.css">
   <link rel="stylesheet" href="refresh.css">
+  <link rel="stylesheet" href="coliseum.css">
 </head>
 <body>
   <header class="topbar">
@@ -17,6 +18,7 @@
     <nav aria-label="Main navigation">
       <button class="nav-link" data-view="home">Characters <span id="character-count">0</span></button>
       <button class="nav-link active" data-view="encounter">Encounters</button>
+      <button class="nav-link" data-view="coliseum">Coliseum</button>
       <button class="nav-link" data-view="tables">Tables</button>
     </nav>
   </header>
@@ -333,6 +335,21 @@
       </div>
       <dialog id="encounter-target-dialog" class="encounter-dialog" aria-labelledby="encounter-target-title"><div class="encounter-dialog-heading"><div><h2 id="encounter-target-title">Choose target</h2><p id="encounter-target-note"></p></div><button type="button" data-close-encounter-dialog="encounter-target-dialog" aria-label="Close target picker">×</button></div><div id="encounter-target-options"></div></dialog>
       <dialog id="encounter-table-dialog" class="encounter-dialog encounter-table-dialog" aria-labelledby="encounter-table-title"><div class="encounter-dialog-heading"><div><h2 id="encounter-table-title">Table</h2><p id="encounter-table-code"></p></div><button type="button" data-close-encounter-dialog="encounter-table-dialog" aria-label="Close table">×</button></div><div id="encounter-table-content"></div></dialog>
+    </section>
+
+    <section id="coliseum-view" class="view" aria-labelledby="coliseum-title">
+      <div class="coliseum-shell">
+        <header class="coliseum-heading"><div><p class="play-eyebrow">A-8 · Creatures</p><h1 id="coliseum-title">Coliseum</h1><p>Choose two creatures. Watch the dice decide.</p><p>A simplified duel: hits decide victory. Special abilities and narrative injuries need GM review.</p></div><span class="coliseum-badge">The arena</span></header>
+        <div class="coliseum-pickers">
+          <section class="coliseum-picker"><label for="coliseum-search-left">Find the first contender</label><input id="coliseum-search-left" type="search" placeholder="Wolf, dragon, giant…"><label for="coliseum-select-left">First contender</label><select id="coliseum-select-left" disabled></select><p id="coliseum-match-left" class="play-muted"></p></section>
+          <section class="coliseum-picker"><label for="coliseum-search-right">Find the second contender</label><input id="coliseum-search-right" type="search" placeholder="Tiger, troll, bear…"><label for="coliseum-select-right">Second contender</label><select id="coliseum-select-right" disabled></select><p id="coliseum-match-right" class="play-muted"></p></section>
+        </div>
+        <div class="coliseum-arena"><article id="coliseum-fighter-left" class="coliseum-fighter"></article><div class="coliseum-center"><span aria-hidden="true">⚔</span><strong id="coliseum-round">Ready</strong><small>10 seconds per round</small></div><article id="coliseum-fighter-right" class="coliseum-fighter"></article></div>
+        <div class="coliseum-controls"><button type="button" id="coliseum-simulate" class="button button-dark" disabled>Simulate fight</button><button type="button" id="coliseum-step" class="button button-quiet" disabled>Next round</button><button type="button" id="coliseum-pause" class="button button-quiet" hidden>Pause</button><button type="button" id="coliseum-reset" class="button button-quiet" disabled>New fight</button></div>
+        <p id="coliseum-status" class="coliseum-status" role="status" aria-live="polite">Loading creatures…</p><button type="button" id="coliseum-retry" class="button button-quiet" hidden>Retry loading</button>
+        <details class="coliseum-rules"><summary>Arena rules</summary><p>A duel at melee range with no movement or parrying. Victory goes to the last creature with hits remaining; a fight ends in a draw after 200 rounds. Attack percentages, same-round and next-round follow-ups, attack size limits, armor, DB, open-ended d100, and large-creature critical resistance come from the tables.</p><p>Initiative is 2d10 plus an arena speed adjustment from Attack Quickness (CR −8, VS −6, SL −4, MD 0, MF +2, FA +4, VF +6, BF +8). Weapon attacks use a normal one-handed edged weapon. Numeric critical hits, bleeding, stun, forced parry, penalties, and bonuses are applied from the next round. Additional hits apply immediately. Narrative injuries or death, equipment-dependent critical branches, optional attacks, group attacks, poison, spells, regeneration, flight, and environmental abilities are shown in the log or creature notes but are not simulated.</p></details>
+        <section class="coliseum-log-card" aria-labelledby="coliseum-log-title"><div class="coliseum-log-heading"><h2 id="coliseum-log-title">Combat log</h2><span>Latest round first</span></div><div id="coliseum-log"><p class="play-muted">The gates are open. Choose your contenders.</p></div></section>
+      </div>
     </section>
 
     <section id="tables-view" class="view">

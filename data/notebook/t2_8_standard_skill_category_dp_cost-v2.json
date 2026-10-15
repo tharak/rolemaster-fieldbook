@@ -1,0 +1,17 @@
+{
+  "table_id": "T-2.8",
+  "title": "Standard Skill Category Development Point Cost Table",
+  "page": 23,
+  "description": "DP costs per rank for all skill categories across the 9 core professions.",
+  "sample_professions": [
+    "Fighter",
+    "Thief",
+    "Rogue",
+    "Cleric",
+    "Magician",
+    "Mentalist",
+    "Ranger",
+    "Dabbler",
+    "Bard"
+  ]
+}

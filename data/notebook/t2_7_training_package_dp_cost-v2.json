@@ -1,0 +1,23 @@
+{
+  "table_id": "T-2.7",
+  "title": "Training Package DP Cost Table",
+  "page": 25,
+  "description": "Development point costs and acquisition times for all 15 Training Packages across professions.",
+  "packages": [
+    "Adventurer",
+    "Amateur Mage",
+    "Animal Friend",
+    "Burglar",
+    "City Guard",
+    "Doctor",
+    "Herbalist",
+    "Hunter",
+    "Knight",
+    "Loremaster",
+    "Merchant",
+    "Performer",
+    "Scout",
+    "Soldier",
+    "Traveller"
+  ]
+}

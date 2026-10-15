@@ -1,0 +1,195 @@
+{
+  "appendix": "A-7",
+  "title": "Equipment, Weapons, Herbs, and Poisons",
+  "weapon_chart_sample": [
+    {
+      "id": 500,
+      "item": "Axe",
+      "code": "ax",
+      "cost": "2sp",
+      "type": "1he",
+      "time": "1 day",
+      "weight": "4-6 lbs.",
+      "breakage": "1-7",
+      "strength": "56-64(w)",
+      "fumble": "01-04"
+    },
+    {
+      "id": 501,
+      "item": "Bastard Sword",
+      "code": "bd",
+      "cost": "20sp",
+      "type": "1he/2h",
+      "time": "45 days",
+      "weight": "4-6 lbs.",
+      "breakage": "1-4/1-5",
+      "strength": "68-82",
+      "fumble": "01-04/05"
+    },
+    {
+      "id": 502,
+      "item": "Battle Axe",
+      "code": "ba",
+      "cost": "13sp",
+      "type": "2h",
+      "time": "2 days",
+      "weight": "5-9 lbs.",
+      "breakage": "1-8",
+      "strength": "65-75(w)",
+      "fumble": "01-05"
+    },
+    {
+      "id": 511,
+      "item": "Composite Bow",
+      "code": "cb",
+      "cost": "17sp",
+      "type": "mis",
+      "time": "14 days",
+      "weight": "2-3 lbs.",
+      "breakage": "-",
+      "strength": "-",
+      "fumble": "01-04"
+    },
+    {
+      "id": 517,
+      "item": "Dagger",
+      "code": "da",
+      "cost": "3sp",
+      "type": "1he/th",
+      "time": "1 day",
+      "weight": "0.75 lbs.",
+      "breakage": "1-6",
+      "strength": "74-86",
+      "fumble": "01"
+    },
+    {
+      "id": 532,
+      "item": "Long Sword",
+      "code": "ls",
+      "cost": "18sp",
+      "type": "1he",
+      "time": "4 days",
+      "weight": "3.5-8 lbs.",
+      "breakage": "1-6",
+      "strength": "64-76",
+      "fumble": "01-04"
+    },
+    {
+      "id": 542,
+      "item": "Quarterstaff",
+      "code": "qs",
+      "cost": "5cp",
+      "type": "2h",
+      "time": "1 day",
+      "weight": "3-5 lbs.",
+      "breakage": "1-7",
+      "strength": "66-74(w)",
+      "fumble": "01-03"
+    },
+    {
+      "id": 551,
+      "item": "Spear",
+      "code": "sp",
+      "cost": "23bp",
+      "type": "pa/th",
+      "time": "1 day",
+      "weight": "3-8 lbs.",
+      "breakage": "1-5",
+      "strength": "38-42(w)",
+      "fumble": "01-05"
+    },
+    {
+      "id": 555,
+      "item": "Two-Handed Sword",
+      "code": "ts",
+      "cost": "20sp",
+      "type": "2h",
+      "time": "5 days",
+      "weight": "5-12 lbs.",
+      "breakage": "1-8",
+      "strength": "69-81",
+      "fumble": "01-05"
+    }
+  ],
+  "herb_chart_sample": [
+    {
+      "id": 610,
+      "name": "Arfandas",
+      "category": "Bone Repair",
+      "code": "c-F-6",
+      "prep": "Stem/apply",
+      "cost": "2sp",
+      "af": 1,
+      "effect": "Doubles rate of healing for fractures."
+    },
+    {
+      "file": 622,
+      "name": "Culkas",
+      "category": "Burn & Exposure",
+      "code": "a-Z-4",
+      "prep": "Leaf/apply",
+      "cost": "35gp",
+      "af": 0,
+      "effect": "Heals 10 square feet of burns."
+    },
+    {
+      "id": 631,
+      "name": "Fek",
+      "category": "Circulatory Repair",
+      "code": "h-O-6",
+      "prep": "Nut/brew",
+      "cost": "50gp",
+      "af": 5,
+      "effect": "Stops any bleeding."
+    },
+    {
+      "id": 642,
+      "name": "Cusamar",
+      "category": "Concussion Relief",
+      "code": "c-H-7",
+      "prep": "Flower/ingest",
+      "cost": "30gp",
+      "af": 3,
+      "effect": "Heals 15-60 (10 + 5d10) hits."
+    },
+    {
+      "id": 750,
+      "name": "Alshanak",
+      "category": "Enchanted Breads",
+      "code": "t-T-2",
+      "prep": "Bread/ingest",
+      "cost": "35gp",
+      "af": 5,
+      "effect": "Infravision up to 50' for 1 hour per 4 oz slice."
+    }
+  ],
+  "poison_chart_sample": [
+    {
+      "id": 901,
+      "name": "Jeggarukh",
+      "code": "m-U-5",
+      "prep": "Bats/powder",
+      "cost": "71gp",
+      "af": 3,
+      "effect": "Level 6 poison. Black powder gives 10-100 hits."
+    },
+    {
+      "id": 915,
+      "name": "Taynaga",
+      "code": "c-C-5",
+      "prep": "Bark/powder",
+      "cost": "27gp",
+      "af": 0,
+      "effect": "Level 8 poison. Brownish powder sterilizes and gives 5-50 hits."
+    },
+    {
+      "id": 945,
+      "name": "Zaganzar",
+      "code": "t-M-6",
+      "prep": "Root/liquid",
+      "cost": "139gp",
+      "af": 0,
+      "effect": "Level 5 poison. Bluish extract blinds optic nerve; gives 1-10 hits."
+    }
+  ]
+}

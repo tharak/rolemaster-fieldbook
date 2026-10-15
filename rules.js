@@ -65,3 +65,15 @@ export function parseCriticalSymbols(raw) {
   take(/(\d*)\(\s*\+\s*(\d+)\s*\)/g, (_, rounds, amount) => effects.push({kind:'bonus', amount:Number(amount), roundsLeft:Number(rounds) || 1}));
   return effects;
 }
+
+export function rollD10() { return Math.floor(Math.random() * 10) + 1; }
+export function rollD100() { return Math.floor(Math.random() * 100) + 1; }
+export function rollOpenEndedD10() {
+  const rolls = [];
+  let roll;
+  do { roll = rollD10(); rolls.push(roll); } while (roll === 10);
+  return {rolls, total:rolls.reduce((sum, value) => sum + (value === 10 ? 9 : value), 0)};
+}
+export function formatRolls(rolls) {
+  return (rolls || []).map((value, index) => index === 0 ? String(value) : value < 0 ? ` − ${-value}` : ` + ${value}`).join('');
+}

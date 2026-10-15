@@ -6,8 +6,7 @@ UI, localStorage and reference data remain JavaScript. No backend or CDN is requ
 ## Startup and contract
 
 index.html loads browser-startup.js. It awaits initializeRankBonusEngine in rules.js,
-then imports encounter.js; app.js runs after engine selection. The local optional
-Coliseum module loads only when its view exists; that unpublished feature is not included.
+then imports encounter.js and coliseum.js; their shared app.js runs after engine selection.
 Consumers retain the synchronous rankBonus API. The wrapper preserves Number coercion
 and strict progression string matching. rankBonusJavaScript remains the original oracle.
 Rust implements all five progressions, negative/NaN normalization, zero penalties,
@@ -79,13 +78,7 @@ Verified command on this machine:
 
     PLAYWRIGHT_MODULE=/home/tharak/.npm-global/lib/node_modules/openclaw/node_modules/playwright-core/index.mjs CHROMIUM_PATH=/home/tharak/.cache/ms-playwright/chromium-1248/chrome-linux64/chrome node tests/wasm-browser.mjs
 
-Working-tree validation before publication (2026-10-14 America/Sao_Paulo):
-These results include preexisting, unpublished local features. They are not all part
-of the isolated release. The release was separately checked: 9/9 Node tests (six
-existing plus three engine tests), 2/2 Rust tests, 3,010 parity cases, release build
-and the real-browser root/subpath/failure/delay acceptance runner. Optional local
-character/Coliseum smoke scripts are absent from the release and explicitly reported
-as unavailable; they are not falsely counted as passing release tests.
+Results (2026-10-14 America/Sao_Paulo):
 
 - npm test: 29/29 (26 original + three initialization/fallback tests).
 - Rust tests: 2/2; fmt, check and Clippy passed; native parity 3,010/3,010.
@@ -103,10 +96,11 @@ as unavailable; they are not falsely counted as passing release tests.
 
 ## Scope and next slices
 
-Existing user changes were preserved in the original working tree. The release was
-assembled in an isolated worktree from the published baseline, with only integration
-hunks and new startup/build/test/assets files. Unrelated character/Coliseum changes
-were deliberately excluded; no original application or deployment config was replaced. Only rank bonuses migrated.
+The initial Rust integration was published separately from an isolated worktree.
+This revision also includes the character modules, Coliseum, and their regression
+checks. Only rank bonuses have migrated to Rust; other application rules remain
+JavaScript. No deployment configuration was changed.
 Potential next slices: rankCost and deterministic dice/character formulas, each gated by
-parity and browser checks. No speed improvement is claimed. Verified locally in Chromium,
-not published to live Pages or tested in every browser. A custom CSP must permit Wasm.
+parity and browser checks. No speed improvement is claimed. Verified locally in Chromium;
+other browsers and the live Pages deployment require separate validation. A custom CSP
+must permit Wasm.

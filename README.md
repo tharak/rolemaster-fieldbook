@@ -4,15 +4,37 @@ A static Rolemaster FRP companion for character creation and table lookup. It ru
 
 ## Run locally
 
-Serve this folder with any static web server and open its root URL. Browser storage and reference-data loading do not work reliably from a `file://` URL. No build step or package install is needed.
+Serve this folder with any static web server and open its root URL. Browser storage and reference-data loading do not work reliably from a `file://` URL. No build step or package install is needed to serve the included assets. Skill rank bonuses use the bundled Rust/WebAssembly core, with a visibly labeled JavaScript fallback if it cannot load. See [Rust build and browser checks](rust/README.md) when changing the core.
 
 ## Check rules
 
-Run `node tests/rules.test.mjs` and `node tests/encounter-roster.test.mjs` to check open-ended rolls, rank bonuses, development point costs, critical effect symbols, and the encounter actor projection. No package install is needed.
+Run `npm test` to check dice, stats, skill classifications, spell development costs, XP progression, character record decoding, the encounter actor projection, and Coliseum duels. No package install is needed. The package metadata configures ES modules, the built-in Node test runner, and the optional Wasm rebuild command.
+
+For browser checks, serve the site locally, open it with Playwright CLI, and run `playwright-cli run-code --filename tests/browser-smoke.js`. The script creates its own browser context and checks table loading races, character creation, role rolls, saving, XP awards and undo, and level advancement.
+
+Run `playwright-cli run-code --filename tests/coliseum-browser-smoke.js` for creature search, failed-loading recovery, stepping, pause/resume, full fights, choice persistence, and mobile layout checks.
 
 ## JavaScript layout
 
-The browser loads `encounter.js` as an ES module. It imports `app.js` first, so the character roster is available when encounters start. Both views import `rules.js` and `dom.js`. `app-data.js` holds the Core Rules catalogs and character creation constants; `character-form.js` converts between the sheet and saved records; `encounter-roster.js` prepares saved characters for encounters; and `table-browser.js` owns table search, loading, and lookup UI. `app.js` still contains character creation, development, play, and event wiring. All imports use relative paths and work on a static server without a build step.
+The browser loads `browser-startup.js`, awaits the Rust/WebAssembly rank engine (or an explicitly labeled JavaScript fallback), then loads `encounter.js` and `coliseum.js`. They import `app.js` first, so the character roster is available when encounters start. All imports use relative paths and work on a static server without a build step.
+
+| Module | Responsibility |
+| --- | --- |
+| `rules.js` | Dice, rank progressions, and critical symbols |
+| `character-rules.js` | Stat, skill, spell development, and XP formulas |
+| `character-record.js` | Decode and validate structured saved fields |
+| `stat-sheet.js` | Stat inputs, potential assignment, and resistance outputs |
+| `character-role.js` | Role traits, appearance, and physical details |
+| `character-advancement.js` | XP awards, undo, level advancement, and history |
+| `character-form.js` | Convert between the sheet and saved records |
+| `encounter-roster.js` | Project saved characters into encounter actors |
+| `table-browser.js` | Table search, lazy loading, and lookup UI |
+| `app-data.js` | Core Rules catalogs and character creation constants |
+| `dom.js` | Shared DOM selection and escaping |
+| `coliseum-rules.js` | Creature attack parsing, table lookup, and pure duel simulation |
+| `coliseum.js` | Creature selection, arena controls, health, and combat log |
+
+`app.js` connects these features to character creation, skill development, equipment, and the play view.
 
 ## Publish with GitHub Pages
 
@@ -27,6 +49,14 @@ The Encounters page opens by default and lists saved encounters. Each encounter 
 ## Table source files
 
 Each file in `tables/` is one table or chart. `tables/index.json` provides the searchable page index. Reference JSON contains cropped text from the printed table, with its spacing preserved so columns remain aligned. To regenerate the extracted data from the included PDF, install Poppler's `pdftotext` and run `node scripts/extract-development-costs.mjs`, `node scripts/extract-attack-tables.mjs`, `python3 scripts/extract-critical-tables.py`, and `node scripts/extract-book-tables.mjs` in that order. The last command refreshes only the other reference files and the index; it leaves attack and critical JSON untouched.
+
+## Coliseum
+
+Open **Coliseum** to choose any two of the 130 monsters and animals from A-8. Search each contender by name, play one round at a time, or simulate until one falls. Pause and continue a fight, inspect previous rounds, or reset for a rematch. Creature choices persist in local storage independently of characters and encounters. Combat state is temporary and resets on page reload.
+
+`tables/creatures.json` is the structured companion to the existing `chart-animal-monster.json`. It preserves the monster and animal charts as arrays with `name`, `size`, `hits`, `armor_type`, `defensive_bonus`, `speed_ms_aq`, `level`, three attack notation fields, and `special` notes. Stable creature IDs use the chart group and row index; preserve row order when editing this file.
+
+The arena uses attack percentages (including Both), critical-triggered follow-ups, natural attack size caps, armor and DB, unmodified fumbles, open-ended d100, and normal physical criticals against large and super-large creatures. It applies numeric critical hits, bleeding, stun, forced parry, penalties, and bonuses. Initiative uses a documented arena adjustment from Attack Quickness, and weapon attacks assume a normal one-handed edged weapon. Hits determine victory, with a 200-round draw limit. It does not automate narrative injuries/death, equipment-dependent critical branches, optional/group attacks, special abilities, movement, or parrying. These limits are also shown under **Arena rules** in the game.
 
 ## Current scope
 
