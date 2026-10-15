@@ -86,7 +86,7 @@ try {
     assert.match(await page.locator('#rules-engine-status').textContent(), /Rust.*WebAssembly/);
     console.log(JSON.stringify({prefix, proof, wasmResponses, pageErrors:errors.length}));
     if (prefix === '/rolemaster/') {
-      for (const filename of ['browser-smoke.js', 'coliseum-browser-smoke.js', 'coliseum-timeline-browser-smoke.js', 'coliseum-emoji-browser-smoke.js', 'critical-presentation-browser-smoke.js', 'critical-review-browser-smoke.js', 'critical-semantics-browser-smoke.js', 'critical-recoil-browser-smoke.js', 'critical-stun-browser-smoke.js']) {
+      for (const filename of ['browser-smoke.js', 'coliseum-browser-smoke.js', 'coliseum-timeline-browser-smoke.js', 'coliseum-emoji-browser-smoke.js', 'critical-presentation-browser-smoke.js', 'critical-review-browser-smoke.js', 'critical-semantics-browser-smoke.js', 'critical-recoil-browser-smoke.js', 'critical-stun-browser-smoke.js', 'rust-components-browser-smoke.js']) {
         const sourceUrl = new URL(filename, import.meta.url);
         try { await access(sourceUrl); } catch (error) {
           if (error.code !== 'ENOENT') throw error;
@@ -120,9 +120,16 @@ try {
     await page.waitForFunction(() => document.documentElement.dataset.appReady === 'true');
     const result = await page.evaluate(async () => {
       const rules = await import('./rules.js');
-      return {statStatus:rules.basicStatBonusEngineStatus(), stat:rules.basicStatBonus(99), status:rules.rankBonusEngineStatus(), costStatus:rules.rankCostEngineStatus(), cost:rules.rankCost([2,4,6],2), value:rules.rankBonus(21, 'combined'), roster:typeof window.RolemasterEncounter?.roster};
+      const components=await import('./rust-components.js'),clock=await import('./critical-stun.js'),ui=await import('./critical-presentation.js');
+      const effects=clock.expireCriticalEffects([{kind:'stun',roundsLeft:2},{kind:'stunNoParry',roundsLeft:1}],1,'starts');
+      const markup=ui.formatCriticalEffect('+10H');
+      return {components:components.rustComponentStatus(),effects,markup,statStatus:rules.basicStatBonusEngineStatus(), stat:rules.basicStatBonus(99), status:rules.rankBonusEngineStatus(), costStatus:rules.rankCostEngineStatus(), cost:rules.rankCost([2,4,6],2), value:rules.rankBonus(21, 'combined'), roster:typeof window.RolemasterEncounter?.roster};
     });
     assert.equal(result.status.backend, mode === 'missing' ? 'javascript' : 'wasm');
+    assert.equal(result.components.backend, mode === 'missing' ? 'javascript' : 'wasm');
+    assert.equal(result.components.ruleCalls, mode === 'missing' ? 0 : 1);
+    assert.deepEqual(result.effects,[{kind:'stun',roundsLeft:2}]);
+    assert.equal(result.markup,'<strong class="critical-token">Extra hits: 10</strong> ');
     assert.equal(result.stat, 9);
     assert.equal(result.statStatus.backend, mode === 'missing' ? 'javascript' : 'wasm');
     await page.locator('[name="stat-temp-0"]').evaluate(input => {

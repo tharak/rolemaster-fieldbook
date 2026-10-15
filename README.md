@@ -71,8 +71,10 @@ Each contender has equipment checkboxes that default unchecked, persist per side
 
 Character creation uses a single editable page modeled on Character Record Sheet T-6.1 in the Core Rules. It groups identity, defense, resistance rolls, role traits, and background on the left, with stats, skills, attacks, equipment, hits, and power points on the right. Existing characters remain in browser storage. The sheet can roll a 10d10 stat pool, check stat assignment costs and prime stats, calculate stat and resistance bonuses, and track apprenticeship development point costs. The remaining sheet entries are recorded manually for now.
 
-## Rust/WebAssembly rank bonuses
+## Rust migration and reusable rules
 
-The browser initializes the bundled Rust/Wasm rank engine before loading the application. Failure or timeout uses a visibly labeled JavaScript fallback. Static hosting and project subpaths remain supported. See [build and validation instructions](rust/README.md). Publish wasm/ assets with the site; no Rust installation is required on the host.
+The Rust workspace now separates reusable game mechanics, Rolemaster rules, UI components and the browser adapter. The website uses Rust for numeric character rules, critical-effect timing and critical-effect rendering. The remaining UI and combat logic are being migrated incrementally; see [current scope and library reuse](RUST-MIGRATION.md).
+
+The browser initializes the bundled Rust/Wasm engine before loading the application. Failure or timeout uses a visibly labeled JavaScript fallback. Static hosting and project subpaths remain supported. See [build instructions](rust/README.md). Publish wasm/ assets with the site; no Rust installation is required on the host.
 
 Critical source review and remaining notation decisions are documented in [CRITICAL-AUDIT.md](CRITICAL-AUDIT.md). Encounters apply explicit recoil distances immediately: away from the attacker for direct attacks, or away from the chosen center for area spells. Bolt/ball actions can select their critical type to resolve those effects; leaving the choice blank retains manual critical resolution.

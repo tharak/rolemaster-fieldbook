@@ -1,6 +1,7 @@
 import {esc} from './dom.js';
 import {criticalDuration} from './critical-duration.js';
 import {criticalDeath,criticalDeathLabel} from './critical-death.js';
+import {rustCriticalToken} from './rust-components.js';
 const preferenceKey = 'rolemaster-coliseum-emojis-v1';
 let emojis = false;
 try { emojis = localStorage.getItem(preferenceKey) === 'true'; } catch { /* Symbols/text by default. */ }
@@ -71,9 +72,12 @@ export function criticalTokens(raw, context = '') {
   return result;
 }
 export function formatCriticalEffect(raw, emojiMode = emojis, context = '') {
-  return criticalTokens(raw,context).map(token => token.text !== undefined ? esc(token.text) : token.initiative ? '<strong class="critical-initiative">'+esc(token.label)+'</strong>' : emojiMode
-    ? '<span class="critical-token" role="img" aria-label="'+esc(token.label)+'" title="'+esc(token.label)+'">'+token.emoji+' <strong>'+esc(token.label.slice(token.label.indexOf(':')+1).trim())+'</strong></span> '
-    : '<strong class="critical-token">'+esc(token.label)+'</strong> ').join('');
+  return criticalTokens(raw,context).map(token=>token.text!==undefined?esc(token.text):rustCriticalToken(token.label,token.emoji||'',token.initiative?2:emojiMode?1:0)??criticalTokenJavaScript(token,emojiMode)).join('');
+}
+export function criticalTokenJavaScript(token,emojiMode) {
+  return token.initiative ? '<strong class="critical-initiative">'+esc(token.label)+'</strong>' : emojiMode
+    ? '<span class="critical-token" role="img" aria-label="'+esc(token.label)+'" title="'+esc(token.label)+'">'+esc(token.emoji||'')+' <strong>'+esc(token.label.slice(token.label.indexOf(':')+1).trim())+'</strong></span> '
+    : '<strong class="critical-token">'+esc(token.label)+'</strong> ';
 }
 export function criticalEffectMarkup(raw, context = '') {
   return '<span data-critical-raw="'+esc(raw)+'" data-critical-context="'+esc(context)+'">'+formatCriticalEffect(raw,emojis,context)+'</span>';

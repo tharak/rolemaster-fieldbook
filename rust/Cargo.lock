@@ -15,6 +15,14 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "4e7648175b45a9a48536d676f68d918270699102aa8dab5496df06904c914600"
 
 [[package]]
+name = "fieldbook-ui"
+version = "0.1.0"
+
+[[package]]
+name = "game-rules"
+version = "0.1.0"
+
+[[package]]
 name = "once_cell"
 version = "1.21.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -42,7 +50,16 @@ dependencies = [
 name = "rolemaster-core"
 version = "0.1.0"
 dependencies = [
+ "fieldbook-ui",
+ "rolemaster-rules",
  "wasm-bindgen",
+]
+
+[[package]]
+name = "rolemaster-rules"
+version = "0.1.0"
+dependencies = [
+ "game-rules",
 ]
 
 [[package]]

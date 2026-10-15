@@ -2,6 +2,7 @@ import {criticalDurationFields} from './critical-duration.js';
 import {hasCriticalInitiative} from './critical-initiative.js';
 import {criticalDeath} from './critical-death.js';
 import {criticalRecoils} from './critical-recoil.js';
+import {installRustComponents} from './rust-components.js';
 // Shared synchronous rules; browser startup awaits the optional Rust engine.
 let rustRankBonus = null;
 let rustRankCost = null;
@@ -41,6 +42,7 @@ export function initializeRankBonusEngine({load = () => import('./wasm/rolemaste
       if (binding.rank_bonus_wasm(21, 'combined') !== 82) throw new Error('Wasm self-check failed');
       if (binding.rank_cost_wasm(new Float64Array([2, 4, 6]), 2.9) !== 6) throw new Error('Wasm rank cost self-check failed');
       if (binding.basic_stat_bonus_wasm(100) !== 10 || binding.basic_stat_bonus_wasm(99) !== 9) throw new Error('Wasm basic stat bonus self-check failed');
+      installRustComponents(binding);
       rustRankBonus = binding.rank_bonus_wasm;
       rustRankCost = binding.rank_cost_wasm;
       rustBasicStatBonus = binding.basic_stat_bonus_wasm;

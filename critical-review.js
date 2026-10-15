@@ -1,6 +1,8 @@
 import {$,esc} from './dom.js';
 import {criticalReferences,reviewTable,reviewReasons} from './critical-review-rules.js';
 import {criticalEffectMarkup,useEmojis,setUseEmojis} from './critical-presentation.js';
+import {initializeRankBonusEngine} from './rules.js';
+await initializeRankBonusEngine();
 let reviews=[];
 const tableSelect=$('#review-table'), status=$('#review-status');
 $('#review-emojis').checked=useEmojis();

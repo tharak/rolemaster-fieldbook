@@ -1,5 +1,12 @@
 # Rust rules — browser integration
 
+Current architecture and migration scope are documented in
+[RUST-MIGRATION.md](../RUST-MIGRATION.md). Rules, generic mechanics, UI and Wasm
+bindings now live in separate crates. Run native test/check/Clippy commands with
+`--workspace` and formatting with `--all` to include every crate.
+The first new browser slice uses Rust for critical effect timing and rendering.
+The numeric-slice notes below record the earlier rollout and its evidence.
+
 The numeric basic stat bonus slice is now integrated locally; see
 [scope, inherited Git state and current verification](BASIC-STAT-BONUS.md).
 The older first-slice results and scope notes below are historical.

@@ -3,6 +3,10 @@
 
 export function basic_stat_bonus_wasm(value: number): number;
 
+export function critical_effect_rounds_wasm(rounds: Float64Array, starts: Float64Array, priorities: Uint8Array, completed: number): Float64Array;
+
+export function critical_token_wasm(label: string, emoji: string, mode: number): string;
+
 export function rank_bonus_wasm(ranks: number, progression: string): number;
 
 export function rank_cost_wasm(costs: Float64Array, ranks: number): number;
@@ -12,10 +16,14 @@ export type InitInput = RequestInfo | URL | Response | BufferSource | WebAssembl
 export interface InitOutput {
     readonly memory: WebAssembly.Memory;
     readonly basic_stat_bonus_wasm: (a: number) => number;
+    readonly critical_effect_rounds_wasm: (a: number, b: number, c: number, d: number, e: number, f: number, g: number) => [number, number, number, number];
+    readonly critical_token_wasm: (a: number, b: number, c: number, d: number, e: number) => [number, number];
     readonly rank_bonus_wasm: (a: number, b: number, c: number) => number;
     readonly rank_cost_wasm: (a: number, b: number, c: number) => number;
     readonly __wbindgen_externrefs: WebAssembly.Table;
     readonly __wbindgen_malloc: (a: number, b: number) => number;
+    readonly __externref_table_dealloc: (a: number) => void;
+    readonly __wbindgen_free: (a: number, b: number, c: number) => void;
     readonly __wbindgen_realloc: (a: number, b: number, c: number, d: number) => number;
     readonly __wbindgen_start: () => void;
 }

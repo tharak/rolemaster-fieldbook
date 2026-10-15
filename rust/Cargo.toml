@@ -4,6 +4,14 @@ version = "0.1.0"
 edition = "2021"
 publish = false
 
+[workspace]
+members = ["crates/game-rules", "crates/rolemaster-rules", "crates/fieldbook-ui"]
+resolver = "2"
+
+[dependencies]
+rolemaster-rules = { path = "crates/rolemaster-rules" }
+fieldbook-ui = { path = "crates/fieldbook-ui" }
+
 [lib]
 path = "src/lib.rs"
 crate-type = ["cdylib", "rlib"]
