@@ -10,6 +10,35 @@ export function basic_stat_bonus_wasm(value) {
 }
 
 /**
+ * @param {string} name
+ * @param {string} profile
+ * @param {number} side
+ * @param {number} hits
+ * @param {number} maximum
+ * @param {string} attack
+ * @param {number} offensive_bonus
+ * @returns {string}
+ */
+export function battle_contender_wasm(name, profile, side, hits, maximum, attack, offensive_bonus) {
+    let deferred4_0;
+    let deferred4_1;
+    try {
+        const ptr0 = passStringToWasm0(name, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+        const len0 = WASM_VECTOR_LEN;
+        const ptr1 = passStringToWasm0(profile, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+        const len1 = WASM_VECTOR_LEN;
+        const ptr2 = passStringToWasm0(attack, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+        const len2 = WASM_VECTOR_LEN;
+        const ret = wasm.battle_contender_wasm(ptr0, len0, ptr1, len1, side, hits, maximum, ptr2, len2, offensive_bonus);
+        deferred4_0 = ret[0];
+        deferred4_1 = ret[1];
+        return getStringFromWasm0(ret[0], ret[1]);
+    } finally {
+        wasm.__wbindgen_free(deferred4_0, deferred4_1, 1);
+    }
+}
+
+/**
  * @param {Float64Array} rounds
  * @param {Float64Array} starts
  * @param {Uint8Array} priorities

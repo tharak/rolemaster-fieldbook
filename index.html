@@ -11,6 +11,7 @@
   <link rel="stylesheet" href="enhancements.css">
   <link rel="stylesheet" href="refresh.css">
   <link rel="stylesheet" href="coliseum.css">
+  <link rel="stylesheet" href="coliseum-battle.css">
   <link rel="stylesheet" href="critical-review.css">
 </head>
 <body>
@@ -341,15 +342,28 @@
 
     <section id="coliseum-view" class="view" aria-labelledby="coliseum-title">
       <div class="coliseum-shell">
-        <header class="coliseum-heading"><div><p class="play-eyebrow">A-8 · Creatures</p><h1 id="coliseum-title">Coliseum</h1><p>Choose two creatures. Watch the dice decide.</p><p>A simplified duel: hits decide victory. Special abilities and narrative injuries need GM review.</p></div><span class="coliseum-badge">The arena</span></header>
-        <div class="coliseum-pickers">
+        <header class="coliseum-heading"><div><p class="play-eyebrow">Rolemaster · Creature duels</p><h1 id="coliseum-title">Coliseum</h1><p>Two contenders. One survives. Let the dice decide.</p></div><div class="coliseum-heading-note"><span class="coliseum-live-dot"></span> THE GATES ARE OPEN<small>Pick a matchup. Play every round.</small></div></header>
+        <section id="coliseum-battle" class="coliseum-battle" aria-label="Arena battle screen" data-playback="idle">
+          <img class="battle-backdrop" src="assets/coliseum/arena.svg" alt="" width="480" height="270">
+          <div class="battle-screen-top"><span>COLISEUM</span><strong id="coliseum-battle-round">PREPARE</strong><span>CREATURE DUEL</span></div>
+          <div id="coliseum-battle-fighters" class="battle-fighters"></div>
+          <div id="coliseum-battle-outcome" class="battle-outcome" hidden><span>THE BATTLE IS OVER</span><strong></strong></div>
+          <p class="battle-commentary" data-battle-commentary>The gates are open. Choose your contenders.</p>
+        </section>
+        <div class="coliseum-playbar">
+          <div class="coliseum-controls"><button type="button" id="coliseum-simulate" class="button button-dark" disabled>Simulate fight</button><button type="button" id="coliseum-step" class="button button-quiet" disabled>Next round</button><button type="button" id="coliseum-pause" class="button button-quiet" hidden>Pause</button><button type="button" id="coliseum-reset" class="button button-quiet" disabled>New fight</button></div>
+          <label class="coliseum-speed">Playback <select id="coliseum-speed"><option value="1">1×</option><option value="2">2×</option><option value="4">4×</option></select></label>
+        </div>
+        <p id="coliseum-status" class="coliseum-status" role="status" aria-live="polite">Loading creatures…</p><button type="button" id="coliseum-retry" class="button button-quiet" hidden>Retry loading</button>
+        <label class="coliseum-emoji-toggle"><input type="checkbox" id="coliseum-use-emojis"> Use emojis</label>
+        <div class="coliseum-section-label"><h2>Choose your contenders</h2><span>130 creatures · One arena</span></div>
+        <div id="coliseum-contenders" class="coliseum-pickers">
           <section class="coliseum-picker"><label for="coliseum-search-left">Find the first contender</label><input id="coliseum-search-left" type="search" placeholder="Wolf, dragon, giant…"><label for="coliseum-select-left">First contender</label><select id="coliseum-select-left" disabled></select><p id="coliseum-match-left" class="play-muted"></p><details><summary>First contender equipment</summary><fieldset id="coliseum-equipment-left"><legend>Equipment on first contender</legend></fieldset></details></section>
           <section class="coliseum-picker"><label for="coliseum-search-right">Find the second contender</label><input id="coliseum-search-right" type="search" placeholder="Tiger, troll, bear…"><label for="coliseum-select-right">Second contender</label><select id="coliseum-select-right" disabled></select><p id="coliseum-match-right" class="play-muted"></p><details><summary>Second contender equipment</summary><fieldset id="coliseum-equipment-right"><legend>Equipment on second contender</legend></fieldset></details></section>
         </div>
-        <label class="coliseum-emoji-toggle"><input type="checkbox" id="coliseum-use-emojis"> Use emojis</label>
+        <details class="coliseum-combatant-details"><summary>Combatant details <span>Stats, equipment effects &amp; attacks</span></summary>
         <div class="coliseum-arena"><article id="coliseum-fighter-left" class="coliseum-fighter"></article><div class="coliseum-center"><span id="coliseum-duel-symbol" role="img" aria-label="Melee duel" title="Melee duel">⚔</span><strong id="coliseum-round">Ready</strong><small>10 seconds per round</small></div><article id="coliseum-fighter-right" class="coliseum-fighter"></article></div>
-        <div class="coliseum-controls"><button type="button" id="coliseum-simulate" class="button button-dark" disabled>Simulate fight</button><button type="button" id="coliseum-step" class="button button-quiet" disabled>Next round</button><button type="button" id="coliseum-pause" class="button button-quiet" hidden>Pause</button><button type="button" id="coliseum-reset" class="button button-quiet" disabled>New fight</button></div>
-        <p id="coliseum-status" class="coliseum-status" role="status" aria-live="polite">Loading creatures…</p><button type="button" id="coliseum-retry" class="button button-quiet" hidden>Retry loading</button>
+        </details>
         <details class="coliseum-rules"><summary>Arena rules</summary><p>A duel at melee range with no movement or parrying. Victory goes to the last creature with hits remaining; a fight ends in a draw after 200 rounds. Attack percentages, same-round and next-round follow-ups, attack size limits, armor, DB, open-ended d100, and large-creature critical resistance come from the tables.</p><p>Initiative is 2d10 plus an arena speed adjustment from Attack Quickness (CR −8, VS −6, SL −4, MD 0, MF +2, FA +4, VF +6, BF +8). Weapon attacks use a normal one-handed edged weapon. Numeric critical hits, bleeding, stun, forced parry, penalties, and bonuses are applied from the next round. Additional hits apply immediately. Recognized foe death countdowns reduce remaining hits to zero after the stated number of round transitions unless healed first. Explicit instant death is immediate. Encounters healing (reducing recorded damage) clears pending death; the arena has no healing control. “You gain the initiative” makes the attacker first next round with no initiative dice, then normal rolls resume. Conflicting grants or multi-combatant ambiguity require GM review. Configure each contender’s equipment before a new fight; choices default unchecked, persist per side/creature, and lock during combat. AT does not imply regional equipment. Supported with/without and if/else equipment clauses check the foe; ambiguous compounds and OCR need GM review. Other narrative injuries, inactive-round death conditions, optional/group attacks and special abilities are not automated.</p><h3>Critical effect legend</h3><p>n is extra hits in +nH, the round count for status effects, or bleeding hits per round; omitted counts mean 1. p and b are penalty and bonus amounts. Bare penalties last until the wound is healed. Other omitted temporary durations default to 1 round; omitted hit and bleeding amounts mean 1. Explicit durations and until-healed/permanent conditions win; bleeding remains an ongoing rate. Dashes separate effects, not negative durations. Original source text is preserved. Recognized effects follow the rules above; unsupported clauses require GM review.</p><ul id="critical-symbol-legend" class="critical-symbol-legend"></ul></details>
         <section class="coliseum-log-card" aria-labelledby="coliseum-log-title"><div class="coliseum-log-heading"><h2 id="coliseum-log-title">Combat log</h2><span id="coliseum-log-hint">Round 1 on the left · Scroll right for later rounds</span></div><div id="coliseum-log" role="region" aria-labelledby="coliseum-log-title" aria-describedby="coliseum-log-hint" tabindex="0"><p class="play-muted">The gates are open. Choose your contenders.</p></div></section>
       </div>

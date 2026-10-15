@@ -156,9 +156,10 @@ export function stepFight(fight,tables,random = Math.random) {
       const penalty = modifier(fighter,fight.round);
       const total = roll.total + attack.ob - target.creature.db + penalty;
       const result = attackLookup(table,total,roll.first,target.creature.armor_type,attack.size);
+      const previousDamage=target.hits;
       target.hits += result.hits;
       const critical = result.critical ? resolveCritical(target,fighter,attack,result.critical,tables,d100,fight.round) : null;
-      entry.events.push({side,kind:'attack',attack:attackTypes[attack.type][0],ob:attack.ob,db:target.creature.db,modifier:penalty,roll,total,code,...result,critical});
+      entry.events.push({side,kind:'attack',attack:attackTypes[attack.type][0],ob:attack.ob,db:target.creature.db,modifier:penalty,roll,total,code,...result,critical,damage:target.hits-previousDamage});
       if (result.critical && attack.type !== 'Ti') {
         const next = fighter.creature.attacks[index+1];
         if (next?.follow === 'same') attacks.push(index+1);

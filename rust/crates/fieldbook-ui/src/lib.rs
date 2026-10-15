@@ -1,5 +1,39 @@
 //! Presentational HTML components. This crate never evaluates game rules.
 
+pub struct BattleContender<'a> {
+    pub name: &'a str,
+    pub profile: &'a str,
+    pub side: u8,
+    pub hits: u32,
+    pub maximum: u32,
+    pub attack: &'a str,
+    pub offensive_bonus: i32,
+}
+
+/// A view model supplied by the combat application, with no rule evaluation.
+pub fn battle_contender(view: BattleContender<'_>) -> String {
+    let side = if view.side == 0 { 0 } else { 1 };
+    let corner = if side == 0 { "Red" } else { "Blue" };
+    let profile = match view.profile {
+        "wolf" | "tiger" | "bear" | "dragon" | "serpent" | "bird" | "insect" | "humanoid"
+        | "horse" | "aquatic" | "elemental" | "turtle" => view.profile,
+        _ => "humanoid",
+    };
+    let name = escape(view.name);
+    let attack = escape(view.attack);
+    let hits = view.hits.min(view.maximum);
+    let percent = if view.maximum == 0 {
+        0.0
+    } else {
+        (f64::from(hits) / f64::from(view.maximum) * 1000.0).floor() / 10.0
+    };
+    format!(
+        r##"<div class="battle-unit" data-battle-side="{side}" data-profile="{profile}"><div class="battle-nameplate"><span>{corner} corner</span><strong>{name}</strong></div><div class="battle-sprite-wrap"><span class="battle-shadow"></span><svg class="battle-sprite" viewBox="0 0 96 80" role="img" aria-label="{name}"><use href="assets/coliseum/creatures.svg#{profile}"></use></svg><span class="battle-impact" aria-hidden="true">✦</span><span class="battle-damage" aria-hidden="true"></span></div><div class="battle-hud"><div class="battle-weapon"><strong data-battle-attack>{attack}</strong><span data-battle-ob>OB {ob:+}</span></div><div class="battle-metrics"><span>ROLL <b data-battle-roll>—</b></span><span>HITS <b data-battle-hits>—</b></span><span>CRIT <b data-battle-critical>—</b></span></div><div class="battle-health"><strong data-battle-health>{hits}</strong><div class="battle-health-track" role="meter" aria-label="{name} hits remaining" aria-valuemin="0" aria-valuemax="{maximum}" aria-valuenow="{hits}"><span style="width:{percent:.1}%"></span></div><small>/ {maximum}</small></div></div></div>"##,
+        ob = view.offensive_bonus,
+        maximum = view.maximum
+    )
+}
+
 pub fn escape(value: &str) -> String {
     let mut result = String::with_capacity(value.len());
     for character in value.chars() {
@@ -31,6 +65,42 @@ pub fn critical_token(label: &str, emoji: &str, mode: u8) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn battle_contender_escapes_names_and_restricts_asset_paths() {
+        let result = battle_contender(BattleContender {
+            name: "<script> & \"foe\"",
+            profile: "../../unknown",
+            side: 7,
+            hits: 999,
+            maximum: 100,
+            attack: "<attack>",
+            offensive_bonus: -20,
+        });
+        assert!(!result.contains("<script>"));
+        assert!(!result.contains("../../unknown"));
+        assert!(result.contains("creatures.svg#humanoid"));
+        assert!(result.contains("data-battle-side=\"1\""));
+        assert!(result.contains("aria-valuenow=\"100\""));
+        assert!(result.contains("&lt;attack&gt;"));
+        assert!(result.contains("OB -20"));
+    }
+
+    #[test]
+    fn battle_contender_handles_zero_hits_without_invalid_meter_width() {
+        let result = battle_contender(BattleContender {
+            name: "Wolf",
+            profile: "wolf",
+            side: 0,
+            hits: 0,
+            maximum: 0,
+            attack: "Bite",
+            offensive_bonus: 65,
+        });
+        assert!(result.contains("aria-valuenow=\"0\""));
+        assert!(!result.contains("NaN"));
+        assert!(!result.contains("inf"));
+    }
 
     #[test]
     fn text_and_attributes_are_escaped_and_emoji_is_accessible() {

@@ -80,3 +80,7 @@ Next slices can move notation parsing and combat calculation into
 `rolemaster-rules`, then replace complete page views with Rust UI components.
 Each slice should preserve source provenance and saved-record compatibility and
 pass the existing behavioral regressions before removing its JavaScript fallback.
+
+The subsequent [Coliseum MVP](COLISEUM-MVP.md) adds a Rust-rendered battle HUD
+and sprite component. Browser animation and combat remain separate from that
+presentational component; both Rust and JavaScript fallback use the same view model.

@@ -5,6 +5,7 @@ import {creatureSymbol,duelSymbol} from './coliseum-symbols.js';
 import {criticalEquipment} from './critical-equipment.js';
 import {criticalEffectMarkup,criticalLegend,useEmojis,setUseEmojis} from './critical-presentation.js';
 import {ROUND_LIMIT,attackTypes,creatureCatalog,createFight,stepFight} from './coliseum-rules.js';
+import {battleContender,creatureProfile,playBattleRound,clearBattleAnimation,setBattleHealth} from './coliseum-battle.js';
 
 const sides = ['left','right'];
 const storageKey = 'rolemaster-coliseum-v1';
@@ -29,6 +30,9 @@ emojiToggle.addEventListener('change',() => {
   setUseEmojis(emojiToggle.checked);
 });
 let catalog = [], tables = {}, selected = [], fight = null, running = false, ready = false, loading = null, runVersion = 0;
+let playback=false,playbackController=null;
+const battleStage=$('#coliseum-battle');
+const playbackSpeed=()=>Number($('#coliseum-speed').value)||1;
 const status = text => { $('#coliseum-status').textContent = text; };
 const choice = side => $(`#coliseum-select-${side}`);
 const search = side => $(`#coliseum-search-${side}`);
@@ -55,13 +59,37 @@ function filterChoices(side,index) {
 
 function controls() {
   const ended = fight?.finished;
-  $('#coliseum-simulate').disabled = !ready || running || ended;
-  $('#coliseum-step').disabled = !ready || running || ended;
+  $('#coliseum-simulate').disabled = !ready || running || playback || ended;
+  $('#coliseum-step').disabled = !ready || running || playback || ended;
   $('#coliseum-reset').disabled = !ready;
   $('#coliseum-pause').hidden = !running;
-  for (const side of sides) { choice(side).disabled = !ready || running; search(side).disabled = !ready || running; }
+  for (const side of sides) { choice(side).disabled = !ready || running || playback; search(side).disabled = !ready || running || playback; }
   document.querySelectorAll('[data-gear]').forEach(input=>{input.disabled=!ready||running||fight?.round>0;});
   $('#coliseum-simulate').textContent = fight?.round && !ended ? 'Continue fight' : 'Simulate fight';
+}
+
+function syncBattleScene() {
+  if(!fight)return;
+  battleStage.dataset.playback=playback?'playing':'idle';
+  $('#coliseum-battle-round').textContent=fight.round?'ROUND '+String(fight.round).padStart(2,'0'):'PREPARE';
+  battleStage.querySelectorAll('.battle-unit').forEach((unit,index)=>{
+    setBattleHealth(unit,Math.max(0,selected[index].hits-fight.fighters[index].hits));
+    unit.classList.toggle('is-winner',!playback&&fight.finished&&fight.winner===index);
+  });
+  const outcome=$('#coliseum-battle-outcome');
+  outcome.hidden=playback||!fight.finished;
+  outcome.querySelector('strong').textContent=fight.finished?(fight.winner===null?'The duel ends in a draw.':selected[fight.winner].name+' wins!'):'';
+}
+function renderBattleScene() {
+  $('#coliseum-battle-fighters').innerHTML=selected.map((creature,side)=>{
+    const attack=creature.attacks.find(attack=>attack&&!attack.both);
+    return battleContender({name:creature.name,profile:creatureProfile(creature),side,hits:Math.max(0,creature.hits-(fight?.fighters[side].hits||0)),maximum:creature.hits,attack:attackTypes[attack.type][0],ob:attack.ob});
+  }).join('');
+  syncBattleScene();
+}
+function cancelPlayback() {
+  playbackController?.abort();playbackController=null;playback=false;
+  clearBattleAnimation(battleStage);syncBattleScene();
 }
 
 function renderFighters() {
@@ -79,6 +107,7 @@ function renderFighters() {
     card.innerHTML = `${symbolMarkup(creature)}<span class="coliseum-kind">${creature.group} · Size ${esc(creature.size)}</span><h2>${esc(creature.name)}</h2><dl class="coliseum-stats"><div><dt>Level</dt><dd>${creature.level}</dd></div><div><dt>Armor</dt><dd>${creature.armor_type}</dd></div><div><dt>DB</dt><dd>${creature.db}</dd></div></dl><div class="coliseum-health-label"><span>Hits remaining</span><strong>${hits} / ${creature.hits}</strong></div><progress aria-label="${esc(creature.name)} hits remaining" value="${hits}" max="${creature.hits}"></progress><p class="coliseum-effects">${esc(effects)} ${fighter?.deathRound!==undefined?criticalEffectMarkup('Foe dies in '+Math.max(0,fighter.deathRound-fight.round)+' rounds.') : fighter?.dead?criticalEffectMarkup('Foe dies instantly.') : ''}</p><ul class="coliseum-attacks">${creature.attacks.filter(Boolean).map(attack => `<li>${attack.both ? 'Both attacks' : `${esc(attackTypes[attack.type][0])} · ${attack.ob >= 0 ? '+' : ''}${attack.ob} OB · ${esc(attack.size)}`}${attack.chance ? ` · ${attack.chance}%` : attack.follow ? ` · ${attack.follow === 'same' ? 'same-round' : 'next-round'} follow-up` : ' · optional'}</li>`).join('')}</ul><p class="coliseum-notes">${esc(creature.special || 'No special abilities listed.')}</p>`;
   });
   renderSymbols();
+  renderBattleScene();
 }
 
 function eventText(event) {
@@ -122,28 +151,39 @@ function renderRound() {
 function resetFight() {
   running = false;
   runVersion++;
+  cancelPlayback();
   fight = createFight(...selected.map((creature,index)=>({...creature,equipment:equipmentFor(sides[index],index)})));
   $('#coliseum-round').textContent = 'Ready';
   $('#coliseum-log').innerHTML = '<p class="play-muted">The gates are open. Start the fight or play one round at a time.</p>';
   $('#coliseum-log').scrollLeft = 0;
   status(`${selected[0].name} vs ${selected[1].name}.`);
   renderFighters(); controls();
+  battleStage.querySelector('[data-battle-commentary]').textContent='The gates are open. Start the fight or play the next round.';
   try { localStorage.setItem(storageKey,JSON.stringify(selected.map(creature => creature.id))); } catch { /* Selection remains usable without storage. */ }
 }
 
-function nextRound() {
-  try { stepFight(fight,tables); renderRound(); }
-  catch (error) { running = false; status(`Fight paused: ${error.message}`); controls(); }
+async function nextRound() {
+  if(!ready||playback||fight.finished)return;
+  const current=fight,controller=new AbortController();
+  const initialHealth=fight.fighters.map(fighter=>Math.max(0,fighter.creature.hits-fighter.hits));
+  playbackController=controller;playback=true;controls();
+  try {
+    stepFight(fight,tables);renderRound();
+    await playBattleRound(battleStage,fight.log[0],initialHealth,{signal:controller.signal,speed:playbackSpeed,reducedMotion:matchMedia('(prefers-reduced-motion: reduce)').matches});
+  }catch(error){running=false;status(`Fight paused: ${error.message}`);}
+  finally {
+    if(playbackController===controller&&fight===current){playbackController=null;playback=false;syncBattleScene();controls();}
+  }
 }
 
 async function simulate() {
-  if (!ready || running || fight.finished) return;
+  if (!ready || running || playback || fight.finished) return;
   running = true; controls();
   const current = fight;
   const version = ++runVersion;
   while (running && version === runVersion && fight === current && !fight.finished) {
-    nextRound();
-    await new Promise(resolve => setTimeout(resolve,90));
+    await nextRound();
+    await new Promise(resolve => setTimeout(resolve,90/playbackSpeed()));
   }
 }
 
@@ -187,5 +227,9 @@ $('#coliseum-pause').addEventListener('click',() => { running = false; status(`P
 $('#coliseum-retry').addEventListener('click',load);
 window.addEventListener('rolemaster-view-changed',event => {
   if (event.detail === 'coliseum') load();
-  else if (running) { running = false; status(`Paused at round ${fight.round}.`); controls(); }
+  else if (running||playback) { running = false; runVersion++;cancelPlayback();status(`Paused at round ${fight.round}.`); controls(); }
 });
+document.addEventListener('visibilitychange',()=>{
+  if(document.hidden&&(running||playback)){running=false;runVersion++;cancelPlayback();status(`Paused at round ${fight.round}.`);controls();}
+});
+if(location.hash==='#coliseum')document.querySelector('[data-view="coliseum"]').click();

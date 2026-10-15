@@ -21,6 +21,19 @@ test('all 130 creature entries have usable primary attacks and combat statistics
   }
 });
 
+test('playback damage includes extra critical hits and instant death without changing base hits',()=>{
+  const creature={...wolf,hits:100,armor_type:1,db:0,attacks:[parseCreatureAttack('100LBi100')]};
+  for(const [description,effect,expected] of [['Impact.','+7H',12],['Foe dies instantly.','+0H',100]]){
+    const fight=createFight(creature,creature);
+    const fixture={...tables,'A-10.9.7':{columns:[{label:'AT 1'}],rows:[{roll:'01-150',values:['5A']}]},'A-10.10.4':{rows:[{roll:'01-100',cells:[{description,effect}]}]}};
+    stepFight(fight,fixture,()=>.49);
+    const attack=fight.log[0].events.find(event=>event.kind==='attack');
+    assert.equal(attack.hits,5);
+    assert.equal(attack.damage,expected);
+    assert.equal(fight.fighters[1-attack.side].hits,expected);
+  }
+});
+
 test('attack notation preserves size, OB, chance, and conditional follow-ups',() => {
   assert.deepEqual(parseCreatureAttack('−50Ti100'),{ob:-50,size:'T',type:'Ti',chance:100,follow:null,optional:false,raw:'−50Ti100'});
   assert.equal(parseCreatureAttack('70LGr «').follow,'same');

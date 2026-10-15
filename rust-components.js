@@ -1,7 +1,7 @@
 // Browser boundary only. Pure Rust crates have no knowledge of DOM or storage.
-let binding=null, ruleCalls=0, uiCalls=0;
+let binding=null, ruleCalls=0, uiCalls=0, battleCalls=0;
 export function rustComponentStatus() {
-  return {backend:binding?'wasm':'javascript',ruleCalls,uiCalls};
+  return {backend:binding?'wasm':'javascript',ruleCalls,uiCalls,battleCalls};
 }
 export function installRustComponents(candidate) {
   // Older numeric-only adapters can still initialize during incremental migration.
@@ -24,4 +24,9 @@ export function rustCriticalToken(label,emoji,mode) {
   if(!binding)return null;
   uiCalls++;
   return binding.critical_token_wasm(label,emoji,mode);
+}
+export function rustBattleContender(view) {
+  if(!binding?.battle_contender_wasm)return null;
+  uiCalls++;battleCalls++;
+  return binding.battle_contender_wasm(view.name,view.profile,view.side,view.hits,view.maximum,view.attack,view.ob);
 }

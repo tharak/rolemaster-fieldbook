@@ -4,6 +4,28 @@ pub use rolemaster_rules::{basic_stat_bonus, rank_bonus, rank_cost};
 
 #[cfg(target_arch = "wasm32")]
 #[wasm_bindgen::prelude::wasm_bindgen]
+pub fn battle_contender_wasm(
+    name: &str,
+    profile: &str,
+    side: u8,
+    hits: u32,
+    maximum: u32,
+    attack: &str,
+    offensive_bonus: i32,
+) -> String {
+    fieldbook_ui::battle_contender(fieldbook_ui::BattleContender {
+        name,
+        profile,
+        side,
+        hits,
+        maximum,
+        attack,
+        offensive_bonus,
+    })
+}
+
+#[cfg(target_arch = "wasm32")]
+#[wasm_bindgen::prelude::wasm_bindgen]
 pub fn critical_effect_rounds_wasm(
     rounds: &[f64],
     starts: &[f64],

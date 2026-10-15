@@ -14,6 +14,7 @@ async (existingPage) => {
     await select.selectOption(option.value);
   };
   try {
+    await page.addInitScript(() => { Math.random = () => .49; });
     await page.route('**/tables/creatures.json',route => route.fulfill({status:503,body:'Unavailable'}));
     await page.goto(existingPage.url());
     await page.waitForFunction(() => document.documentElement.dataset.appReady === 'true');

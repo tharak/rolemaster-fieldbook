@@ -78,3 +78,7 @@ The Rust workspace now separates reusable game mechanics, Rolemaster rules, UI c
 The browser initializes the bundled Rust/Wasm engine before loading the application. Failure or timeout uses a visibly labeled JavaScript fallback. Static hosting and project subpaths remain supported. See [build instructions](rust/README.md). Publish wasm/ assets with the site; no Rust installation is required on the host.
 
 Critical source review and remaining notation decisions are documented in [CRITICAL-AUDIT.md](CRITICAL-AUDIT.md). Encounters apply explicit recoil distances immediately: away from the attacker for direct attacks, or away from the chosen center for area spells. Bolt/ball actions can select their critical type to resolve those effects; leaving the choice blank retains manual critical resolution.
+
+The Coliseum now has an animated pixel arena, Rust-rendered fighter HUDs, live hit
+bars and roll/critical readouts. Open `/#coliseum` to play it directly. See
+[MVP controls, architecture and checks](COLISEUM-MVP.md).

@@ -86,7 +86,7 @@ try {
     assert.match(await page.locator('#rules-engine-status').textContent(), /Rust.*WebAssembly/);
     console.log(JSON.stringify({prefix, proof, wasmResponses, pageErrors:errors.length}));
     if (prefix === '/rolemaster/') {
-      for (const filename of ['browser-smoke.js', 'coliseum-browser-smoke.js', 'coliseum-timeline-browser-smoke.js', 'coliseum-emoji-browser-smoke.js', 'critical-presentation-browser-smoke.js', 'critical-review-browser-smoke.js', 'critical-semantics-browser-smoke.js', 'critical-recoil-browser-smoke.js', 'critical-stun-browser-smoke.js', 'rust-components-browser-smoke.js']) {
+      for (const filename of ['browser-smoke.js', 'coliseum-browser-smoke.js', 'coliseum-timeline-browser-smoke.js', 'coliseum-emoji-browser-smoke.js', 'critical-presentation-browser-smoke.js', 'critical-review-browser-smoke.js', 'critical-semantics-browser-smoke.js', 'critical-recoil-browser-smoke.js', 'critical-stun-browser-smoke.js', 'rust-components-browser-smoke.js', 'coliseum-battle-browser-smoke.js']) {
         const sourceUrl = new URL(filename, import.meta.url);
         try { await access(sourceUrl); } catch (error) {
           if (error.code !== 'ENOENT') throw error;
