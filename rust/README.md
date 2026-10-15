@@ -1,4 +1,12 @@
-# Rust rank bonuses — browser integration
+# Rust rules — browser integration
+
+The numeric basic stat bonus slice is now integrated locally; see
+[scope, inherited Git state and current verification](BASIC-STAT-BONUS.md).
+The older first-slice results and scope notes below are historical.
+
+The subsequent numeric rankCost slice is implemented locally; see [contract and
+validation](RANK-COST.md). The historical first-slice evidence below remains applicable
+to rankBonus; current native tests also include rankCost.
 
 The actual static browser application now uses Rust/Wasm for rankBonus. Other rules,
 UI, localStorage and reference data remain JavaScript. No backend or CDN is required.

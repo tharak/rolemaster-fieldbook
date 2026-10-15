@@ -1,13 +1,19 @@
 /* tslint:disable */
 /* eslint-disable */
 
+export function basic_stat_bonus_wasm(value: number): number;
+
 export function rank_bonus_wasm(ranks: number, progression: string): number;
+
+export function rank_cost_wasm(costs: Float64Array, ranks: number): number;
 
 export type InitInput = RequestInfo | URL | Response | BufferSource | WebAssembly.Module;
 
 export interface InitOutput {
     readonly memory: WebAssembly.Memory;
+    readonly basic_stat_bonus_wasm: (a: number) => number;
     readonly rank_bonus_wasm: (a: number, b: number, c: number) => number;
+    readonly rank_cost_wasm: (a: number, b: number, c: number) => number;
     readonly __wbindgen_externrefs: WebAssembly.Table;
     readonly __wbindgen_malloc: (a: number, b: number) => number;
     readonly __wbindgen_realloc: (a: number, b: number, c: number, d: number) => number;

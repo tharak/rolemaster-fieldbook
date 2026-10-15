@@ -1,6 +1,15 @@
 /* @ts-self-types="./rolemaster_core.d.ts" */
 
 /**
+ * @param {number} value
+ * @returns {number}
+ */
+export function basic_stat_bonus_wasm(value) {
+    const ret = wasm.basic_stat_bonus_wasm(value);
+    return ret;
+}
+
+/**
  * @param {number} ranks
  * @param {string} progression
  * @returns {number}
@@ -9,6 +18,18 @@ export function rank_bonus_wasm(ranks, progression) {
     const ptr0 = passStringToWasm0(progression, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
     const len0 = WASM_VECTOR_LEN;
     const ret = wasm.rank_bonus_wasm(ranks, ptr0, len0);
+    return ret;
+}
+
+/**
+ * @param {Float64Array} costs
+ * @param {number} ranks
+ * @returns {number}
+ */
+export function rank_cost_wasm(costs, ranks) {
+    const ptr0 = passArrayF64ToWasm0(costs, wasm.__wbindgen_malloc);
+    const len0 = WASM_VECTOR_LEN;
+    const ret = wasm.rank_cost_wasm(ptr0, len0, ranks);
     return ret;
 }
 function __wbg_get_imports() {
@@ -30,12 +51,27 @@ function __wbg_get_imports() {
     };
 }
 
+let cachedFloat64ArrayMemory0 = null;
+function getFloat64ArrayMemory0() {
+    if (cachedFloat64ArrayMemory0 === null || cachedFloat64ArrayMemory0.byteLength === 0) {
+        cachedFloat64ArrayMemory0 = new Float64Array(wasm.memory.buffer);
+    }
+    return cachedFloat64ArrayMemory0;
+}
+
 let cachedUint8ArrayMemory0 = null;
 function getUint8ArrayMemory0() {
     if (cachedUint8ArrayMemory0 === null || cachedUint8ArrayMemory0.byteLength === 0) {
         cachedUint8ArrayMemory0 = new Uint8Array(wasm.memory.buffer);
     }
     return cachedUint8ArrayMemory0;
+}
+
+function passArrayF64ToWasm0(arg, malloc) {
+    const ptr = malloc(arg.length * 8, 8) >>> 0;
+    getFloat64ArrayMemory0().set(arg, ptr / 8);
+    WASM_VECTOR_LEN = arg.length;
+    return ptr;
 }
 
 function passStringToWasm0(arg, malloc, realloc) {
@@ -95,6 +131,7 @@ function __wbg_finalize_init(instance, module) {
     wasmInstance = instance;
     wasm = instance.exports;
     wasmModule = module;
+    cachedFloat64ArrayMemory0 = null;
     cachedUint8ArrayMemory0 = null;
     wasm.__wbindgen_start();
     return wasm;

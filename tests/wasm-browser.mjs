@@ -33,9 +33,29 @@ try {
     await page.goto(base + prefix);
     await page.waitForFunction(() => document.documentElement.dataset.appReady === 'true');
     await page.waitForFunction(async () => (await import('./rules.js')).rankBonusEngineStatus().calls > 0);
+    // Drive the actual stat-sheet input handler before parity-only calls.
+    const statBefore = await page.evaluate(async () => (await import('./rules.js')).basicStatBonusEngineStatus());
+    await page.locator('[name="stat-temp-0"]').evaluate(input => {
+      input.value = '99'; input.dispatchEvent(new Event('change', {bubbles:true}));
+    });
+    assert.equal(await page.locator('[name="stat-basic-0"]').inputValue(), '9');
+    const statAfterInput = await page.evaluate(async () => (await import('./rules.js')).basicStatBonusEngineStatus());
+    assert.equal(statAfterInput.backend, 'wasm');
+    assert.ok(statAfterInput.calls > statBefore.calls, 'actual sheet input must invoke Rust');
     const proof = await page.evaluate(async () => {
       const rules = await import('./rules.js');
       const before = rules.rankBonusEngineStatus();
+      const costBefore = rules.rankCostEngineStatus();
+      const statBefore = rules.basicStatBonusEngineStatus();
+      let statChecked = 0;
+      for (const n of [NaN,Infinity,-Infinity,-0,1e20,-1e20,...Array.from({length:1201}, (_,i) => (i-400)/4)]) {
+        if (!Object.is(rules.basicStatBonus(n), rules.basicStatBonusJavaScript(n))) throw new Error('browser stat parity mismatch');
+        statChecked++;
+      }
+      for (const n of ['100',null,undefined,true,{valueOf:() => 99}]) {
+        if (!Object.is(rules.basicStatBonus(n), rules.basicStatBonusJavaScript(n))) throw new Error('browser stat compatibility mismatch');
+      }
+      const statAfter = rules.basicStatBonusEngineStatus();
       let checked = 0;
       for (const kind of ['standard','category','limited','special','combined','unknown','']) {
         for (let quarter = -8; quarter <= 400; quarter++) {
@@ -44,9 +64,20 @@ try {
           checked++;
         }
       }
-      return {before, after:rules.rankBonusEngineStatus(), checked, roster:typeof window.RolemasterEncounter?.roster};
+      let costChecked = 0;
+      for (const costs of [[], [2,4,6], [NaN], [Infinity,-Infinity], [1e16,1,-1e16], [.1,.2,.3], ['2',4], [,2], null]) {
+        for (const ranks of [-Infinity,-1,0,.9,1,1.9,2,3,Infinity,NaN,'2',null]) {
+          if (!Object.is(rules.rankCost(costs, ranks), rules.rankCostJavaScript(costs, ranks))) throw new Error('browser cost parity mismatch');
+          costChecked++;
+        }
+      }
+      return {statBefore, statAfter, statChecked, before, after:rules.rankBonusEngineStatus(), checked, costBefore, costAfter:rules.rankCostEngineStatus(), costChecked, roster:typeof window.RolemasterEncounter?.roster};
     });
+    assert.equal(proof.statAfter.calls - proof.statBefore.calls, proof.statChecked);
     assert.equal(proof.before.backend, 'wasm');
+    assert.equal(proof.costBefore.backend, 'wasm');
+    assert.ok(proof.costBefore.calls > 0, 'actual app must use Rust costs before test calls');
+    assert.equal(proof.costAfter.calls - proof.costBefore.calls, 72);
     assert.ok(proof.before.calls > 0, 'actual app startup must use Rust before test calls');
     assert.equal(proof.after.calls - proof.before.calls, proof.checked);
     assert.equal(proof.roster, 'function');
@@ -89,10 +120,18 @@ try {
     await page.waitForFunction(() => document.documentElement.dataset.appReady === 'true');
     const result = await page.evaluate(async () => {
       const rules = await import('./rules.js');
-      return {status:rules.rankBonusEngineStatus(), value:rules.rankBonus(21, 'combined'), roster:typeof window.RolemasterEncounter?.roster};
+      return {statStatus:rules.basicStatBonusEngineStatus(), stat:rules.basicStatBonus(99), status:rules.rankBonusEngineStatus(), costStatus:rules.rankCostEngineStatus(), cost:rules.rankCost([2,4,6],2), value:rules.rankBonus(21, 'combined'), roster:typeof window.RolemasterEncounter?.roster};
     });
     assert.equal(result.status.backend, mode === 'missing' ? 'javascript' : 'wasm');
+    assert.equal(result.stat, 9);
+    assert.equal(result.statStatus.backend, mode === 'missing' ? 'javascript' : 'wasm');
+    await page.locator('[name="stat-temp-0"]').evaluate(input => {
+      input.value = '100'; input.dispatchEvent(new Event('change', {bubbles:true}));
+    });
+    assert.equal(await page.locator('[name="stat-basic-0"]').inputValue(), '10');
     assert.equal(result.value, 82);
+    assert.equal(result.cost, 6);
+    assert.equal(result.costStatus.backend, mode === 'missing' ? 'javascript' : 'wasm');
     assert.equal(result.roster, 'function');
     if (mode === 'missing') assert.match(await page.locator('#rules-engine-status').textContent(), /JavaScript fallback/);
     console.log(mode, JSON.stringify(result));

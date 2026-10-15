@@ -14,14 +14,8 @@ export function rolledPotential(value, random = Math.random) {
   const result = base + Array.from({length: dice}, () => Math.floor(random() * sides) + 1).reduce((sum, roll) => sum + roll, 0);
   return Math.max(value, result);
 }
-export function basicStatBonus(value) {
-  if (value === 100) return 10;
-  if (value >= 90) return 5 + Math.floor((value - 90) / 2);
-  if (value >= 70) return 1 + Math.floor((value - 70) / 5);
-  if (value >= 31) return 0;
-  if (value >= 11) return -1 - Math.floor((30 - value) / 5);
-  return -5 - Math.floor((10 - value) / 2);
-}
+// Preserve the existing import API used by stat-sheet.js.
+export {basicStatBonus} from './rules.js';
 export function strideBonus(heightText) {
   const match = /^(\d+)'\s*(\d{1,2})(?:")?$/.exec(heightText.trim());
   if (!match) return null;

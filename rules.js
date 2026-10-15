@@ -1,5 +1,27 @@
 // Shared synchronous rules; browser startup awaits the optional Rust engine.
 let rustRankBonus = null;
+let rustRankCost = null;
+let rustBasicStatBonus = null;
+let statBonusCalls = 0;
+export function basicStatBonusEngineStatus() { return {backend:rustBasicStatBonus ? 'wasm' : 'javascript', calls:statBonusCalls}; }
+// Non-number inputs retain the original strict === 100 and coercion behavior.
+export function basicStatBonus(value) {
+  if (rustBasicStatBonus && typeof value === 'number') {
+    statBonusCalls++;
+    return rustBasicStatBonus(value);
+  }
+  return basicStatBonusJavaScript(value);
+}
+export function basicStatBonusJavaScript(value) {
+  if (value === 100) return 10;
+  if (value >= 90) return 5 + Math.floor((value - 90) / 2);
+  if (value >= 70) return 1 + Math.floor((value - 70) / 5);
+  if (value >= 31) return 0;
+  if (value >= 11) return -1 - Math.floor((30 - value) / 5);
+  return -5 - Math.floor((10 - value) / 2);
+}
+let costCalls = 0;
+export function rankCostEngineStatus() { return {backend:rustRankCost ? 'wasm' : 'javascript', calls:costCalls}; }
 let initialization;
 let engine = Object.freeze({backend:'javascript', reason:'not initialized', calls:0});
 export function rankBonusEngineStatus() { return {...engine}; }
@@ -13,11 +35,15 @@ export function initializeRankBonusEngine({load = () => import('./wasm/rolemaste
         new Promise((_, reject) => { timer = setTimeout(() => reject(new Error('Wasm initialization timed out')), timeoutMs); }),
       ]);
       if (binding.rank_bonus_wasm(21, 'combined') !== 82) throw new Error('Wasm self-check failed');
+      if (binding.rank_cost_wasm(new Float64Array([2, 4, 6]), 2.9) !== 6) throw new Error('Wasm rank cost self-check failed');
+      if (binding.basic_stat_bonus_wasm(100) !== 10 || binding.basic_stat_bonus_wasm(99) !== 9) throw new Error('Wasm basic stat bonus self-check failed');
       rustRankBonus = binding.rank_bonus_wasm;
+      rustRankCost = binding.rank_cost_wasm;
+      rustBasicStatBonus = binding.basic_stat_bonus_wasm;
       engine = {backend:'wasm', reason:null, calls:0};
     } catch (error) {
       engine = {backend:'javascript', reason:String(error?.message || error), calls:0};
-      console.warn('Rust rank bonuses unavailable; using JavaScript fallback.', error);
+      console.warn('Rust rules unavailable; using JavaScript fallback.', error);
     } finally { clearTimeout(timer); }
     return rankBonusEngineStatus();
   })();
@@ -40,6 +66,24 @@ export function rankBonusJavaScript(ranks, progression) {
 }
 
 export function rankCost(costs, ranks) {
+  // Preserve legacy behavior for sparse/mixed arrays and unusual array-like inputs.
+  // Only ordinary dense numeric arrays are the Rust boundary contract.
+  if (rustRankCost && Array.isArray(costs) && Object.getPrototypeOf(costs) === Array.prototype) {
+    let numeric = true;
+    for (let i = 0; i < costs.length; i++) {
+      const slot = Object.getOwnPropertyDescriptor(costs, i);
+      if (!slot || !('value' in slot) || typeof slot.value !== 'number') { numeric = false; break; }
+    }
+    if (numeric) {
+      const n = Number(ranks);
+      const result = rustRankCost(new Float64Array(costs), n);
+      costCalls++;
+      return result;
+    }
+  }
+  return rankCostJavaScript(costs, ranks);
+}
+export function rankCostJavaScript(costs, ranks) {
   return (costs || []).slice(0, Math.max(0, Number(ranks) || 0)).reduce((sum, value) => sum + value, 0);
 }
 
