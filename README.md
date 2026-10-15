@@ -21,6 +21,10 @@ The browser loads `browser-startup.js`, awaits the Rust/WebAssembly rank engine 
 | Module | Responsibility |
 | --- | --- |
 | `rules.js` | Dice, rank progressions, and critical symbols |
+| `critical-duration.js` | Shared temporary-effect durations and one-round defaults |
+| `critical-initiative.js` | Next-round automatic initiative and conflict review |
+| `critical-death.js` | Explicit fatal clauses, countdowns, and cancellation by healing |
+| `critical-equipment.js` | Foe equipment and conditional clause selection across source fields |
 | `character-rules.js` | Stat, skill, spell development, and XP formulas |
 | `character-record.js` | Decode and validate structured saved fields |
 | `stat-sheet.js` | Stat inputs, potential assignment, and resistance outputs |
@@ -56,7 +60,9 @@ Open **Coliseum** to choose any two of the 130 monsters and animals from A-8. Se
 
 `tables/creatures.json` is the structured companion to the existing `chart-animal-monster.json`. It preserves the monster and animal charts as arrays with `name`, `size`, `hits`, `armor_type`, `defensive_bonus`, `speed_ms_aq`, `level`, three attack notation fields, and `special` notes. Stable creature IDs use the chart group and row index; preserve row order when editing this file.
 
-The arena uses attack percentages (including Both), critical-triggered follow-ups, natural attack size caps, armor and DB, unmodified fumbles, open-ended d100, and normal physical criticals against large and super-large creatures. It applies numeric critical hits, bleeding, stun, forced parry, penalties, and bonuses. Initiative uses a documented arena adjustment from Attack Quickness, and weapon attacks assume a normal one-handed edged weapon. Hits determine victory, with a 200-round draw limit. It does not automate narrative injuries/death, equipment-dependent critical branches, optional/group attacks, special abilities, movement, or parrying. These limits are also shown under **Arena rules** in the game.
+The arena uses attack percentages (including Both), critical-triggered follow-ups, natural attack size caps, armor and DB, unmodified fumbles, open-ended d100, and normal physical criticals against large and super-large creatures. It applies numeric critical hits, bleeding, stun, forced parry, penalties, and bonuses. Unspecified temporary durations default to one round; explicit durations and relevant permanent/until-healed conditions remain intact. Bleeding stays ongoing. Initiative uses a documented arena adjustment from Attack Quickness; “you gain the initiative” instead wins the next round without initiative dice, then normal rolls resume. Weapon attacks assume a normal one-handed edged weapon. Hits determine victory, with a 200-round draw limit.
+
+Each contender has equipment checkboxes that default unchecked, persist per side and creature, and lock during a fight. Supported conditions select the foe's equipment branch, including clauses that span the extracted description and effect fields. Armor type does not imply regional equipment. Explicit instant death ends the target's actions immediately; recognized death countdowns expire after the stated round transitions. Reducing recorded damage in Encounters cancels pending critical death without removing bleeding. The arena has no healing control. Unsupported compounds, inactive-round death requirements, other narrative injuries, optional/group attacks, special abilities, movement, and parrying require GM review. Original conditional results remain available in the arena log. These limits are also shown under **Arena rules**.
 
 ## Current scope
 

@@ -8,7 +8,7 @@ are reused; original stored cell description and effect remain visible separatel
 Coverage comes from all A-10.10.* references in tables/index.json, then validates
 kind: critical and the row/column schema. No table numbers are enumerated in the
 implementation. Current manifest: nine tables, 836 result coordinates. Current
-checks: 547 green, 289 yellow. Missing cells are yellow; a table that cannot load
+checks: 651 green, 185 yellow. Missing cells are yellow; a table that cannot load
 or has an invalid schema remains visible as unavailable, and totals explicitly say
 incomplete. Empty/broken manifests report no results checked. Reload retries.
 
@@ -21,19 +21,21 @@ Yellow reasons (visible text as well as background color):
   with/without clauses in descriptions: GM should review branch. Ordinary
   descriptions such as “with too much effort” are not flagged just for with.
 - Explicit review/GM/uncertainty markers.
-- Penalty without round count unless the description supplies an explicit duration,
-  permanent effect, healing or until-condition; undated narrative stun/parry.
+- Unrecognized fatal narrative, including inactive-round death conditions.
 - Unknown leftover shorthand (including bare signed numbers, unfamiliar glyphs or
   incomplete parentheses); no unrecognized effect remainder can be green.
 - Prose mixed into the effect field: check extraction boundaries against source.
 - Shorthand embedded in description, repeated words, double colons, replacement
   glyphs, and known ambiguous/parser-mismatch spellings such as 10 ∫, ∑π, π(−10).
 
-Bare ∑/∏/π, compound ∑∏ and bare bonuses retain their established one-round
-convention. Bleeding is a rate until treated, not a missing duration. Explicit
-permanent/until-healed/conditional durations are not called absent. No durations
-or conditions are inferred into combat data. The review does not silently repair
-OCR or choose branches.
+Recognized temporary effects, including bare penalties and bonuses, default to
+one round when no duration is specified. Explicit counts and relevant permanent,
+until-healed or ongoing durations are preserved. Bleeding is a rate until treated.
+Recognized “you gain the initiative” means next round without an initiative roll;
+recognized death clauses display Dies / ☠️ with their countdown. Other fatal prose
+remains yellow. The review does not repair OCR, choose equipment branches, or
+mutate combat data. The combat engines separately use the shared duration policy
+and supported foe-equipment conditions.
 
 Filters: all/green/yellow, reason, source/coordinate/reason search, one table or all.
 Non-matching cells retain an explicit Filtered out placeholder so column alignment

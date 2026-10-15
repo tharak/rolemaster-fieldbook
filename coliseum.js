@@ -2,6 +2,7 @@ import './app.js';
 import {$,esc} from './dom.js';
 import {formatRolls} from './rules.js';
 import {creatureSymbol,duelSymbol} from './coliseum-symbols.js';
+import {criticalEquipment} from './critical-equipment.js';
 import {criticalEffectMarkup,criticalLegend,useEmojis,setUseEmojis} from './critical-presentation.js';
 import {ROUND_LIMIT,attackTypes,creatureCatalog,createFight,stepFight} from './coliseum-rules.js';
 
@@ -21,8 +22,7 @@ function renderSymbols() {
     if (crest && selected[index]) crest.outerHTML = symbolMarkup(selected[index]);
   });
   $('#coliseum-duel-symbol').textContent = emojiToggle.checked ? duelSymbol.emoji : duelSymbol.symbol;
-  const entries = [...selected.map(creatureSymbol),duelSymbol];
-  $('#coliseum-symbol-legend').innerHTML = entries.map(icon => `<li><span class="coliseum-legend-symbol" aria-hidden="true">${esc(icon.symbol)}</span><span aria-hidden="true">→</span><span class="coliseum-legend-symbol" aria-hidden="true">${icon.emoji}</span><span>${esc(icon.meaning)} <small>(symbol ${esc(icon.symbol)} / emoji ${icon.emoji})</small></span></li>`).join('');
+
 }
 emojiToggle.addEventListener('change',() => {
   renderSymbols();
@@ -32,6 +32,12 @@ let catalog = [], tables = {}, selected = [], fight = null, running = false, rea
 const status = text => { $('#coliseum-status').textContent = text; };
 const choice = side => $(`#coliseum-select-${side}`);
 const search = side => $(`#coliseum-search-${side}`);
+const equipmentKey='rolemaster-coliseum-equipment-v1';
+let equipmentByContender={};
+try {const saved=JSON.parse(localStorage.getItem(equipmentKey));if(saved&&typeof saved==='object'&&!Array.isArray(saved))equipmentByContender=saved;}catch{}
+const equipmentFor=(side,index)=>{const value=equipmentByContender[side+':'+selected[index]?.id];return Array.isArray(value)?value:[];};
+function renderEquipment(){sides.forEach((side,index)=>{const list=$(`#coliseum-equipment-${side}`);list.innerHTML=`<legend>Equipment on ${esc(selected[index]?.name||side)}</legend>`+criticalEquipment.map(([key,label])=>`<label><input type="checkbox" data-gear="${esc(key)}"${equipmentFor(side,index).includes(key)?' checked':''}> ${esc(label)}</label>`).join('');});}
+for(const [index,side] of sides.entries())$(`#coliseum-equipment-${side}`).addEventListener('change',()=>{equipmentByContender[side+':'+selected[index].id]=[...$(`#coliseum-equipment-${side}`).querySelectorAll('input:checked')].map(el=>el.dataset.gear);try{localStorage.setItem(equipmentKey,JSON.stringify(equipmentByContender));}catch{} if(!fight?.round)fight=createFight(...selected.map((creature,i)=>({...creature,equipment:equipmentFor(sides[i],i)})));});
 
 function filterChoices(side,index) {
   const query = search(side).value.trim().toLowerCase();
@@ -54,6 +60,7 @@ function controls() {
   $('#coliseum-reset').disabled = !ready;
   $('#coliseum-pause').hidden = !running;
   for (const side of sides) { choice(side).disabled = !ready || running; search(side).disabled = !ready || running; }
+  document.querySelectorAll('[data-gear]').forEach(input=>{input.disabled=!ready||running||fight?.round>0;});
   $('#coliseum-simulate').textContent = fight?.round && !ended ? 'Continue fight' : 'Simulate fight';
 }
 
@@ -67,22 +74,24 @@ function renderFighters() {
     card.classList.toggle('defeated',hits === 0);
     card.classList.toggle('winner',!!fight?.finished && fight.winner === index);
     const effects = fighter?.effects.map(effect => effect.kind === 'bleed' ? `Bleed ${effect.amount}/round` :
-      effect.kind === 'penalty' ? `−${effect.amount} OB` : effect.kind === 'bonus' ? `+${effect.amount} OB` :
-      `${effect.kind === 'mustParry' ? 'Must parry' : effect.kind === 'noParry' ? 'No parry' : 'Stunned'} ${effect.roundsLeft} rounds`).join(' · ') || '';
-    card.innerHTML = `${symbolMarkup(creature)}<span class="coliseum-kind">${creature.group} · Size ${esc(creature.size)}</span><h2>${esc(creature.name)}</h2><dl class="coliseum-stats"><div><dt>Level</dt><dd>${creature.level}</dd></div><div><dt>Armor</dt><dd>${creature.armor_type}</dd></div><div><dt>DB</dt><dd>${creature.db}</dd></div></dl><div class="coliseum-health-label"><span>Hits remaining</span><strong>${hits} / ${creature.hits}</strong></div><progress aria-label="${esc(creature.name)} hits remaining" value="${hits}" max="${creature.hits}"></progress><p class="coliseum-effects">${esc(effects)}</p><ul class="coliseum-attacks">${creature.attacks.filter(Boolean).map(attack => `<li>${attack.both ? 'Both attacks' : `${esc(attackTypes[attack.type][0])} · ${attack.ob >= 0 ? '+' : ''}${attack.ob} OB · ${esc(attack.size)}`}${attack.chance ? ` · ${attack.chance}%` : attack.follow ? ` · ${attack.follow === 'same' ? 'same-round' : 'next-round'} follow-up` : ' · optional'}</li>`).join('')}</ul><p class="coliseum-notes">${esc(creature.special || 'No special abilities listed.')}</p>`;
+      effect.kind === 'penalty' ? `−${effect.amount} OB (${effect.durationLabel||effect.roundsLeft+' round'+(effect.roundsLeft===1?'':'s')})` : effect.kind === 'bonus' ? `+${effect.amount} OB (${effect.durationLabel||effect.roundsLeft+' round'+(effect.roundsLeft===1?'':'s')})` :
+      `${effect.kind === 'mustParry' ? 'Must parry' : effect.kind === 'noParry' ? 'No parry' : 'Stunned'} ${effect.durationLabel||effect.roundsLeft+' round'+(effect.roundsLeft===1?'':'s')}`).join(' · ') || '';
+    card.innerHTML = `${symbolMarkup(creature)}<span class="coliseum-kind">${creature.group} · Size ${esc(creature.size)}</span><h2>${esc(creature.name)}</h2><dl class="coliseum-stats"><div><dt>Level</dt><dd>${creature.level}</dd></div><div><dt>Armor</dt><dd>${creature.armor_type}</dd></div><div><dt>DB</dt><dd>${creature.db}</dd></div></dl><div class="coliseum-health-label"><span>Hits remaining</span><strong>${hits} / ${creature.hits}</strong></div><progress aria-label="${esc(creature.name)} hits remaining" value="${hits}" max="${creature.hits}"></progress><p class="coliseum-effects">${esc(effects)} ${fighter?.deathRound!==undefined?criticalEffectMarkup('Foe dies in '+Math.max(0,fighter.deathRound-fight.round)+' rounds.') : fighter?.dead?criticalEffectMarkup('Foe dies instantly.') : ''}</p><ul class="coliseum-attacks">${creature.attacks.filter(Boolean).map(attack => `<li>${attack.both ? 'Both attacks' : `${esc(attackTypes[attack.type][0])} · ${attack.ob >= 0 ? '+' : ''}${attack.ob} OB · ${esc(attack.size)}`}${attack.chance ? ` · ${attack.chance}%` : attack.follow ? ` · ${attack.follow === 'same' ? 'same-round' : 'next-round'} follow-up` : ' · optional'}</li>`).join('')}</ul><p class="coliseum-notes">${esc(creature.special || 'No special abilities listed.')}</p>`;
   });
   renderSymbols();
 }
 
 function eventText(event) {
   const name = esc(selected[event.side].name);
+  if (event.kind === 'dies') return `<p><strong>${name}</strong> ${criticalEffectMarkup('Foe dies instantly.')} Death countdown expired; remaining hits are zero.</p>`;
   if (event.kind === 'bleed') return `<p><strong>${name}</strong> takes ${event.hits} bleeding hits.</p>`;
   if (event.kind === 'stun') return `<p><strong>${name}</strong> cannot attack this round: stunned or forced to parry.</p>`;
   const target = esc(selected[1-event.side].name);
   let html = `<p><strong>${name}</strong> → ${target}: ${esc(event.attack)}. ${formatRolls(event.roll.dice)} + ${event.ob} OB − ${event.db} DB${event.modifier ? ` ${event.modifier >= 0 ? '+' : '−'} ${Math.abs(event.modifier)} effects` : ''} = <strong>${event.total}</strong>. ${esc(event.code)}: <strong>${esc(event.result)}</strong>${event.result === 'F' ? ' · attack fails' : ` · ${event.hits} hits`}.</p>`;
   const critical = event.critical;
   if (critical?.ignored) html += `<p class="coliseum-critical">${critical.severity} critical has no effect on this creature.</p>`;
-  else if (critical) html += `<p class="coliseum-critical"><strong>${critical.severity} critical · ${esc(critical.code)} · roll ${critical.roll}</strong><br>${criticalEffectMarkup(critical.description)} ${criticalEffectMarkup(critical.effect)}${critical.conditional ? '<br>Conditional result: numerical effects require GM review and were not applied.' : ''}</p>`;
+  else if (critical) html += `<p class="coliseum-critical"><strong>${critical.severity} critical · ${esc(critical.code)} · roll ${critical.roll}</strong><br>${criticalEffectMarkup(critical.description)} ${criticalEffectMarkup(critical.effect,critical.description)}${critical.conditional ? '<br>Unsupported conditional clause needs GM review; supported and unconditional clauses applied.' : ''}</p>`;
+  if(critical?.conditional||critical?.equipmentConditions?.length)html+=`<details class="coliseum-critical-source"><summary>Original conditional result</summary><p>${criticalEffectMarkup(critical.sourceDescription)} ${criticalEffectMarkup(critical.sourceEffect,critical.sourceDescription)}</p></details>`;
   return html;
 }
 
@@ -98,7 +107,7 @@ function renderRound() {
   if (firstRound) log.replaceChildren();
   const detail = document.createElement('details');
   detail.className = 'coliseum-log-round'; detail.open = true;
-  detail.innerHTML = `<summary>Round ${entry.round} · ${entry.events.filter(event => event.kind === 'attack').reduce((sum,event) => sum+event.hits,0)} attack hits</summary><p class="coliseum-initiative">Initiative: ${entry.initiative.map(({side,total}) => `${esc(selected[side].name)} ${total}`).join(' · ')}</p>${entry.events.map(eventText).join('')}`;
+  detail.innerHTML = `<summary>Round ${entry.round} · ${entry.events.filter(event => event.kind === 'attack').reduce((sum,event) => sum+event.hits,0)} attack hits</summary><p class="coliseum-initiative">Initiative: ${entry.initiative.map(({side,total}) => `${esc(selected[side].name)} ${total===null?'no roll':total}`).join(' · ')}</p>${entry.events.map(eventText).join('')}`;
   log.append(detail);
   log.scrollLeft = firstRound ? 0 : follow ? log.scrollWidth : previousScroll;
   if (fight.finished) {
@@ -111,7 +120,7 @@ function renderRound() {
 function resetFight() {
   running = false;
   runVersion++;
-  fight = createFight(...selected);
+  fight = createFight(...selected.map((creature,index)=>({...creature,equipment:equipmentFor(sides[index],index)})));
   $('#coliseum-round').textContent = 'Ready';
   $('#coliseum-log').innerHTML = '<p class="play-muted">The gates are open. Start the fight or play one round at a time.</p>';
   $('#coliseum-log').scrollLeft = 0;
@@ -155,7 +164,7 @@ async function load() {
       selected = [0,1].map(index => catalog.find(creature => Array.isArray(saved) && creature.id === saved[index]) ||
         catalog.find(creature => creature.name === (index === 0 ? 'Wolf' : 'Tiger')) || catalog[index]);
       sides.forEach(filterChoices);
-      ready = true; resetFight();
+      ready = true; renderEquipment(); resetFight();
     } catch (error) { status(`${error.message}. Retry to open the arena.`); $('#coliseum-retry').hidden = false; }
     finally { loading = null; controls(); }
   })();
@@ -166,7 +175,7 @@ sides.forEach((side,index) => {
   search(side).addEventListener('input',() => filterChoices(side,index));
   choice(side).addEventListener('change',() => {
     selected[index] = catalog.find(creature => creature.id === choice(side).value);
-    resetFight(); filterChoices(side,index);
+    renderEquipment(); resetFight(); filterChoices(side,index);
   });
 });
 $('#coliseum-step').addEventListener('click',nextRound);

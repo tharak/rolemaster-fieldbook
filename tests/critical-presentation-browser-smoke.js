@@ -28,8 +28,8 @@ async (existingPage) => {
       const boldText=await result.textContent();
       await arena();
       const legend=page.locator('#critical-symbol-legend');
-      assert(await legend.locator('li').count()===9,'Incomplete critical legend');
-      const expected=['💥','🌀','🚫','🌀🚫','🛡️','🛡️','🩸','➖','➕'];
+      assert(await legend.locator('li').count()===10,'Incomplete critical legend');
+      const expected=['💥','🌀','🚫','🌀🚫','🛡️','🛡️','🩸','➖','➕','☠️'];
       assert(JSON.stringify(await legend.locator('[role="img"]').allTextContents())===JSON.stringify(expected),'Legend mapping differs from exact requested symbols');
       assert(await page.locator('.coliseum-rules #critical-symbol-legend').count()===1,'Legend not under Arena rules');
       await page.getByRole('checkbox',{name:'Use emojis',exact:true}).check();
@@ -66,7 +66,7 @@ async (existingPage) => {
     }
     const mappingProof=await page.locator('#attack-grid .critical-token[role="img"]').evaluateAll(elements=>elements.map(el=>({label:el.getAttribute('aria-label'),title:el.title,icon:el.firstChild.textContent.trim(),text:el.textContent})));
     for(const item of mappingProof){
-      const expected=item.label.startsWith('Stunned and')?'🌀🚫':item.label.startsWith('Stunned:')?'🌀':item.label.startsWith('Unable')?'🚫':item.label.startsWith('Must')?'🛡️':item.label.startsWith('Bleeding')?'🩸':item.label.startsWith('Penalty')?'➖':item.label.startsWith('Attacker')?'➕':'💥';
+      const expected=item.label.startsWith('Dies:')?'☠️':item.label.startsWith('Stunned and')?'🌀🚫':item.label.startsWith('Stunned:')?'🌀':item.label.startsWith('Unable')?'🚫':item.label.startsWith('Must')?'🛡️':item.label.startsWith('Bleeding')?'🩸':item.label.startsWith('Penalty')?'➖':item.label.startsWith('Attacker')?'➕':'💥';
       assert(item.icon===expected&&item.title===item.label,'Wrong accessible effect mapping: '+JSON.stringify(item));
     }
     assert(errors.length===0,errors.join('\n'));

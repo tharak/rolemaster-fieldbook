@@ -92,7 +92,7 @@ export function createTableBrowser({showView}) {
   }
   function renderCriticalGrid() {
     const columns = activeTable.columns.map(column => `<th scope="col">${esc(column.group === 'Critical severity' || column.group === 'Weapon' ? column.label : `${column.group} · ${column.label}`)}</th>`).join('');
-    const rows = activeTable.rows.map((row, rowIndex) => `<tr class="critical-row" data-row="${rowIndex}"><th scope="row">${esc(row.roll)}</th>${row.cells.map((cell, columnIndex) => `<td data-column="${columnIndex}"><p>${criticalEffectMarkup(cell.description)}</p>${cell.effect ? `<span class="critical-effect">${criticalEffectMarkup(cell.effect)}</span>` : ''}</td>`).join('')}</tr>`).join('');
+    const rows = activeTable.rows.map((row, rowIndex) => `<tr class="critical-row" data-row="${rowIndex}"><th scope="row">${esc(row.roll)}</th>${row.cells.map((cell, columnIndex) => `<td data-column="${columnIndex}"><p>${criticalEffectMarkup(cell.description)}</p>${cell.effect ? `<span class="critical-effect">${criticalEffectMarkup(cell.effect,cell.description)}</span>` : ''}</td>`).join('')}</tr>`).join('');
     $('#attack-grid').innerHTML = `<thead><tr><th scope="col">Roll</th>${columns}</tr></thead><tbody>${rows}</tbody>`;
   }
   function updateCriticalLookup() {
@@ -105,7 +105,7 @@ export function createTableBrowser({showView}) {
     }) || activeTable.rows[activeTable.rows.length - 1];
     const column = activeTable.columns[columnIndex];
     const cell = row.cells[columnIndex];
-    $('#lookup-result').innerHTML = `<div class="critical-lookup"><div class="critical-lookup-heading"><span>ROLL ${esc(roll)}${row.roll === String(roll) ? '' : ` · ${esc(row.roll)}`}</span><strong>${esc(column.group === 'Critical severity' || column.group === 'Weapon' ? column.label : `${column.group} · ${column.label}`)}</strong></div><p>${criticalEffectMarkup(cell.description)}</p>${cell.effect ? `<div class="critical-lookup-effect">${criticalEffectMarkup(cell.effect)}</div>` : ''}</div>`;
+    $('#lookup-result').innerHTML = `<div class="critical-lookup"><div class="critical-lookup-heading"><span>ROLL ${esc(roll)}${row.roll === String(roll) ? '' : ` · ${esc(row.roll)}`}</span><strong>${esc(column.group === 'Critical severity' || column.group === 'Weapon' ? column.label : `${column.group} · ${column.label}`)}</strong></div><p>${criticalEffectMarkup(cell.description)}</p>${cell.effect ? `<div class="critical-lookup-effect">${criticalEffectMarkup(cell.effect,cell.description)}</div>` : ''}</div>`;
     $$('.critical-row', $('#attack-grid')).forEach(element => {
       const selected = Number(element.dataset.row) === activeTable.rows.indexOf(row);
       element.classList.toggle('selected-row', selected);

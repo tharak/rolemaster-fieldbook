@@ -5,6 +5,9 @@
 .coliseum-badge { border:1px solid #ad8c56; border-radius:100%; padding:26px 16px; text-transform:uppercase; letter-spacing:.15em; color:#dabd77; font-size:.7rem; }
 .coliseum-pickers { display:grid; grid-template-columns:1fr 1fr; gap:24px; margin:26px 0; }
 .coliseum-picker { display:grid; gap:8px; }
+.coliseum-picker fieldset { min-width:0; margin:8px 0; border:1px solid #cbd1c8; display:grid; gap:8px; }
+.coliseum-picker fieldset label { display:flex; align-items:center; gap:6px; }
+.coliseum-picker fieldset input { width:18px; height:18px; padding:0; }
 .coliseum-picker label { font-weight:600; font-size:.85rem; }
 .coliseum-picker input,.coliseum-picker select { width:100%; min-width:0; padding:12px; border:1px solid #cbd1c8; border-radius:7px; background:#fffef9; color:#263d2e; font:inherit; }
 .coliseum-picker select option { background:#fffef9; color:#263d2e; }

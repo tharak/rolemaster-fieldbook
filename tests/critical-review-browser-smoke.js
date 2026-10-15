@@ -32,9 +32,9 @@ async (existingPage) => {
       await page.locator('#review-filter').selectOption('green');
       assert(await page.locator('.review-yellow').count()===0&&await page.locator('.review-green').count()>0,'Green filter mismatch');
       await page.locator('#review-filter').selectOption('yellow');
-      await page.locator('#review-reason').selectOption('duration');
+      await page.locator('#review-reason').selectOption('condition');
       assert(await page.locator('.review-result').count()>0,'Duration examples absent');
-      assert(await page.locator('.review-result').evaluateAll(cells=>cells.every(c=>c.dataset.reasons.split(' ').includes('duration'))),'Reason filter mismatch');
+      assert(await page.locator('.review-result').evaluateAll(cells=>cells.every(c=>c.dataset.reasons.split(' ').includes('condition'))),'Reason filter mismatch');
       await page.locator('#review-search').fill('no-such-result-938475');
       assert(await page.locator('.review-result').count()===0,'Empty search should not show cells');
       assert((await page.locator('#review-match-count').textContent()).startsWith('0 matching'),'Empty count wrong');
@@ -43,7 +43,7 @@ async (existingPage) => {
       await page.getByRole('checkbox',{name:'Use emojis',exact:true}).check();
       assert(await page.locator('.critical-token[role="img"]').count()>0,'Emoji preference not applied');
       const icons=await page.locator('.critical-token[role="img"]').evaluateAll(elements=>elements.map(el=>el.firstChild.textContent.trim()));
-      assert(icons.every(icon=>['💥','🌀','🚫','🌀🚫','🛡️','🩸','➖','➕'].includes(icon)),'Review has an obsolete effect icon');
+      assert(icons.every(icon=>['💥','🌀','🚫','🌀🚫','🛡️','🩸','➖','➕','☠️'].includes(icon)),'Review has an obsolete effect icon');
       const parry=page.locator('.critical-token[aria-label^="Must parry:"][aria-label*=" at −"]').first();
       assert(await parry.count()>0,'Missing real parry penalty example');
       assert(await parry.evaluate(el=>el.firstChild.textContent.trim())==='🛡️','Parry penalty icon must be only a shield');

@@ -1,6 +1,9 @@
 import './app.js';
 import {$, esc} from './dom.js';
 import {criticalEffectMarkup,refreshCriticalEffects} from './critical-presentation.js';
+import {automaticInitiative} from './critical-initiative.js';
+import {applyCriticalDeath,advanceCriticalDeath,cancelCriticalDeathOnHealing} from './critical-death.js';
+import {resolveCriticalEquipment,criticalEquipment} from './critical-equipment.js';
 import {openEndedD100, parseCriticalSymbols, rollD10 as d10, rollD100 as d100} from './rules.js';
 
 (() => {
@@ -78,25 +81,18 @@ import {openEndedD100, parseCriticalSymbols, rollD10 as d10, rollD100 as d100} f
   const criticalPenalty=value=>activeCriticalEffects(value).reduce((sum,effect)=>sum-(effect.kind==='penalty'?Number(effect.amount)||0:0),0);
   const criticalBonus=value=>activeCriticalEffects(value).reduce((sum,effect)=>sum+(effect.kind==='bonus'?Number(effect.amount)||0:0),0);
   const criticalModifier=value=>criticalPenalty(value)+criticalBonus(value);
-  const criticalRounds=(value,kind)=>activeCriticalEffects(value).filter(effect=>effect.kind===kind).reduce((sum,effect)=>sum+(Number(effect.roundsLeft)||0),0);
+  const criticalRounds=(value,kind)=>activeCriticalEffects(value).filter(effect=>effect.kind===kind).reduce((sum,effect)=>sum+(effect.roundsLeft===null?1:Number(effect.roundsLeft)||0),0);
   function criticalEffectLabel(effect) {
-    const rounds=effect.roundsLeft===null?'until healed':`${effect.roundsLeft} round${effect.roundsLeft===1?'':'s'}`;
+    const rounds=effect.roundsLeft===null?(effect.durationLabel||'until healed'):`${effect.roundsLeft} round${effect.roundsLeft===1?'':'s'}`;
     return ({penalty:`−${effect.amount} to rolls`,bonus:`+${effect.amount} to rolls`,stun:'Stunned',stunNoParry:'Stunned; cannot parry',noParry:'Cannot parry',mustParry:`Must parry${effect.amount?` at −${effect.amount}`:''}`,bleed:`Bleeding ${effect.amount} hit${effect.amount===1?'':'s'}/round`})[effect.kind]+` · ${rounds}`;
   }
   function criticalFacts(who,value) {
-    const names=(who.equipmentNames||[]).join(' ').toLowerCase(),at=Number(who.at)||1;
-    const greaves=[10,14,18].includes(at)||/full chain|full plate|half plate|rein.*full/i.test(names);
-    return {
-      shield:(who.shieldBonus||0)>0||/shield/.test(names),
-      helmet:/helm|helmet/.test(names),
-      'nose guard':/visored|nose guard/.test(names),
-      'arm greaves':greaves||/arm greave/.test(names),
-      'leg greaves':greaves||/leg greave/.test(names),
-      'leg armor':greaves||[8,11,12,15,16,19,20].includes(at)||/leg greave/.test(names),
-      'thigh armor':greaves||[8,11,12,15,16,19,20].includes(at)||/thigh armor/.test(names),
-      'chest armor':at>=5,'abdomen armor':at>=5,'waist armor':at>=5,'shoulder armor':at>=6,
-      backpack:/backpack/.test(names),wet:(value.statuses||[]).includes('Wet')
-    };
+    const names=(who.equipmentNames||[]).join(' ').toLowerCase();
+    const facts=Object.fromEntries(criticalEquipment.map(([key])=>[key,names.includes(key)]));
+    facts.helmet=/helm|helmet/.test(names);facts['full helmet']=/full helm/.test(names);facts.visor=/visor/.test(names);
+    facts['abdomen armor']=/abdom(?:en|inal) armor/.test(names);
+    facts.shield=(who.shieldBonus||0)>0||/shield/.test(names);
+    return facts;
   }
   function chooseCriticalBranch(raw,who,value) {
     const marker=/\b(without|with|w\/o|w\/|if not|if)\s+(arm greaves|leg greaves?|leg armor|thigh armor|chest armor|ch\.? armor|abdom(?:en|inal) armor|waist armor|shoulder armor|nose guard|shield|helmet|helm|backpack|wet)\s*:+/gi;
@@ -123,11 +119,13 @@ import {openEndedD100, parseCriticalSymbols, rollD10 as d10, rollD100 as d100} f
   }
   function addCriticalEffects(target,attacker,effects) {
     for(const effect of effects) {
+      if(effect.kind==='dies'){const id=Object.keys(state.tokens).find(id=>token(id)===target);applyCriticalDeath(target,actor(id)?.hitsMax||0,state.round,effect.roundsLeft);continue;}
+      if(effect.kind==='initiative'){attacker.automaticInitiativeRound=state.round+1;continue;}
       if(effect.kind==='hits') {target.hits=(target.hits||0)+effect.amount;continue;}
       const receiver=effect.kind==='bonus'?attacker:target;
       receiver.criticalEffects=Array.isArray(receiver.criticalEffects)?receiver.criticalEffects:[];
       const startsRound=effect.kind==='bleed'||effect.kind==='bonus'?state.round+1:state.round+(effect.roundsLeft!==null&&(target.activityThisRound||0)>=50?1:0);
-      const existing=['stun','stunNoParry','noParry','mustParry'].includes(effect.kind)&&receiver.criticalEffects.find(item=>item.kind===effect.kind&&item.startsRound===startsRound&&item.amount===effect.amount);
+      const existing=['stun','stunNoParry','noParry','mustParry'].includes(effect.kind)&&receiver.criticalEffects.find(item=>item.kind===effect.kind&&item.startsRound===startsRound&&item.amount===effect.amount&&item.roundsLeft!==null&&effect.roundsLeft!==null);
       if(existing){existing.roundsLeft+=effect.roundsLeft;continue;}
       receiver.criticalEffects.push({...effect,startsRound,id:crypto.randomUUID?.()||`${Date.now()}-${Math.random()}`});
     }
@@ -143,6 +141,7 @@ import {openEndedD100, parseCriticalSymbols, rollD10 as d10, rollD100 as d100} f
   }
   function advanceCriticalEffects(completedRound) {
     for(const [id,value] of Object.entries(state.tokens)) {
+      if(advanceCriticalDeath(value,actor(id)?.hitsMax||0,state.round))appendLog(id,criticalEffectMarkup('Foe dies instantly.')+' Critical death countdown reached zero remaining hits.');
       const stuns=(value.criticalEffects||[]).filter(effect=>['stun','stunNoParry'].includes(effect.kind)&&(effect.startsRound??completedRound)<=completedRound);
       const spent=stuns.find(effect=>effect.kind==='stunNoParry')||stuns[0];
       value.criticalEffects=(value.criticalEffects||[]).filter(effect=>effect.roundsLeft===null||(effect.startsRound??completedRound)>completedRound||(['stun','stunNoParry'].includes(effect.kind)?effect!==spent||--effect.roundsLeft>0:--effect.roundsLeft>0));
@@ -171,7 +170,7 @@ import {openEndedD100, parseCriticalSymbols, rollD10 as d10, rollD100 as d100} f
       let html='';
       if(table.columns&&table.rows) {
         const headings=table.columns.map(column=>`<th scope="col">${esc(column.group&&column.group!=='Critical severity'?`${column.group} · `:'')}${esc(column.label)}</th>`).join('');
-        const body=table.rows.map(row=>`<tr><th scope="row">${esc(row.roll)}</th>${table.columns.map((_,index)=>{const cell=row.cells?.[index],value=cell?`${criticalEffectMarkup(cell.description||'')}${cell.effect?` · ${criticalEffectMarkup(cell.effect)}`:''}`:row.values?.[index]??'—';return `<td>${cell?value:esc(value)}</td>`;}).join('')}</tr>`).join('');
+        const body=table.rows.map(row=>`<tr><th scope="row">${esc(row.roll)}</th>${table.columns.map((_,index)=>{const cell=row.cells?.[index],value=cell?`${criticalEffectMarkup(cell.description||'')}${cell.effect?` · ${criticalEffectMarkup(cell.effect,cell.description)}`:''}`:row.values?.[index]??'—';return `<td>${cell?value:esc(value)}</td>`;}).join('')}</tr>`).join('');
         html=`<table><thead><tr><th scope="col">Roll</th>${headings}</tr></thead><tbody>${body}</tbody></table>`;
       } else if(table.categories&&table.professions) {
         html=`<table><thead><tr><th>Skill category</th>${table.professions.map(name=>`<th>${esc(name)}</th>`).join('')}</tr></thead><tbody>${Object.entries(table.categories).map(([name,costs])=>`<tr><th>${esc(name)}</th>${table.professions.map(profession=>`<td>${esc(costs[profession]?.join('/')||'—')}</td>`).join('')}</tr>`).join('')}</tbody></table>`;
@@ -188,10 +187,10 @@ import {openEndedD100, parseCriticalSymbols, rollD10 as d10, rollD100 as d100} f
       const cell=row?.cells?.[columnIndex];
       const dice=`${roll}${modifier?` ${modifier>=0?'+':'−'} ${Math.abs(modifier)} = ${total}`:''}`;
       if(!cell)return {html:`${tableLink(code,label)} roll ${dice}: no matching entry.`,effects:[]};
-      const choice=criticalTarget?chooseCriticalBranch(cell.effect||'',criticalTarget.who,criticalTarget.value):{effect:cell.effect||'',unresolved:false};
-      const effect=choice.effect?` <strong>${criticalEffectMarkup(choice.effect)}</strong>`:'';
-      const effects=criticalTarget&&!choice.unresolved?parseCriticalSymbols(choice.effect):[];
-      return {html:`${tableLink(code,label)} roll ${dice}: ${criticalEffectMarkup(cell.description)}${effect}${choice.unresolved?` <strong>Condition needs review: ${criticalEffectMarkup(cell.effect)}</strong>`:''}`,effects,unresolved:choice.unresolved,rawEffect:cell.effect||''};
+      const choice=criticalTarget?resolveCriticalEquipment(cell.description,cell.effect,criticalFacts(criticalTarget.who,criticalTarget.value)):{description:cell.description,effect:cell.effect||'',unresolved:false};
+      const effect=choice.effect?` <strong>${criticalEffectMarkup(choice.effect,choice.description)}</strong>`:'';
+      const effects=criticalTarget?parseCriticalSymbols(choice.effect,choice.description):[];
+      return {html:`${tableLink(code,label)} roll ${dice}: ${criticalEffectMarkup(choice.description)}${effect}${choice.unresolved?` <strong>Condition needs review: ${criticalEffectMarkup(cell.description)} ${criticalEffectMarkup(cell.effect,cell.description)}</strong>`:''}`,effects,unresolved:choice.unresolved,rawEffect:cell.effect||''};
     } catch {return {html:`${tableLink(code,label)} roll ${roll}: table unavailable.`,effects:[]};}
   }
   const weaponFumbleColumn=category=>category==='Weapon • 2-Handed'?1:category==='Weapon • Pole Arms'?2:category==='Weapon • Thrown'?4:category==='Weapon • Missile'||category==='Weapon • Missile Artillery'?5:0;
@@ -201,7 +200,7 @@ import {openEndedD100, parseCriticalSymbols, rollD10 as d10, rollD100 as d100} f
     state.log = state.log.slice(0,80);
   }
   function beginRoundLog() {
-    const initiatives=orderedActors().map(([id,value])=>({name:actor(id).name,roll:[...(value.initiativeRoll||[])],stat:whoQuickness(id),modifier:(value.initiative||0)-(value.initiativeRoll||[]).reduce((sum,item)=>sum+item,0)-whoQuickness(id),total:value.initiative||0}));
+    const initiatives=orderedActors().map(([id,value])=>({name:actor(id).name,automatic:value.initiativeAutomatic,roll:[...(value.initiativeRoll||[])],stat:whoQuickness(id),modifier:(value.initiative||0)-(value.initiativeRoll||[]).reduce((sum,item)=>sum+item,0)-whoQuickness(id),total:value.initiative||0}));
     state.log.unshift({round:state.round,kind:'round',initiatives});
     state.log=state.log.slice(0,80);
   }
@@ -282,9 +281,18 @@ import {openEndedD100, parseCriticalSymbols, rollD10 as d10, rollD100 as d100} f
     return phases.reduce((sum,phase)=>{const draft=draftFor(id,phase);return sum+(draftType(draft,actor(id))==='move'?Number(draft.activity)||0:0);},0);
   }
   function ensureInitiative(reroll=false) {
+    const contenders=Object.entries(state.tokens).filter(([id])=>actor(id));
+    for(const [,value] of contenders)if(value.automaticInitiativeRound<state.round)delete value.automaticInitiativeRound;
+    const automatic=automaticInitiative(contenders.map(([,value])=>value),state.round);
+    state.initiativeReview=automatic?.review||'';
+    if(automatic){
+      contenders.forEach(([,value],index)=>{value.initiativeRoll=[];value.initiativeAutomatic=automatic.review?'GM review':index===automatic.winner?'Automatic winner':'No roll';value.initiative=automatic.review?0:index===automatic.winner?1:0;});
+      return;
+    }
     for(const [id,value] of Object.entries(state.tokens)) {
+      delete value.initiativeAutomatic;
       const who=actor(id);if(!who)continue;
-      if(reroll||!Array.isArray(value.initiativeRoll))value.initiativeRoll=[d10(),d10()];
+      if(reroll||!Array.isArray(value.initiativeRoll)||value.initiativeRoll.length!==2)value.initiativeRoll=[d10(),d10()];
       const mod=(value.surprised?-4:0)+(who.hitsMax>0&&(value.hits||0)>who.hitsMax/2?-4:0)-Math.floor(movementActivity(id)/10)+(Number(value.initiativeMod)||0)+criticalModifier(value);
       value.initiative=value.initiativeRoll[0]+value.initiativeRoll[1]+(who.stats[8]||0)+mod;
     }
@@ -425,8 +433,8 @@ import {openEndedD100, parseCriticalSymbols, rollD10 as d10, rollD100 as d100} f
       const who=actor(id);
       const used=phases.reduce((sum,phase)=>{const draft=draftFor(id,phase);return sum+(draft.choice==='none'?0:Number(draft.activity)||0);},0);
       const statuses=statusChoices.map(status=>{const active=status==='Surprised'?!!value.surprised:(value.statuses||[]).includes(status);return `<button type="button" data-status="${status}" aria-pressed="${active}" class="${active?'selected':''}">${status}</button>`;}).join('');
-      const effects=(value.criticalEffects||[]).map(effect=>`<span>${(effect.startsRound??state.round)>state.round?'Starts next round · ':''}${esc(criticalEffectLabel(effect))}<button type="button" data-clear-effect="${esc(effect.id)}" aria-label="Clear ${esc(criticalEffectLabel(effect))}">×</button></span>`).join('')+(value.dyingRoundsLeft!==undefined?`<span>Dying · ${value.dyingRoundsLeft} rounds left</span>`:'');
-      const header=`<header class="encounter-actor-header"><div class="encounter-actor-initiative"><small>Initiative</small><strong>${value.initiative}</strong><small>${value.initiativeRoll?.join(' + ')||''} + Qu/mods</small></div><div class="encounter-actor-name"><small>Name</small><strong>${esc(who.name)}</strong><small>DB ${who.db} · AT ${who.at} · ${who.baseMove} ft/round</small></div><label><span>Hits</span><span class="encounter-vital-input"><input type="number" min="0" data-vital="hits" value="${value.hits||0}"><small>/ ${who.hitsMax||'—'}</small></span></label><label><span>PP</span><span class="encounter-vital-input"><input type="number" min="0" max="${Math.max(0,who.ppMax)}" data-vital="pp" value="${value.pp||0}"><small>/ ${who.ppMax||'—'}</small></span></label></header><div class="encounter-actor-tools"><span>${used} / 100% activity</span><label>Initiative modifier <input type="number" data-initiative-mod value="${value.initiativeMod||0}"></label><button type="button" data-place-actor="${esc(id)}">Place on map</button></div><div class="encounter-status"><strong>Status</strong><div class="encounter-status-options">${statuses}</div></div>${effects?`<div class="encounter-critical-effects" aria-label="Critical effects">${effects}</div>`:''}`;
+      const effects=(value.criticalEffects||[]).map(effect=>`<span>${(effect.startsRound??state.round)>state.round?'Starts next round · ':''}${esc(criticalEffectLabel(effect))}<button type="button" data-clear-effect="${esc(effect.id)}" aria-label="Clear ${esc(criticalEffectLabel(effect))}">×</button></span>`).join('')+(value.deathRound!==undefined?`<span>${criticalEffectMarkup('Foe dies in '+Math.max(0,value.deathRound-state.round)+' rounds.')}</span>`:'')+(value.dead?`<span>${criticalEffectMarkup('Foe dies instantly.')}</span>`:'')+(value.dyingRoundsLeft!==undefined?`<span>Dying · ${value.dyingRoundsLeft} rounds left</span>`:'');
+      const header=`<header class="encounter-actor-header"><div class="encounter-actor-initiative"><small>Initiative</small><strong>${value.initiativeAutomatic||value.initiative}</strong><small>${value.initiativeAutomatic?'No initiative dice':(value.initiativeRoll?.join(' + ')||'')+' + Qu/mods'}</small></div><div class="encounter-actor-name"><small>Name</small><strong>${esc(who.name)}</strong><small>DB ${who.db} · AT ${who.at} · ${who.baseMove} ft/round</small></div><label><span>Hits</span><span class="encounter-vital-input"><input type="number" min="0" data-vital="hits" value="${value.hits||0}"><small>/ ${who.hitsMax||'—'}</small></span></label><label><span>PP</span><span class="encounter-vital-input"><input type="number" min="0" max="${Math.max(0,who.ppMax)}" data-vital="pp" value="${value.pp||0}"><small>/ ${who.ppMax||'—'}</small></span></label></header><div class="encounter-actor-tools"><span>${used} / 100% activity</span><label>Initiative modifier <input type="number" data-initiative-mod value="${value.initiativeMod||0}"></label><button type="button" data-place-actor="${esc(id)}">Place on map</button></div><div class="encounter-status"><strong>Status</strong><div class="encounter-status-options">${statuses}</div></div>${effects?`<div class="encounter-critical-effects" aria-label="Critical effects">${effects}</div>`:''}`;
       const cards=phases.map((phase,index)=>{
       const draft=draftFor(who.id,phase),type=draftType(draft,who),kind=targetKindFor(draft,who);
       const target=kind==='creature'?(actor(draft.target)?.name||'Choose a creature'):kind==='hex'?(draft.hex?`Hex ${draft.hex.q},${draft.hex.r} · ${token(who.id)?.q!=null?distance(token(who.id),draft.hex)*state.scale:0} ft`:'Choose a hex'):'';
@@ -447,7 +455,7 @@ import {openEndedD100, parseCriticalSymbols, rollD10 as d10, rollD100 as d100} f
       if(entry.kind==='round')group.header=entry;else if(entry.phase!=='Declaration'||!entry.detail?.startsWith('Initiative rolled'))group.actions.push(entry);
     }
     $('#encounter-log').innerHTML=[...groups].reverse().map(([round,group])=>{
-      const initiatives=group.header?.initiatives?.map(item=>`<span>${esc(item.name)}: ${esc(item.roll.join(' + '))} + ${esc(item.stat)} Qu ${item.modifier?`${item.modifier>=0?'+':'−'} ${Math.abs(item.modifier)} modifiers`:''} = <strong>${esc(item.total)}</strong></span>`).join('')||'';
+      const initiatives=group.header?.initiatives?.map(item=>item.automatic?`<span>${esc(item.name)}: ${esc(item.automatic)} (no roll)</span>`:`<span>${esc(item.name)}: ${esc(item.roll.join(' + '))} + ${esc(item.stat)} Qu ${item.modifier?`${item.modifier>=0?'+':'−'} ${Math.abs(item.modifier)} modifiers`:''} = <strong>${esc(item.total)}</strong></span>`).join('')||'';
       return `<section class="encounter-log-round"><strong>Round ${esc(round)}</strong>${initiatives?`<div class="encounter-log-initiative">${initiatives}</div>`:''}${group.actions.map(entry=>`<article><small>${esc(entry.phase==='Declaration'?'Start':entry.phase)}</small><p><strong>${esc(entry.actor)}:</strong> ${entry.detail}</p></article>`).join('')}</section>`;
     }).join('');
     refreshCriticalEffects($('#encounter-log'));
@@ -745,6 +753,7 @@ import {openEndedD100, parseCriticalSymbols, rollD10 as d10, rollD100 as d100} f
   async function resolveRound() {
     if(resolving)return;
     if(!Object.keys(state.tokens).length)return message('Add a character before resolving a round.');
+    if(state.initiativeReview)return message(state.initiativeReview);
     if(state.phase<0&&!prepareRoundActions())return;
     resolving=true;
     try {
@@ -799,7 +808,7 @@ import {openEndedD100, parseCriticalSymbols, rollD10 as d10, rollD100 as d100} f
     const id=card.dataset.actorCard,value=token(id);if(!value)return;
     const form=event.target.closest('form');
     if(form){state.selected=id;activePhase=form.dataset.phase;readDraft(form,event.target.name);ensureInitiative();save();renderPhaseCards();renderMap();return;}
-    if(event.target.dataset.vital){const who=actor(id),max=event.target.dataset.vital==='hits'?Infinity:who.ppMax;value[event.target.dataset.vital]=Math.max(0,Math.min(max,Number(event.target.value)||0));}
+    if(event.target.dataset.vital){const who=actor(id),oldDamage=value.hits,max=event.target.dataset.vital==='hits'?Infinity:who.ppMax;value[event.target.dataset.vital]=Math.max(0,Math.min(max,Number(event.target.value)||0));if(event.target.dataset.vital==='hits'&&cancelCriticalDeathOnHealing(value,oldDamage))appendLog(id,'Healing cleared the pending critical death countdown.');}
     if(event.target.hasAttribute('data-initiative-mod'))value.initiativeMod=Number(event.target.value)||0;
     ensureInitiative();save();renderPhaseCards();renderMap();
   });

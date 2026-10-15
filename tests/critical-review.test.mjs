@@ -6,8 +6,12 @@ const cell=(effect,description='A clear strike.')=>reviewCell({description,effec
 test('review conventions do not mistake established durations for missing ones',()=>{
   for(const effect of ['+0H','+12H – ∑∏ – 4∫','π','∏','∑','2∫','(+10)','6(-20)'])assert.equal(cell(effect).status,'green',effect);
   for(const description of ['Permanent penalty.','Penalty lasts until healed.','Penalty applies for 2 weeks.'])assert.equal(cell('(-20)',description).status,'green',description);
-  assert.ok(cell('(-20)').reasons.includes('duration'));
-  assert.ok(cell('', 'Foe is stunned.').reasons.includes('duration'));
+  assert.equal(cell('(-20)').status,'green');
+  assert.ok(cell('(-20)').durationDefaults.includes('(-20)'));
+  assert.equal(cell('', 'Foe is stunned.').status,'green');
+  assert.equal(cell('+2H','You gain the initiative.').initiative,'attacker-next-round-no-roll');
+  assert.equal(cell('+2H','You gain the initiative.').status,'green');
+  assert.equal(cell('(-20)','If shield is absent, you gain the initiative.').status,'yellow');
   assert.equal(cell('', 'Foe is stunned for 2 rounds.').status,'green');
   assert.equal(cell('+2H','Foe dodges with too much effort.').status,'green');
   assert.equal(cell('+2H','He tries without success to push the attack away.').status,'green');

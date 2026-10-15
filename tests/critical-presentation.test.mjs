@@ -27,10 +27,10 @@ test('compounds, durations, coercion-free prose, and distinct parry meanings',()
   assert.match(formatCriticalEffect('∏'),/Unable to parry/);
   assert.match(formatCriticalEffect('π'),/Must parry/);
   assert.match(formatCriticalEffect('2∑π'),/Stunned: 2 rounds/);
-  assert.match(formatCriticalEffect('π(-10)'),/duration not specified/);
+  assert.match(formatCriticalEffect('π(-10)'),/Penalty: −10 for 1 round/);
   assert.match(formatCriticalEffect('10 ∫'),/10 hits per round/);
   assert.equal(formatCriticalEffect('dies in 9 rounds. +10 – 20'),'dies in 9 rounds. +10 – 20');
-  assert.equal(criticalLegend.length,9);
+  assert.equal(criticalLegend.length,10);
 });
 test('all untrusted prose and source attributes are escaped',()=>{
   const raw='<img src=x onerror="alert(1)"> +4H';
@@ -42,7 +42,7 @@ test('all untrusted prose and source attributes are escaped',()=>{
 test('requested effect emojis are exact and leave bold labels and numeric penalties intact',()=>{
   const raw=['+7H','2∑','3∏','4∑∏','5π','6(π-15)','7∫','8(-20)','9(+25)'];
   const expected=['💥','🌀','🚫','🌀🚫','🛡️','🛡️','🩸','➖','➕'];
-  assert.deepEqual(criticalLegend.map(row=>row[2]),expected);
+  assert.deepEqual(criticalLegend.map(row=>row[2]),[...expected,'☠️']);
   assert.deepEqual(raw.map(text=>criticalTokens(text).find(token=>token.raw).emoji),expected);
   for(const text of raw){
     const token=criticalTokens(text).find(token=>token.raw);

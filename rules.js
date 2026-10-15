@@ -1,3 +1,6 @@
+import {criticalDurationFields} from './critical-duration.js';
+import {hasCriticalInitiative} from './critical-initiative.js';
+import {criticalDeath} from './critical-death.js';
 // Shared synchronous rules; browser startup awaits the optional Rust engine.
 let rustRankBonus = null;
 let rustRankCost = null;
@@ -95,18 +98,22 @@ export function openEndedD100(rollD100, unmodifiedExceptions = false) {
   return {first, dice, total:dice.reduce((sum, value) => sum + value, 0), unmodified:false};
 }
 
-export function parseCriticalSymbols(raw) {
+export function parseCriticalSymbols(raw, description = '') {
+  const context = description + '. ' + String(raw || '');
   const effects = []; let rest = String(raw || '');
   const take = (pattern, handler) => { rest = rest.replace(pattern, (...match) => { handler(...match); return ' '; }); };
   take(/\+(\d+)H\b/g, (_, amount) => effects.push({kind:'hits', amount:Number(amount)}));
-  take(/(\d*)∑∏/g, (_, rounds) => effects.push({kind:'stunNoParry', roundsLeft:Number(rounds) || 1}));
-  take(/(\d*)\(\s*(\d*)π\s*[-−–]\s*(\d+)\s*\)/g, (_, outer, inner, penalty) => effects.push({kind:'mustParry', roundsLeft:Number(outer || inner) || 1, amount:Number(penalty)}));
-  take(/(\d*)∑/g, (_, rounds) => effects.push({kind:'stun', roundsLeft:Number(rounds) || 1}));
-  take(/(\d*)∏/g, (_, rounds) => effects.push({kind:'noParry', roundsLeft:Number(rounds) || 1}));
-  take(/(\d*)π/g, (_, rounds) => effects.push({kind:'mustParry', roundsLeft:Number(rounds) || 1, amount:0}));
+  take(/(\d*)∑∏/g, (_, rounds) => effects.push({kind:'stunNoParry', ...criticalDurationFields(rounds,'stunNoParry',context)}));
+  take(/(\d*)\(\s*(\d*)π\s*[-−–]\s*(\d+)\s*\)/g, (_, outer, inner, penalty) => effects.push({kind:'mustParry', ...criticalDurationFields(outer || inner,'mustParry',context), amount:Number(penalty)}));
+  take(/(\d*)∑/g, (_, rounds) => effects.push({kind:'stun', ...criticalDurationFields(rounds,'stun',context)}));
+  take(/(\d*)∏/g, (_, rounds) => effects.push({kind:'noParry', ...criticalDurationFields(rounds,'noParry',context)}));
+  take(/(\d*)π/g, (_, rounds) => effects.push({kind:'mustParry', ...criticalDurationFields(rounds,'mustParry',context), amount:0}));
   take(/(\d*)∫/g, (_, amount) => effects.push({kind:'bleed', amount:Number(amount) || 1, roundsLeft:null}));
-  take(/(\d*)\(\s*[-−–]\s*(\d+)\s*\)/g, (_, rounds, amount) => effects.push({kind:'penalty', amount:Number(amount), roundsLeft:rounds ? Number(rounds) : null}));
-  take(/(\d*)\(\s*\+\s*(\d+)\s*\)/g, (_, rounds, amount) => effects.push({kind:'bonus', amount:Number(amount), roundsLeft:Number(rounds) || 1}));
+  take(/(\d*)\(\s*[-−–]\s*(\d+)\s*\)/g, (_, rounds, amount) => effects.push({kind:'penalty', amount:Number(amount), ...criticalDurationFields(rounds,'penalty',context)}));
+  take(/(\d*)\(\s*\+\s*(\d+)\s*\)/g, (_, rounds, amount) => effects.push({kind:'bonus', amount:Number(amount), ...criticalDurationFields(rounds,'bonus',context)}));
+  const death=criticalDeath(description+' '+String(raw||''));
+  if(death&&!death.conditional)effects.push({kind:'dies',roundsLeft:death.rounds});
+  if (hasCriticalInitiative(raw,description)) effects.push({kind:'initiative',nextRound:true});
   return effects;
 }
 

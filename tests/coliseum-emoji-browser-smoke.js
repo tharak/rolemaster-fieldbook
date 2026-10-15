@@ -26,9 +26,8 @@ async (existingPage) => {
     assert(!await toggle.isChecked(),'Default must retain symbols');
     assert(await page.locator('#coliseum-fighter-left .coliseum-crest').textContent() === 'W','Missing original wolf initial');
     await page.locator('.coliseum-rules > summary').click();
-    assert(await page.locator('.coliseum-rules #coliseum-symbol-legend li').count() === 3,'Legend must cover both contenders and duel');
-    const legend = await page.locator('#coliseum-symbol-legend').textContent();
-    for (const text of ['W','🐺','Wolf','T','🐯','Tiger','⚔','⚔️','Melee duel']) assert(legend.includes(text),'Incomplete legend: '+text);
+    assert(await page.locator('#coliseum-symbol-legend').count() === 0,'Arena symbol legend must be removed');
+    assert(await page.locator('#critical-symbol-legend li').count() === 10,'Critical effect legend must remain');
     const reports = [];
     for (const viewport of [{width:1280,height:900},{width:375,height:812}]) {
       await page.setViewportSize(viewport);
@@ -57,10 +56,9 @@ async (existingPage) => {
     assert(!await toggle.isChecked(),'Disabled preference not restored');
     const dragon = await page.locator('#coliseum-select-left option').evaluateAll(options => options.find(o => o.textContent.startsWith('Dragon (typical adult) ·')).value);
     await page.locator('#coliseum-select-left').selectOption(dragon);
-    assert((await page.locator('#coliseum-symbol-legend').textContent()).includes('🐉'),'Legend stale after selection change');
     await toggle.check();
     assert(await page.locator('#coliseum-fighter-left .coliseum-crest').textContent() === '🐉','Selection mapping stale');
     assert(errors.length === 0, errors.join('\n'));
-    return {emoji:reports,persistence:'on/off passed',legend:'both contenders + duel; updates with selection',pageErrors:errors.length};
+    return {emoji:reports,persistence:'on/off passed',legend:'arena marker legend removed; critical effects retained',pageErrors:errors.length};
   } finally { await context.close(); }
 }

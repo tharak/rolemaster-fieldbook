@@ -1,4 +1,7 @@
 import {openEndedD100, parseCriticalSymbols} from './rules.js';
+import {automaticInitiative} from './critical-initiative.js';
+import {applyCriticalDeath,advanceCriticalDeath} from './critical-death.js';
+import {resolveCriticalEquipment} from './critical-equipment.js';
 
 export const ROUND_LIMIT = 200;
 export const attackTypes = {
@@ -99,29 +102,36 @@ function resolveCritical(target,attacker,attack,severity,tables,d100,round) {
   const cell = table.rows.find(row => inRange(row.roll,roll))?.cells[column];
   if (!cell) throw new Error(`No critical result for ${code} roll ${roll}`);
   // Equipment-dependent branches need GM interpretation; never combine both outcomes.
-  const conditional = /\b(?:with|without|w\/o|if)\b|:/i.test(cell.effect || '');
-  if (!conditional) for (const effect of parseCriticalSymbols(cell.effect)) {
+  const selected=resolveCriticalEquipment(cell.description,cell.effect,target.creature.equipment||{});
+  const conditional=selected.unresolved;
+  for (const effect of parseCriticalSymbols(selected.effect,selected.description)) {
+    if(effect.kind==='dies'){applyCriticalDeath(target,target.creature.hits,round,effect.roundsLeft);continue;}
+    if (effect.kind === 'initiative') { attacker.automaticInitiativeRound=round+1; continue; }
     if (effect.kind === 'hits') target.hits += effect.amount;
     else (effect.kind === 'bonus' ? attacker : target).effects.push({...effect, starts:round+1});
   }
-  return {severity,code,roll,description:cell.description,effect:cell.effect,conditional};
+  return {severity,code,roll,description:selected.description,effect:selected.effect,sourceDescription:cell.description,sourceEffect:cell.effect,conditional,equipmentConditions:selected.conditions};
 }
 
 export function stepFight(fight,tables,random = Math.random) {
   if (fight.finished) return fight;
+  const automatic=automaticInitiative(fight.fighters,fight.round+1);
+  if(automatic?.review) throw new Error(automatic.review);
   const d100 = () => Math.floor(random()*100)+1;
   const d10 = () => Math.floor(random()*10)+1;
   fight.round++;
+  for(const fighter of fight.fighters) if(fighter.automaticInitiativeRound<=fight.round) delete fighter.automaticInitiativeRound;
   const entry = {round:fight.round,events:[]};
   for (const [side,fighter] of fight.fighters.entries()) {
+    if(advanceCriticalDeath(fighter,fighter.creature.hits,fight.round))entry.events.push({side,kind:'dies'});
     const bleed = active(fighter,fight.round).filter(effect => effect.kind === 'bleed').reduce((sum,effect) => sum+effect.amount,0);
     if (bleed) { fighter.hits += bleed; entry.events.push({side,kind:'bleed',hits:bleed}); }
   }
   finish(fight,false);
   // AQ determines the speed adjustment; the arena adds 2d10 each round.
   const speeds = {CR:-8,VS:-6,SL:-4,MD:0,MF:2,FA:4,VF:6,BF:8};
-  const order = fight.fighters.map((fighter,side) => ({side,total:d10()+d10()+(speeds[fighter.creature.speed_ms_aq?.split('/')[1]] || 0), tie:random()}))
-    .sort((a,b) => b.total-a.total || a.tie-b.tie);
+  const order = automatic ? [automatic.winner,1-automatic.winner].map(side=>({side,total:null,automatic:side===automatic.winner,noRoll:true})) : fight.fighters.map((fighter,side) => ({side,total:d10()+d10()+(speeds[fighter.creature.speed_ms_aq?.split('/')[1]] || 0), tie:random()}))
+    .sort((a,b) => automatic ? 0 : b.total-a.total || a.tie-b.tie);
   entry.initiative = order;
   if (!fight.finished) for (const {side} of order) {
     const fighter = fight.fighters[side], target = fight.fighters[1-side];
