@@ -5,7 +5,7 @@ import {creatureSymbol,duelSymbol} from './coliseum-symbols.js';
 import {criticalEquipment} from './critical-equipment.js';
 import {criticalEffectMarkup,criticalLegend,useEmojis,setUseEmojis} from './critical-presentation.js';
 import {ROUND_LIMIT,attackTypes,creatureCatalog,createFight,stepFight} from './coliseum-rules.js';
-import {battleContender,creatureProfile,playBattleRound,clearBattleAnimation,setBattleHealth} from './coliseum-battle.js';
+import {battleContender,creatureProfile,playBattleRound,clearBattleAnimation,setBattleHealth,setBattleStatuses} from './coliseum-battle.js';
 
 const sides = ['left','right'];
 const storageKey = 'rolemaster-coliseum-v1';
@@ -68,12 +68,14 @@ function controls() {
   $('#coliseum-simulate').textContent = fight?.round && !ended ? 'Continue fight' : 'Simulate fight';
 }
 
-function syncBattleScene() {
+function syncBattleScene(displayHealth) {
   if(!fight)return;
   battleStage.dataset.playback=playback?'playing':'idle';
   $('#coliseum-battle-round').textContent=fight.round?'ROUND '+String(fight.round).padStart(2,'0'):'PREPARE';
   battleStage.querySelectorAll('.battle-unit').forEach((unit,index)=>{
-    setBattleHealth(unit,Math.max(0,selected[index].hits-fight.fighters[index].hits));
+    const remaining=displayHealth?.[index]??Math.max(0,selected[index].hits-fight.fighters[index].hits);
+    setBattleHealth(unit,remaining);
+    setBattleStatuses(unit,fight.fighters[index],fight.round,remaining);
     unit.classList.toggle('is-winner',!playback&&fight.finished&&fight.winner===index);
   });
   const outcome=$('#coliseum-battle-outcome');
@@ -92,7 +94,7 @@ function cancelPlayback() {
   clearBattleAnimation(battleStage);syncBattleScene();
 }
 
-function renderFighters() {
+function renderFighterDetails() {
   sides.forEach((side,index) => {
     const creature = selected[index];
     if (!creature) return;
@@ -107,7 +109,6 @@ function renderFighters() {
     card.innerHTML = `${symbolMarkup(creature)}<span class="coliseum-kind">${creature.group} · Size ${esc(creature.size)}</span><h2>${esc(creature.name)}</h2><dl class="coliseum-stats"><div><dt>Level</dt><dd>${creature.level}</dd></div><div><dt>Armor</dt><dd>${creature.armor_type}</dd></div><div><dt>DB</dt><dd>${creature.db}</dd></div></dl><div class="coliseum-health-label"><span>Hits remaining</span><strong>${hits} / ${creature.hits}</strong></div><progress aria-label="${esc(creature.name)} hits remaining" value="${hits}" max="${creature.hits}"></progress><p class="coliseum-effects">${esc(effects)} ${fighter?.deathRound!==undefined?criticalEffectMarkup('Foe dies in '+Math.max(0,fighter.deathRound-fight.round)+' rounds.') : fighter?.dead?criticalEffectMarkup('Foe dies instantly.') : ''}</p><ul class="coliseum-attacks">${creature.attacks.filter(Boolean).map(attack => `<li>${attack.both ? 'Both attacks' : `${esc(attackTypes[attack.type][0])} · ${attack.ob >= 0 ? '+' : ''}${attack.ob} OB · ${esc(attack.size)}`}${attack.chance ? ` · ${attack.chance}%` : attack.follow ? ` · ${attack.follow === 'same' ? 'same-round' : 'next-round'} follow-up` : ' · optional'}</li>`).join('')}</ul><p class="coliseum-notes">${esc(creature.special || 'No special abilities listed.')}</p>`;
   });
   renderSymbols();
-  renderBattleScene();
 }
 
 function eventText(event) {
@@ -126,8 +127,12 @@ function eventText(event) {
   return html;
 }
 
-function renderRound() {
-  renderFighters();
+function renderRound(initialHealth) {
+  renderFighterDetails();
+  // Keep the live HUD and its starting HP until each resolved attack lands.
+  // Rebuilding it with final HP first made playback look like healing.
+  syncBattleScene(initialHealth);
+  battleStage.querySelectorAll('[data-battle-roll],[data-battle-hits],[data-battle-critical]').forEach(field=>{field.textContent='—';});
   $('#coliseum-round').textContent = `Round ${fight.round}`;
   const entry = fight.log[0];
   const log = $('#coliseum-log');
@@ -157,7 +162,7 @@ function resetFight() {
   $('#coliseum-log').innerHTML = '<p class="play-muted">The gates are open. Start the fight or play one round at a time.</p>';
   $('#coliseum-log').scrollLeft = 0;
   status(`${selected[0].name} vs ${selected[1].name}.`);
-  renderFighters(); controls();
+  renderFighterDetails();renderBattleScene();controls();
   battleStage.querySelector('[data-battle-commentary]').textContent='The gates are open. Start the fight or play the next round.';
   try { localStorage.setItem(storageKey,JSON.stringify(selected.map(creature => creature.id))); } catch { /* Selection remains usable without storage. */ }
 }
@@ -168,7 +173,7 @@ async function nextRound() {
   const initialHealth=fight.fighters.map(fighter=>Math.max(0,fighter.creature.hits-fighter.hits));
   playbackController=controller;playback=true;controls();
   try {
-    stepFight(fight,tables);renderRound();
+    stepFight(fight,tables);renderRound(initialHealth);
     await playBattleRound(battleStage,fight.log[0],initialHealth,{signal:controller.signal,speed:playbackSpeed,reducedMotion:matchMedia('(prefers-reduced-motion: reduce)').matches});
   }catch(error){running=false;status(`Fight paused: ${error.message}`);}
   finally {

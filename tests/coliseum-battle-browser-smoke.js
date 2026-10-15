@@ -42,6 +42,16 @@ async (existingPage)=>{
       return {checked,creatures:creatures.length};
     });
     await page.locator('#coliseum-speed').selectOption('4');
+    await page.evaluate(()=>{
+      window.battleHealthChanges=[];
+      window.battleHealthObserver=new MutationObserver(records=>{
+        records.forEach((record,index)=>{
+          const next=records.slice(index+1).find(item=>item.target===record.target);
+          window.battleHealthChanges.push({from:Number(record.oldValue),to:Number(next?next.oldValue:record.target.getAttribute('aria-valuenow'))});
+        });
+      });
+      window.battleHealthObserver.observe(document.querySelector('#coliseum-battle-fighters'),{subtree:true,attributes:true,attributeFilter:['aria-valuenow'],attributeOldValue:true});
+    });
     const dice=await page.evaluate(()=>window.battleDice);
     await page.locator('#coliseum-step').click();
     await page.waitForFunction(()=>document.querySelector('#coliseum-battle').dataset.activeSide!==undefined);
@@ -50,14 +60,18 @@ async (existingPage)=>{
     assert((await health()).join(',')==='9988,9988','Critical extra hits missing from animated health');
     assert((await page.locator('[data-battle-hits]').allTextContents()).join(',')==='12,12','HUD hits do not include critical damage');
     assert((await page.locator('[data-battle-critical]').allTextContents()).join(',')==='A,A','Actual critical severity is not displayed');
+    assert((await page.locator('[data-battle-statuses]').allTextContents()).every(text=>text.includes('Bleeding: 2/round')),'Status list omitted the applied bleeding');
     assert(await page.evaluate(()=>window.battleDice)-dice===12,'Playback consumed extra combat randomness');
     assert((await page.locator('.coliseum-fighter progress').evaluateAll(elements=>elements.map(element=>element.value))).join(',')===(await health()).join(','),'HUD and actual combat state disagree');
     await step();
     assert((await health()).join(',')==='9974,9974','Round-two bleeding and attacks replayed incorrectly');
+    const healing=await page.evaluate(()=>{window.battleHealthObserver.disconnect();return window.battleHealthChanges.filter(change=>change.to>change.from);});
+    assert(healing.length===0,'Playback visibly healed before damage: '+JSON.stringify(healing));
     await page.locator('#coliseum-step').click();await page.locator('#coliseum-reset').click();
     await page.waitForTimeout(600);
     assert(await page.locator('#coliseum-round').textContent()==='Ready'&&(await health()).join(',')==='10000,10000','Cancelled playback overwrote the new fight');
     assert(await page.locator('#coliseum-log details').count()===0,'Cancelled playback restored an old round');
+    assert((await page.locator('[data-battle-statuses]').allTextContents()).every(text=>text==='No active effects'),'New fight kept stale statuses');
     await page.locator('#coliseum-simulate').click();await page.locator('#coliseum-pause').click();await idle();
     const paused=await page.locator('#coliseum-round').textContent();await page.waitForTimeout(250);
     assert(await page.locator('#coliseum-round').textContent()===paused,'Pause advanced another round');
@@ -75,10 +89,15 @@ async (existingPage)=>{
       assert(await page.locator('#coliseum-step').isVisible(),'Battle controls missing at '+viewport.width);
       const wolf=await page.locator('[data-battle-side="0"] .battle-sprite').boundingBox(),tiger=await page.locator('[data-battle-side="1"] .battle-sprite').boundingBox();
       assert(wolf.width>100&&tiger.width>100,'Unreadable mobile sprites');mobile.push(viewport.width);
+      for(const unit of await page.locator('.battle-unit').all()){
+        const hp=await unit.locator('.battle-health').boundingBox(),statuses=await unit.locator('[data-battle-statuses]').boundingBox();
+        assert(statuses.y>=hp.y+hp.height,'Statuses do not appear below HP at '+viewport.width);
+      }
     }
     fatal=true;await page.reload();await ready();await page.emulateMedia({reducedMotion:'reduce'});await step();
     assert(await page.locator('#coliseum-battle-outcome').isVisible(),'Finished duel has no result banner');
     assert(await page.locator('.battle-unit.is-winner').count()===1&&await page.locator('.battle-unit.is-defeated').count()===1,'Winner/defeated poses do not reflect the combat result');
+    assert((await page.locator('.battle-unit.is-defeated [data-battle-statuses]').textContent()).includes('Dead'),'Fatal status missing below HP');
     assert(await page.locator('#coliseum-step').isDisabled(),'Finished duel can advance');
     assert(art.some(asset=>asset.url.endsWith('/arena.svg')&&asset.status===200&&asset.mime.includes('image/svg+xml')),'Arena artwork did not load');
     assert(art.some(asset=>asset.url.endsWith('/creatures.svg')&&asset.status===200),'Creature artwork did not load');

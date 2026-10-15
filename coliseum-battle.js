@@ -21,7 +21,7 @@ export function creatureProfile(creature) {
 export function battleContenderJavaScript(view) {
   const side=view.side===0?0:1,corner=side===0?'Red':'Blue',profile=profiles.includes(view.profile)?view.profile:'humanoid';
   const name=esc(view.name),attack=esc(view.attack),hits=Math.min(view.hits,view.maximum),percent=view.maximum?Math.floor(hits/view.maximum*1000)/10:0;
-  return `<div class="battle-unit" data-battle-side="${side}" data-profile="${profile}"><div class="battle-nameplate"><span>${corner} corner</span><strong>${name}</strong></div><div class="battle-sprite-wrap"><span class="battle-shadow"></span><svg class="battle-sprite" viewBox="0 0 96 80" role="img" aria-label="${name}"><use href="assets/coliseum/creatures.svg#${profile}"></use></svg><span class="battle-impact" aria-hidden="true">✦</span><span class="battle-damage" aria-hidden="true"></span></div><div class="battle-hud"><div class="battle-weapon"><strong data-battle-attack>${attack}</strong><span data-battle-ob>OB ${view.ob>=0?'+':''}${view.ob}</span></div><div class="battle-metrics"><span>ROLL <b data-battle-roll>—</b></span><span>HITS <b data-battle-hits>—</b></span><span>CRIT <b data-battle-critical>—</b></span></div><div class="battle-health"><strong data-battle-health>${hits}</strong><div class="battle-health-track" role="meter" aria-label="${name} hits remaining" aria-valuemin="0" aria-valuemax="${view.maximum}" aria-valuenow="${hits}"><span style="width:${percent.toFixed(1)}%"></span></div><small>/ ${view.maximum}</small></div></div></div>`;
+  return `<div class="battle-unit" data-battle-side="${side}" data-profile="${profile}"><div class="battle-nameplate"><span>${corner} corner</span><strong>${name}</strong></div><div class="battle-sprite-wrap"><span class="battle-shadow"></span><svg class="battle-sprite" viewBox="0 0 96 80" role="img" aria-label="${name}"><use href="assets/coliseum/creatures.svg#${profile}"></use></svg><span class="battle-impact" aria-hidden="true">✦</span><span class="battle-damage" aria-hidden="true"></span></div><div class="battle-hud"><div class="battle-weapon"><strong data-battle-attack>${attack}</strong><span data-battle-ob>OB ${view.ob>=0?'+':''}${view.ob}</span></div><div class="battle-metrics"><span>ROLL <b data-battle-roll>—</b></span><span>HITS <b data-battle-hits>—</b></span><span>CRIT <b data-battle-critical>—</b></span></div><div class="battle-health"><strong data-battle-health>${hits}</strong><div class="battle-health-track" role="meter" aria-label="${name} hits remaining" aria-valuemin="0" aria-valuemax="${view.maximum}" aria-valuenow="${hits}"><span style="width:${percent.toFixed(1)}%"></span></div><small>/ ${view.maximum}</small></div><ul class="battle-status-list" data-battle-statuses aria-label="${name} statuses" tabindex="0"><li class="battle-status-empty">No active effects</li></ul></div></div>`;
 }
 export const battleContender=view=>rustBattleContender(view)??battleContenderJavaScript(view);
 
@@ -30,8 +30,29 @@ export function setBattleHealth(unit,value) {
   const remaining=Math.max(0,Math.min(maximum,value));
   unit.querySelector('[data-battle-health]').textContent=remaining;
   meter.setAttribute('aria-valuenow',String(remaining));
-  meter.firstElementChild.style.width=(maximum?remaining/maximum*100:0)+'%';
+  meter.firstElementChild.style.width=(maximum?Math.floor(remaining/maximum*1000)/10:0).toFixed(1)+'%';
   unit.classList.toggle('is-defeated',remaining===0);
+}
+
+export function setBattleStatuses(unit,fighter,round,remaining) {
+  const labels=[];
+  if(remaining===0)labels.push(fighter.dead?'Dead':'Defeated');
+  else {
+    for(const effect of fighter.effects||[]){
+      if(effect.roundsLeft!==null&&!(effect.roundsLeft>0))continue;
+      const duration=effect.roundsLeft===null?(effect.durationLabel||'until healed'):effect.roundsLeft+' round'+(effect.roundsLeft===1?'':'s');
+      const label={bleed:`Bleeding: ${effect.amount}/round`,stun:`Stunned · ${duration}`,stunNoParry:`Stunned, no parry · ${duration}`,downOrOut:`Down or out · ${duration}`,noParry:`No parry · ${duration}`,mustParry:`Must parry${effect.amount?' −'+effect.amount:''} · ${duration}`,penalty:`Penalty −${effect.amount} · ${duration}`,bonus:`Bonus +${effect.amount} · ${duration}`}[effect.kind];
+      if(label)labels.push(label);
+    }
+    if(fighter.deathRound!==undefined){const rounds=Math.max(0,fighter.deathRound-round);labels.push(`Death in ${rounds} round${rounds===1?'':'s'}`);}
+    if(fighter.automaticInitiativeRound>round)labels.push('Initiative next round');
+  }
+  const list=unit.querySelector('[data-battle-statuses]');
+  list.replaceChildren(...(labels.length?labels:['No active effects']).map(label=>{
+    const item=document.createElement('li');item.textContent=label;
+    if(!labels.length)item.className='battle-status-empty';
+    return item;
+  }));
 }
 
 function delay(milliseconds,signal) {

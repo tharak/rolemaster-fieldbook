@@ -35,6 +35,12 @@ arena limitations. Equipment, attacks, active effects, the rules guide and the
 chronological combat log remain available below the battle screen. Existing
 contender/equipment preferences keep their storage format.
 
+Status lists below both HP bars show critical effects and their remaining
+durations, bleeding rates, pending death/initiative, and defeat. Lists clear with
+a new fight and scroll when several effects are present. Round playback keeps
+the existing HUD at its starting HP until damage lands; it no longer briefly
+renders final HP and then restores it. `+H` remains extra damage, never healing.
+
 ## Verification
 
 `tests/coliseum-battle-browser-smoke.js` drives the actual app with deterministic
@@ -53,3 +59,8 @@ formatting/Clippy, and all eleven browser regressions passed. The combined run
 also passed root/project-path Wasm parity and missing/delayed-Wasm startup.
 Critical review remained 836 green and zero yellow. Desktop and phone screenshots
 were visually inspected; the battle-specific regression reported zero page errors.
+
+The status/HP follow-up passed the focused battle regression, all 71 JavaScript
+tests and eleven Rust tests. The browser check watches HP transitions through
+attacks and bleeding to reject any visual healing, and checks status placement,
+reset, death and fallback on desktop and mobile.
