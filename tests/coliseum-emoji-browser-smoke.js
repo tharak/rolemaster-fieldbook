@@ -5,6 +5,7 @@ async (existingPage) => {
   page.on('pageerror',error => errors.push(error.message));
   const assert = (condition,message) => { if (!condition) throw new Error(message); };
   const open = async () => {
+    await page.waitForFunction(() => document.documentElement.dataset.appReady === 'true');
     await page.getByRole('button',{name:'Coliseum',exact:true}).click();
     await page.waitForFunction(() => !document.querySelector('#coliseum-step').disabled);
   };
