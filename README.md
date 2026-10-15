@@ -31,3 +31,7 @@ Each file in `tables/` is one table or chart. `tables/index.json` provides the s
 ## Current scope
 
 Character creation uses a single editable page modeled on Character Record Sheet T-6.1 in the Core Rules. It groups identity, defense, resistance rolls, role traits, and background on the left, with stats, skills, attacks, equipment, hits, and power points on the right. Existing characters remain in browser storage. The sheet can roll a 10d10 stat pool, check stat assignment costs and prime stats, calculate stat and resistance bonuses, and track apprenticeship development point costs. The remaining sheet entries are recorded manually for now.
+
+## Rust/WebAssembly rank bonuses
+
+The browser initializes the bundled Rust/Wasm rank engine before loading the application. Failure or timeout uses a visibly labeled JavaScript fallback. Static hosting and project subpaths remain supported. See [build and validation instructions](rust/README.md). Publish wasm/ assets with the site; no Rust installation is required on the host.

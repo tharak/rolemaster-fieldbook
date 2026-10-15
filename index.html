@@ -341,6 +341,7 @@
       <div class="table-layout"><aside class="table-sidebar"><label class="field">Find a table<input id="table-search" type="search" placeholder="Weapon, spell, stat…"></label><p id="table-count" class="table-count">Loading tables…</p><div id="table-list" class="table-list"></div></aside><section class="table-card"><div class="table-toolbar"><div><h2 id="table-current">Loading tables…</h2><span id="table-code" class="table-code"></span></div><div class="lookup-controls"><label class="field"><span id="roll-label">Modified roll</span><input id="table-roll" type="number" min="1" max="300" value="100"></label><label class="field" id="column-select-field">Target armor<select id="table-column"></select></label></div></div><div class="lookup-result" id="lookup-result" aria-live="polite"></div><div class="table-scroll"><table id="attack-grid" class="attack-grid"></table></div><div id="table-source" class="table-source" hidden></div><div id="table-note" class="table-note"></div></section></div>
     </section>
   </main>
-  <script type="module" src="encounter.js"></script>
+  <p id="rules-engine-status" role="status">Loading skill rank engine…</p>
+  <script type="module" src="browser-startup.js"></script>
 </body>
 </html>

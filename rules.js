@@ -1,5 +1,35 @@
-// Pure rules shared by character and encounter views.
+// Shared synchronous rules; browser startup awaits the optional Rust engine.
+let rustRankBonus = null;
+let initialization;
+let engine = Object.freeze({backend:'javascript', reason:'not initialized', calls:0});
+export function rankBonusEngineStatus() { return {...engine}; }
+export function initializeRankBonusEngine({load = () => import('./wasm/rolemaster_core.js'), timeoutMs = 8000} = {}) {
+  if (initialization) return initialization;
+  initialization = (async () => {
+    let timer;
+    try {
+      const binding = await Promise.race([
+        (async () => { const module = await load(); await module.default(); return module; })(),
+        new Promise((_, reject) => { timer = setTimeout(() => reject(new Error('Wasm initialization timed out')), timeoutMs); }),
+      ]);
+      if (binding.rank_bonus_wasm(21, 'combined') !== 82) throw new Error('Wasm self-check failed');
+      rustRankBonus = binding.rank_bonus_wasm;
+      engine = {backend:'wasm', reason:null, calls:0};
+    } catch (error) {
+      engine = {backend:'javascript', reason:String(error?.message || error), calls:0};
+      console.warn('Rust rank bonuses unavailable; using JavaScript fallback.', error);
+    } finally { clearTimeout(timer); }
+    return rankBonusEngineStatus();
+  })();
+  return initialization;
+}
 export function rankBonus(ranks, progression) {
+  if (!rustRankBonus) return rankBonusJavaScript(ranks, progression);
+  engine.calls++;
+  // Preserve Number coercion and strict string matching from the original API.
+  return rustRankBonus(Number(ranks), typeof progression === 'string' ? progression : 'standard');
+}
+export function rankBonusJavaScript(ranks, progression) {
   const n = Math.max(0, Number(ranks) || 0);
   const rounded = value => Math.floor(value + 0.5);
   if (progression === 'category') return n ? rounded(2 * Math.min(n, 10) + Math.min(Math.max(n - 10, 0), 10) + .5 * Math.min(Math.max(n - 20, 0), 10)) : -15;
