@@ -67,12 +67,16 @@ function renderRound() {
   $('#coliseum-round').textContent = `Round ${fight.round}`;
   const entry = fight.log[0];
   const log = $('#coliseum-log');
-  log.querySelector('details[open]')?.removeAttribute('open');
-  if (fight.round === 1) log.replaceChildren();
+  // Follow only readers already at the live edge; leave earlier rounds untouched.
+  const firstRound = fight.round === 1;
+  const follow = !firstRound && log.scrollWidth - log.clientWidth - log.scrollLeft <= 24;
+  const previousScroll = log.scrollLeft;
+  if (firstRound) log.replaceChildren();
   const detail = document.createElement('details');
   detail.className = 'coliseum-log-round'; detail.open = true;
   detail.innerHTML = `<summary>Round ${entry.round} · ${entry.events.filter(event => event.kind === 'attack').reduce((sum,event) => sum+event.hits,0)} attack hits</summary><p class="coliseum-initiative">Initiative: ${entry.initiative.map(({side,total}) => `${esc(selected[side].name)} ${total}`).join(' · ')}</p>${entry.events.map(eventText).join('')}`;
-  log.prepend(detail);
+  log.append(detail);
+  log.scrollLeft = firstRound ? 0 : follow ? log.scrollWidth : previousScroll;
   if (fight.finished) {
     running = false;
     status(fight.winner === null ? `Draw after ${fight.round} rounds${fight.round >= ROUND_LIMIT ? ' — the arena round limit was reached' : ' — both creatures fell'}.` : `${selected[fight.winner].name} wins in ${fight.round} round${fight.round === 1 ? '' : 's'}!`);
@@ -86,6 +90,7 @@ function resetFight() {
   fight = createFight(...selected);
   $('#coliseum-round').textContent = 'Ready';
   $('#coliseum-log').innerHTML = '<p class="play-muted">The gates are open. Start the fight or play one round at a time.</p>';
+  $('#coliseum-log').scrollLeft = 0;
   status(`${selected[0].name} vs ${selected[1].name}.`);
   renderFighters(); controls();
   try { localStorage.setItem(storageKey,JSON.stringify(selected.map(creature => creature.id))); } catch { /* Selection remains usable without storage. */ }

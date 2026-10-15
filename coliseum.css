@@ -35,10 +35,13 @@
 .coliseum-status { text-align:center; font-weight:600; min-height:1.5em; }
 .coliseum-rules { color:var(--muted); margin:24px 0; font-size:.85rem; line-height:1.6; }
 .coliseum-rules summary { cursor:pointer; font-weight:600; }
-.coliseum-log-card { border-top:1px solid #ced2c5; padding-top:24px; }
+.coliseum-log-card { min-width:0; border-top:1px solid #ced2c5; padding-top:24px; }
+#coliseum-log { display:flex; flex-wrap:nowrap; align-items:flex-start; gap:14px; width:100%; min-width:0; overflow-x:auto; overscroll-behavior-x:contain; padding:4px 2px 16px; }
+#coliseum-log:focus-visible { outline:2px solid #376448; outline-offset:3px; }
+#coliseum-log > .play-muted { flex:0 1 auto; }
 .coliseum-log-heading h2 { margin:0 0 18px; }
 .coliseum-log-heading span { font-size:.75rem; color:var(--muted); }
-.coliseum-log-round { border:1px solid #d6dacd; background:#fffef9; color:#263d2e; border-radius:9px; margin:12px 0; padding:15px 20px; }
+.coliseum-log-round { border:1px solid #d6dacd; background:#fffef9; color:#263d2e; border-radius:9px; margin:0; padding:15px 20px; flex:0 0 min(360px,85%); min-width:0; overflow-wrap:anywhere; }
 .coliseum-log-round summary { cursor:pointer; font-weight:650; }
 .coliseum-log-round p { line-height:1.5; font-size:.85rem; margin:12px 0; }
 .coliseum-initiative { color:#687166; }
@@ -47,6 +50,8 @@
 @media(max-width:700px) {
   .coliseum-shell { padding:22px 14px 40px; }
   .coliseum-badge { display:none; }
+  .coliseum-log-heading { flex-wrap:wrap; gap:0; margin-bottom:12px; }
+  .coliseum-log-heading h2 { margin-bottom:6px; }
   .coliseum-pickers { gap:14px; }
   .coliseum-arena { grid-template-columns:minmax(0,1fr) minmax(0,1fr); padding:12px; gap:12px; }
   .coliseum-center { grid-column:1/-1; grid-row:1; flex-direction:row; gap:15px; }
