@@ -2,13 +2,15 @@ import './app.js';
 import {$,esc} from './dom.js';
 import {formatRolls} from './rules.js';
 import {creatureSymbol,duelSymbol} from './coliseum-symbols.js';
+import {criticalEffectMarkup,criticalLegend,useEmojis,setUseEmojis} from './critical-presentation.js';
 import {ROUND_LIMIT,attackTypes,creatureCatalog,createFight,stepFight} from './coliseum-rules.js';
 
 const sides = ['left','right'];
 const storageKey = 'rolemaster-coliseum-v1';
-const emojiKey = 'rolemaster-coliseum-emojis-v1';
+
 const emojiToggle = $('#coliseum-use-emojis');
-try { emojiToggle.checked = localStorage.getItem(emojiKey) === 'true'; } catch { /* Default symbols without storage. */ }
+emojiToggle.checked = useEmojis();
+$('#critical-symbol-legend').innerHTML = criticalLegend.map(([symbol,label,emoji]) => `<li><code>${esc(symbol)}</code><strong>${esc(label)}</strong><span role="img" aria-label="${esc(label)}" title="${esc(label)}">${emoji}</span></li>`).join('');
 function symbolMarkup(creature) {
   const icon = creatureSymbol(creature);
   return `<div class="coliseum-crest" role="img" aria-label="${esc(icon.meaning)}" title="${esc(icon.meaning)}">${esc(emojiToggle.checked ? icon.emoji : icon.symbol)}</div>`;
@@ -24,7 +26,7 @@ function renderSymbols() {
 }
 emojiToggle.addEventListener('change',() => {
   renderSymbols();
-  try { localStorage.setItem(emojiKey,String(emojiToggle.checked)); } catch { /* Usable without persistence. */ }
+  setUseEmojis(emojiToggle.checked);
 });
 let catalog = [], tables = {}, selected = [], fight = null, running = false, ready = false, loading = null, runVersion = 0;
 const status = text => { $('#coliseum-status').textContent = text; };
@@ -80,7 +82,7 @@ function eventText(event) {
   let html = `<p><strong>${name}</strong> → ${target}: ${esc(event.attack)}. ${formatRolls(event.roll.dice)} + ${event.ob} OB − ${event.db} DB${event.modifier ? ` ${event.modifier >= 0 ? '+' : '−'} ${Math.abs(event.modifier)} effects` : ''} = <strong>${event.total}</strong>. ${esc(event.code)}: <strong>${esc(event.result)}</strong>${event.result === 'F' ? ' · attack fails' : ` · ${event.hits} hits`}.</p>`;
   const critical = event.critical;
   if (critical?.ignored) html += `<p class="coliseum-critical">${critical.severity} critical has no effect on this creature.</p>`;
-  else if (critical) html += `<p class="coliseum-critical"><strong>${critical.severity} critical · ${esc(critical.code)} · roll ${critical.roll}</strong><br>${esc(critical.description)} ${esc(critical.effect)}${critical.conditional ? '<br>Conditional result: numerical effects require GM review and were not applied.' : ''}</p>`;
+  else if (critical) html += `<p class="coliseum-critical"><strong>${critical.severity} critical · ${esc(critical.code)} · roll ${critical.roll}</strong><br>${criticalEffectMarkup(critical.description)} ${criticalEffectMarkup(critical.effect)}${critical.conditional ? '<br>Conditional result: numerical effects require GM review and were not applied.' : ''}</p>`;
   return html;
 }
 

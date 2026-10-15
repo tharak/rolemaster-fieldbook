@@ -1,5 +1,6 @@
 import './app.js';
 import {$, esc} from './dom.js';
+import {criticalEffectMarkup,refreshCriticalEffects} from './critical-presentation.js';
 import {openEndedD100, parseCriticalSymbols, rollD10 as d10, rollD100 as d100} from './rules.js';
 
 (() => {
@@ -170,7 +171,7 @@ import {openEndedD100, parseCriticalSymbols, rollD10 as d10, rollD100 as d100} f
       let html='';
       if(table.columns&&table.rows) {
         const headings=table.columns.map(column=>`<th scope="col">${esc(column.group&&column.group!=='Critical severity'?`${column.group} · `:'')}${esc(column.label)}</th>`).join('');
-        const body=table.rows.map(row=>`<tr><th scope="row">${esc(row.roll)}</th>${table.columns.map((_,index)=>{const cell=row.cells?.[index],value=cell?`${cell.description||''}${cell.effect?` · ${expandTableSymbols(cell.effect)}`:''}`:row.values?.[index]??'—';return `<td>${esc(value)}</td>`;}).join('')}</tr>`).join('');
+        const body=table.rows.map(row=>`<tr><th scope="row">${esc(row.roll)}</th>${table.columns.map((_,index)=>{const cell=row.cells?.[index],value=cell?`${criticalEffectMarkup(cell.description||'')}${cell.effect?` · ${criticalEffectMarkup(cell.effect)}`:''}`:row.values?.[index]??'—';return `<td>${cell?value:esc(value)}</td>`;}).join('')}</tr>`).join('');
         html=`<table><thead><tr><th scope="col">Roll</th>${headings}</tr></thead><tbody>${body}</tbody></table>`;
       } else if(table.categories&&table.professions) {
         html=`<table><thead><tr><th>Skill category</th>${table.professions.map(name=>`<th>${esc(name)}</th>`).join('')}</tr></thead><tbody>${Object.entries(table.categories).map(([name,costs])=>`<tr><th>${esc(name)}</th>${table.professions.map(profession=>`<td>${esc(costs[profession]?.join('/')||'—')}</td>`).join('')}</tr>`).join('')}</tbody></table>`;
@@ -188,9 +189,9 @@ import {openEndedD100, parseCriticalSymbols, rollD10 as d10, rollD100 as d100} f
       const dice=`${roll}${modifier?` ${modifier>=0?'+':'−'} ${Math.abs(modifier)} = ${total}`:''}`;
       if(!cell)return {html:`${tableLink(code,label)} roll ${dice}: no matching entry.`,effects:[]};
       const choice=criticalTarget?chooseCriticalBranch(cell.effect||'',criticalTarget.who,criticalTarget.value):{effect:cell.effect||'',unresolved:false};
-      const effect=choice.effect?` <strong>${esc(expandTableSymbols(choice.effect))}</strong>`:'';
+      const effect=choice.effect?` <strong>${criticalEffectMarkup(choice.effect)}</strong>`:'';
       const effects=criticalTarget&&!choice.unresolved?parseCriticalSymbols(choice.effect):[];
-      return {html:`${tableLink(code,label)} roll ${dice}: ${esc(expandTableSymbols(cell.description))}${effect}${choice.unresolved?` <strong>Condition needs review: ${esc(expandTableSymbols(cell.effect))}</strong>`:''}`,effects,unresolved:choice.unresolved,rawEffect:cell.effect||''};
+      return {html:`${tableLink(code,label)} roll ${dice}: ${criticalEffectMarkup(cell.description)}${effect}${choice.unresolved?` <strong>Condition needs review: ${criticalEffectMarkup(cell.effect)}</strong>`:''}`,effects,unresolved:choice.unresolved,rawEffect:cell.effect||''};
     } catch {return {html:`${tableLink(code,label)} roll ${roll}: table unavailable.`,effects:[]};}
   }
   const weaponFumbleColumn=category=>category==='Weapon • 2-Handed'?1:category==='Weapon • Pole Arms'?2:category==='Weapon • Thrown'?4:category==='Weapon • Missile'||category==='Weapon • Missile Artillery'?5:0;
@@ -449,6 +450,7 @@ import {openEndedD100, parseCriticalSymbols, rollD10 as d10, rollD100 as d100} f
       const initiatives=group.header?.initiatives?.map(item=>`<span>${esc(item.name)}: ${esc(item.roll.join(' + '))} + ${esc(item.stat)} Qu ${item.modifier?`${item.modifier>=0?'+':'−'} ${Math.abs(item.modifier)} modifiers`:''} = <strong>${esc(item.total)}</strong></span>`).join('')||'';
       return `<section class="encounter-log-round"><strong>Round ${esc(round)}</strong>${initiatives?`<div class="encounter-log-initiative">${initiatives}</div>`:''}${group.actions.map(entry=>`<article><small>${esc(entry.phase==='Declaration'?'Start':entry.phase)}</small><p><strong>${esc(entry.actor)}:</strong> ${entry.detail}</p></article>`).join('')}</section>`;
     }).join('');
+    refreshCriticalEffects($('#encounter-log'));
   }
   function render() {renderCharacterButtons();renderRound();renderPhaseCards();renderMap();renderLog();$('#encounter-scale').value=String(state.scale);}
   function returnToActivePhase(){[...document.querySelectorAll('.encounter-phase-form')].find(form=>form.dataset.actor===state.selected&&form.dataset.phase===activePhase)?.scrollIntoView({behavior:'smooth',block:'center'});}

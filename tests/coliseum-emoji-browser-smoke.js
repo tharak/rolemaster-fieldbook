@@ -12,7 +12,7 @@ async (existingPage) => {
   const state = () => page.evaluate(() => JSON.stringify({
     round:document.querySelector('#coliseum-round').textContent,
     status:document.querySelector('#coliseum-status').textContent,
-    log:document.querySelector('#coliseum-log').innerHTML,
+    log:(() => { const clone=document.querySelector('#coliseum-log').cloneNode(true); clone.querySelectorAll('[data-critical-raw]').forEach(el=>{el.textContent=el.dataset.criticalRaw;}); return clone.innerHTML; })(),
     scroll:document.querySelector('#coliseum-log').scrollLeft,
     health:[...document.querySelectorAll('.coliseum-fighter progress')].map(el => [el.value,el.max]),
     stats:[...document.querySelectorAll('.coliseum-stats,.coliseum-attacks,.coliseum-effects')].map(el => el.textContent),
