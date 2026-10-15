@@ -2,6 +2,8 @@ import {openEndedD100, parseCriticalSymbols} from './rules.js';
 import {automaticInitiative} from './critical-initiative.js';
 import {applyCriticalDeath,advanceCriticalDeath} from './critical-death.js';
 import {resolveCriticalEquipment} from './critical-equipment.js';
+import {normalizedCriticalCell} from './critical-source.js';
+import {expireCriticalEffects} from './critical-stun.js';
 
 export const ROUND_LIMIT = 200;
 export const attackTypes = {
@@ -76,7 +78,7 @@ export function createFight(left,right) {
 }
 
 const active = (fighter,round) => fighter.effects.filter(effect => effect.starts <= round);
-const unable = (fighter,round) => active(fighter,round).some(effect => ['stun','stunNoParry','mustParry'].includes(effect.kind));
+const unable = (fighter,round) => active(fighter,round).some(effect => ['stun','stunNoParry','downOrOut','noParry','mustParry'].includes(effect.kind));
 const modifier = (fighter,round) => active(fighter,round).reduce((total,effect) => total + (effect.kind === 'bonus' ? effect.amount : effect.kind === 'penalty' ? -effect.amount : 0),0);
 const standing = fighter => fighter.hits < fighter.creature.hits;
 function finish(fight, checkLimit = true) {
@@ -99,18 +101,22 @@ function resolveCritical(target,attacker,attack,severity,tables,d100,round) {
   }
   const table = tables[code];
   if (!table) throw new Error(`Missing critical table ${code}`);
-  const cell = table.rows.find(row => inRange(row.roll,roll))?.cells[column];
+  const cell = normalizedCriticalCell(table.rows.find(row => inRange(row.roll,roll))?.cells[column]);
   if (!cell) throw new Error(`No critical result for ${code} roll ${roll}`);
   // Equipment-dependent branches need GM interpretation; never combine both outcomes.
   const selected=resolveCriticalEquipment(cell.description,cell.effect,target.creature.equipment||{});
   const conditional=selected.unresolved;
+  const recoils=[];
+  const manualEffects=[];
   for (const effect of parseCriticalSymbols(selected.effect,selected.description)) {
+    if(effect.kind==='allyBonus'){manualEffects.push(`All allies gain +${effect.amount} for ${effect.roundsLeft} round(s); GM-managed because arena allies are not simulated.`);continue;}
+    if(effect.kind==='recoil'){recoils.push(effect.feet);continue;}
     if(effect.kind==='dies'){applyCriticalDeath(target,target.creature.hits,round,effect.roundsLeft);continue;}
     if (effect.kind === 'initiative') { attacker.automaticInitiativeRound=round+1; continue; }
     if (effect.kind === 'hits') target.hits += effect.amount;
     else (effect.kind === 'bonus' ? attacker : target).effects.push({...effect, starts:round+1});
   }
-  return {severity,code,roll,description:selected.description,effect:selected.effect,sourceDescription:cell.description,sourceEffect:cell.effect,conditional,equipmentConditions:selected.conditions};
+  return {severity,code,roll,description:selected.description,effect:selected.effect,sourceDescription:cell.sourceCorrection?.original.description??cell.description,sourceEffect:cell.sourceCorrection?.original.effect??cell.effect,conditional,equipmentConditions:selected.conditions,recoils,manualEffects};
 }
 
 export function stepFight(fight,tables,random = Math.random) {
@@ -130,7 +136,7 @@ export function stepFight(fight,tables,random = Math.random) {
   finish(fight,false);
   // AQ determines the speed adjustment; the arena adds 2d10 each round.
   const speeds = {CR:-8,VS:-6,SL:-4,MD:0,MF:2,FA:4,VF:6,BF:8};
-  const order = automatic ? [automatic.winner,1-automatic.winner].map(side=>({side,total:null,automatic:side===automatic.winner,noRoll:true})) : fight.fighters.map((fighter,side) => ({side,total:d10()+d10()+(speeds[fighter.creature.speed_ms_aq?.split('/')[1]] || 0), tie:random()}))
+  const order = automatic ? [automatic.winner,1-automatic.winner].map(side=>({side,total:null,automatic:side===automatic.winner,noRoll:true})) : fight.fighters.map((fighter,side) => ({side,total:d10()+d10()+(speeds[fighter.creature.speed_ms_aq?.split('/')[1]] || 0)+modifier(fighter,fight.round), tie:random()}))
     .sort((a,b) => automatic ? 0 : b.total-a.total || a.tie-b.tie);
   entry.initiative = order;
   if (!fight.finished) for (const {side} of order) {
@@ -162,9 +168,7 @@ export function stepFight(fight,tables,random = Math.random) {
   }
   // Stun rounds accumulate and expire one at a time; other timed effects expire together.
   for (const fighter of fight.fighters) {
-    const stun = active(fighter,fight.round).find(effect => effect.kind === 'stunNoParry') || active(fighter,fight.round).find(effect => effect.kind === 'stun');
-    fighter.effects = fighter.effects.filter(effect => effect.starts > fight.round || effect.roundsLeft === null ||
-      (['stun','stunNoParry'].includes(effect.kind) && effect !== stun) || --effect.roundsLeft > 0);
+    fighter.effects=expireCriticalEffects(fighter.effects,fight.round,'starts');
   }
   fight.log.unshift(entry);
   finish(fight);

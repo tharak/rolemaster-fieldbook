@@ -4,6 +4,9 @@ import {criticalEffectMarkup,refreshCriticalEffects} from './critical-presentati
 import {automaticInitiative} from './critical-initiative.js';
 import {applyCriticalDeath,advanceCriticalDeath,cancelCriticalDeathOnHealing} from './critical-death.js';
 import {resolveCriticalEquipment,criticalEquipment} from './critical-equipment.js';
+import {recoilMovement} from './critical-recoil.js';
+import {normalizedCriticalTable} from './critical-source.js';
+import {expireCriticalEffects,updateCriticalStunConsciousness} from './critical-stun.js';
 import {openEndedD100, parseCriticalSymbols, rollD10 as d10, rollD100 as d100} from './rules.js';
 
 (() => {
@@ -14,6 +17,7 @@ import {openEndedD100, parseCriticalSymbols, rollD10 as d10, rollD100 as d100} f
   const difficulties = ['Routine','Easy','Light','Medium','Hard','Very Hard','Extremely Hard','Sheer Folly','Absurd'];
   const staticDifficulty = [30,20,10,0,-10,-20,-30,-50,-70];
   const attackTables = {'Weapon • 1-H Concussion':'A-10.9.1','Weapon • 1-H Edged':'A-10.9.2','Weapon • 2-Handed':'A-10.9.3','Weapon • Missile':'A-10.9.4','Weapon • Missile Artillery':'A-10.9.4','Weapon • Pole Arms':'A-10.9.5','Weapon • Thrown':'A-10.9.6'};
+  const spellCriticalTables = [['A-10.10.1','Cold'],['A-10.10.2','Heat'],['A-10.10.3','Krush'],['A-10.10.4','Puncture'],['A-10.10.5','Slash'],['A-10.10.6','Unbalance']];
   const movingRows = [
     [-150,-101,[10,null,null,null,null,null,null,null,null]],[-100,-51,[30,10,null,null,null,null,null,null,null]],
     [-50,-26,[50,30,10,null,null,null,null,null,null]],[-25,0,[70,50,30,5,null,null,null,null,null]],
@@ -84,7 +88,7 @@ import {openEndedD100, parseCriticalSymbols, rollD10 as d10, rollD100 as d100} f
   const criticalRounds=(value,kind)=>activeCriticalEffects(value).filter(effect=>effect.kind===kind).reduce((sum,effect)=>sum+(effect.roundsLeft===null?1:Number(effect.roundsLeft)||0),0);
   function criticalEffectLabel(effect) {
     const rounds=effect.roundsLeft===null?(effect.durationLabel||'until healed'):`${effect.roundsLeft} round${effect.roundsLeft===1?'':'s'}`;
-    return ({penalty:`−${effect.amount} to rolls`,bonus:`+${effect.amount} to rolls`,stun:'Stunned',stunNoParry:'Stunned; cannot parry',noParry:'Cannot parry',mustParry:`Must parry${effect.amount?` at −${effect.amount}`:''}`,bleed:`Bleeding ${effect.amount} hit${effect.amount===1?'':'s'}/round`})[effect.kind]+` · ${rounds}`;
+    return ({penalty:`−${effect.amount} to rolls`,bonus:`+${effect.amount} to rolls`,stun:'Stunned',stunNoParry:'Stunned; cannot parry',downOrOut:'Down or out',noParry:'Cannot parry',mustParry:`Must parry${effect.amount?` at −${effect.amount}`:''}`,bleed:`Bleeding ${effect.amount} hit${effect.amount===1?'':'s'}/round`})[effect.kind]+` · ${rounds}`;
   }
   function criticalFacts(who,value) {
     const names=(who.equipmentNames||[]).join(' ').toLowerCase();
@@ -92,6 +96,7 @@ import {openEndedD100, parseCriticalSymbols, rollD10 as d10, rollD100 as d100} f
     facts.helmet=/helm|helmet/.test(names);facts['full helmet']=/full helm/.test(names);facts.visor=/visor/.test(names);
     facts['abdomen armor']=/abdom(?:en|inal) armor/.test(names);
     facts.shield=(who.shieldBonus||0)>0||/shield/.test(names);
+    facts.wet=(value.statuses||[]).includes('Wet')||facts.wet;
     return facts;
   }
   function chooseCriticalBranch(raw,who,value) {
@@ -117,8 +122,17 @@ import {openEndedD100, parseCriticalSymbols, rollD10 as d10, rollD100 as d100} f
     }
     return {effect:'',unresolved:false};
   }
-  function addCriticalEffects(target,attacker,effects) {
+  function addCriticalEffects(target,attacker,effects,attackOrigin=attacker) {
+    const movement=[];
     for(const effect of effects) {
+      if(effect.kind==='allyBonus'){movement.push(`All allies gain +${effect.amount} for ${effect.roundsLeft} round(s); the GM assigns allies because this encounter has no team assignments.`);continue;}
+      if(effect.kind==='recoil'){
+        const occupied=Object.values(state.tokens).filter(value=>value!==target);
+        const move=recoilMovement(target,attackOrigin,effect.feet,{scale:state.scale,columns,rows,terrain:state.terrain,occupied});
+        if(move.movedFeet){target.q=move.position.q;target.r=move.position.r;}
+        movement.push(`Recoil: moved ${move.movedFeet} of ${effect.feet} ft away from hex ${attackOrigin.q},${attackOrigin.r} to hex ${target.q},${target.r}.${move.reason?' '+move.reason:''}`);
+        continue;
+      }
       if(effect.kind==='dies'){const id=Object.keys(state.tokens).find(id=>token(id)===target);applyCriticalDeath(target,actor(id)?.hitsMax||0,state.round,effect.roundsLeft);continue;}
       if(effect.kind==='initiative'){attacker.automaticInitiativeRound=state.round+1;continue;}
       if(effect.kind==='hits') {target.hits=(target.hits||0)+effect.amount;continue;}
@@ -130,21 +144,16 @@ import {openEndedD100, parseCriticalSymbols, rollD10 as d10, rollD100 as d100} f
       receiver.criticalEffects.push({...effect,startsRound,id:crypto.randomUUID?.()||`${Date.now()}-${Math.random()}`});
     }
     updateStunConsciousness(target);
+    return movement.join(' ');
   }
   function updateStunConsciousness(value) {
     const who=actor(Object.keys(state.tokens).find(id=>token(id)===value));
-    const total=(value.criticalEffects||[]).filter(effect=>['stun','stunNoParry'].includes(effect.kind)).reduce((sum,effect)=>sum+(effect.roundsLeft||0),0);
-    const threshold=10+2*(who?.stats?.[1]||0);
-    value.statuses=Array.isArray(value.statuses)?value.statuses:[];
-    if(total>0&&total>threshold&&!value.statuses.includes('Unconscious')){value.statuses.push('Unconscious');value.stunUnconscious=true;}
-    else if(total<=threshold&&value.stunUnconscious){if(!value.hitUnconscious)value.statuses=value.statuses.filter(item=>item!=='Unconscious');delete value.stunUnconscious;}
+    updateCriticalStunConsciousness(value,value.criticalEffects||[],who?.stats?.[1]||0);
   }
   function advanceCriticalEffects(completedRound) {
     for(const [id,value] of Object.entries(state.tokens)) {
       if(advanceCriticalDeath(value,actor(id)?.hitsMax||0,state.round))appendLog(id,criticalEffectMarkup('Foe dies instantly.')+' Critical death countdown reached zero remaining hits.');
-      const stuns=(value.criticalEffects||[]).filter(effect=>['stun','stunNoParry'].includes(effect.kind)&&(effect.startsRound??completedRound)<=completedRound);
-      const spent=stuns.find(effect=>effect.kind==='stunNoParry')||stuns[0];
-      value.criticalEffects=(value.criticalEffects||[]).filter(effect=>effect.roundsLeft===null||(effect.startsRound??completedRound)>completedRound||(['stun','stunNoParry'].includes(effect.kind)?effect!==spent||--effect.roundsLeft>0:--effect.roundsLeft>0));
+      value.criticalEffects=expireCriticalEffects(value.criticalEffects||[],completedRound,'startsRound');
       updateStunConsciousness(value);
       const bleeding=activeCriticalEffects(value).filter(effect=>effect.kind==='bleed').reduce((sum,effect)=>sum+effect.amount,0);
       if(bleeding){value.hits=(value.hits||0)+bleeding;appendLog(id,`Bleeding: ${bleeding} hit${bleeding===1?'':'s'} at the start of round ${state.round}.`);}
@@ -152,7 +161,7 @@ import {openEndedD100, parseCriticalSymbols, rollD10 as d10, rollD100 as d100} f
   }
   const tableCache=new Map();
   async function loadTable(code) {
-    if(!tableCache.has(code))tableCache.set(code,fetch(`tables/${code}.json`).then(response=>{if(!response.ok)throw new Error(`Table ${code} unavailable`);return response.json();}));
+    if(!tableCache.has(code))tableCache.set(code,fetch(`tables/${code}.json`).then(response=>{if(!response.ok)throw new Error(`Table ${code} unavailable`);return response.json();}).then(normalizedCriticalTable));
     return tableCache.get(code);
   }
   async function openTableDialog(code) {
@@ -253,6 +262,7 @@ import {openEndedD100, parseCriticalSymbols, rollD10 as d10, rollD100 as d100} f
     roster = window.RolemasterEncounter?.roster() || [];
     if(!activeEncounterId){renderList();return;}
     Object.keys(state.tokens).filter(id => !actor(id)).forEach(id => delete state.tokens[id]);
+    Object.values(state.tokens).forEach(updateStunConsciousness);
     if(!token(placingActorId))placingActorId='';
     ensureInitiative();
     if (!state.tokens[state.selected]) state.selected = Object.keys(state.tokens)[0] || '';
@@ -272,7 +282,7 @@ import {openEndedD100, parseCriticalSymbols, rollD10 as d10, rollD100 as d100} f
     const key=`${id}:${phase}`;
     if(!drafts[key]) {
       const action=token(id)?.actions?.[phase];
-      drafts[key]={choice:choiceFor(action),activity:action?.activity??0,maneuver:action?.type==='moving'?'moving':'static',statIndex:action?.statIndex??0,targetKind:action?.targetHex?'hex':action?.target?'creature':'none',target:action?.target||'',hex:action?.destination||action?.targetHex||null,difficulty:action?.difficulty||'Medium',pace:action?.pace||1,spellLevel:action?.spellLevel||1,preparation:action?.preparation||0,instant:!!action?.instant,spellAttack:action?.spellAttack||'none',areaRadius:action?.areaRadius??0,resistance:action?.resistance||'channeling',attackLevel:action?.attackLevel||1,modifier:action?.modifier||0,range:action?.range||'',description:action?.description||''};
+      drafts[key]={choice:choiceFor(action),activity:action?.activity??0,maneuver:action?.type==='moving'?'moving':'static',statIndex:action?.statIndex??0,targetKind:action?.targetHex?'hex':action?.target?'creature':'none',target:action?.target||'',hex:action?.destination||action?.targetHex||null,difficulty:action?.difficulty||'Medium',pace:action?.pace||1,spellLevel:action?.spellLevel||1,preparation:action?.preparation||0,instant:!!action?.instant,spellAttack:action?.spellAttack||'none',spellCritical:action?.spellCritical||'',areaRadius:action?.areaRadius??0,resistance:action?.resistance||'channeling',attackLevel:action?.attackLevel||1,modifier:action?.modifier||0,range:action?.range||'',description:action?.description||''};
       restoreLastTarget(id,drafts[key]);
     }
     return drafts[key];
@@ -378,7 +388,7 @@ import {openEndedD100, parseCriticalSymbols, rollD10 as d10, rollD100 as d100} f
     const pieces=placed.map(([id,value])=>{
       const character=actor(id);if(!character)return '';
       const stacked=placed.filter(([,item])=>item.q===value.q&&item.r===value.r).findIndex(([other])=>other===id);
-      const x=xOf(value.q)+(stacked%2)*12-6,y=yOf(value.r)+Math.floor(stacked/2)*13;
+      const x=xOf(value.q,value.r)+(stacked%2)*12-6,y=yOf(value.r)+Math.floor(stacked/2)*13;
       const valid=false;
       return `<g data-token="${esc(id)}" class="encounter-token${id===state.selected?' selected':''}${valid?' valid-target':''}${draft?.target===id?' destination':''}" transform="translate(${x},${y})"><circle r="17"></circle><text text-anchor="middle" y="4">${esc(character.name.slice(0,2).toUpperCase())}</text><title>${esc(character.name)}</title></g>`;
     }).join('');
@@ -439,7 +449,7 @@ import {openEndedD100, parseCriticalSymbols, rollD10 as d10, rollD100 as d100} f
       const draft=draftFor(who.id,phase),type=draftType(draft,who),kind=targetKindFor(draft,who);
       const target=kind==='creature'?(actor(draft.target)?.name||'Choose a creature'):kind==='hex'?(draft.hex?`Hex ${draft.hex.q},${draft.hex.r} · ${token(who.id)?.q!=null?distance(token(who.id),draft.hex)*state.scale:0} ft`:'Choose a hex'):'';
       const active=phase===activePhase&&who.id===state.selected;
-      return `<article class="encounter-phase-card${active?' active':''}${state.phase===index?' current':''}"><div><strong>${index+1}. ${phase[0].toUpperCase()+phase.slice(1)}</strong><small>${index===0?'Acts early · −20':index===2?'Acts late · +10':'Acts normally'}</small></div><form class="encounter-phase-form" data-actor="${esc(who.id)}" data-phase="${phase}"><label class="encounter-phase-wide">Skill or action<select name="choice">${choiceOptions(who,draft.choice)}</select></label>${draft.choice==='none'?'':`<label>Activity %<input name="activity" type="number" min="0" max="100" value="${esc(draft.activity)}"></label>${['static','moving'].includes(type)?`<label>Maneuver<select name="maneuver">${option('static','Static',draft.maneuver)}${option('moving','Moving',draft.maneuver)}</select></label><label>Difficulty<select name="difficulty">${difficulties.map(item=>option(item,item,draft.difficulty)).join('')}</select></label>`:''}${draft.choice==='stat'?`<label>Applicable stat<select name="statIndex">${['Agility','Constitution','Memory','Reasoning','Self Discipline','Empathy','Intuition','Presence','Quickness','Strength'].map((item,i)=>option(i,item,draft.statIndex)).join('')}</select></label>`:''}${type==='move'?`<label>Pace<select name="pace">${[[1,'Walk ×1'],[1.5,'Jog ×1.5'],[2,'Run ×2'],[3,'Sprint ×3'],[4,'Fast sprint ×4'],[5,'Dash ×5']].map(([value,label])=>option(value,label,draft.pace)).join('')}</select></label>`:''}${type==='spell'?`<label>Spell level<input name="spellLevel" type="number" min="1" max="50" value="${esc(draft.spellLevel)}"></label><label>Preparation rounds<input name="preparation" type="number" min="0" max="20" value="${esc(draft.preparation)}"></label><label>Spell attack<select name="spellAttack">${[['none','No attack'],['basic','Basic'],['bolt','Bolt'],['ball','Ball']].map(([value,label])=>option(value,label,draft.spellAttack)).join('')}</select></label>${draft.spellAttack==='ball'?`<label>Area radius (ft)<input name="areaRadius" type="number" min="0" value="${esc(draft.areaRadius)}"></label>`:''}<label class="encounter-inline-check"><input name="instant" type="checkbox" ${draft.instant?'checked':''}> Instantaneous</label>`:''}${type==='resist'?`<label>Resistance<select name="resistance">${['channeling','essence','mentalism','poison','disease','fear'].map(item=>option(item,item,draft.resistance)).join('')}</select></label><label>Attack level<input name="attackLevel" type="number" min="1" max="100" value="${esc(draft.attackLevel)}"></label>`:''}${!['move','melee','missile','resist'].includes(type)&&!(type==='spell'&&draft.spellAttack!=='none')?`<label>Target<select name="targetKind">${[['none','No target'],['creature','Creature'],['hex','Hex']].map(([value,label])=>option(value,label,draft.targetKind)).join('')}</select></label>`:''}${kind!=='none'&&type!=='move'?`<label>Max range (ft)<input name="range" type="number" min="1" placeholder="Optional" value="${esc(draft.range)}"><small>Blank shows all visible targets.</small></label>`:''}${kind!=='none'?`<div class="encounter-phase-target encounter-phase-wide"><span>${esc(target)}</span><button type="button" data-focus-target="${phase}" aria-haspopup="dialog">Choose target</button></div>`:''}<label>Other modifier<input name="modifier" type="number" value="${esc(draft.modifier)}"></label><label class="encounter-phase-wide">Description<input name="description" type="text" maxlength="100" placeholder="Optional" value="${esc(draft.description)}"></label>`}</form></article>`;
+      return `<article class="encounter-phase-card${active?' active':''}${state.phase===index?' current':''}"><div><strong>${index+1}. ${phase[0].toUpperCase()+phase.slice(1)}</strong><small>${index===0?'Acts early · −20':index===2?'Acts late · +10':'Acts normally'}</small></div><form class="encounter-phase-form" data-actor="${esc(who.id)}" data-phase="${phase}"><label class="encounter-phase-wide">Skill or action<select name="choice">${choiceOptions(who,draft.choice)}</select></label>${draft.choice==='none'?'':`<label>Activity %<input name="activity" type="number" min="0" max="100" value="${esc(draft.activity)}"></label>${['static','moving'].includes(type)?`<label>Maneuver<select name="maneuver">${option('static','Static',draft.maneuver)}${option('moving','Moving',draft.maneuver)}</select></label><label>Difficulty<select name="difficulty">${difficulties.map(item=>option(item,item,draft.difficulty)).join('')}</select></label>`:''}${draft.choice==='stat'?`<label>Applicable stat<select name="statIndex">${['Agility','Constitution','Memory','Reasoning','Self Discipline','Empathy','Intuition','Presence','Quickness','Strength'].map((item,i)=>option(i,item,draft.statIndex)).join('')}</select></label>`:''}${type==='move'?`<label>Pace<select name="pace">${[[1,'Walk ×1'],[1.5,'Jog ×1.5'],[2,'Run ×2'],[3,'Sprint ×3'],[4,'Fast sprint ×4'],[5,'Dash ×5']].map(([value,label])=>option(value,label,draft.pace)).join('')}</select></label>`:''}${type==='spell'?`<label>Spell level<input name="spellLevel" type="number" min="1" max="50" value="${esc(draft.spellLevel)}"></label><label>Preparation rounds<input name="preparation" type="number" min="0" max="20" value="${esc(draft.preparation)}"></label><label>Spell attack<select name="spellAttack">${[['none','No attack'],['basic','Basic'],['bolt','Bolt'],['ball','Ball']].map(([value,label])=>option(value,label,draft.spellAttack)).join('')}</select></label>${['bolt','ball'].includes(draft.spellAttack)?`<label>Critical type<select name="spellCritical">${option('','Resolve manually in Tables',draft.spellCritical||'')}${spellCriticalTables.map(([code,label])=>option(code,label,draft.spellCritical)).join('')}</select></label>`:''}${draft.spellAttack==='ball'?`<label>Area radius (ft)<input name="areaRadius" type="number" min="0" value="${esc(draft.areaRadius)}"></label>`:''}<label class="encounter-inline-check"><input name="instant" type="checkbox" ${draft.instant?'checked':''}> Instantaneous</label>`:''}${type==='resist'?`<label>Resistance<select name="resistance">${['channeling','essence','mentalism','poison','disease','fear'].map(item=>option(item,item,draft.resistance)).join('')}</select></label><label>Attack level<input name="attackLevel" type="number" min="1" max="100" value="${esc(draft.attackLevel)}"></label>`:''}${!['move','melee','missile','resist'].includes(type)&&!(type==='spell'&&draft.spellAttack!=='none')?`<label>Target<select name="targetKind">${[['none','No target'],['creature','Creature'],['hex','Hex']].map(([value,label])=>option(value,label,draft.targetKind)).join('')}</select></label>`:''}${kind!=='none'&&type!=='move'?`<label>Max range (ft)<input name="range" type="number" min="1" placeholder="Optional" value="${esc(draft.range)}"><small>Blank shows all visible targets.</small></label>`:''}${kind!=='none'?`<div class="encounter-phase-target encounter-phase-wide"><span>${esc(target)}</span><button type="button" data-focus-target="${phase}" aria-haspopup="dialog">Choose target</button></div>`:''}<label>Other modifier<input name="modifier" type="number" value="${esc(draft.modifier)}"></label><label class="encounter-phase-wide">Description<input name="description" type="text" maxlength="100" placeholder="Optional" value="${esc(draft.description)}"></label>`}</form></article>`;
       }).join('');
       return `<section class="encounter-actor-card" data-actor-card="${esc(id)}">${header}<div class="encounter-phase-cards">${cards}</div></section>`;
     }).join('');
@@ -537,6 +547,7 @@ import {openEndedD100, parseCriticalSymbols, rollD10 as d10, rollD100 as d100} f
     return result;
   }
   async function attackResult(who,value,declaration) {
+    const attackOrigin={q:value.q,r:value.r};
     const weapon=who.attacks[Number(declaration.skill)];
     const foe=actor(declaration.target),foeToken=token(declaration.target);
     if(!weapon||!foe||!foeToken) return 'Attack has no valid weapon or target.';
@@ -561,8 +572,8 @@ import {openEndedD100, parseCriticalSymbols, rollD10 as d10, rollD100 as d100} f
       let criticalText='',fumbleText='';
       if(critical){
         const outcome=await narrativeRoll(criticalTable,critical.charCodeAt(0)-65,`${critical} critical`,0,{who:foe,value:foeToken});
-        addCriticalEffects(foeToken,value,outcome.effects);
-        criticalText=` · ${outcome.html}${outcome.effects.length?' · critical effects applied':''}`;
+        const movement=addCriticalEffects(foeToken,value,outcome.effects,attackOrigin);
+        criticalText=` · ${outcome.html}${outcome.effects.length?' · critical effects applied':''}${movement?' · '+esc(movement):''}`;
       }
       if(roll.first<=2||result==='F')fumbleText=` · ${(await narrativeRoll('A-10.11.1',weaponFumbleColumn(weapon.category),'weapon fumble')).html}`;
       return `${esc(weapon.name)} vs ${esc(foe.name)}: ${diceText(roll)} ${roll.total} + ${weapon.bonus} OB − ${foe.db} DB ${actionPenalty>=0?'+':'−'} ${Math.abs(actionPenalty)} action ${declaration.modifier>=0?'+':'−'} ${Math.abs(declaration.modifier)} other${penalty?` ${penalty} critical modifier`:''} = ${modified}. ${tableLink(code)} result <strong>${esc(result)}</strong>${hits?` · ${hits} hits applied`:''}${criticalText}${fumbleText}.`;
@@ -573,9 +584,10 @@ import {openEndedD100, parseCriticalSymbols, rollD10 as d10, rollD100 as d100} f
     if(!foe||!foeToken||!within(foeToken.q,foeToken.r))return 'Choose and place a spell target to resolve its attack.';
     const origin=token(who.id);
     if(!origin||!within(origin.q,origin.r))return 'Place the caster on the map first.';
+    const attackOrigin=declaration.spellAttack==='ball'&&declaration.targetHex?{...declaration.targetHex}:{q:origin.q,r:origin.r};
     const penalty=criticalModifier(origin);
     if(declaration.range&&distance(origin,foeToken)*state.scale>declaration.range)return 'Spell target is outside the selected range.';
-    if(lineTo(origin,foeToken).slice(0,-1).some(hex=>state.terrain[keyOf(hex.q,hex.r)]==='blocked'))return 'Blocked terrain obscures the spell target.';
+    if(lineTo(attackOrigin,foeToken).slice(0,-1).some(hex=>state.terrain[keyOf(hex.q,hex.r)]==='blocked'))return 'Blocked terrain obscures the spell target.';
     const kind=declaration.spellAttack,code=kind==='basic'?'A-10.9.11':kind==='bolt'?'A-10.9.9':'A-10.9.10';
     try {
       const table=await loadTable(code);
@@ -603,8 +615,14 @@ import {openEndedD100, parseCriticalSymbols, rollD10 as d10, rollD100 as d100} f
       const column=table.columns.findIndex(item=>item.label===`AT ${foe.at}`),result=row?.values[column]||'–';
       const hits=Number(/^\d+/.exec(result)?.[0])||0;
       foeToken.hits=(foeToken.hits||0)+hits;
+      const critical=/[A-E]/.exec(result)?.[0];let criticalText='';
+      if(critical&&spellCriticalTables.some(([code])=>code===declaration.spellCritical)){
+        const outcome=await narrativeRoll(declaration.spellCritical,critical.charCodeAt(0)-65,`${critical} critical`,0,{who:foe,value:foeToken});
+        const movement=addCriticalEffects(foeToken,origin,outcome.effects,attackOrigin);
+        criticalText=` · ${outcome.html}${outcome.effects.length?' · critical effects applied':''}${movement?' · '+esc(movement):''}`;
+      }else if(critical)criticalText=' · resolve the critical type named by the spell in Tables';
       const failure=result==='F'?` · ${(await narrativeRoll('A-10.11.2',spellFailureColumn(spellSkill,kind),'spell failure')).html}`:'';
-      return `${kind} spell vs ${esc(foe.name)}: ${diceText(roll)} + ${bonus} OB − ${foe.db} DB ${declaration.modifier>=0?'+':'−'} ${Math.abs(declaration.modifier)} other${penalty?` ${penalty} critical modifier`:''} = ${modified}. ${tableLink(code)} result <strong>${esc(result)}</strong>${hits?` · ${hits} hits applied`:''}${/[A-E]/.test(result)?' · resolve the critical type named by the spell in Tables':''}${failure}.`;
+      return `${kind} spell vs ${esc(foe.name)}: ${diceText(roll)} + ${bonus} OB − ${foe.db} DB ${declaration.modifier>=0?'+':'−'} ${Math.abs(declaration.modifier)} other${penalty?` ${penalty} critical modifier`:''} = ${modified}. ${tableLink(code)} result <strong>${esc(result)}</strong>${hits?` · ${hits} hits applied`:''}${criticalText}${failure}.`;
     }catch{return `${kind} spell attack table could not be loaded; use the Tables page.`;}
   }
   async function resolveAction(id,declaration) {
@@ -614,8 +632,8 @@ import {openEndedD100, parseCriticalSymbols, rollD10 as d10, rollD100 as d100} f
       appendLog(id,`${esc(declaration.description||declaration.type)} cannot be performed while ${statuses.includes('Dead')?'dead':'unconscious'}.`);
       return;
     }
-    const stunned=statuses.includes('Stunned')||criticalRounds(value,'stun')>0||criticalRounds(value,'stunNoParry')>0;
-    const parryOnly=criticalRounds(value,'stunNoParry')>0||criticalRounds(value,'noParry')>0||criticalRounds(value,'mustParry')>0;
+    const stunned=statuses.includes('Stunned')||criticalRounds(value,'stun')>0||criticalRounds(value,'stunNoParry')>0||criticalRounds(value,'downOrOut')>0;
+    const parryOnly=criticalRounds(value,'stunNoParry')>0||criticalRounds(value,'downOrOut')>0||criticalRounds(value,'noParry')>0||criticalRounds(value,'mustParry')>0;
     if((stunned||parryOnly)&&!['move','moving','static','resist'].includes(declaration.type)) {
       appendLog(id,`${esc(declaration.description||declaration.type)} cannot be performed while ${stunned?'stunned':'restricted by a parry critical'}.`);
       return;
@@ -679,7 +697,9 @@ import {openEndedD100, parseCriticalSymbols, rollD10 as d10, rollD100 as d100} f
           else {
             const radius=Math.max(0,Number(declaration.areaRadius)||0);
             const targets=Object.keys(state.tokens).filter(id=>{const item=token(id);return within(item.q,item.r)&&distance(item,center)*state.scale<=radius;});
-            detail+=targets.length?` Area centered on hex ${center.q},${center.r} (${radius} ft): ${ (await Promise.all(targets.map(id=>spellAttackResult(who,{...declaration,target:id,range:0},skill)))).join(' ')}`:` No characters are within ${radius} ft of hex ${center.q},${center.r}.`;
+            const results=[];
+            for(const id of targets)results.push(await spellAttackResult(who,{...declaration,target:id,range:0},skill));
+            detail+=targets.length?` Area centered on hex ${center.q},${center.r} (${radius} ft): ${results.join(' ')}`:` No characters are within ${radius} ft of hex ${center.q},${center.r}.`;
           }
         } else if(cast&&declaration.spellAttack!=='none')detail+=` ${await spellAttackResult(who,declaration,skill)}`;
       }
@@ -702,6 +722,7 @@ import {openEndedD100, parseCriticalSymbols, rollD10 as d10, rollD100 as d100} f
     if(data.has('spellLevel'))draft.spellLevel=Number(data.get('spellLevel'));
     if(data.has('preparation'))draft.preparation=Number(data.get('preparation'));
     if(data.has('spellAttack'))draft.spellAttack=String(data.get('spellAttack'));
+    if(data.has('spellCritical'))draft.spellCritical=String(data.get('spellCritical'));
     if(data.has('areaRadius'))draft.areaRadius=Number(data.get('areaRadius'));
     if(draftType(draft,who)==='spell')draft.instant=data.has('instant');
     if(data.has('resistance'))draft.resistance=String(data.get('resistance'));
@@ -710,7 +731,7 @@ import {openEndedD100, parseCriticalSymbols, rollD10 as d10, rollD100 as d100} f
     if(data.has('modifier'))draft.modifier=Number(data.get('modifier'));
     if(data.has('range'))draft.range=String(data.get('range'));
     if(data.has('description'))draft.description=String(data.get('description')).trim();
-    if(changed==='choice'&&oldChoice!==draft.choice){draft.activity=defaultActivity[draftType(draft,who)]??0;draft.target='';draft.hex=null;draft.targetKind='none';draft.spellAttack='none';draft.areaRadius=0;draft.range='';draft.description='';draft.modifier=0;draft.instant=false;}
+    if(changed==='choice'&&oldChoice!==draft.choice){draft.activity=defaultActivity[draftType(draft,who)]??0;draft.target='';draft.hex=null;draft.targetKind='none';draft.spellAttack='none';draft.spellCritical='';draft.areaRadius=0;draft.range='';draft.description='';draft.modifier=0;draft.instant=false;}
     if(changed==='spellAttack'&&oldAttack!==draft.spellAttack){draft.target='';draft.hex=null;}
     if(changed==='targetKind'&&oldTargetKind!==draft.targetKind){draft.target='';draft.hex=null;}
     if(changed==='instant'&&draftType(draft,who)==='spell')draft.activity=draft.instant?10:75;
@@ -726,12 +747,13 @@ import {openEndedD100, parseCriticalSymbols, rollD10 as d10, rollD100 as d100} f
     if(type==='move'&&activity>({snap:20,normal:50,deliberate:80}[phase]))return {error:`${phase} movement cannot exceed ${({snap:20,normal:50,deliberate:80}[phase])}% activity.`};
     if(type==='melee'&&activity<60||type==='missile'&&(activity<30||activity>60)||type==='static'&&activity<50)return {error:'This action is outside its allowed activity range.'};
     if(type==='spell'&&activity<(draft.instant?10:75))return {error:`Spell casting needs at least ${draft.instant?10:75}% activity.`};
+    if(type==='spell'&&draft.spellCritical&&!spellCriticalTables.some(([code])=>code===draft.spellCritical))return {error:'Choose a supported spell critical type.'};
     const skillIndex=Number(draft.choice.split(':')[1]);
     if(['melee','missile'].includes(type)&&!who.attacks[skillIndex]||['static','moving','spell'].includes(type)&&draft.choice!=='stat'&&!who.skills[skillIndex])return {error:'Choose an available skill or attack item.'};
     const kind=targetKindFor(draft,who);
     if(kind==='creature'&&(!draft.target||!validCreature(draft.target,draft,who,value)))return {error:'Choose a creature in the target popup first.'};
     if(kind==='hex'&&(!draft.hex||!validHex(draft.hex.q,draft.hex.r,draft,who,value)))return {error:'Choose a hex in the target popup first.'};
-    return {action:{phase,type,activity,skill:draft.choice==='stat'?'stat':skillIndex,statIndex:Number(draft.statIndex)||0,target:kind==='creature'?draft.target:'',targetHex:kind==='hex'&&type!=='move'?{...draft.hex}:null,difficulty:draft.difficulty,pace:Number(draft.pace)||1,spellLevel:Number(draft.spellLevel)||1,preparation:Number(draft.preparation)||0,instant:!!draft.instant,spellAttack:draft.spellAttack||'none',areaRadius:Math.max(0,Number(draft.areaRadius)||0),resistance:draft.resistance,attackLevel:Number(draft.attackLevel)||1,modifier:Number(draft.modifier)||0,range:Number(draft.range)||0,description:draft.description,destination:type==='move'?{...draft.hex}:null}};
+    return {action:{phase,type,activity,skill:draft.choice==='stat'?'stat':skillIndex,statIndex:Number(draft.statIndex)||0,target:kind==='creature'?draft.target:'',targetHex:kind==='hex'&&type!=='move'?{...draft.hex}:null,difficulty:draft.difficulty,pace:Number(draft.pace)||1,spellLevel:Number(draft.spellLevel)||1,preparation:Number(draft.preparation)||0,instant:!!draft.instant,spellAttack:draft.spellAttack||'none',spellCritical:draft.spellCritical||'',areaRadius:Math.max(0,Number(draft.areaRadius)||0),resistance:draft.resistance,attackLevel:Number(draft.attackLevel)||1,modifier:Number(draft.modifier)||0,range:Number(draft.range)||0,description:draft.description,destination:type==='move'?{...draft.hex}:null}};
   }
   function prepareRoundActions() {
     for(const form of $('#encounter-phase-cards').querySelectorAll('form'))readDraft(form);
@@ -827,7 +849,8 @@ import {openEndedD100, parseCriticalSymbols, rollD10 as d10, rollD100 as d100} f
       const id=status.closest('[data-actor-card]').dataset.actorCard,value=token(id),name=status.dataset.status;
       if(!value)return;
       if(name==='Surprised')value.surprised=!value.surprised;
-      else {value.statuses=Array.isArray(value.statuses)?value.statuses:[];value.statuses=value.statuses.includes(name)?value.statuses.filter(item=>item!==name):[...value.statuses,name];}
+      else {value.statuses=Array.isArray(value.statuses)?value.statuses:[];value.statuses=value.statuses.includes(name)?value.statuses.filter(item=>item!==name):[...value.statuses,name];if(name==='Unconscious')value.otherUnconscious=value.statuses.includes(name);}
+      updateStunConsciousness(value);
       ensureInitiative();save();renderPhaseCards();renderMap();return;
     }
     const place=event.target.closest('[data-place-actor]');

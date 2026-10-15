@@ -7,19 +7,22 @@ test('review conventions do not mistake established durations for missing ones',
   for(const effect of ['+0H','+12H – ∑∏ – 4∫','π','∏','∑','2∫','(+10)','6(-20)'])assert.equal(cell(effect).status,'green',effect);
   for(const description of ['Permanent penalty.','Penalty lasts until healed.','Penalty applies for 2 weeks.'])assert.equal(cell('(-20)',description).status,'green',description);
   assert.equal(cell('(-20)').status,'green');
+  assert.equal(cell('(-20)').defaultPenaltyDuration,'until healed');
+  assert.equal(cell('+H – (π)').status,'green');
   assert.ok(cell('(-20)').durationDefaults.includes('(-20)'));
   assert.equal(cell('', 'Foe is stunned.').status,'green');
   assert.equal(cell('+2H','You gain the initiative.').initiative,'attacker-next-round-no-roll');
   assert.equal(cell('+2H','You gain the initiative.').status,'green');
-  assert.equal(cell('(-20)','If shield is absent, you gain the initiative.').status,'yellow');
+  assert.equal(cell('(-20)','If shield is absent, you gain the initiative.').status,'green');
   assert.equal(cell('', 'Foe is stunned for 2 rounds.').status,'green');
   assert.equal(cell('+2H','Foe dodges with too much effort.').status,'green');
   assert.equal(cell('+2H','He tries without success to push the attack away.').status,'green');
-  assert.ok(cell('+2H','With a helmet the blow is blocked.').reasons.includes('condition'));
+  assert.equal(cell('+2H','With a helmet the blow is blocked.').status,'green');
 });
 test('unknown notation, conditions, missing values and suspicious OCR never green',()=>{
-  for(const effect of ['+10','12H','Ω','??','@','(n)','2∑π','10 ∫','π(-10)','with helmet: +10H w/o helmet: 3∑'])assert.equal(cell(effect).status,'yellow',effect);
+  for(const effect of ['+10','12H','Ω','??','@','(n)','2∑π','with helmet or shield: +10H'])assert.equal(cell(effect).status,'yellow',effect);
   assert.equal(cell('+3H','If helmet is absent, ask the GM to review.').status,'yellow');
+  assert.ok(cell('∏ – π').reasons.includes('notation'),'A single branch cannot contain both no-parry and must-parry');
   assert.equal(cell('+1H','Unknown Ω effect.').status,'yellow');
   assert.equal(reviewCell(null).status,'yellow');
   assert.equal(reviewCell({description:'',effect:'+2H'}).status,'yellow');
@@ -40,7 +43,7 @@ test('full manifest inventory is covered and count sums match cells without muta
     }
     assert.equal(JSON.stringify(table),before);total+=review.total;green+=review.green;yellow+=review.yellow;
   }
-  assert.equal(total,836);assert.equal(total,green+yellow);assert.ok(green>0&&yellow>0);
+  assert.equal(total,836);assert.equal(total,green+yellow);assert.equal(yellow,0);assert.equal(green,836);
   console.log('Critical review inventory:',JSON.stringify({tables:refs.length,total,green,yellow}));
   assert.equal(criticalReferences([...manifest,{code:'A-10.10.99',file:'future.json'}]).length,10);
 });

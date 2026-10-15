@@ -14,8 +14,9 @@ async (existingPage) => {
     await select.selectOption(option.value);
   };
   try {
-    await page.goto(existingPage.url());
     await page.route('**/tables/creatures.json',route => route.fulfill({status:503,body:'Unavailable'}));
+    await page.goto(existingPage.url());
+    await page.waitForFunction(() => document.documentElement.dataset.appReady === 'true');
     await page.getByRole('button',{name:'Coliseum',exact:true}).click();
     await page.locator('#coliseum-retry').waitFor({state:'visible'});
     assert(await page.locator('#coliseum-simulate').isDisabled(),'Fight started without tables');
@@ -51,6 +52,7 @@ async (existingPage) => {
     const result = await page.locator('#coliseum-status').textContent();
     assert(await page.locator('#coliseum-log details').count() > 0,'Missing fight log');
     await page.reload();
+    await page.waitForFunction(() => document.documentElement.dataset.appReady === 'true');
     await page.getByRole('button',{name:'Coliseum',exact:true}).click();
     await page.locator('#coliseum-status').getByText('Dragon (typical adult) vs Ant (Giant).').waitFor();
     assert(await page.locator('#coliseum-round').textContent() === 'Ready','Reload retained stale fight');

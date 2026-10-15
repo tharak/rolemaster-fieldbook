@@ -92,6 +92,8 @@ function eventText(event) {
   if (critical?.ignored) html += `<p class="coliseum-critical">${critical.severity} critical has no effect on this creature.</p>`;
   else if (critical) html += `<p class="coliseum-critical"><strong>${critical.severity} critical · ${esc(critical.code)} · roll ${critical.roll}</strong><br>${criticalEffectMarkup(critical.description)} ${criticalEffectMarkup(critical.effect,critical.description)}${critical.conditional ? '<br>Unsupported conditional clause needs GM review; supported and unconditional clauses applied.' : ''}</p>`;
   if(critical?.conditional||critical?.equipmentConditions?.length)html+=`<details class="coliseum-critical-source"><summary>Original conditional result</summary><p>${criticalEffectMarkup(critical.sourceDescription)} ${criticalEffectMarkup(critical.sourceEffect,critical.sourceDescription)}</p></details>`;
+  if(critical?.recoils?.length)html+=`<p>Recoil ${critical.recoils.join(' / ')} ft requires the Encounters map; arena positions are not simulated.</p>`;
+  if(critical?.manualEffects?.length)html+=critical.manualEffects.map(note=>`<p>${esc(note)}</p>`).join('');
   return html;
 }
 

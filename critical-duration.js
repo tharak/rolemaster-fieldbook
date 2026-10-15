@@ -18,7 +18,11 @@ export function criticalDuration(count, kind, context = '') {
       return {roundsLeft:null,label:'for '+explicit[1]+' '+explicit[2]+' (GM-managed)',defaulted:false};
     }
   }
-  return {roundsLeft:1,label:'1 round',defaulted:true};
+  // Core Rules, Key to the Criticals (printed p. 209): the specific penalty
+  // rule overrides the general omitted-beta default of one.
+  return kind==='penalty'
+    ? {roundsLeft:null,label:'until healed',defaulted:true}
+    : {roundsLeft:1,label:'1 round',defaulted:true};
 }
 export function criticalDurationFields(count,kind,context) {
   const duration=criticalDuration(count,kind,context);

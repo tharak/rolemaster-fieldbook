@@ -1,6 +1,6 @@
 import {esc} from './dom.js';
 import {criticalDuration} from './critical-duration.js';
-import {criticalDeath} from './critical-death.js';
+import {criticalDeath,criticalDeathLabel} from './critical-death.js';
 const preferenceKey = 'rolemaster-coliseum-emojis-v1';
 let emojis = false;
 try { emojis = localStorage.getItem(preferenceKey) === 'true'; } catch { /* Symbols/text by default. */ }
@@ -25,8 +25,10 @@ export const criticalLegend = [
 export function criticalTokens(raw, context = '') {
   const input = String(raw || '');
   const patterns = [
-    [/^\+(\d+)H\b/,m => ['Extra hits: '+m[1],'💥']],
-    [/^(\d*)\(\s*(\d*)π\s*[-−–]\s*(\d+)\s*\)/,m => ['Must parry: '+(Number(m[1]||m[2])||1)+' rounds at −'+m[3],'🛡️']],
+    [/^all allies get\s+\(?\+(\d+)\)?(?:\s+for\s+(\d+)\s+rounds?)?/i,m => ['All allies bonus: +'+m[1]+' for '+(m[2]||1)+' round'+((m[2]||'1')==='1'?'':'s')+' (GM-managed)','➕']],
+    [/^\+(\d*)H\b/,m => ['Extra hits: '+(m[1]===''?'1':m[1]),'💥']],
+    [/^(\d*)\(\s*(\d*)π\s*(?:[-−–]\s*(\d+))?\s*\)/,m => ['Must parry: '+(Number(m[1]||m[2])||1)+' rounds'+(Number(m[3])?' at −'+m[3]:''),'🛡️']],
+    [/^(\d*)π\s*\(\s*[-−–]\s*(\d+)\s*\)/,m => ['Must parry: '+(Number(m[1])||1)+' rounds at −'+m[2],'🛡️']],
     [/^(\d*)∑∏/,m => ['Stunned and unable to parry: '+(Number(m[1])||1)+' rounds','🌀🚫']],
     [/^(\d*)∑/,m => ['Stunned: '+(Number(m[1])||1)+' rounds','🌀']],
     [/^(\d*)∏/,m => ['Unable to parry: '+(Number(m[1])||1)+' rounds','🚫']],
@@ -40,7 +42,7 @@ export function criticalTokens(raw, context = '') {
     let found;
     const initiative=/^you gain the initiative\b/i.exec(input.slice(i));
     const death=criticalDeath(input.slice(i));
-    if(death?.index===0)found={raw:death.raw,label:death.rounds===0?'Dies: instantly':('Dies: in '+death.rounds+' round'+(death.rounds===1?'':'s')+' unless healed'),emoji:'☠️',death:true};
+    if(death?.index===0)found={raw:death.raw,label:criticalDeathLabel(death),emoji:'☠️',death:true};
     if(initiative)found={raw:initiative[0],label:'Attacker wins initiative next round (no roll)',initiative:true};
     for (const [pattern,label] of patterns) {
       if(found)break;

@@ -15,9 +15,11 @@ test('healing cancels pending death, repeated deaths cannot postpone it, seriali
 });
 test('explicit fatal variants are recognized; harmless instantly and unknown fatal prose do not invent death',()=>{
   for(const [text,n] of [['Foe dies in 1 round.',1],['He drops and dies after 3 rounds.',3],['He dies of shock in 12 rnds.',12],['He goes into shock and dies 6 rounds later.',6],['Foe dies in two rounds.',2],['Foe dies instantly.',0],['You kill him instantly.',0]]){assert.equal(criticalDeath(text)?.rounds,n,text);assert.equal(parseCriticalSymbols('',text).find(e=>e.kind==='dies')?.roundsLeft,n,text);}
-  for(const text of ['Foe is instantly pale.','He feels pain instantly.','Foe dies in 12 inactive rounds.','Foe drops instantly to the ground.'])assert.equal(criticalDeath(text),null,text);
+  for(const text of ['Foe is instantly pale.','He feels pain instantly.','Foe drops instantly to the ground.'])assert.equal(criticalDeath(text),null,text);
   assert.match(formatCriticalEffect('Foe dies in 3 rounds.',false),/Dies: in 3 rounds unless healed/);assert.match(formatCriticalEffect('Foe dies instantly.',true),/☠️.*instantly/);
-  assert.ok(reviewCell({description:'Foe dies in 12 inactive rounds.',effect:'—'}).reasons.includes('fatal'));
+  assert.equal(criticalDeath('Foe dies in 12 inactive rounds.').inactive,true);
+  assert.equal(parseCriticalSymbols('', 'Foe dies in 12 inactive rounds.').some(e=>e.kind==='dies'),false);
+  assert.ok(reviewCell({description:'Foe dies in 12 inactive rounds.',effect:'—'}).notes.some(note=>note.includes('GM-managed')));
 });
 test('each inventory equipment key has independent with/without branches, unconditional prefix preserved',()=>{
   for(const [key] of criticalEquipment){
@@ -53,7 +55,12 @@ test('conditions and fatal clauses spanning source fields stay scoped to foe equ
   }
   const split=resolveCriticalEquipment('If visored, foe dies in 10 rounds. Without a visor, he dies','instantly. +30H',[]);
   assert.equal(parseCriticalSymbols(split.effect,split.description).find(e=>e.kind==='dies')?.roundsLeft,0);
-  const unknown=resolveCriticalEquipment('If the neck is exposed it','freezes solid and foe dies in 9 rounds. +5H',[]);
+  for(const [equipment,rounds] of [[[],9],[['neck armor'],undefined]]){
+    const neck=resolveCriticalEquipment('If the neck is exposed it','freezes solid and foe dies in 9 rounds. +5H',equipment);
+    assert.equal(neck.unresolved,false);
+    assert.equal(parseCriticalSymbols(neck.effect,neck.description).find(e=>e.kind==='dies')?.roundsLeft,rounds);
+  }
+  const unknown=resolveCriticalEquipment('If magical protection fails it','freezes solid and foe dies in 9 rounds. +5H',[]);
   assert.equal(unknown.unresolved,true);
   assert.deepEqual(parseCriticalSymbols(unknown.effect,unknown.description),[]);
 });

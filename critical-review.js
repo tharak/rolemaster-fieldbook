@@ -12,7 +12,7 @@ function render() {
   const selected=reviews.filter(r=>tableSelect.value==='all'||r.reference.code===tableSelect.value);
   const wanted=$('#review-filter').value, reason=$('#review-reason').value, search=$('#review-search').value.trim().toLowerCase();
   let matched=0;
-  const matches=(cell,row,table)=> (wanted==='all'||wanted===cell.status) && (reason==='all'||cell.reasons.includes(reason)) && (table.reference.code+' '+table.reference.title+' '+row.roll+' '+cell.column+' '+cell.description+' '+cell.effect+' '+cell.reasons.map(r=>reviewReasons[r]).join(' ')).toLowerCase().includes(search);
+  const matches=(cell,row,table)=> (wanted==='all'||wanted===cell.status) && (reason==='all'||cell.reasons.includes(reason)) && (table.reference.code+' '+table.reference.title+' '+row.roll+' '+cell.column+' '+cell.description+' '+cell.effect+' '+cell.originalDescription+' '+cell.originalEffect+' '+cell.reasons.map(r=>reviewReasons[r]).join(' ')).toLowerCase().includes(search);
   $('#review-results').innerHTML=selected.map(table=>{
     const ref=table.reference;
     const heading='<h2>'+esc(ref.code)+' · '+esc(ref.title)+'</h2>';
@@ -23,7 +23,7 @@ function render() {
         if(!matches(cell,row,table))return '<td class="review-filtered">Filtered out</td>';
         matched++;
         const coordinate=ref.code+' · Roll '+row.roll+' · '+cell.group+' / '+cell.column;
-        return '<td class="review-result review-'+cell.status+'" data-status="'+cell.status+'" data-reasons="'+cell.reasons.join(' ')+'"><small>'+esc(coordinate)+'</small><p><strong>'+(cell.status==='green'?'Green: no automated issues detected':'Yellow: needs review')+'</strong></p>'+(cell.reasons.length?'<ul>'+cell.reasons.map(r=>'<li>'+esc(reviewReasons[r])+'</li>').join('')+'</ul>':'')+'<p class="original"><strong>Original description:</strong> '+esc(cell.description||'[missing]')+'<br><strong>Original effect:</strong> '+esc(cell.effect||'[none]')+'</p><p><strong>Readable:</strong> '+criticalEffectMarkup(cell.description)+' '+criticalEffectMarkup(cell.effect,cell.description)+'</p></td>';
+        return '<td class="review-result review-'+cell.status+'" data-status="'+cell.status+'" data-reasons="'+cell.reasons.join(' ')+'"><small>'+esc(coordinate)+'</small><p><strong>'+(cell.status==='green'?'Green: no automated issues detected':'Yellow: needs review')+'</strong></p>'+(cell.reasons.length?'<ul>'+cell.reasons.map(r=>'<li>'+esc(reviewReasons[r])+'</li>').join('')+'</ul>':'')+(cell.notes?.length?'<ul class="review-notes">'+cell.notes.map(note=>'<li>'+esc(note)+'</li>').join('')+'</ul>':'')+'<p class="original"><strong>Original description:</strong> '+esc(cell.originalDescription||'[missing]')+'<br><strong>Original effect:</strong> '+esc(cell.originalEffect||'[none]')+'</p><p><strong>Readable:</strong> '+criticalEffectMarkup(cell.description)+' '+criticalEffectMarkup(cell.effect,cell.description)+'</p></td>';
       }).join('')+'</tr>';
     }).join('');
     return '<section data-review-code="'+esc(ref.code)+'">'+heading+'<p>'+table.total+' results · '+table.green+' green · '+table.yellow+' yellow</p>'+(rows?'<div class="review-scroll" tabindex="0" role="region" aria-label="'+esc(ref.code)+' review table, scroll horizontally"><table class="review-grid"><caption>'+esc(ref.title)+' — original and readable results</caption><thead><tr><th scope="col">Roll</th>'+table.columns.map(c=>'<th scope="col">'+esc(c.group)+' / '+esc(c.label)+'</th>').join('')+'</tr></thead><tbody>'+rows+'</tbody></table></div>':'<p>No results match these filters in this table.</p>')+'</section>';
@@ -31,10 +31,11 @@ function render() {
   $('#review-match-count').textContent=matched+' matching result cells'+(reviews.some(r=>r.error)?' · Some tables are unavailable; totals are incomplete.':'');
 }
 async function load() {
-  $('#review-retry').disabled=true; document.documentElement.dataset.reviewReady='false';
+  $('#review-retry').disabled=true;
   status.className='';
-  for (const key of ['tables','total','green','yellow','unavailable']) delete status.dataset[key];
   $('#review-match-count').textContent='Loading; no results checked yet.';
+  document.documentElement.dataset.reviewReady='loading';
+  for(const key of ['tables','total','green','yellow','unavailable','corrected'])delete status.dataset[key];
   status.textContent='Loading critical table manifest…'; reviews=[]; $('#review-results').replaceChildren(); $('#review-overview').replaceChildren();
   try {
     const response=await fetch('tables/index.json'); if(!response.ok)throw new Error('Manifest HTTP '+response.status);
@@ -45,7 +46,9 @@ async function load() {
       catch(error){return reviewTable(ref,null,error);}
     }));
     const total=reviews.reduce((n,r)=>n+r.total,0),green=reviews.reduce((n,r)=>n+r.green,0),yellow=reviews.reduce((n,r)=>n+r.yellow,0),failures=reviews.filter(r=>r.error).length;
-    status.textContent=refs.length+' critical tables · '+total+' available result cells · '+green+' green · '+yellow+' yellow · '+failures+' unavailable tables'+(failures?' — incomplete review':'');
+    const corrected=reviews.flatMap(table=>table.rows.flatMap(row=>row.cells)).filter(cell=>cell.sourceCorrection).length;
+    status.dataset.corrected=String(corrected);
+    status.textContent=refs.length+' critical tables · '+total+' available result cells · '+green+' green · '+yellow+' yellow · '+failures+' unavailable tables · '+corrected+' source corrections'+(failures?' — incomplete review':'');
     status.dataset.tables=String(refs.length);status.dataset.total=String(total);status.dataset.green=String(green);status.dataset.yellow=String(yellow);status.dataset.unavailable=String(failures);
     tableSelect.innerHTML='<option value="all">All tables</option>'+reviews.map(r=>'<option value="'+esc(r.reference.code)+'">'+esc(r.reference.code+' · '+r.reference.title)+' ('+(r.error?'unavailable':r.yellow+' yellow / '+r.total)+')</option>').join('');
     $('#review-overview').innerHTML=reviews.map(r=>'<a href="#'+esc(r.reference.code)+'">'+esc(r.reference.code)+'<br>'+esc(r.reference.title)+'<br>'+(r.error?'Yellow: unavailable':r.green+' green · '+r.yellow+' yellow')+'</a>').join('');

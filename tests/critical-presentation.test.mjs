@@ -27,7 +27,7 @@ test('compounds, durations, coercion-free prose, and distinct parry meanings',()
   assert.match(formatCriticalEffect('∏'),/Unable to parry/);
   assert.match(formatCriticalEffect('π'),/Must parry/);
   assert.match(formatCriticalEffect('2∑π'),/Stunned: 2 rounds/);
-  assert.match(formatCriticalEffect('π(-10)'),/Penalty: −10 for 1 round/);
+  assert.match(formatCriticalEffect('π(-10)'),/Must parry: 1 round at −10/);
   assert.match(formatCriticalEffect('10 ∫'),/10 hits per round/);
   assert.equal(formatCriticalEffect('dies in 9 rounds. +10 – 20'),'dies in 9 rounds. +10 – 20');
   assert.equal(criticalLegend.length,10);

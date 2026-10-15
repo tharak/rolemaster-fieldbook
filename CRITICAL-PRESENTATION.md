@@ -13,20 +13,21 @@ The meanings follow parseCriticalSymbols and encounter.js's existing expansion:
 - nπ: must parry / 🛡️ n rounds.
 - n(π−p), (nπ−p): must parry at −p / 🛡️ n rounds at −p.
 - n∫: bleeding / 🩸 n hits per round (amount, NOT duration).
-- n(−p): penalty −p / ➖ for n rounds; no n defaults to one round.
+- n(−p): penalty −p / ➖ for n rounds; no n means until the wound is healed.
 - n(+b): attacker bonus +b / ➕ for n rounds.
 
-Omitted temporary counts mean one round unless the relevant description gives an
-explicit duration, permanent effect, or until-condition. Bleeding remains a rate.
+Core Rules, Key to the Criticals, printed page 209 (PDF page 210): omitted β
+means one unless otherwise specified. The detailed penalty rule is the exception:
+a bare (−α) lasts until the wound is healed. Other omitted temporary counts mean
+one round, and an omitted must-parry α means zero. Explicit durations and
+permanent/until-conditions remain intact. Bleeding remains a rate.
 “You gain the initiative” displays attacker first next round without a roll.
 Recognized target death displays Dies / ☠️, instantly or after the stated round
 transitions unless healed; ambiguous fatal prose remains literal for review.
 Duration context is stored with rendered tokens so emoji toggles preserve it.
 n∑π is displayed as the separate
-stun and must-parry tokens; it is NOT conflated with ∑∏. π(−10) is likewise a
-must-parry token followed by a separate penalty, matching current parsing rather
-than silently fixing mechanics. A spaced 10 ∫ is rendered with its visible amount
-10; automated parsing behavior is deliberately unchanged. Standalone separators
+stun and must-parry tokens; it is NOT conflated with ∑∏. π(−10) is a must-parry token at −10, equivalent to (π−10).
+A spaced 10 ∫ retains the amount 10 in both presentation and mechanics. Standalone separators
 – / — are punctuation, not a status. Bare +10, 20 and conditional/OCR prose remain
 literal: presentation does not guess missing H or choose equipment branches.
 
@@ -54,3 +55,8 @@ and the existing full character, Coliseum, and 14-round horizontal timeline suit
 The critical-semantics browser suite also checks actual one-round expiry, ongoing
 bleeding, automatic initiative without RNG, independent equipment choices,
 instant/countdown deaths, and healing through the saved encounter damage input.
+
+The shared source audit supplies traceable derived corrections while preserving
+all original JSON. Recognized inactive-round/hour/day death and ally bonuses
+display their conditions as GM-managed. See CRITICAL-AUDIT.md for the four
+recorded user rulings and recoil behavior.

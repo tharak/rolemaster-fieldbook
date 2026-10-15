@@ -15,6 +15,14 @@ async (existingPage) => {
     assert(await page.locator('.review-green').count()===Number(totals.green),'Green counts inconsistent');
     assert(await page.locator('.review-yellow').count()===Number(totals.yellow),'Yellow counts inconsistent');
     assert(await page.locator('#review-overview a').count()===9,'Overview incomplete');
+    // A known unsupported branch verifies yellow behavior independently of
+    // the real inventory, which may contain no unresolved cells after audit.
+    await page.route('**/tables/A-10.10.1.json',async route=>{
+      const table=await(await route.fetch()).json();
+      table.rows[0].cells[0].effect='with helmet or shield: +1H';
+      await route.fulfill({json:table});
+    });
+    await page.reload();await ready();
     const colors=await page.evaluate(()=>Object.fromEntries(['green','yellow'].map(key=>[key,getComputedStyle(document.querySelector('.review-'+key)).backgroundColor])));
     assert(colors.green==='rgb(220, 239, 226)'&&colors.yellow==='rgb(255, 240, 180)','Actual cell colors missing');
     assert((await page.locator('.review-yellow').first().textContent()).includes('Yellow: needs review'),'No accessible status text');
@@ -33,7 +41,7 @@ async (existingPage) => {
       assert(await page.locator('.review-yellow').count()===0&&await page.locator('.review-green').count()>0,'Green filter mismatch');
       await page.locator('#review-filter').selectOption('yellow');
       await page.locator('#review-reason').selectOption('condition');
-      assert(await page.locator('.review-result').count()>0,'Duration examples absent');
+      assert(await page.locator('.review-result').count()>0,'Unsupported-condition example absent');
       assert(await page.locator('.review-result').evaluateAll(cells=>cells.every(c=>c.dataset.reasons.split(' ').includes('condition'))),'Reason filter mismatch');
       await page.locator('#review-search').fill('no-such-result-938475');
       assert(await page.locator('.review-result').count()===0,'Empty search should not show cells');

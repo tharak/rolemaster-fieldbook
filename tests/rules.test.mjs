@@ -60,7 +60,7 @@ test('critical symbols produce timed and persistent effects', () => {
     {kind:'stunNoParry', roundsLeft:2},
     {kind:'mustParry', roundsLeft:3, amount:20},
     {kind:'bleed', amount:2, roundsLeft:null},
-    {kind:'penalty', amount:15, roundsLeft:1}
+    {kind:'penalty', amount:15, roundsLeft:null, durationLabel:'until healed'}
   ]);
   assert.deepEqual(parseCriticalSymbols('2∑ 3∏ 1π 2(+10)'), [
     {kind:'stun', roundsLeft:2},

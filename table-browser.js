@@ -1,5 +1,6 @@
 // Search, lazy loading, and lookup UI for the reference tables.
 import {$, $$, esc} from './dom.js';
+import {normalizedCriticalTable} from './critical-source.js';
 import {criticalEffectMarkup} from './critical-presentation.js';
 export function createTableBrowser({showView}) {
   let tables = [];
@@ -26,7 +27,7 @@ export function createTableBrowser({showView}) {
         detail = await response.json(); tableCache.set(reference.code, detail);
       }
       if (version !== selectionVersion) return;
-      activeTable = detail;
+      activeTable = normalizedCriticalTable(detail);
       if (detail.kind === 'critical' || detail.kind === 'fumble') {
         const isFumble = detail.kind === 'fumble';
         const select = $('#table-column');

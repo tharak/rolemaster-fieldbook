@@ -12,7 +12,7 @@ async (existingPage) => {
   for(const code of ['4','5'])await page.route('**/tables/A-10.10.'+code+'.json',route=>{
    const key=mode==='helmet'?'helmet':mode==='chest'?'chest armor':'abdomen armor';
    const description=code==='4'?(mode==='duration'?'You gain the initiative. Temporary penalty.':mode==='abdomen'?'If foe has abdominal armor, he dies in 2 rounds. If not, he dies instantly.':'If no '+key+' he dies instantly. Otherwise he dies after 3 rounds.'):'No further effects.';
-   const rows=mode==='duration'?[{roll:'01-79',cells:[{description:'No further effects.',effect:'+0H'}]},{roll:'80-100',cells:[{description,effect:'(-15) – 2∫'}]}]:[{roll:'01-100',cells:[{description,effect:'+0H'}]}];
+   const rows=mode==='duration'?[{roll:'01-79',cells:[{description:'No further effects.',effect:'+0H'}]},{roll:'80-100',cells:[{description,effect:'1(-15) – 2∫'}]}]:[{roll:'01-100',cells:[{description,effect:'+0H'}]}];
    return route.fulfill({json:{rows}});
   });
   await page.goto(existingPage.url());await ready();await open();
@@ -20,7 +20,7 @@ async (existingPage) => {
   assert(await page.locator('#coliseum-symbol-legend').count()===0,'Arena symbol legend still present');
   await page.evaluate(()=>{window.testDice=0;});await page.locator('#coliseum-step').click();
   const first=await page.locator('#coliseum-log .coliseum-initiative').first().textContent();assert(first.indexOf('Tiger')<first.indexOf('Wolf'),'Normal initiative wrong');
-  assert((await page.locator('#coliseum-fighter-right .coliseum-effects').textContent()).includes('1 round'),'Unspecified penalty must show one round');
+  assert((await page.locator('#coliseum-fighter-right .coliseum-effects').textContent()).includes('1 round'),'Explicit one-round penalty must show one round');
   await page.evaluate(()=>{window.testValue=.49;window.testDice=0;});await page.locator('#coliseum-step').click();
   const second=await page.locator('#coliseum-log .coliseum-initiative').nth(1).textContent();
   assert(second.indexOf('Wolf')<second.indexOf('Tiger')&&second.includes('no roll'),'Critical must win next round automatically');
