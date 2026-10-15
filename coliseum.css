@@ -16,6 +16,12 @@
 .coliseum-fighter.winner { box-shadow:0 0 0 2px #b28d45; }
 .coliseum-fighter h2 { color:inherit; font-size:1.6rem; line-height:1.15; margin:10px 0; overflow-wrap:anywhere; }
 .coliseum-fighter .coliseum-kind { text-transform:uppercase; letter-spacing:.12em; font-size:.7rem; color:#697465; }
+.coliseum-emoji-toggle { display:flex; align-items:center; gap:8px; margin:14px 0; width:fit-content; cursor:pointer; }
+.coliseum-emoji-toggle input { width:18px; height:18px; accent-color:#376448; }
+.coliseum-symbol-legend { list-style:none; padding:0; display:grid; gap:10px; }
+.coliseum-symbol-legend li { display:grid; grid-template-columns:2em 1em 2em minmax(0,1fr); align-items:center; gap:8px; overflow-wrap:anywhere; }
+.coliseum-legend-symbol { text-align:center; font-size:1.35rem; }
+.coliseum-symbol-legend small { display:block; }
 .coliseum-crest { display:grid; place-items:center; width:58px; height:64px; background:#e2eade; color:#2c5237; border-radius:6px 6px 28px 28px; font-family:Georgia,serif; font-size:2rem; margin-bottom:18px; }
 .coliseum-fighter:last-child .coliseum-crest { color:#82482c; background:#f1e2d7; }
 .coliseum-health-label { display:flex; justify-content:space-between; gap:8px; margin:20px 0 8px; font-size:.85rem; }

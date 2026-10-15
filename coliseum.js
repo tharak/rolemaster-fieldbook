@@ -1,10 +1,31 @@
 import './app.js';
 import {$,esc} from './dom.js';
 import {formatRolls} from './rules.js';
+import {creatureSymbol,duelSymbol} from './coliseum-symbols.js';
 import {ROUND_LIMIT,attackTypes,creatureCatalog,createFight,stepFight} from './coliseum-rules.js';
 
 const sides = ['left','right'];
 const storageKey = 'rolemaster-coliseum-v1';
+const emojiKey = 'rolemaster-coliseum-emojis-v1';
+const emojiToggle = $('#coliseum-use-emojis');
+try { emojiToggle.checked = localStorage.getItem(emojiKey) === 'true'; } catch { /* Default symbols without storage. */ }
+function symbolMarkup(creature) {
+  const icon = creatureSymbol(creature);
+  return `<div class="coliseum-crest" role="img" aria-label="${esc(icon.meaning)}" title="${esc(icon.meaning)}">${esc(emojiToggle.checked ? icon.emoji : icon.symbol)}</div>`;
+}
+function renderSymbols() {
+  sides.forEach((side,index) => {
+    const crest = $('.coliseum-crest', $(`#coliseum-fighter-${side}`));
+    if (crest && selected[index]) crest.outerHTML = symbolMarkup(selected[index]);
+  });
+  $('#coliseum-duel-symbol').textContent = emojiToggle.checked ? duelSymbol.emoji : duelSymbol.symbol;
+  const entries = [...selected.map(creatureSymbol),duelSymbol];
+  $('#coliseum-symbol-legend').innerHTML = entries.map(icon => `<li><span class="coliseum-legend-symbol" aria-hidden="true">${esc(icon.symbol)}</span><span aria-hidden="true">→</span><span class="coliseum-legend-symbol" aria-hidden="true">${icon.emoji}</span><span>${esc(icon.meaning)} <small>(symbol ${esc(icon.symbol)} / emoji ${icon.emoji})</small></span></li>`).join('');
+}
+emojiToggle.addEventListener('change',() => {
+  renderSymbols();
+  try { localStorage.setItem(emojiKey,String(emojiToggle.checked)); } catch { /* Usable without persistence. */ }
+});
 let catalog = [], tables = {}, selected = [], fight = null, running = false, ready = false, loading = null, runVersion = 0;
 const status = text => { $('#coliseum-status').textContent = text; };
 const choice = side => $(`#coliseum-select-${side}`);
@@ -46,8 +67,9 @@ function renderFighters() {
     const effects = fighter?.effects.map(effect => effect.kind === 'bleed' ? `Bleed ${effect.amount}/round` :
       effect.kind === 'penalty' ? `−${effect.amount} OB` : effect.kind === 'bonus' ? `+${effect.amount} OB` :
       `${effect.kind === 'mustParry' ? 'Must parry' : effect.kind === 'noParry' ? 'No parry' : 'Stunned'} ${effect.roundsLeft} rounds`).join(' · ') || '';
-    card.innerHTML = `<div class="coliseum-crest" aria-hidden="true">${esc(creature.name[0])}</div><span class="coliseum-kind">${creature.group} · Size ${esc(creature.size)}</span><h2>${esc(creature.name)}</h2><dl class="coliseum-stats"><div><dt>Level</dt><dd>${creature.level}</dd></div><div><dt>Armor</dt><dd>${creature.armor_type}</dd></div><div><dt>DB</dt><dd>${creature.db}</dd></div></dl><div class="coliseum-health-label"><span>Hits remaining</span><strong>${hits} / ${creature.hits}</strong></div><progress aria-label="${esc(creature.name)} hits remaining" value="${hits}" max="${creature.hits}"></progress><p class="coliseum-effects">${esc(effects)}</p><ul class="coliseum-attacks">${creature.attacks.filter(Boolean).map(attack => `<li>${attack.both ? 'Both attacks' : `${esc(attackTypes[attack.type][0])} · ${attack.ob >= 0 ? '+' : ''}${attack.ob} OB · ${esc(attack.size)}`}${attack.chance ? ` · ${attack.chance}%` : attack.follow ? ` · ${attack.follow === 'same' ? 'same-round' : 'next-round'} follow-up` : ' · optional'}</li>`).join('')}</ul><p class="coliseum-notes">${esc(creature.special || 'No special abilities listed.')}</p>`;
+    card.innerHTML = `${symbolMarkup(creature)}<span class="coliseum-kind">${creature.group} · Size ${esc(creature.size)}</span><h2>${esc(creature.name)}</h2><dl class="coliseum-stats"><div><dt>Level</dt><dd>${creature.level}</dd></div><div><dt>Armor</dt><dd>${creature.armor_type}</dd></div><div><dt>DB</dt><dd>${creature.db}</dd></div></dl><div class="coliseum-health-label"><span>Hits remaining</span><strong>${hits} / ${creature.hits}</strong></div><progress aria-label="${esc(creature.name)} hits remaining" value="${hits}" max="${creature.hits}"></progress><p class="coliseum-effects">${esc(effects)}</p><ul class="coliseum-attacks">${creature.attacks.filter(Boolean).map(attack => `<li>${attack.both ? 'Both attacks' : `${esc(attackTypes[attack.type][0])} · ${attack.ob >= 0 ? '+' : ''}${attack.ob} OB · ${esc(attack.size)}`}${attack.chance ? ` · ${attack.chance}%` : attack.follow ? ` · ${attack.follow === 'same' ? 'same-round' : 'next-round'} follow-up` : ' · optional'}</li>`).join('')}</ul><p class="coliseum-notes">${esc(creature.special || 'No special abilities listed.')}</p>`;
   });
+  renderSymbols();
 }
 
 function eventText(event) {
