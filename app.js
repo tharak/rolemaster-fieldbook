@@ -1,3 +1,5 @@
+import {equipmentIcon} from './equipment-art.js';
+import {appendExperience} from './experience-rules.js';
 import {
   statNames, realmByProfession, primeStats,
   skillCategoryRules, weaponCategories,
@@ -14,7 +16,7 @@ import {buildEncounterRoster} from './encounter-roster.js';
 import {$, $$, esc} from './dom.js';
 import {rankBonus, rankCost, openEndedD100, rollD10, rollD100, rollOpenEndedD10, formatRolls} from './rules.js';
 import {
-  statCost, fixedPotential, strideBonus, rollStatGain, trainingSpecialAwards,
+  statCost, fixedPotential, strideBonus, rollStatGain, trainingSpecialAwards, levelForXp,
   categoryGroup, classifySkill, developedRanks, spellListCostsFor
 } from './character-rules.js';
 import {createStatSheet} from './stat-sheet.js';
@@ -1767,7 +1769,7 @@ import {isRecord, equipmentLedger} from './character-record.js';
     const needle = equipmentSearch.trim().toLowerCase();
     const shown = equipmentCatalog.filter(item => (category === 'All' || item.category === category) && (!needle || `${item.name} ${item.id}`.toLowerCase().includes(needle)));
     const balance = equipmentBalance();
-    $('#equipment-catalog').innerHTML = equipmentCatalog.length ? shown.map(item => `<article class="equipment-item"><div><strong>${esc(item.name)}</strong><small>${esc(item.category)} · A-7 #${esc(item.id)}</small></div><span>${esc(item.price)}</span><div class="equipment-item-actions"><button type="button" data-equipment-buy="${esc(item.id)}"${balance < item.priceTin ? ' disabled' : ''}>Buy</button><button type="button" data-equipment-own="${esc(item.id)}">Add owned</button></div></article>`).join('') || '<p class="play-muted">No matching equipment.</p>' : '<p class="play-muted">Equipment prices are loading.</p>';
+    $('#equipment-catalog').innerHTML = equipmentCatalog.length ? shown.map(item => `<article class="equipment-item"><div><strong>${equipmentIcon(item.name)}${esc(item.name)}</strong><small>${esc(item.category)} · A-7 #${esc(item.id)}</small></div><span>${esc(item.price)}</span><div class="equipment-item-actions"><button type="button" data-equipment-buy="${esc(item.id)}"${balance < item.priceTin ? ' disabled' : ''}>Buy</button><button type="button" data-equipment-own="${esc(item.id)}">Add owned</button></div></article>`).join('') || '<p class="play-muted">No matching equipment.</p>' : '<p class="play-muted">Equipment prices are loading.</p>';
     $('#equipment-catalog-count').textContent = `${shown.length} item${shown.length === 1 ? '' : 's'}`;
     $$('[data-equipment-category]').forEach(button => button.setAttribute('aria-pressed', String(button.dataset.equipmentCategory === category)));
   }
@@ -1776,7 +1778,7 @@ import {isRecord, equipmentLedger} from './character-record.js';
     const balance = equipmentBalance(ledger);
     $('#equipment-balance').textContent = formatMoney(balance);
     $('#equipment-message').textContent = equipmentMessage;
-    $('#equipment-inventory').innerHTML = ledger.items.length ? ledger.items.map(item => `<div class="equipment-owned"><span><strong>${esc(item.name)}</strong><small>× ${item.quantity} · sell for ${formatMoney(Math.floor(item.priceTin / 2))} each</small></span><button type="button" data-equipment-sell="${esc(item.id)}">Sell one</button></div>`).join('') : '<p class="play-muted">No equipment recorded here yet. Add starting gear or buy from the list below.</p>';
+    $('#equipment-inventory').innerHTML = ledger.items.length ? ledger.items.map(item => `<div class="equipment-owned"><span><strong>${equipmentIcon(item.name)}${esc(item.name)}</strong><small>× ${item.quantity} · sell for ${formatMoney(Math.floor(item.priceTin / 2))} each</small></span><button type="button" data-equipment-sell="${esc(item.id)}">Sell one</button></div>`).join('') : '<p class="play-muted">No equipment recorded here yet. Add starting gear or buy from the list below.</p>';
     for (const [unit, value] of coinUnits) $(`[name="equipment-cash-${unit}"]`).value = String(Math.floor(Math.max(0, balance) / value) % 10 || 0);
     const gpField = $('[name="equipment-cash-gp"]');
     gpField.value = String(Math.floor(Math.max(0, balance) / 10000));
@@ -1834,7 +1836,7 @@ import {isRecord, equipmentLedger} from './character-record.js';
         || weaponSkills.find(skill => normalizeWeapon(skill.name) === normalizeWeapon(item.name));
       return playRollTile({category:match ? `${item.source} · ${match.category}` : item.source, name:item.name, ranks:match?.ranks ?? 0, total:match?.total ?? '—'});
     }).join('');
-    const armors = armorItems.map(item => `<div class="equipment-owned"><span><strong>${esc(item.name)}</strong><small>${esc(item.detail)}</small></span></div>`).join('');
+    const armors = armorItems.map(item => `<div class="equipment-owned"><span><strong>${equipmentIcon(item.name)}${esc(item.name)}</strong><small>${esc(item.detail)}</small></span></div>`).join('');
     const rolls = resistanceTypes.map(([key, label]) => playRollTile({category:'Resistance roll', name:label, total:$(`#rr-total-${key}`).textContent, kind:'resistance'})).join('');
     const combatNotes = form.elements.attacks.value.trim();
     const spells = form.elements.spells.value.trim();
@@ -1935,7 +1937,21 @@ import {isRecord, equipmentLedger} from './character-record.js';
     }
   }
   const encounterRoster = () => buildEncounterRoster(characters, {equipmentCatalog, trainingPackages});
-  window.RolemasterEncounter = {roster:encounterRoster, openTable:tableBrowser.openTable};
+  window.RolemasterEncounter = {roster:encounterRoster, openTable:tableBrowser.openTable,
+    awardExperience(id, award) {
+      const index=characters.findIndex(character=>character.id===id);
+      if(index<0)throw new Error('This saved character no longer exists.');
+      const updated=appendExperience(characters[index],award);
+      updated.level=String(levelForXp(updated.xp));
+      const next=characters.map((character,i)=>i===index?updated:character);
+      localStorage.setItem(STORAGE_KEY,JSON.stringify(next));
+      characters=next;
+      if(currentId===id){form.elements.xp.value=updated.xp;form.elements.xpHistory.value=updated.xpHistory;syncLevelFromXp();}
+      window.dispatchEvent(new Event('rolemaster-roster-updated'));renderRoster();
+      if(currentId===id)renderPlay();
+      return Number(updated.xp);
+    }
+  };
   makeStats(); makeResistances(); renderRoster(); loadReferenceData();
   $$('.nav-link').forEach(button => button.addEventListener('click', () => showView(button.dataset.view)));
   $('.brand').addEventListener('click', event => { event.preventDefault(); showView('encounter'); });

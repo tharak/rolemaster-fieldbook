@@ -74,6 +74,13 @@
 .coliseum-picker > label:nth-of-type(2) { grid-column:2; grid-row:1; }
 .coliseum-picker > input,.coliseum-picker > select { grid-row:2; padding:10px; border-radius:3px; font-size:12px; }
 .coliseum-picker > p { grid-column:1/-1; font:10px var(--mono); }
+.coliseum-character-note { color:#b5c0a8; font:12px/1.5 var(--sans); }
+.coliseum-attack-picker { grid-column:1/-1; display:grid; gap:6px; margin-top:7px; }
+.coliseum-attack-picker[hidden] { display:none; }
+.coliseum-attack-picker label { color:#626953; font:10px var(--mono); }
+.coliseum-attack-picker select { font-size:12px; padding:10px; border-radius:3px; }
+.coliseum-picker .coliseum-contender-note { color:#5d644f; font:11px/1.5 var(--sans); }
+.coliseum-picker .coliseum-contender-note:empty { display:none; }
 .coliseum-picker > details { grid-column:1/-1; margin-top:5px; font-size:11px; color:#626953; }
 .coliseum-picker summary,.coliseum-combatant-details > summary { cursor:pointer; }
 .coliseum-picker fieldset { grid-template-columns:1fr 1fr; background:var(--card); }
@@ -126,3 +133,21 @@
   .battle-sprite,.battle-impact,.battle-damage { animation:none!important; }
   .battle-health-track span { transition:none; }
 }
+
+.generator-form { display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:12px; }
+.generator-form label { display:flex; flex-direction:column; gap:5px; }
+.generator-form p,.generator-form>div { grid-column:1/-1; }
+.generator-form input,.generator-form select,#coliseum-experience select { max-width:100%; padding:8px; }
+.generator-form>div label { display:block; margin:6px 0; }
+.encounter-generator { margin-bottom:20px; }
+.encounter-generator summary { cursor:pointer; font-weight:700; }
+#coliseum-experience { margin-block:20px; }
+#coliseum-experience [data-xp-results] { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,280px),1fr)); gap:24px; margin-top:16px; }
+#coliseum-experience article>label { display:block; margin:8px 0; }
+.equipment-pixel-icon { display:inline-block; width:32px; height:32px; flex:none; vertical-align:middle; margin-right:7px; shape-rendering:crispEdges; image-rendering:pixelated; }
+.equipment-item strong,.equipment-owned strong { display:flex; align-items:center; }
+.battle-weapon .equipment-pixel-icon { width:24px; height:24px; margin-right:4px; }
+.coliseum-equipment .equipment-pixel-icon { width:24px; height:24px; }
+.generator-form [hidden] { display:none; }
+.experience-calculator { margin-top:24px; border-top:1px solid #b6ac8a; padding-top:16px; }
+.experience-calculator summary { cursor:pointer; font-weight:700; }

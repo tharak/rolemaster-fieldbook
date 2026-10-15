@@ -14,6 +14,7 @@ export const attackTypes = {
   Ba:['Bash','A-10.9.8','A-10.10.6'], Gr:['Grapple','A-10.9.8','A-10.10.6'],
   Wp:['Weapon','A-10.9.2','A-10.10.5']
 };
+export const attackName=attack=>attack.name||attackTypes[attack.type][0];
 
 export function parseCreatureAttack(raw) {
   const text = String(raw || '').replace(/[−–]/g, '-').trim();
@@ -72,7 +73,7 @@ export function chooseAttacks(creature, roll) {
 }
 
 export function createFight(left,right) {
-  if (![left,right].every(creature => creature?.hits > 0 && creature.attacks.some(attack => attack && !attack.both))) throw new Error('Choose two creatures with attacks.');
+  if (![left,right].every(creature => creature?.hits > 0 && creature.attacks.some(attack => attack && !attack.both))) throw new Error('Choose two contenders with hits and attacks.');
   return {round:0,finished:false,winner:null,log:[],fighters:[left,right].map(creature =>
     ({creature,hits:0,effects:[],pending:[]}))};
 }
@@ -90,7 +91,7 @@ function finish(fight, checkLimit = true) {
 }
 
 function resolveCritical(target,attacker,attack,severity,tables,d100,round) {
-  let code = attackTypes[attack.type][2], column = severity.charCodeAt(0) - 65;
+  let code = attack.criticalTable||attackTypes[attack.type][2], column = severity.charCodeAt(0) - 65;
   const large = target.creature.size === 'L*', huge = target.creature.size === 'H*';
   if (!code || large && severity === 'A' || huge && severity <= 'C') return {ignored:true,severity};
   let roll = d100();
@@ -106,6 +107,7 @@ function resolveCritical(target,attacker,attack,severity,tables,d100,round) {
   // Equipment-dependent branches need GM interpretation; never combine both outcomes.
   const selected=resolveCriticalEquipment(cell.description,cell.effect,target.creature.equipment||{});
   const conditional=selected.unresolved;
+  let experienceHits=0;
   const recoils=[];
   const manualEffects=[];
   for (const effect of parseCriticalSymbols(selected.effect,selected.description)) {
@@ -113,10 +115,10 @@ function resolveCritical(target,attacker,attack,severity,tables,d100,round) {
     if(effect.kind==='recoil'){recoils.push(effect.feet);continue;}
     if(effect.kind==='dies'){applyCriticalDeath(target,target.creature.hits,round,effect.roundsLeft);continue;}
     if (effect.kind === 'initiative') { attacker.automaticInitiativeRound=round+1; continue; }
-    if (effect.kind === 'hits') target.hits += effect.amount;
+    if (effect.kind === 'hits') {target.hits += effect.amount;experienceHits+=effect.amount;}
     else (effect.kind === 'bonus' ? attacker : target).effects.push({...effect, starts:round+1});
   }
-  return {severity,code,roll,description:selected.description,effect:selected.effect,sourceDescription:cell.sourceCorrection?.original.description??cell.description,sourceEffect:cell.sourceCorrection?.original.effect??cell.effect,conditional,equipmentConditions:selected.conditions,recoils,manualEffects};
+  return {experienceHits,severity,code,roll,description:selected.description,effect:selected.effect,sourceDescription:cell.sourceCorrection?.original.description??cell.description,sourceEffect:cell.sourceCorrection?.original.effect??cell.effect,conditional,equipmentConditions:selected.conditions,recoils,manualEffects};
 }
 
 export function stepFight(fight,tables,random = Math.random) {
@@ -129,14 +131,14 @@ export function stepFight(fight,tables,random = Math.random) {
   for(const fighter of fight.fighters) if(fighter.automaticInitiativeRound<=fight.round) delete fighter.automaticInitiativeRound;
   const entry = {round:fight.round,events:[]};
   for (const [side,fighter] of fight.fighters.entries()) {
-    if(advanceCriticalDeath(fighter,fighter.creature.hits,fight.round))entry.events.push({side,kind:'dies'});
+    if(advanceCriticalDeath(fighter,fighter.creature.hits,fight.round))entry.events.push({side,kind:'dies',sourceSide:fighter.mortalSource});
     const bleed = active(fighter,fight.round).filter(effect => effect.kind === 'bleed').reduce((sum,effect) => sum+effect.amount,0);
-    if (bleed) { fighter.hits += bleed; entry.events.push({side,kind:'bleed',hits:bleed}); }
+    if (bleed&&!fighter.dead) { fighter.hits += bleed; entry.events.push({side,kind:'bleed',hits:bleed,defeated:!standing(fighter),sourceSide:1-side}); }
   }
   finish(fight,false);
   // AQ determines the speed adjustment; the arena adds 2d10 each round.
   const speeds = {CR:-8,VS:-6,SL:-4,MD:0,MF:2,FA:4,VF:6,BF:8};
-  const order = automatic ? [automatic.winner,1-automatic.winner].map(side=>({side,total:null,automatic:side===automatic.winner,noRoll:true})) : fight.fighters.map((fighter,side) => ({side,total:d10()+d10()+(speeds[fighter.creature.speed_ms_aq?.split('/')[1]] || 0)+modifier(fighter,fight.round), tie:random()}))
+  const order = automatic ? [automatic.winner,1-automatic.winner].map(side=>({side,total:null,automatic:side===automatic.winner,noRoll:true})) : fight.fighters.map((fighter,side) => ({side,total:d10()+d10()+(fighter.creature.initiativeBonus??speeds[fighter.creature.speed_ms_aq?.split('/')[1]]??0)+modifier(fighter,fight.round), tie:random()}))
     .sort((a,b) => automatic ? 0 : b.total-a.total || a.tie-b.tie);
   entry.initiative = order;
   if (!fight.finished) for (const {side} of order) {
@@ -150,16 +152,19 @@ export function stepFight(fight,tables,random = Math.random) {
       if (used.has(index) || !standing(target)) continue;
       used.add(index);
       const attack = fighter.creature.attacks[index];
-      const code = attackTypes[attack.type][1], table = tables[code];
+      const code = attack.attackTable||attackTypes[attack.type][1], table = tables[code];
       if (!table) throw new Error(`Missing attack table ${code}`);
       const roll = openEndedD100(d100);
       const penalty = modifier(fighter,fight.round);
       const total = roll.total + attack.ob - target.creature.db + penalty;
       const result = attackLookup(table,total,roll.first,target.creature.armor_type,attack.size);
       const previousDamage=target.hits;
+      const targetState=target.dead||target.deathRound!==undefined?'dying':active(target,fight.round).some(e=>e.kind==='downOrOut')?'down':active(target,fight.round).some(e=>['stun','stunNoParry'].includes(e.kind))?'stunned':'active';
+      const wasMortal=target.dead||target.deathRound!==undefined;
       target.hits += result.hits;
       const critical = result.critical ? resolveCritical(target,fighter,attack,result.critical,tables,d100,fight.round) : null;
-      entry.events.push({side,kind:'attack',attack:attackTypes[attack.type][0],ob:attack.ob,db:target.creature.db,modifier:penalty,roll,total,code,...result,critical,damage:target.hits-previousDamage});
+      if(!wasMortal&&(target.dead||target.deathRound!==undefined))target.mortalSource=side;
+      entry.events.push({side,kind:'attack',attack:attackName(attack),ob:attack.ob,db:target.creature.db,modifier:penalty,roll,total,code,...result,critical,damage:target.hits-previousDamage,experienceHits:result.hits+(critical?.experienceHits||0),targetState,melee:!['Weapon • Missile','Weapon • Missile Artillery','Weapon • Thrown'].includes(attack.category),defeated:!standing(target),mortal:!wasMortal&&(!!target.dead||target.deathRound!==undefined)});
       if (result.critical && attack.type !== 'Ti') {
         const next = fighter.creature.attacks[index+1];
         if (next?.follow === 'same') attacks.push(index+1);

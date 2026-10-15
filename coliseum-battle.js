@@ -2,8 +2,17 @@
 import {esc} from './dom.js';
 import {rustBattleContender} from './rust-components.js';
 
-const profiles=['wolf','tiger','bear','dragon','serpent','bird','insect','humanoid','horse','aquatic','elemental','turtle'];
+const profiles=['wolf','tiger','bear','dragon','serpent','bird','insect','humanoid','warrior','ranger','rogue','mage','cleric','bard','horse','aquatic','elemental','turtle'];
 export function creatureProfile(creature) {
+  if(creature.sourceKind==='character'||creature.sourceKind==='master'){
+    const profession=(creature.profession||'').toLowerCase();
+    if(/magician|mentalist|illusionist|dabbler/.test(profession))return 'mage';
+    if(/cleric|animist|healer/.test(profession))return 'cleric';
+    if(/thief|rogue/.test(profession))return 'rogue';
+    if(/bard/.test(profession))return 'bard';
+    if(/ranger/.test(profession)||creature.attacks?.some(attack=>attack?.chance>0&&/Missile/.test(attack.category||'')))return 'ranger';
+    return 'warrior';
+  }
   const name=creature.name.toLowerCase();
   if(/dragon|wyvern|hydra|drake/.test(name))return 'dragon';
   if(/wolf|dog|hound|fox|jackal|rat/.test(name))return 'wolf';

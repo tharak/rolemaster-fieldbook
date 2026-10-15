@@ -24,7 +24,8 @@ async (existingPage) => {
     await page.unroute('**/tables/creatures.json');
     await page.locator('#coliseum-retry').click();
     await page.locator('#coliseum-status').getByText('Wolf vs Tiger.').waitFor();
-    assert(await page.locator('#coliseum-select-left option').count() === 130,'Wrong creature count');
+    assert(await page.locator('#coliseum-select-left optgroup[label="Creatures"] option').count() === 130,'Wrong creature count');
+    assert(await page.locator('#coliseum-select-left optgroup[label="T-5.8 enemies"] option').count() === 45,'Wrong T-5.8 enemy count');
     await page.locator('#coliseum-search-left').fill('missing creature 123456');
     assert((await page.locator('#coliseum-match-left').textContent()).startsWith('0 matching'),'Missing search does not report empty matches');
     assert(await page.locator('#coliseum-fighter-left h2').textContent() === 'Wolf','Filtering changed the fighter');

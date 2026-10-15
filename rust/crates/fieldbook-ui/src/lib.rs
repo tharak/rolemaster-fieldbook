@@ -16,7 +16,8 @@ pub fn battle_contender(view: BattleContender<'_>) -> String {
     let corner = if side == 0 { "Red" } else { "Blue" };
     let profile = match view.profile {
         "wolf" | "tiger" | "bear" | "dragon" | "serpent" | "bird" | "insect" | "humanoid"
-        | "horse" | "aquatic" | "elemental" | "turtle" => view.profile,
+        | "warrior" | "ranger" | "rogue" | "mage" | "cleric" | "bard" | "horse" | "aquatic"
+        | "elemental" | "turtle" => view.profile,
         _ => "humanoid",
     };
     let name = escape(view.name);

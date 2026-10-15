@@ -30,7 +30,7 @@ async (existingPage)=>{
     assert(rust.battleCalls>=2,'Actual battle HUD did not use Rust');
     const parity=await page.evaluate(async()=>{
       const ui=await import('./coliseum-battle.js'),rust=await import('./rust-components.js');let checked=0;
-      for(const profile of ['wolf','tiger','bear','dragon','serpent','bird','insect','humanoid','horse','aquatic','elemental','turtle','unknown'])for(const side of [0,1])for(const [hits,maximum] of [[0,0],[1,1600],[79,150],[999,100]]){
+      for(const profile of ['wolf','tiger','bear','dragon','serpent','bird','insect','humanoid','warrior','ranger','rogue','mage','cleric','bard','horse','aquatic','elemental','turtle','unknown'])for(const side of [0,1])for(const [hits,maximum] of [[0,0],[1,1600],[79,150],[999,100]]){
         const view={name:`<script> & "creature" '`,attack:'<bite>',profile,side,hits,maximum,ob:-20};
         if(rust.rustBattleContender(view)!==ui.battleContenderJavaScript(view))throw new Error('Battle HUD parity mismatch: '+profile);
         checked++;

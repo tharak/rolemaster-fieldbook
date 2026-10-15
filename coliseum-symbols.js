@@ -18,6 +18,7 @@ const families = [
   [/barracuda|pike|piranha|eel|manta/i,'🐟'],
 ];
 export function creatureSymbol(creature) {
+  if(creature.sourceKind)return {symbol:creature.name[0],emoji:'🧑',meaning:creature.name};
   return {symbol:creature.name[0], emoji:families.find(([pattern]) => pattern.test(creature.name))?.[1] || (creature.group === 'Animal' ? '🐾' : '👾'), meaning:creature.name};
 }
 export const duelSymbol = {symbol:'⚔', emoji:'⚔️', meaning:'Melee duel'};
