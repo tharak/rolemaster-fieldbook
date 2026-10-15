@@ -6,14 +6,14 @@ H with +count, ∑, ∏, π, ∫, compound ∑∏, parentheses, signed modifiers
 The meanings follow parseCriticalSymbols and encounter.js's existing expansion:
 
 - +nH: extra hits / 💥 n.
-- n∑: stunned / 😵 n rounds.
-- n∏: unable to parry / 🚫🛡️ n rounds.
-- n∑∏: stunned AND unable to parry / 😵🚫🛡️ n rounds.
+- n∑: stunned / 🌀 n rounds.
+- n∏: unable to parry / 🚫 n rounds.
+- n∑∏: stunned AND unable to parry / 🌀🚫 n rounds.
 - nπ: must parry / 🛡️ n rounds.
-- n(π−p), (nπ−p): must parry at −p / 🛡️⬇️ n rounds at −p.
+- n(π−p), (nπ−p): must parry at −p / 🛡️ n rounds at −p.
 - n∫: bleeding / 🩸 n hits per round (amount, NOT duration).
-- n(−p): penalty −p / ⬇️ for n rounds; no n means duration unspecified.
-- n(+b): attacker bonus +b / ⬆️ for n rounds.
+- n(−p): penalty −p / ➖ for n rounds; no n means duration unspecified.
+- n(+b): attacker bonus +b / ➕ for n rounds.
 
 Omitted counts mean 1 as in the current parser. n∑π is displayed as the separate
 stun and must-parry tokens; it is NOT conflated with ∑∏. π(−10) is likewise a

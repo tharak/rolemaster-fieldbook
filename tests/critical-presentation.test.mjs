@@ -38,3 +38,20 @@ test('all untrusted prose and source attributes are escaped',()=>{
     assert.doesNotMatch(html,/<img/); assert.match(html,/&lt;img/);
   }
 });
+
+test('requested effect emojis are exact and leave bold labels and numeric penalties intact',()=>{
+  const raw=['+7H','2∑','3∏','4∑∏','5π','6(π-15)','7∫','8(-20)','9(+25)'];
+  const expected=['💥','🌀','🚫','🌀🚫','🛡️','🛡️','🩸','➖','➕'];
+  assert.deepEqual(criticalLegend.map(row=>row[2]),expected);
+  assert.deepEqual(raw.map(text=>criticalTokens(text).find(token=>token.raw).emoji),expected);
+  for(const text of raw){
+    const token=criticalTokens(text).find(token=>token.raw);
+    const bold=formatCriticalEffect(text,false),emoji=formatCriticalEffect(text,true);
+    assert.match(bold,/<strong class="critical-token">/);
+    assert.ok(bold.includes(token.label));
+    assert.ok(emoji.includes('aria-label="'+token.label+'"'));
+    assert.ok(emoji.includes('title="'+token.label+'"'));
+  }
+  assert.match(formatCriticalEffect('6(π-15)',true),/6 rounds at −15/);
+  assert.doesNotMatch(formatCriticalEffect(raw.join(' – '),true),/😵|⬇|⬆|🚫🛡/);
+});

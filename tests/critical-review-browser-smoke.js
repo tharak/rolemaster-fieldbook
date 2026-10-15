@@ -42,6 +42,12 @@ async (existingPage) => {
       const original=await page.locator('.original').first().textContent();
       await page.getByRole('checkbox',{name:'Use emojis',exact:true}).check();
       assert(await page.locator('.critical-token[role="img"]').count()>0,'Emoji preference not applied');
+      const icons=await page.locator('.critical-token[role="img"]').evaluateAll(elements=>elements.map(el=>el.firstChild.textContent.trim()));
+      assert(icons.every(icon=>['💥','🌀','🚫','🌀🚫','🛡️','🩸','➖','➕'].includes(icon)),'Review has an obsolete effect icon');
+      const parry=page.locator('.critical-token[aria-label^="Must parry:"][aria-label*=" at −"]').first();
+      assert(await parry.count()>0,'Missing real parry penalty example');
+      assert(await parry.evaluate(el=>el.firstChild.textContent.trim())==='🛡️','Parry penalty icon must be only a shield');
+      assert((await parry.textContent()).includes('at −15'),'Numeric must-parry penalty lost');
       assert(await page.locator('.original').first().textContent()===original,'Original source changed with presentation');
       await page.getByRole('checkbox',{name:'Use emojis',exact:true}).uncheck();
       assert(await page.locator('.critical-token[role="img"]').count()===0,'Bold mode not restored');

@@ -29,12 +29,14 @@ async (existingPage) => {
       await arena();
       const legend=page.locator('#critical-symbol-legend');
       assert(await legend.locator('li').count()===9,'Incomplete critical legend');
+      const expected=['💥','🌀','🚫','🌀🚫','🛡️','🛡️','🩸','➖','➕'];
+      assert(JSON.stringify(await legend.locator('[role="img"]').allTextContents())===JSON.stringify(expected),'Legend mapping differs from exact requested symbols');
       assert(await page.locator('.coliseum-rules #critical-symbol-legend').count()===1,'Legend not under Arena rules');
       await page.getByRole('checkbox',{name:'Use emojis',exact:true}).check();
       await page.getByRole('button',{name:'Tables',exact:true}).click();
       assert(await result.getAttribute('data-critical-raw')===raw,'Toggling changed source');
       assert(await result.locator('[role="img"][aria-label*="Stunned and unable to parry"]').count()>0,'Existing lookup did not update immediately');
-      assert((await result.textContent()).includes('😵🚫🛡️'),'Combined emoji missing');
+      assert((await result.textContent()).includes('🌀🚫'),'Combined emoji missing');
       assert(await page.locator('#attack-grid .critical-token[role="img"]').count()>10,'Existing full grid not updated');
       proof.push({viewport,source:raw,text:boldText,emoji:await result.textContent(),immediate:true});
       await arena(); await page.getByRole('checkbox',{name:'Use emojis',exact:true}).uncheck();
@@ -61,6 +63,11 @@ async (existingPage) => {
       await page.locator('.table-choice[data-code="'+code+'"]').click();
       await page.locator('#attack-grid .critical-token[role="img"]').first().waitFor();
       assert(!/[∑∏π∫]/.test(await page.locator('#attack-grid').textContent()),'Shorthand remains in '+code);
+    }
+    const mappingProof=await page.locator('#attack-grid .critical-token[role="img"]').evaluateAll(elements=>elements.map(el=>({label:el.getAttribute('aria-label'),title:el.title,icon:el.firstChild.textContent.trim(),text:el.textContent})));
+    for(const item of mappingProof){
+      const expected=item.label.startsWith('Stunned and')?'🌀🚫':item.label.startsWith('Stunned:')?'🌀':item.label.startsWith('Unable')?'🚫':item.label.startsWith('Must')?'🛡️':item.label.startsWith('Bleeding')?'🩸':item.label.startsWith('Penalty')?'➖':item.label.startsWith('Attacker')?'➕':'💥';
+      assert(item.icon===expected&&item.title===item.label,'Wrong accessible effect mapping: '+JSON.stringify(item));
     }
     assert(errors.length===0,errors.join('\n'));
     return {critical:proof,combatLog:'real critical updates without state changes',persistence:'emoji mode restored in Tables',pageErrors:0};

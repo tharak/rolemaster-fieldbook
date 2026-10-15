@@ -12,10 +12,10 @@ export function refreshCriticalEffects(root = document) {
   root.querySelectorAll('[data-critical-raw]').forEach(el => { el.innerHTML = formatCriticalEffect(el.dataset.criticalRaw); });
 }
 export const criticalLegend = [
-  ['+nH','Extra hits','💥'], ['n∑','Stunned','😵'], ['n∏','Unable to parry','🚫🛡️'],
-  ['n∑∏','Stunned and unable to parry','😵🚫🛡️'], ['nπ','Must parry','🛡️'],
-  ['n(π−p)','Must parry at −p','🛡️⬇️'], ['n∫','Bleeding: n hits per round','🩸'],
-  ['n(−p)','Penalty −p','⬇️'], ['n(+b)','Attacker bonus +b','⬆️'],
+  ['+nH','Extra hits','💥'], ['n∑','Stunned','🌀'], ['n∏','Unable to parry','🚫'],
+  ['n∑∏','Stunned and unable to parry','🌀🚫'], ['nπ','Must parry','🛡️'],
+  ['n(π−p)','Must parry at −p','🛡️'], ['n∫','Bleeding: n hits per round','🩸'],
+  ['n(−p)','Penalty −p','➖'], ['n(+b)','Attacker bonus +b','➕'],
 ];
 // Longest compounds first. Only recognized shorthand tokens are transformed;
 // conditional prose, punctuation, bare numbers and uncertain OCR stay literal.
@@ -23,13 +23,13 @@ export function criticalTokens(raw) {
   const input = String(raw || '');
   const patterns = [
     [/^\+(\d+)H\b/,m => ['Extra hits: '+m[1],'💥']],
-    [/^(\d*)\(\s*(\d*)π\s*[-−–]\s*(\d+)\s*\)/,m => ['Must parry: '+(Number(m[1]||m[2])||1)+' rounds at −'+m[3],'🛡️⬇️']],
-    [/^(\d*)∑∏/,m => ['Stunned and unable to parry: '+(Number(m[1])||1)+' rounds','😵🚫🛡️']],
-    [/^(\d*)∑/,m => ['Stunned: '+(Number(m[1])||1)+' rounds','😵']],
-    [/^(\d*)∏/,m => ['Unable to parry: '+(Number(m[1])||1)+' rounds','🚫🛡️']],
+    [/^(\d*)\(\s*(\d*)π\s*[-−–]\s*(\d+)\s*\)/,m => ['Must parry: '+(Number(m[1]||m[2])||1)+' rounds at −'+m[3],'🛡️']],
+    [/^(\d*)∑∏/,m => ['Stunned and unable to parry: '+(Number(m[1])||1)+' rounds','🌀🚫']],
+    [/^(\d*)∑/,m => ['Stunned: '+(Number(m[1])||1)+' rounds','🌀']],
+    [/^(\d*)∏/,m => ['Unable to parry: '+(Number(m[1])||1)+' rounds','🚫']],
     [/^(\d*)π/,m => ['Must parry: '+(Number(m[1])||1)+' rounds','🛡️']],
     [/^(\d*\s*)∫/,m => ['Bleeding: '+(Number(m[1])||1)+' hits per round','🩸']],
-    [/^(\d*)\(\s*([-−–+])\s*(\d+)\s*\)/,m => [m[2]==='+' ? 'Attacker bonus: +'+m[3]+' for '+(Number(m[1])||1)+' rounds' : 'Penalty: −'+m[3]+(m[1]?' for '+m[1]+' rounds':' (duration not specified)'),m[2]==='+'?'⬆️':'⬇️']],
+    [/^(\d*)\(\s*([-−–+])\s*(\d+)\s*\)/,m => [m[2]==='+' ? 'Attacker bonus: +'+m[3]+' for '+(Number(m[1])||1)+' rounds' : 'Penalty: −'+m[3]+(m[1]?' for '+m[1]+' rounds':' (duration not specified)'),m[2]==='+'?'➕':'➖']],
   ];
   const result = [];
   let plain = '';
