@@ -8,7 +8,7 @@ are reused; original stored cell description and effect remain visible separatel
 Coverage comes from all A-10.10.* references in tables/index.json, then validates
 kind: critical and the row/column schema. No table numbers are enumerated in the
 implementation. Current manifest: nine tables, 836 result coordinates. Current
-checks: 493 green, 343 yellow. Missing cells are yellow; a table that cannot load
+checks: 547 green, 289 yellow. Missing cells are yellow; a table that cannot load
 or has an invalid schema remains visible as unavailable, and totals explicitly say
 incomplete. Empty/broken manifests report no results checked. Reload retries.
 
@@ -17,7 +17,9 @@ approval, source transcription verification, or permission to automate narration
 Yellow reasons (visible text as well as background color):
 
 - Missing description/result or malformed effect field.
-- Possible conditional prose (if/with/without/unless/w/o): GM should review branch.
+- If/unless/w/o, with/without branches in effect fields, and equipment-dependent
+  with/without clauses in descriptions: GM should review branch. Ordinary
+  descriptions such as “with too much effort” are not flagged just for with.
 - Explicit review/GM/uncertainty markers.
 - Penalty without round count unless the description supplies an explicit duration,
   permanent effect, healing or until-condition; undated narrative stun/parry.
@@ -41,8 +43,8 @@ lists reasons; every green result has a text status. Tables scroll horizontally
 inside keyboard-focusable regions on desktop/mobile, not the page. Use emojis
 shares the existing local preference; raw text is unaffected.
 
-Limitations: heuristic lexical checks can over-flag ordinary prose (especially
-with) and cannot fully understand scope, healing conditions or narrative durations.
+Limitations: heuristic keyword checks can over-flag or miss conditional prose
+and cannot fully understand scope, healing conditions or narrative durations.
 Recognizing a token is not proof that its OCR/count is correct. Green narration can
 still require GM interpretation. Compare cells with the book before deciding.
 This page neither records manual approval nor mutates source data.

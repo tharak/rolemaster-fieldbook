@@ -20,7 +20,9 @@ export function reviewCell(cell) {
   const effect = typeof cell?.effect==='string' ? cell.effect : '';
   const combined = description+' '+effect;
   if (!cell || !description.trim() || (cell.effect!==undefined&&typeof cell.effect!=='string')) reasons.add('missing');
-  if (/\b(?:if|unless|without|with|w\/o|w\/)\b/i.test(combined)) reasons.add('condition');
+  // Ordinary prose such as 'with too much effort' is not an equipment branch.
+  const branch=/\b(?:if|unless|w\/o)\b/i.test(combined) || /\b(?:with|without|w\/)\b/i.test(effect) || /\b(?:with|without)\s+(?:(?:a|an|the|his|her|your|any|no)\s+)?(?:armor|armour|helmet|helm|shield|greaves?|leg|arm|chest|abdominal|waist|nose|backpack|shoulder|thigh|neck)\b/i.test(description);
+  if (branch) reasons.add('condition');
   if (/\b(?:GM|gamemaster|review|uncertain|unclear|interpret|variable|random|choose)\b|\?{2,}|\[.*?\]/i.test(combined)) reasons.add('review');
   const tokens = criticalTokens(effect);
   const descriptionRemainder=criticalTokens(description).filter(token=>token.text!==undefined).map(token=>token.text).join('');

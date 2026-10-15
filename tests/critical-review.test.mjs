@@ -9,6 +9,9 @@ test('review conventions do not mistake established durations for missing ones',
   assert.ok(cell('(-20)').reasons.includes('duration'));
   assert.ok(cell('', 'Foe is stunned.').reasons.includes('duration'));
   assert.equal(cell('', 'Foe is stunned for 2 rounds.').status,'green');
+  assert.equal(cell('+2H','Foe dodges with too much effort.').status,'green');
+  assert.equal(cell('+2H','He tries without success to push the attack away.').status,'green');
+  assert.ok(cell('+2H','With a helmet the blow is blocked.').reasons.includes('condition'));
 });
 test('unknown notation, conditions, missing values and suspicious OCR never green',()=>{
   for(const effect of ['+10','12H','Ω','??','@','(n)','2∑π','10 ∫','π(-10)','with helmet: +10H w/o helmet: 3∑'])assert.equal(cell(effect).status,'yellow',effect);
