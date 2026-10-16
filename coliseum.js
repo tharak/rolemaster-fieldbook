@@ -192,6 +192,7 @@ function renderRound(initialHealth) {
   log.append(detail);
   log.scrollLeft = firstRound ? 0 : follow ? log.scrollWidth : previousScroll;
   if (fight.finished) {
+    if(fight.adventureContext&&!fight.adventureReported){fight.adventureReported=true;window.dispatchEvent(new CustomEvent('rolemaster-coliseum-result',{detail:{...fight.adventureContext,winnerName:fight.winner===null?null:fight.fighters[fight.winner].creature.name,rounds:fight.round}}));}
     running = false;
     status(fight.winner === null ? `Draw after ${fight.round} rounds${fight.round >= ROUND_LIMIT ? ' — the arena round limit was reached' : ' — both creatures fell'}.` : `${selected[fight.winner].name} wins in ${fight.round} round${fight.round === 1 ? '' : 's'}!`);
   } else status(`${running ? 'Fighting' : 'Paused'} · round ${fight.round}.`);
@@ -309,5 +310,6 @@ window.addEventListener('rolemaster-coliseum-encounter',async event=>{
   const hero=catalog.find(item=>item.id===event.detail?.heroId&&!item.unavailable);
   if(!foe){status('The generated opponent is unavailable.');return;}
   selected=[hero||selected[0],foe];resetFight();
+  if(event.detail.adventureContext&&hero)fight.adventureContext=event.detail.adventureContext;
   document.querySelector('[data-view="coliseum"]').click();
 });

@@ -93,3 +93,27 @@ bars and roll/critical readouts. Open `/#coliseum` to play it directly. See
 `experience-rules.js` and `encounter-generation-rules.js` contain pure rules with no UI or storage dependencies; `coliseum-contenders.js` adapts the existing character projection and printed T-5.8 rows. T-5.8 directed spells require a specified spell, so the arena uses those opponents’ printed melee OB and explains this limitation.
 
 The human sprites cover warrior, ranger, rogue, mage, cleric and bard archetypes. Twenty-six original equipment icon families appear in inventory, the shop, arena equipment choices and weapon HUDs; unfamiliar items use a generic item icon. These are visual families, not paper-doll equipment layers. Rebuild with `python3 scripts/build-coliseum-art.py` and `python3 scripts/build-equipment-art.py`. Browser checks cover all 200 catalog entries and actual rendering of every SVG symbol.
+
+## Adventure maps
+
+Open **Adventures** or `/#adventure`. Generate a parchment map from a seed, choose
+one to six saved characters and a quest destination, then send the fellowship.
+Eighteen connected landmarks span six original Middle-earth-inspired regions.
+Click a landmark or use the accessible location selector to plan the shortest
+travel-time route. Maps, partial journeys, encounters and journals save locally.
+
+Travel advances four hours at a time, with one T-5.1 check per watch. Twelve-mile
+routes take one to three watches depending on terrain; these are explicit campaign
+pacing choices. Camp takes eight hours and checks once for an encounter. Resolve
+encounters before continuing; optional Coliseum duels return their result to the
+journal without changing saved wounds. Confirm mission completion at the goal.
+Travel XP has a separate eligibility confirmation and uses the existing character
+XP journal and duplicate-award guard. GM-managed supplies, injuries, quest rewards
+and whole-party consequences are described in the campaign notes.
+
+`adventure-rules.js` provides seeded geography, routing and immutable journey
+transitions. `adventure-map.js` draws original SVG cartography; `adventures.js`
+handles storage and UI. Unit tests check connectivity across 40 seeds, journey
+completion, camping, persistence boundaries and repeat-route XP. The browser test
+covers actual party selection, travel, completion, XP, reload, encounter/duel
+handoff and mobile layout. Visual previews are under `output/playwright/`.
