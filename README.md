@@ -97,36 +97,41 @@ The human sprites cover warrior, ranger, rogue, mage, cleric and bard archetypes
 ## GuildMaster · member management
 
 **GuildMaster** is the landing page (`/#guildmaster`) and first navigation item.
-Its main view is a grid of **members**, sharing the same saved guild as Adventures.
-Each living member has a next-action selector: **Adventure**, **Come back**, or
-**Rest**, plus an adventure-level field. Assignments save immediately but do not
-execute until **Advance time · 4 hours** is clicked. All orders resolve against
-one shared four-hour tick, not four hours per member.
+Its main view is a grid of **members** with independent progress and inventory.
+Each living member has an **Adventure / Rest / Work** segmented control.
+Assignments save immediately and execute together when **Advance time · 4 hours**
+is clicked. Adventure difficulty always equals the member's level.
 
-Adventure starts or continues an independent single-member expedition. Encounters
-use the existing random encounter and automatic combat rules. Results appear on
-the member's card: HP/PP changes, XP, loot, and expandable round conclusions.
-No Coliseum view or encounter modal opens. The player reviews these results and
-chooses the next orders before advancing again. Orders persist across turns and
-reloads; Come back spends one turn returning and banking loot, then changes the
-member's next order to Rest. Rest only works at base and follows the existing
-infirmary rules in four-hour increments. Dead members do not act.
+Adventure starts or continues a single-member expedition. Encounters use the
+existing random encounter and automatic combat rules. Results appear on the
+member's card: HP/PP changes, XP, loot, and expandable round conclusions.
+Selecting Rest or Work while away queues a return and locks the control until
+arrival. The next turn returns the member and banks loot; subsequent turns perform
+the selected base action. Rest follows the infirmary rules. Work earns one gold
+per four-hour turn without healing or recovering power points (a campaign default).
+Dead members do not act.
 
-Recruitment, equipment, spell lists, the shared store and a turn journal remain
-available. The map is a collapsed reference below the grid. Adventures keeps its
-separate party-based flow: members assigned there are marked and managed there,
-so no member can be assigned to both modes. GuildMaster orders execute only with
-GuildMaster's Advance time control. Both pages update after changes to the shared
-guild. Existing saves are compatible; management state is added on the first order
-or turn, without replacing members or an existing party expedition.
+Cards show location beside the name, centered HP inside the health bar, and named
+equipment. Equipment buttons open an item picker; spells use the same item-style
+presentation and can be selected from the member's learned lists and levels.
+Selected supported spells are available to automatic combat; other spells are
+marked reference-only. Members without available spells have no spell section.
+Equipment and spell selections can change only at base.
 
-`guildmaster-rules.js` implements immutable per-member orders and turn resolution;
-`guild-store.js` and `guild-data.js` share persistence and data loading between the
-pages; `guild-member-view.js` renders their common member details. A turn is saved
-atomically after all results resolve. Failed data loading or simulation does not
-consume time or pay rewards. The journal retains 30 turns and up to 400 combat
-rounds. Tests cover simultaneous orders, clock increments, recovery, returns,
-shared ownership, failed simulation, reloads, actual combat/loot, and mobile layout.
+GuildMaster has no map or link to Adventures. The older party-based Adventures
+mode retains its own save. On upgrade, the previously shared roster and progress
+are copied once into GuildMaster's independent save before the old management
+state is detached. Subsequent recruitment, inventory changes, and turns do not
+cross between modes.
+
+`guildmaster-rules.js` implements immutable orders and turn resolution;
+`guildmaster-store.js` owns persistence, `guild-save-migration.js` preserves legacy
+progress, and `guildmaster-member-view.js` renders compact member cards.
+A turn is saved atomically after all results resolve. Failed loading or simulation
+does not consume time or pay rewards. The journal retains 30 turns and up to 400
+combat rounds. Tests cover save isolation and migration, simultaneous orders,
+recovery, work, return locking, equipment and spell selection, failed simulation,
+reloads, actual combat/loot, and mobile layout.
 
 ## Guild adventures
 

@@ -12,7 +12,7 @@ function save(next){writeGuild(next,'adventures');state=next;}
 function message(text){notice=text;const el=root.querySelector('[data-guild-message]');if(el)el.textContent=text;document.querySelector('#adventure-fight-message').textContent=text;}
 async function load(){
  try{({catalog,lists}=await loadGuildData());
-  const raw=localStorage.getItem(key);if(raw){try{state=JSON.parse(raw);if(!validGuild(state))throw new Error();}catch{storageInvalid=true;throw new Error('The guild save could not be read. Export it before starting a new guild.');}}
+  const raw=localStorage.getItem(key);if(raw){try{state=readGuild();if(!validGuild(state))throw new Error();}catch{storageInvalid=true;throw new Error('The guild save could not be read. Export it before starting a new guild.');}}
   else save(newGuild(catalog));
   selected=new Set(state.members.filter(availableMember).slice(0,4).map(m=>m.id));loadFailed=false;root.dataset.ready='true';render();
  }catch(error){loadFailed=true;root.innerHTML=`<h1 id="adventure-title">The Wayfarers’ Guild</h1><p role="alert">${esc(error.message)}</p>${storageInvalid?'<button class="button" data-action="export">Export saved guild</button>':'<button class="button" data-action="retry">Retry loading</button>'}`;}

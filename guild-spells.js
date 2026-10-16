@@ -32,4 +32,5 @@ export const automatedSpells=[
  {list:'A-9.16.1',level:3,name:'Stun Song',kind:'song'},
  {list:'A-9.16.1',level:1,name:'Calm Song',kind:'song'}
 ];
-export const knownAutomatedSpells=actor=>automatedSpells.filter(s=>s.level<=actor.level&&actor.spellLists?.some(l=>l.id===s.list&&l.ranks>=s.level));
+export const spellKey=spell=>`${spell.list}:${spell.level}`;
+export const knownAutomatedSpells=actor=>automatedSpells.filter(s=>(!Array.isArray(actor.selectedSpells)||actor.selectedSpells.includes(spellKey(s)))&&s.level<=actor.level&&actor.spellLists?.some(l=>l.id===s.list&&l.ranks>=s.level));

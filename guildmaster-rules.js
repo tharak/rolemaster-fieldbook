@@ -1,20 +1,42 @@
 // Per-member orders and one shared clock tick. No DOM, storage, or random globals.
+import {knownAutomatedSpells,spellKey} from './guild-spells.js';
 import {availableMember,departGuild,continueGuild,returnGuild,restGuild} from './guild-rules.js';
-export const MEMBER_ACTIONS=['adventure','return','rest'];
+export const MEMBER_ACTIONS=['adventure','rest','work'];
+export const WORK_GOLD_PER_TURN=1;
 export const GUILD_TURN_HOURS=4;
 export function managementState(state){return state.management||{version:1,turn:0,seed:'guildmaster-roads',orders:{},journeys:{},reports:[]};}
 export function memberOrder(state,id){return managementState(state).orders[id]||{action:managementState(state).journeys[id]?'adventure':'rest',level:state.members.find(m=>m.id===id)?.level||1};}
-export function setMemberOrder(state,id,{action,level}){
+export function prepareGuildMaster(state){
+ const next=structuredClone(state);next.mode='guildmaster';next.expedition=null;next.history=[];
+ next.management=structuredClone(managementState(next));
+ for(const member of next.members){
+  if(!Array.isArray(member.selectedSpells))member.selectedSpells=knownAutomatedSpells(member).map(spellKey);
+  const order=memberOrder(next,member.id);next.management.orders[member.id]={...order,level:member.level};
+  if(order.action==='return')next.management.orders[member.id].nextAction=order.nextAction||'rest';
+  if(next.management.journeys[member.id])next.management.journeys[member.id].level=member.level;
+ }
+ return next;
+}
+export function setMemberOrder(state,id,{action}){
  const member=state.members.find(m=>m.id===id),management=managementState(state);
  if(!member||member.dead)throw new Error('Choose a living guild member.');
- if(state.expedition?.party.includes(id))throw new Error('This member is in the Adventures party. Return that party first.');
- if(!MEMBER_ACTIONS.includes(action))throw new Error('Choose Adventure, Come back, or Rest.');
- if(!Number.isInteger(level)||level<1||level>20)throw new Error('Adventure level must be 1–20.');
+ if(memberOrder(state,id).action==='return')throw new Error('This member is returning. Change their action after arrival.');
+ if(!MEMBER_ACTIONS.includes(action))throw new Error('Choose Adventure, Rest, or Work.');
  if(action==='adventure'&&!management.journeys[id]&&!availableMember(member))throw new Error('This member needs to rest before adventuring.');
- if(action==='rest'&&management.journeys[id])throw new Error('Order this member to come back before resting.');
- if(action==='return'&&!management.journeys[id])throw new Error('This member is already at base.');
- if(management.journeys[id]&&level!==management.journeys[id].level)throw new Error('Return to base before changing adventure level.');
- const next=structuredClone(state);next.management=structuredClone(management);next.management.orders[id]={action,level};return next;
+ if(action==='work'&&!management.journeys[id]&&!availableMember(member))throw new Error('This member needs to recover before working.');
+ const next=structuredClone(state);next.management=structuredClone(management);
+ next.management.orders[id]=management.journeys[id]&&action!=='adventure'?{action:'return',nextAction:action,level:member.level}:{action,level:member.level};
+ return next;
+}
+export function availableMemberSpells(member,lists){
+ return member.spellLists.flatMap(known=>{const list=lists.find(l=>l.id===known.id);return (list?.spells||[]).filter(s=>s.level<=known.ranks&&s.level<=member.level).map(s=>({...s,list:known.id,listName:list.name,key:spellKey({...s,list:known.id})}));});
+}
+export function setMemberSpells(state,id,keys,lists){
+ const member=state.members.find(m=>m.id===id);
+ if(!member||member.dead||managementState(state).journeys[id])throw new Error('Spell equipment can only change while this member is at base.');
+ const available=new Set(availableMemberSpells(member,lists).map(s=>s.key));
+ if(!Array.isArray(keys)||new Set(keys).size!==keys.length||keys.some(key=>!available.has(key)))throw new Error('Choose spells from this member’s learned lists and levels.');
+ const next=structuredClone(state);next.members.find(m=>m.id===id).selectedSpells=[...keys];return next;
 }
 function trimReports(management){
  let remaining=400;
@@ -37,23 +59,26 @@ export function advanceGuildMaster(state,catalog,tables){
   const id=original.id,member=next.members.find(m=>m.id===id),order=orders[id],journey=management.journeys[id];
   const result={memberId:id,name:member.name,action:order.action,hpBefore:Math.max(0,member.hits-member.damage),ppBefore:member.pp,xp:0,gold:0,items:[]};
   if(member.dead){result.summary='Dead — no action taken.';result.action='none';}
-  else if(state.expedition?.party.includes(id)){result.summary='Away with the Adventures party; manage this member on Adventures.';result.action='external';}
   else if(order.action==='rest'&&!journey){
    const rested=restGuild({...next,management:undefined,expedition:null,members:[member]},GUILD_TURN_HOURS).members[0];
    next.members=next.members.map(m=>m.id===id?rested:m);result.summary=`Rested at base for ${GUILD_TURN_HOURS} hours. Recovered ${member.damage-rested.damage} HP and ${rested.pp-member.pp} PP.`;
+  }else if(order.action==='work'&&!journey){
+   if(availableMember(member)){next.gold+=WORK_GOLD_PER_TURN;result.gold=WORK_GOLD_PER_TURN;member.restHours=0;result.summary=`Worked at base for ${GUILD_TURN_HOURS} hours and earned ${WORK_GOLD_PER_TURN} gold.`;}
+   else {management.orders[id]={action:'rest',level:member.level};result.summary='Too injured to work. Rest is queued for the next turn.';}
   }else if(order.action==='return'&&journey){
    const returned=returnGuild({...next,management:undefined,expedition:journey,history:[],gold:0});
    next.inventory=returned.inventory;next.gold+=returned.gold;result.gold=journey.gold;result.items=journey.items;
    result.summary=`Returned to base with ${journey.gold} gold and ${journey.items.length} items. Ready to rest or take a new assignment.`;
-   delete management.journeys[id];management.orders[id]={action:'rest',level:order.level};
+   delete management.journeys[id];management.orders[id]={action:order.nextAction||'rest',level:member.level};
   }else if(order.action==='adventure'){
+   member.restHours=0;
    if(!journey&&!availableMember(member)){
-    result.summary='Unable to depart because of wounds. Order changed to Rest for the next turn.';management.orders[id]={action:'rest',level:order.level};
+    result.summary='Unable to depart because of wounds. Order changed to Rest for the next turn.';management.orders[id]={action:'rest',level:member.level};
    }else if(journey?.stage>=50){
-    result.summary='Adventure limit reached. Come back is queued for the next turn.';management.orders[id]={action:'return',level:order.level};
+    result.summary='Adventure limit reached. Come back is queued for the next turn.';management.orders[id]={action:'return',nextAction:'rest',level:member.level};
    }else{
     let expedition=journey;
-    if(!expedition)expedition=departGuild({...next,management:undefined,expedition:null},{party:[id],level:order.level,seed:management.seed+':'+id,id:`guildmaster:${id}:${turn.number}`}).expedition;
+    if(!expedition)expedition=departGuild({...next,management:undefined,expedition:null},{party:[id],level:member.level,seed:management.seed+':'+id,id:`guildmaster:${id}:${turn.number}`}).expedition;
     const simulated=continueGuild({...next,management:undefined,expedition,history:[],gold:0},catalog,tables);
     next.members=simulated.members;next.inventory=simulated.inventory;next.gold+=simulated.gold;
     const finished=simulated.expedition||simulated.history[0],encounter=finished.reports[0];
@@ -62,7 +87,7 @@ export function advanceGuildMaster(state,catalog,tables){
      result.encounter=structuredClone(encounter);result.summary=encounter.conclusion;result.xp=encounter.xp[id]||0;result.gold=encounter.gold;result.items=encounter.items;
     }else result.summary=finished.conclusion||'Returned to base to recover.';
     if(simulated.expedition)management.journeys[id]=simulated.expedition;
-    else {delete management.journeys[id];management.orders[id]={action:'rest',level:order.level};result.summary+=' Returned to base; Rest is the next order.';}
+    else {delete management.journeys[id];management.orders[id]={action:'rest',level:member.level};result.summary+=' Returned to base; Rest is the next order.';}
    }
   }else throw new Error('An order is incompatible with this member’s location. Review their order before advancing.');
   const after=next.members.find(m=>m.id===id);result.hpAfter=Math.max(0,after.hits-after.damage);result.ppAfter=after.pp;result.dead=after.dead;result.away=!!management.journeys[id];
