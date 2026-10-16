@@ -1457,7 +1457,8 @@ import {isRecord, equipmentLedger} from './character-record.js';
   }
   function updateStartingOutfit(skills) {
     const weaponSkills = skills.filter(skill => skill.category.startsWith('Weapon •') && skill.ranks >= 1 && skillAllowed(skill.category,skill.name));
-        const weapons = readStartingWeapons();
+        const weaponKeys = new Set(skills.filter(skill=>skill.category.startsWith('Weapon •')&&skill.ranks>=1).map(skill=>favoriteSkillKey(skill.category,skill.name)));
+    const weapons = readStartingWeapons().filter(key=>weaponKeys.has(key));
     form.elements.startingWeapons.value = JSON.stringify(weapons);
     const weaponStrip = $('#final-weapon-options'), weaponScroll = weaponStrip.scrollLeft;
     weaponStrip.innerHTML = weaponSkills.length ? weaponSkills.map(skill => {
