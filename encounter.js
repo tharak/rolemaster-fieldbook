@@ -215,7 +215,7 @@ import {openEndedD100, parseCriticalSymbols, rollD10 as d10, rollD100 as d100} f
     state.log=state.log.slice(0,80);
   }
   const whoQuickness=id=>actor(id)?.stats?.[8]||0;
-  function checkDeaths() {
+  function checkDeaths(advanceClock=true) {
     const soulDeparture=Object.fromEntries(Object.entries(raceHealing).map(([race,factors])=>[race,factors[0]]));
     for(const [id,value] of Object.entries(state.tokens)) {
       const who=actor(id);
@@ -227,7 +227,7 @@ import {openEndedD100, parseCriticalSymbols, rollD10 as d10, rollD100 as d100} f
       else if(hits<who.hitsMax&&value.hitUnconscious){if(!value.stunUnconscious)value.statuses=value.statuses.filter(item=>item!=='Unconscious');delete value.hitUnconscious;}
       if(hits>who.hitsMax+who.constitution){
         if(value.dyingRoundsLeft===undefined){value.dyingRoundsLeft=Math.max(1,12+(who.stats?.[1]||0)+(soulDeparture[who.race]||0));appendLog(id,`Massive shock: dying in ${value.dyingRoundsLeft} rounds unless healed.`);}
-        else if(--value.dyingRoundsLeft<=0){value.statuses.push('Dead');delete value.dyingRoundsLeft;appendLog(id,`Died from massive shock at ${hits} hits.`);}
+        else if(advanceClock&&--value.dyingRoundsLeft<=0){value.statuses.push('Dead');delete value.dyingRoundsLeft;appendLog(id,`Died from massive shock at ${hits} hits.`);}
       } else if(value.dyingRoundsLeft!==undefined){delete value.dyingRoundsLeft;appendLog(id,'Massive shock stopped after healing.');}
     }
   }
@@ -900,7 +900,7 @@ import {openEndedD100, parseCriticalSymbols, rollD10 as d10, rollD100 as d100} f
     if(!Number.isFinite(amount)||amount<=0)throw new Error('Healing must be a positive amount.');
     const target=token(id);if(target.dead||(target.statuses||[]).includes('Dead'))throw new Error('Hit healing does not revive a dead character.');
     const before=target.hits||0;target.hits=Math.max(0,before-amount);cancelCriticalDeathOnHealing(target,before);
-    delete target.lastHitCheckRound;checkDeaths();appendLog(id,`Recovered ${before-target.hits} hits (§24.1).`);save();render();
+    delete target.lastHitCheckRound;checkDeaths(false);appendLog(id,`Recovered ${before-target.hits} hits (§24.1).`);save();render();
     return `${actor(id).name}: ${target.hits} damage remains in the active encounter.`;
   };
   window.addEventListener('rolemaster-roster-updated',refreshRoster);

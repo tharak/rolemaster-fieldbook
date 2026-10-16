@@ -1,3 +1,4 @@
+import {hitRecovery} from './healing-rules.js';
 import {readCampaign,skillAllowed,weaponAllowed,fixedSkillBonus} from './campaign-rules.js';
 import {equipmentIcon} from './equipment-art.js';
 import {appendExperience} from './experience-rules.js';
@@ -1532,7 +1533,7 @@ import {isRecord, equipmentLedger} from './character-record.js';
     const co = form.elements.namedItem('stat-total-1').value;
     const realmStatIndex = {Channeling:6, Essence:5, Mentalism:7}[form.elements.realm.value];
     const realmStat = realmStatIndex === undefined ? '' : form.elements.namedItem(`stat-total-${realmStatIndex}`).value;
-    $('#final-recovery').textContent = `Hits recovery: 1 per 3 hr active${co !== '' ? ` · ${Math.max(0, Math.ceil(Number(co) / 2))} per hr resting · ${Math.max(0, 2 * Number(co))} per 3 hr sleeping` : ''}. ${form.elements.realm.value === 'None' ? 'No power point recovery without a realm.' : `Power point recovery: 1 per 3 hr active${realmStat !== '' ? ` · ${Math.max(0, Math.ceil(Number(realmStat) / 2))} per hr resting` : ''}${pp !== null ? ` · ${Math.ceil(Math.max(0, pp) / 2)} per 3 hr sleeping` : ''}.`}`;
+    $('#final-recovery').textContent = `Hits recovery: 1 per 3 hr active${co !== '' ? ` · ${hitRecovery('rest',1,Number(co))} per hr resting · ${hitRecovery('sleep',3,Number(co))} per 3 hr sleeping` : ''}. ${form.elements.realm.value === 'None' ? 'No power point recovery without a realm.' : `Power point recovery: 1 per 3 hr active${realmStat !== '' ? ` · ${Math.max(0, Math.ceil(Number(realmStat) / 2))} per hr resting` : ''}${pp !== null ? ` · ${Math.ceil(Math.max(0, pp) / 2)} per 3 hr sleeping` : ''}.`}`;
     const spellLists = skills.filter(skill => skill.category.startsWith('Spells • Own Realm') && skill.ranks >= 1);
     $('#final-known-spells').textContent = spellLists.length ? `Known spell lists: ${spellLists.map(skill => `${skill.name} (spells through level ${skill.ranks})`).join(' · ')}. Record individual spell names below.` : 'Known spells: develop ranks in a spell list to know its spells through that level.';
   }
