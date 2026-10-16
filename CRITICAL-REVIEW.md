@@ -14,4 +14,4 @@ unknown notation, missing schemas and narrative scope.
 The combat engines and in-game table references retain the shared source
 corrections and readable critical effects. Original extracted data is preserved.
 The Tables and Encounters navigation links are hidden. Contextual table access
-and the encounter page remain available; the brand opens encounters.
+and the encounter page remain available; the encounter page can be opened directly with `/#encounters`.

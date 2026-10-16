@@ -1943,6 +1943,7 @@ import {isRecord, equipmentLedger} from './character-record.js';
   }
   const encounterRoster = () => buildEncounterRoster(characters, {equipmentCatalog, trainingPackages});
   window.RolemasterEncounter = {roster:encounterRoster, openTable:tableBrowser.openTable,
+    openEncounters(){showView('encounter');},
     characterRecord(id){const record=characters.find(character=>character.id===id);return record?structuredClone(record):null;},
     awardExperience(id, award) {
       const index=characters.findIndex(character=>character.id===id);
@@ -1961,7 +1962,7 @@ import {isRecord, equipmentLedger} from './character-record.js';
   window.addEventListener('rolemaster-campaign-updated',()=>{updateDevelopment();if(currentId)saveCurrent();renderPlay();window.dispatchEvent(new Event('rolemaster-roster-updated'));});
   makeStats(); makeResistances(); renderRoster(); loadReferenceData();
   $$('.nav-link').forEach(button => button.addEventListener('click', () => showView(button.dataset.view)));
-  $('.brand').addEventListener('click', event => { event.preventDefault(); showView('encounter'); });
+  $('.brand').addEventListener('click', event => { event.preventDefault(); showView('adventure'); });
   $('#new-character').addEventListener('click', newCharacter);
   $('#empty-new-character').addEventListener('click', newCharacter);
   $('#back-play-roster').addEventListener('click', () => showView('home'));

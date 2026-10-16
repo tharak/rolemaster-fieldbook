@@ -56,7 +56,7 @@ async (existingPage) => {
    localStorage.setItem('rolemaster-fieldbook-characters-v1',JSON.stringify(chars));
    localStorage.setItem('rolemaster-encounters-v2',JSON.stringify([{id:'healing-case',name:'Healing case',updatedAt:Date.now(),state:{round:1,phase:-1,scale:5,terrain:{},selected:'heal-a',drafts:{},lastTargets:{},log:[],tokens:{'heal-a':{hits:5,deathRound:3,deathDamage:5,automaticInitiativeRound:1,criticalEffects:[{kind:'bleed',amount:2,roundsLeft:null,startsRound:1,id:'bleed'}]},'heal-b':{hits:0,criticalEffects:[]}}}}]));
   });
-  await page.reload();await ready();await page.evaluate(()=>{window.testDice=0;});await page.locator('[data-open-encounter="healing-case"]').click();
+  await page.reload();await ready();await page.evaluate(()=>{window.testDice=0;});await page.evaluate(()=>window.RolemasterEncounter.openEncounters());await page.locator('[data-open-encounter="healing-case"]').click();
   const card=page.locator('[data-actor-card="heal-a"]');assert((await card.textContent()).includes('Automatic winner'),'Encounter duel initiative not applied');assert(await page.evaluate(()=>window.testDice)===0,'Encounter automatic initiative rolled dice');
   assert((await card.textContent()).includes('☠️'),'Pending encounter Dies status missing');
   await card.locator('[data-vital="hits"]').fill('4');await card.locator('[data-vital="hits"]').dispatchEvent('change');

@@ -41,7 +41,7 @@ async existingPage => {
   await page.locator('[data-view="coliseum"]').click();
   await page.waitForFunction(()=>!document.querySelector('#coliseum-select-left').disabled);
   const recruit=page.locator('#coliseum-select-left option').filter({hasText:'New recruit'});assert(await recruit.count()===1,'Newly created character absent');assert(await recruit.isDisabled(),'Unfinished character entered arena');
-  await page.getByRole('link',{name:'Rolemaster encounters',exact:true}).click();await page.locator('#encounter-generator summary').click();
+  await page.evaluate(()=>window.RolemasterEncounter.openEncounters());await page.locator('#encounter-generator summary').click();
   const generator=page.locator('#encounter-generator');
   await generator.locator('[name="density"]').selectOption('Dense');await generator.locator('[name="activityExtra"]').fill('200');await generator.locator('button[type="submit"]').click();
   await generator.locator('[data-generated-opponent]').waitFor({state:'visible'});

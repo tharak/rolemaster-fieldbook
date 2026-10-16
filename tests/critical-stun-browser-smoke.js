@@ -13,7 +13,7 @@ async (existingPage)=>{
       const tokens=Object.fromEntries(ids.map((id,index)=>[id,{q:index+2,r:3,hits:id==='hit-cause'?100:0,hitUnconscious:id==='hit-cause',statuses:id==='stun-only'?[]:['Unconscious'],criticalEffects:[{id:'ordinary',kind:'stun',roundsLeft:7,startsRound:1},{id:'severe',kind:'stunNoParry',roundsLeft:7,startsRound:1},{id:'one',kind:'stun',roundsLeft:1,startsRound:1}]}]));
       localStorage.setItem('rolemaster-encounters-v2',JSON.stringify([{id:'stun-case',name:'Stun boundary',state:{round:1,phase:-1,scale:5,terrain:{},tokens,selected:ids[0],drafts:{},lastTargets:{},log:[]}}]));
     });
-    await page.reload();await ready();await page.locator('[data-open-encounter="stun-case"]').click();
+    await page.reload();await ready();await page.evaluate(()=>window.RolemasterEncounter.openEncounters());await page.locator('[data-open-encounter="stun-case"]').click();
     for(const id of ['stun-only','hit-cause','manual-cause'])assert(await unconscious(id)==='true','15 rounds must exceed the Co +2 threshold of 14: '+id);
     await card('stun-only').locator('[data-clear-effect="one"]').click();
     assert(await unconscious('stun-only')==='true','Equality at 14 must not revive a combatant');
@@ -23,7 +23,7 @@ async (existingPage)=>{
       await card(id).locator('[data-clear-effect="severe"]').click();
       assert(await unconscious(id)==='true','Stun relief removed another cause of unconsciousness: '+id);
     }
-    await page.reload();await ready();await page.locator('[data-open-encounter="stun-case"]').click();
+    await page.reload();await ready();await page.evaluate(()=>window.RolemasterEncounter.openEncounters());await page.locator('[data-open-encounter="stun-case"]').click();
     assert(await unconscious('stun-only')==='false'&&await unconscious('hit-cause')==='true'&&await unconscious('manual-cause')==='true','Consciousness causes did not persist through reload');
     assert(errors.length===0,errors.join('\n'));
     return {threshold:'Co +2 → 14; above loses, equality stays, below recovers',relief:'real clear-effect controls',otherCauses:'damage and manual causes retained',persistence:true,pageErrors:0};

@@ -15,7 +15,7 @@ async (existingPage) => {
       const state={round:1,phase:-1,resolved:false,scale,terrain,tokens,selected:'caster',drafts:{},lastTargets:{},log:[]};
       localStorage.setItem('rolemaster-encounters-v2',JSON.stringify([{id:'recoil-case',name:'Recoil case',updatedAt:Date.now(),state}]));
     },{caster,foe,extra,terrain,scale});
-    await page.reload();await ready();await page.locator('[data-open-encounter="recoil-case"]').click();
+    await page.reload();await ready();await page.evaluate(()=>window.RolemasterEncounter.openEncounters());await page.locator('[data-open-encounter="recoil-case"]').click();
   };
   const chooseTarget=async(kind,value)=>{
     await form().locator('[data-focus-target="normal"]').click();
@@ -36,7 +36,7 @@ async (existingPage) => {
     assert(!state.tokens.foe.criticalEffects.some(effect=>effect.kind==='recoil'),'Recoil was stored as a timed status');
     assert(await page.locator('[data-token="foe"]').getAttribute('transform')!==before,'Map did not render the displaced foe: before '+before+'; after '+await page.locator('[data-token="foe"]').getAttribute('transform')+'; status '+await page.locator('#encounter-message').textContent());
     assert((await page.locator('#encounter-log').textContent()).includes('moved 10 of 10 ft'),'Movement log missing');
-    await page.reload();await ready();await page.locator('[data-open-encounter="recoil-case"]').click();assert((await saved()).tokens.foe.q===7,'Recoil position was not saved');
+    await page.reload();await ready();await page.evaluate(()=>window.RolemasterEncounter.openEncounters());await page.locator('[data-open-encounter="recoil-case"]').click();assert((await saved()).tokens.foe.q===7,'Recoil position was not saved');
 
     const reports=[];
     for(const kind of ['bolt','ball']){

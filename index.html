@@ -17,10 +17,10 @@
 </head>
 <body>
   <header class="topbar">
-    <a class="brand" href="#encounters" aria-label="Rolemaster encounters">Rolemaster</a>
+    <a class="brand" href="#adventure" aria-label="Rolemaster adventures">Rolemaster</a>
     <nav aria-label="Main navigation">
+      <button class="nav-link active" data-view="adventure">Adventures</button>
       <button class="nav-link" data-view="home">Characters <span id="character-count">0</span></button>
-      <button class="nav-link" data-view="adventure">Adventures</button>
       <button class="nav-link" data-view="coliseum">Coliseum</button>
       <button class="nav-link" data-view="gm">GM tools</button>
     </nav>
@@ -318,7 +318,7 @@
       </dialog>
     </section>
 
-    <section id="encounter-view" class="view active">
+    <section id="encounter-view" class="view">
       <div class="encounter-shell">
         <div id="encounter-list-view">
           <header class="encounter-list-header"><div><p class="play-eyebrow">Part III · Performing actions</p><h1>Encounters</h1><p>Continue a saved encounter or create a new one.</p></div></header>
@@ -340,7 +340,7 @@
       <dialog id="encounter-table-dialog" class="encounter-dialog encounter-table-dialog" aria-labelledby="encounter-table-title"><div class="encounter-dialog-heading"><div><h2 id="encounter-table-title">Table</h2><p id="encounter-table-code"></p></div><button type="button" data-close-encounter-dialog="encounter-table-dialog" aria-label="Close table">×</button></div><div id="encounter-table-content"></div></dialog>
     </section>
 
-    <section id="adventure-view" class="view" aria-labelledby="adventure-title"><div id="adventure-app" class="adventure-shell"></div></section>
+    <section id="adventure-view" class="view active" aria-labelledby="adventure-title"><div id="adventure-app" class="adventure-shell"></div><dialog id="adventure-encounter-dialog" aria-labelledby="adventure-encounter-title"><div class="adventure-overlay-heading"><h2 id="adventure-encounter-title">Encounter on the road</h2><button type="button" class="button button-quiet" id="adventure-close-encounter">Back to map</button></div><p id="adventure-fight-message" role="status"></p><div id="adventure-arena-host"></div><div id="adventure-encounter-content"></div></dialog></section>
 
     <section id="coliseum-view" class="view" aria-labelledby="coliseum-title">
       <div class="coliseum-shell">

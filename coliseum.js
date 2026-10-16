@@ -290,7 +290,7 @@ $('#coliseum-reset').addEventListener('click',resetFight);
 $('#coliseum-pause').addEventListener('click',() => { running = false; status(`Paused at round ${fight.round}.`); controls(); });
 $('#coliseum-retry').addEventListener('click',load);
 window.addEventListener('rolemaster-view-changed',event => {
-  if (event.detail === 'coliseum') {if(ready)refreshCharacters();else load();}
+  if (event.detail === 'coliseum') {closeAdventureFight();if(ready)refreshCharacters();else load();}
   else if (running||playback) { running = false; runVersion++;cancelPlayback();status(`Paused at round ${fight.round}.`); controls(); }
 });
 function refreshCharacters() {
@@ -302,6 +302,31 @@ window.addEventListener('rolemaster-roster-updated',refreshCharacters);
 document.addEventListener('visibilitychange',()=>{
   if(document.hidden&&(running||playback)){running=false;runVersion++;cancelPlayback();status(`Paused at round ${fight.round}.`);controls();}
 });
+// Reparent the live arena instead of creating a second combat engine or duplicate IDs.
+const arenaHome=$('#coliseum-view'),arenaShell=$('.coliseum-shell',arenaHome);
+let embeddedHost=null,embeddedVersion=0;
+export function closeAdventureFight(){
+  embeddedVersion++;
+  if(!embeddedHost)return;
+  running=false;runVersion++;cancelPlayback();controls();
+  arenaHome.append(arenaShell);arenaShell.classList.remove('adventure-embedded-arena');embeddedHost=null;
+}
+export function resumeAdventureFight(context,host){
+  if(fight?.adventureContext?.encounterId!==context.encounterId||fight?.adventureContext?.adventureId!==context.adventureId)return false;
+  embeddedHost=host;arenaShell.classList.add('adventure-embedded-arena');host.append(arenaShell);controls();return true;
+}
+export async function showAdventureFight({heroId,foeId,adventureContext},host){
+  const version=++embeddedVersion;
+  await load();if(version!==embeddedVersion)return false;
+  if(!ready)throw new Error('Combat tables could not load. Retry the encounter fight.');
+  updateCatalog();
+  const hero=catalog.find(c=>c.id===heroId&&!c.unavailable),foe=catalog.find(c=>c.id===foeId&&!c.unavailable);
+  if(!hero||!foe)throw new Error('The champion or opponent is unavailable. Choose a ready character.');
+  const same=fight?.adventureContext?.encounterId===adventureContext.encounterId&&fight?.adventureContext?.adventureId===adventureContext.adventureId&&selected[0]?.id===heroId;
+  if(!same){selected=[hero,foe];resetFight();fight.adventureContext=adventureContext;}
+  embeddedHost=host;arenaShell.classList.add('adventure-embedded-arena');host.append(arenaShell);controls();return true;
+}
+
 if(location.hash==='#coliseum')document.querySelector('[data-view="coliseum"]').click();
 
 window.addEventListener('rolemaster-coliseum-encounter',async event=>{

@@ -96,17 +96,21 @@ The human sprites cover warrior, ranger, rogue, mage, cleric and bard archetypes
 
 ## Adventure maps
 
-Open **Adventures** or `/#adventure`. Generate a parchment map from a seed, choose
-one to six saved characters and a quest destination, then send the fellowship.
+The site opens on **Adventures** (also `/#adventure`). Use **Create character**
+to open the character page. Generate a parchment map from a seed, choose one to
+six saved characters and a quest destination, then send the fellowship.
 Eighteen connected landmarks span six original Middle-earth-inspired regions.
-Click a landmark or use the accessible location selector to plan the shortest
-travel-time route. Maps, partial journeys, encounters and journals save locally.
+Click a landmark, or focus it with Tab and press Enter/Space, to plan the shortest
+travel-time route. The journey journal sits directly beneath the map. Maps,
+partial journeys, encounters and journals save locally.
 
 Travel advances four hours at a time, with one T-5.1 check per watch. Twelve-mile
 routes take one to three watches depending on terrain; these are explicit campaign
 pacing choices. Camp takes eight hours and checks once for an encounter. Resolve
-encounters before continuing; optional Coliseum duels return their result to the
-journal without changing saved wounds. Confirm mission completion at the goal.
+encounters before continuing. An encounter opens the live Coliseum in an overlay
+over the map, with no page navigation. Closing pauses the fight; reopening resumes
+the same matchup. Results return to the journal without changing saved wounds.
+Confirm mission completion at the goal.
 Travel XP has a separate eligibility confirmation and uses the existing character
 XP journal and duplicate-award guard. GM-managed supplies, injuries, quest rewards
 and whole-party consequences are described in the campaign notes.
