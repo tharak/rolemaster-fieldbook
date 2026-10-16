@@ -111,6 +111,10 @@ the selected base action. Rest follows the infirmary rules. Work earns one gold
 per four-hour turn without healing or recovering power points (a campaign default).
 Dead members do not act.
 
+The store buys equipment with guild gold and buys back unequipped inventory at
+half value. Equipped items and unbanked expedition loot cannot be sold. Prices
+are campaign defaults, with enchanted bonuses valued at 10 gold per +1.
+
 Cards show location beside the name, centered HP inside the health bar, and named
 equipment. Equipment buttons open an item picker; spells use the same item-style
 presentation and can be selected from the member's learned lists and levels.
