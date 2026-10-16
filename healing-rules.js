@@ -25,7 +25,7 @@ export function hitRecovery(mode,hours,coBonus,interrupted=false){
  if(!Number.isFinite(hours)||hours<0||!Number.isFinite(coBonus))throw new Error('Enter valid time and Constitution bonus.');
  if(mode==='active')return Math.floor(hours/3);
  if(mode==='rest'||mode==='sleep'&&interrupted)return Math.floor(hours)*Math.max(1,coBonus/2);
- if(mode==='sleep')return Math.floor(hours/3)*Math.max(1,coBonus*2);
+ if(mode==='sleep')return Math.floor(hours/3)*Math.max(3,coBonus*2);
  throw new Error('Choose active, rest or sleep.');
 }
 export function nerveDamage(penalty,chanceRoll,permanentRoll,coBonus,{explicit=false,useless=false}={}){

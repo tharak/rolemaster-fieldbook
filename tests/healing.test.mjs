@@ -14,7 +14,7 @@ test('classification, combined recovery and permanent nerve damage match book ex
  assert.match(permanentInjury(50,50).result,/unspecified/);
 });
 test('natural recovery and first aid enforce continuous time, equipment and once-per-wound limits',()=>{
- assert.equal(hitRecovery('active',8,4),2);assert.equal(hitRecovery('rest',2.9,4),4);assert.equal(hitRecovery('sleep',8,4),16);assert.equal(hitRecovery('sleep',8,4,true),16);assert.equal(hitRecovery('sleep',3,-5),1);
+ assert.equal(hitRecovery('active',8,4),2);assert.equal(hitRecovery('rest',2.9,4),4);assert.equal(hitRecovery('sleep',8,4),16);assert.equal(hitRecovery('sleep',8,4,true),16);assert.equal(hitRecovery('sleep',3,-5),3);
  assert.equal(firstAid({severity:'Severe',type:'Skin/Tissue',bleeding:12,success:true,equipment:true}).bleeding,7);
  assert.equal(firstAid({severity:'Medium',type:'Organ',success:true,equipment:true}).effective,false);assert.throws(()=>firstAid({applied:true}));
  assert.equal(soulRecovery({days:7,mode:'stationary',soothing:true,holy:true},()=>3).points,23);

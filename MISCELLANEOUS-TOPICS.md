@@ -17,7 +17,8 @@ keeps calculations and campaign records separate from editable character stats.
   transformation and narrative permanent injuries remain explicit GM decisions.
   Tests: source table values/bounds, Onree's 34.5-day recovery, Solrac's permanent
   nerve damage, Jaide's 35-round shock countdown, first aid, natural/soul healing,
-  and separate death clocks.
+  and separate death clocks. Appendix A-4.5 p. 112 sets the sleep minimum
+  to three hits per three hours (including negative Constitution bonuses).
 - [x] **24.2 Magic Items (80–81)** — T-5.3 appraisal (all worked examples),
   spell-level/charge limits, consumable and daily uses, attunement prerequisites,
   recharge/rune reuse, and one bonus spell item per rest with adder limits.
