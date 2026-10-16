@@ -16,7 +16,7 @@ export const guildItems=[
  {key:'plate',name:'Plate armor (AT 17)',slot:'armor',at:17}
 ];
 const clone=value=>structuredClone(value);
-const atBase=(state,id)=>!state.expedition?.party.includes(id);
+export const atBase=(state,id)=>!state.expedition?.party.includes(id)&&!state.management?.journeys?.[id];
 export const availableMember=m=>!m.dead&&m.damage<m.hits&&!m.effects.some(e=>e.kind==='bleed');
 export function newGuild(catalog){
  let state={version:1,members:[],inventory:[],gold:0,hours:0,expedition:null,history:[],nextId:1};
@@ -25,7 +25,7 @@ export function newGuild(catalog){
  return state;
 }
 export function recruitMember(state,template){
- if(!template||template.sourceKind!=='master')throw new Error('Choose a T-5.8 character.');
+ if(!template||template.sourceKind!=='master')throw new Error('Choose a T-5.8 member template.');
  if(state.members.length>=24)throw new Error('The guild has room for 24 recruits.');
  const next=clone(state),id=`member-${next.nextId++}`,member={...clone(template),id,templateId:template.id,name:`${template.profession} ${next.members.filter(m=>m.profession===template.profession).length+1}`,damage:0,pp:template.ppMax,xp:0,dead:false,effects:[],equipped:{},restHours:0};
  const first=template.attacks[0];
@@ -36,7 +36,7 @@ export function recruitMember(state,template){
 }
 export function equipMember(state,memberId,itemId,slot){
  const next=clone(state),member=next.members.find(m=>m.id===memberId);
- if(!member||!atBase(next,memberId)||member.dead)throw new Error('Only living characters at base can change equipment.');
+ if(!member||!atBase(next,memberId)||member.dead)throw new Error('Only living members at base can change equipment.');
  if(!['weapon','shield','helmet','armor'].includes(slot))throw new Error('Invalid equipment slot.');
  if(!itemId){if(slot==='weapon')throw new Error('Equip a weapon before removing this one.');delete member.equipped[slot];return next;}
  const item=next.inventory.find(i=>i.id===itemId);
@@ -81,7 +81,7 @@ export function restGuild(state,hours=24){
 export function departGuild(state,{party,level,seed,id}){
  if(state.expedition)throw new Error('Return the current party before sending another.');
  if(!Number.isInteger(level)||level<1||level>20)throw new Error('Adventure level must be 1–20.');
- if(!Array.isArray(party)||!party.length||party.length>6||new Set(party).size!==party.length||party.some(id=>!state.members.some(m=>m.id===id&&availableMember(m))))throw new Error('Choose one to six ready guild members.');
+ if(!Array.isArray(party)||!party.length||party.length>6||new Set(party).size!==party.length||party.some(id=>!state.members.some(m=>m.id===id&&availableMember(m)&&atBase(state,id))))throw new Error('Choose one to six ready guild members.');
  if(!id||!String(seed).trim())throw new Error('An expedition needs an ID and seed.');
  const next=clone(state),world=generateWorld(seed);
  next.expedition={id,seed,level,party:[...party],stage:0,hours:0,current:world.start,goal:world.goal,explored:[world.start],visitedEdges:[],route:findRoute(world,world.start,world.goal),reports:[],gold:0,items:[],xp:{}};
@@ -147,5 +147,14 @@ export function continueGuild(state,catalog,tables){
  return compactReports(next);
 }
 export function validGuild(state){
- return state?.version===1&&Array.isArray(state.members)&&state.members.length<=24&&state.members.every(m=>typeof m.id==='string'&&m.sourceKind==='master'&&Number.isFinite(m.damage)&&m.damage>=0&&Number.isFinite(m.pp)&&m.pp>=0&&Number.isFinite(m.xp)&&Array.isArray(m.effects)&&Array.isArray(m.spellLists)&&m.equipped&&Array.isArray(m.attacks)&&Array.isArray(m.sourceAttacks))&&new Set(state.members.map(m=>m.id)).size===state.members.length&&Array.isArray(state.inventory)&&Array.isArray(state.history)&&Number.isSafeInteger(state.nextId)&&state.nextId>0&&Number.isFinite(state.gold)&&Number.isFinite(state.hours)&&(!state.expedition||Array.isArray(state.expedition.party)&&state.expedition.party.length>0&&state.expedition.party.every(id=>state.members.some(m=>m.id===id))&&Array.isArray(state.expedition.reports)&&Array.isArray(state.expedition.items)&&Number.isInteger(state.expedition.stage)&&typeof state.expedition.seed==='string');
+ return validManagement(state)&&state?.version===1&&Array.isArray(state.members)&&state.members.length<=24&&state.members.every(m=>typeof m.id==='string'&&m.sourceKind==='master'&&Number.isFinite(m.damage)&&m.damage>=0&&Number.isFinite(m.pp)&&m.pp>=0&&Number.isFinite(m.xp)&&Array.isArray(m.effects)&&Array.isArray(m.spellLists)&&m.equipped&&Array.isArray(m.attacks)&&Array.isArray(m.sourceAttacks))&&new Set(state.members.map(m=>m.id)).size===state.members.length&&Array.isArray(state.inventory)&&Array.isArray(state.history)&&Number.isSafeInteger(state.nextId)&&state.nextId>0&&Number.isFinite(state.gold)&&Number.isFinite(state.hours)&&(!state.expedition||Array.isArray(state.expedition.party)&&state.expedition.party.length>0&&state.expedition.party.every(id=>state.members.some(m=>m.id===id))&&Array.isArray(state.expedition.reports)&&Array.isArray(state.expedition.items)&&Number.isInteger(state.expedition.stage)&&typeof state.expedition.seed==='string');
+}
+
+function validManagement(state){
+ const m=state?.management;if(m===undefined)return true;
+ if(!m||m.version!==1||!Number.isSafeInteger(m.turn)||m.turn<0||typeof m.seed!=='string'||!m.orders||!m.journeys||!Array.isArray(m.reports)||!Array.isArray(state.members))return false;
+ const ids=new Set(state.members.map(member=>member.id));
+ if(!Object.entries(m.orders).every(([id,o])=>ids.has(id)&&o&&['adventure','return','rest'].includes(o.action)&&Number.isInteger(o.level)&&o.level>=1&&o.level<=20))return false;
+ if(!Object.entries(m.journeys).every(([id,j])=>ids.has(id)&&j&&j.party?.length===1&&j.party[0]===id&&!state.expedition?.party.includes(id)&&validGuild({...state,management:undefined,expedition:j})&&Array.isArray(j.items)&&Number.isFinite(j.gold)))return false;
+ return m.reports.every(t=>t&&Number.isInteger(t.number)&&Number.isFinite(t.hour)&&Array.isArray(t.results)&&t.results.every(r=>r&&ids.has(r.memberId)&&typeof r.summary==='string'&&(!r.encounter||Array.isArray(r.encounter.rounds))));
 }

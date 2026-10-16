@@ -1962,7 +1962,7 @@ import {isRecord, equipmentLedger} from './character-record.js';
   window.addEventListener('rolemaster-campaign-updated',()=>{updateDevelopment();if(currentId)saveCurrent();renderPlay();window.dispatchEvent(new Event('rolemaster-roster-updated'));});
   makeStats(); makeResistances(); renderRoster(); loadReferenceData();
   $$('.nav-link').forEach(button => button.addEventListener('click', () => showView(button.dataset.view)));
-  $('.brand').addEventListener('click', event => { event.preventDefault(); showView('adventure'); });
+  $('.brand').addEventListener('click', event => { event.preventDefault(); showView('guildmaster'); });
   $('#new-character').addEventListener('click', newCharacter);
   $('#empty-new-character').addEventListener('click', newCharacter);
   $('#back-play-roster').addEventListener('click', () => showView('home'));

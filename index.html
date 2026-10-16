@@ -4,22 +4,24 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#0c2419">
-  <meta name="description" content="Create Rolemaster characters and browse the tables.">
+  <meta name="description" content="Manage a guild of Rolemaster members, assign their actions, and resolve adventures one turn at a time.">
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
-  <title>Rolemaster Characters & Tables</title>
+  <title>GuildMaster · Rolemaster</title>
   <link rel="stylesheet" href="styles.css">
   <link rel="stylesheet" href="enhancements.css">
   <link rel="stylesheet" href="refresh.css">
   <link rel="stylesheet" href="coliseum.css">
   <link rel="stylesheet" href="coliseum-battle.css">
   <link rel="stylesheet" href="adventures.css">
+  <link rel="stylesheet" href="guildmaster.css">
   <link rel="stylesheet" href="gm-tools.css">
 </head>
 <body>
   <header class="topbar">
-    <a class="brand" href="#adventure" aria-label="Rolemaster adventures">Rolemaster</a>
+    <a class="brand" href="#guildmaster" aria-label="Rolemaster GuildMaster">Rolemaster</a>
     <nav aria-label="Main navigation">
-      <button class="nav-link active" data-view="adventure">Adventures</button>
+      <button class="nav-link active" data-view="guildmaster">GuildMaster</button>
+      <button class="nav-link" data-view="adventure">Adventures</button>
       <button class="nav-link" data-view="home">Characters <span id="character-count">0</span></button>
       <button class="nav-link" data-view="coliseum">Coliseum</button>
       <button class="nav-link" data-view="gm">GM tools</button>
@@ -340,7 +342,9 @@
       <dialog id="encounter-table-dialog" class="encounter-dialog encounter-table-dialog" aria-labelledby="encounter-table-title"><div class="encounter-dialog-heading"><div><h2 id="encounter-table-title">Table</h2><p id="encounter-table-code"></p></div><button type="button" data-close-encounter-dialog="encounter-table-dialog" aria-label="Close table">×</button></div><div id="encounter-table-content"></div></dialog>
     </section>
 
-    <section id="adventure-view" class="view active" aria-labelledby="adventure-title"><div id="adventure-app" class="adventure-shell"></div><dialog id="adventure-encounter-dialog" aria-labelledby="adventure-encounter-title"><div class="adventure-overlay-heading"><h2 id="adventure-encounter-title">Expedition report</h2><button type="button" class="button button-quiet" id="adventure-close-encounter">Back to map</button></div><p id="adventure-fight-message" role="status"></p><div id="adventure-encounter-content"></div></dialog></section>
+    <section id="guildmaster-view" class="view active" aria-labelledby="guildmaster-title"><div id="guildmaster-app" class="adventure-shell guildmaster-shell"></div></section>
+
+    <section id="adventure-view" class="view" aria-labelledby="adventure-title"><div id="adventure-app" class="adventure-shell"></div><dialog id="adventure-encounter-dialog" aria-labelledby="adventure-encounter-title"><div class="adventure-overlay-heading"><h2 id="adventure-encounter-title">Expedition report</h2><button type="button" class="button button-quiet" id="adventure-close-encounter">Back to map</button></div><p id="adventure-fight-message" role="status"></p><div id="adventure-encounter-content"></div></dialog></section>
 
     <section id="coliseum-view" class="view" aria-labelledby="coliseum-title">
       <div class="coliseum-shell">

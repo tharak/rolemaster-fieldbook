@@ -94,9 +94,43 @@ bars and roll/critical readouts. Open `/#coliseum` to play it directly. See
 
 The human sprites cover warrior, ranger, rogue, mage, cleric and bard archetypes. Twenty-six original equipment icon families appear in inventory, the shop, arena equipment choices and weapon HUDs; unfamiliar items use a generic item icon. These are visual families, not paper-doll equipment layers. Rebuild with `python3 scripts/build-coliseum-art.py` and `python3 scripts/build-equipment-art.py`. Browser checks cover all 200 catalog entries and actual rendering of every SVG symbol.
 
+## GuildMaster · member management
+
+**GuildMaster** is the landing page (`/#guildmaster`) and first navigation item.
+Its main view is a grid of **members**, sharing the same saved guild as Adventures.
+Each living member has a next-action selector: **Adventure**, **Come back**, or
+**Rest**, plus an adventure-level field. Assignments save immediately but do not
+execute until **Advance time · 4 hours** is clicked. All orders resolve against
+one shared four-hour tick, not four hours per member.
+
+Adventure starts or continues an independent single-member expedition. Encounters
+use the existing random encounter and automatic combat rules. Results appear on
+the member's card: HP/PP changes, XP, loot, and expandable round conclusions.
+No Coliseum view or encounter modal opens. The player reviews these results and
+chooses the next orders before advancing again. Orders persist across turns and
+reloads; Come back spends one turn returning and banking loot, then changes the
+member's next order to Rest. Rest only works at base and follows the existing
+infirmary rules in four-hour increments. Dead members do not act.
+
+Recruitment, equipment, spell lists, the shared store and a turn journal remain
+available. The map is a collapsed reference below the grid. Adventures keeps its
+separate party-based flow: members assigned there are marked and managed there,
+so no member can be assigned to both modes. GuildMaster orders execute only with
+GuildMaster's Advance time control. Both pages update after changes to the shared
+guild. Existing saves are compatible; management state is added on the first order
+or turn, without replacing members or an existing party expedition.
+
+`guildmaster-rules.js` implements immutable per-member orders and turn resolution;
+`guild-store.js` and `guild-data.js` share persistence and data loading between the
+pages; `guild-member-view.js` renders their common member details. A turn is saved
+atomically after all results resolve. Failed data loading or simulation does not
+consume time or pay rewards. The journal retains 30 turns and up to 400 combat
+rounds. Tests cover simultaneous orders, clock increments, recovery, returns,
+shared ownership, failed simulation, reloads, actual combat/loot, and mobile layout.
+
 ## Guild adventures
 
-**Adventures** is the landing page (`/#adventure`). Recruit any of the 45 T-5.8
+**Adventures** remains available from navigation (`/#adventure`). Recruit any of the 45 T-5.8
 characters; four level-one members are supplied to start. Select 1–6 ready members,
 choose adventure level 1–20, and send the party onto the seeded Middle-earth-inspired
 map. Each **Continue adventure** advances a four-hour stage and rolls T-5.1.

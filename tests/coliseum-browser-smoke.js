@@ -40,7 +40,7 @@ async (existingPage) => {
     await page.waitForTimeout(300);
     assert(await page.locator('#coliseum-round').textContent() === paused,'Paused fight continued');
     await page.locator('#coliseum-simulate').click();
-    await page.getByRole('link',{name:'Rolemaster adventures',exact:true}).click();
+    await page.getByRole('link',{name:'Rolemaster GuildMaster',exact:true}).click();
     const hiddenRound = await page.locator('#coliseum-round').textContent();
     await page.waitForTimeout(300);
     assert(await page.locator('#coliseum-round').textContent() === hiddenRound,'Fight kept running after leaving arena');
