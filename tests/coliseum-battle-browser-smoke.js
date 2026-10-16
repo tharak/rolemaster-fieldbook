@@ -75,7 +75,7 @@ async (existingPage)=>{
     await page.locator('#coliseum-simulate').click();await page.locator('#coliseum-pause').click();await idle();
     const paused=await page.locator('#coliseum-round').textContent();await page.waitForTimeout(250);
     assert(await page.locator('#coliseum-round').textContent()===paused,'Pause advanced another round');
-    await page.locator('#coliseum-simulate').click();await page.getByRole('button',{name:'Tables',exact:true}).click();
+    await page.locator('#coliseum-simulate').click();await page.getByRole('link',{name:'Rolemaster encounters',exact:true}).click();
     const hiddenRound=await page.locator('#coliseum-round').textContent();await page.waitForTimeout(250);
     assert(await page.locator('#coliseum-round').textContent()===hiddenRound,'Navigation kept combat running');
     await page.getByRole('button',{name:'Coliseum',exact:true}).click();await idle();

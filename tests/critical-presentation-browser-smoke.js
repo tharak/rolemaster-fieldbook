@@ -8,7 +8,7 @@ async (existingPage) => {
   try {
     await page.addInitScript(()=>{Math.random=()=>.79;});
     await page.goto(existingPage.url()); await ready();
-    await page.getByRole('button',{name:'Tables',exact:true}).click();
+    await page.evaluate(()=>window.RolemasterEncounter.openTable('A-10.10.1'));
     await page.locator('.table-choice[data-code="A-10.10.1"]').click();
     await page.locator('.critical-effect strong.critical-token').first().waitFor();
     const proof=[];
@@ -33,14 +33,18 @@ async (existingPage) => {
       assert(JSON.stringify(await legend.locator('[role="img"]').allTextContents())===JSON.stringify(expected),'Legend mapping differs from exact requested symbols');
       assert(await page.locator('.coliseum-rules #critical-symbol-legend').count()===1,'Legend not under Arena rules');
       await page.getByRole('checkbox',{name:'Use emojis',exact:true}).check();
-      await page.getByRole('button',{name:'Tables',exact:true}).click();
+      await page.evaluate(()=>window.RolemasterEncounter.openTable('A-10.10.1'));
+      await page.locator('#table-roll').fill(String(cell.roll));
+      await page.locator('#table-column').selectOption(String(cell.col));
       assert(await result.getAttribute('data-critical-raw')===raw,'Toggling changed source');
       assert(await result.locator('[role="img"][aria-label*="Stunned and unable to parry"]').count()>0,'Existing lookup did not update immediately');
       assert((await result.textContent()).includes('🌀🚫'),'Combined emoji missing');
       assert(await page.locator('#attack-grid .critical-token[role="img"]').count()>10,'Existing full grid not updated');
       proof.push({viewport,source:raw,text:boldText,emoji:await result.textContent(),immediate:true});
       await arena(); await page.getByRole('checkbox',{name:'Use emojis',exact:true}).uncheck();
-      await page.getByRole('button',{name:'Tables',exact:true}).click();
+      await page.evaluate(()=>window.RolemasterEncounter.openTable('A-10.10.1'));
+      await page.locator('#table-roll').fill(String(cell.roll));
+      await page.locator('#table-column').selectOption(String(cell.col));
       assert(await result.locator('[role="img"]').count()===0,'Text mode not restored');
     }
     await arena();
@@ -56,7 +60,7 @@ async (existingPage) => {
     assert(await log.locator('[role="img"]').count()>0,'Existing combat critical not updated');
     assert(state===await page.evaluate(()=>JSON.stringify({round:document.querySelector('#coliseum-round').textContent,hits:[...document.querySelectorAll('.coliseum-fighter progress')].map(e=>e.value),raw:[...document.querySelectorAll('#coliseum-log [data-critical-raw]')].map(e=>e.dataset.criticalRaw)})),'Toggling mutated combat');
     await page.reload(); await ready();
-    await page.getByRole('button',{name:'Tables',exact:true}).click();
+    await page.evaluate(()=>window.RolemasterEncounter.openTable('A-10.10.1'));
     await page.locator('.table-choice[data-code="A-10.10.1"]').click();
     await page.locator('#attack-grid .critical-token[role="img"]').first().waitFor();
     for (const code of ['A-10.10.3','A-10.10.6']) {

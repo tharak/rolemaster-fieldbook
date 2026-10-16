@@ -3,15 +3,10 @@ async (existingPage)=>{
   page.on('pageerror',error=>errors.push(error.message));
   const assert=(value,message)=>{if(!value)throw new Error(message);};
   try{
-    await page.goto(new URL('critical-review.html',existingPage.url()).href);
-    await page.waitForFunction(()=>document.documentElement.dataset.reviewReady==='true');
-    const review=await page.evaluate(async()=>({
-      status:(await import('./rust-components.js')).rustComponentStatus(),
-      green:document.querySelector('#review-status').dataset.green,
-      yellow:document.querySelector('#review-status').dataset.yellow,
-    }));
-    assert(review.status.backend==='wasm'&&review.status.uiCalls>0,'Actual critical-review UI did not use the Rust component');
-    assert(review.green==='836'&&review.yellow==='0','Rust UI changed the audited inventory');
+    await page.goto(existingPage.url());
+    await page.waitForFunction(()=>document.documentElement.dataset.appReady==='true');
+    assert(await page.locator('.topbar [data-view="encounter"], .topbar [data-view="tables"], .topbar a[href="critical-review.html"]').count()===0,'Removed navigation links remain');
+    assert((await page.request.get(new URL('critical-review.html',page.url()).href)).status()===404,'Critical review page still served');
     const parity=await page.evaluate(async()=>{
       const clock=await import('./critical-stun.js'),ui=await import('./critical-presentation.js'),components=await import('./rust-components.js');
       let effectsChecked=0,tokensChecked=0;
@@ -40,6 +35,6 @@ async (existingPage)=>{
     const after=await page.evaluate(async()=>(await import('./rust-components.js')).rustComponentStatus());
     assert(after.ruleCalls>before.ruleCalls,'Actual Coliseum round did not invoke the Rust rule component');
     assert(errors.length===0,errors.join('\n'));
-    return {review,parity,actualCombat:{before,after},pageErrors:0};
+    return {parity,actualCombat:{before,after},pageErrors:0};
   }finally{await context.close();}
 }

@@ -86,7 +86,8 @@ async (existingPage) => {
   }
   try {
     await page.goto(existingPage.url());
-    await page.locator('.nav-link[data-view="tables"]').click();
+    await page.waitForFunction(()=>document.documentElement.dataset.appReady==='true'&&document.querySelector('.table-choice'));
+    await page.evaluate(()=>window.RolemasterEncounter.openTable('T-1.1'));
     const tables = await checkTables(page);
     const character = await checkCharacter(page);
     return {tables, character};

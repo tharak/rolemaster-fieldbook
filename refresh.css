@@ -898,3 +898,7 @@ input::placeholder, textarea::placeholder { color: #82998a; opacity: 1; }
 @media (max-width: 390px) { .encounter-phase-form { grid-template-columns: 1fr; } .encounter-header { align-items: flex-start; } }
 @media (max-width: 500px) { .encounter-create { align-items: stretch; flex-direction: column; } }
 @media (max-width: 540px) { .topbar { padding: 0 10px; gap: 6px; } .brand { font-size: 14px; } .topbar nav { gap: 7px; } .nav-link { font-size: 11px; } }
+
+/* Keep all remaining navigation controls reachable on narrow screens. */
+.topbar nav { min-width:0; overflow-x:auto; }
+.topbar nav > * { flex-shrink:0; }
