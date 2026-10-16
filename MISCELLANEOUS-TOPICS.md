@@ -27,6 +27,9 @@ keeps calculations and campaign records separate from editable character stats.
   records: local practices, ceremonies, duties, sacred places and healing-service
   requirements. Archive/restore preserves history. No mechanical bonuses invented;
   detailed religious systems are explicitly deferred to Gamemaster Law.
-- [ ] **24.4 Economics (82)**
+- [x] **24.4 Economics (82)** — all five cultural guidelines, saved local market
+  profiles, coin acceptance, barter comparisons using real A-7 prices, and
+  editable obligation/gift/exchange records. Acceptance remains a local decision;
+  the journal does not silently transfer equipment or money.
 - [ ] **24.5 Other Topics (83)**
 - [ ] **24.6 Customizing Rolemaster (83)**

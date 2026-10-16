@@ -14,6 +14,7 @@ try {
   await import('./healing-tools.js');
   await import('./magic-item-tools.js');
   await import('./religion-tools.js');
+  await import('./economics-tools.js');
   if(location.hash==='#gm')document.querySelector('[data-view="gm"]').click();
   document.documentElement.dataset.appReady = 'true';
 } catch (error) {
