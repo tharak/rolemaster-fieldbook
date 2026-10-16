@@ -31,5 +31,9 @@ keeps calculations and campaign records separate from editable character stats.
   profiles, coin acceptance, barter comparisons using real A-7 prices, and
   editable obligation/gift/exchange records. Acceptance remains a local decision;
   the journal does not silently transfer equipment or money.
-- [ ] **24.5 Other Topics (83)**
+- [x] **24.5 Other Topics (83)** — sale quote prerequisites, Trading maneuver
+  outcomes (not automatic negotiated prices), exact coin value/physical weight,
+  daily weather journal, all ten A-7 poison summaries and preparation constraints,
+  and poison/disease records. Missing Gamemaster Law weather/disease generation
+  is not invented; these remain GM-entered conditions.
 - [ ] **24.6 Customizing Rolemaster (83)**
