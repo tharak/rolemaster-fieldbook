@@ -18,7 +18,8 @@ keeps calculations and campaign records separate from editable character stats.
   Tests: source table values/bounds, Onree's 34.5-day recovery, Solrac's permanent
   nerve damage, Jaide's 35-round shock countdown, first aid, natural/soul healing,
   and separate death clocks. Appendix A-4.5 p. 112 sets the sleep minimum
-  to three hits per three hours (including negative Constitution bonuses).
+  to three hits per three hours, whereas §24.1 p. 79 says one. The GM
+  calculator exposes both printed choices; the character summary uses A-4.5.
   The character recovery summary and GM tool share the same hit-recovery function.
 - [x] **24.2 Magic Items (80–81)** — T-5.3 appraisal (all worked examples),
   spell-level/charge limits, consumable and daily uses, attunement prerequisites,

@@ -21,11 +21,11 @@ export function recoveryPlan(wounds,elapsed=0){
  const penalty=wounds.reduce((sum,w)=>sum+Math.abs(w.penalty||0),0),daily=days?Math.floor(penalty/days):0,remainder=penalty-daily*days;
  return {days,penalty,daily,firstDay:daily+remainder,remaining:elapsed>=days?0:Math.max(0,penalty-daily*Math.max(0,elapsed)-(elapsed>=1?remainder:0))};
 }
-export function hitRecovery(mode,hours,coBonus,interrupted=false){
+export function hitRecovery(mode,hours,coBonus,interrupted=false,sleepMinimum=3){
  if(!Number.isFinite(hours)||hours<0||!Number.isFinite(coBonus))throw new Error('Enter valid time and Constitution bonus.');
  if(mode==='active')return Math.floor(hours/3);
  if(mode==='rest'||mode==='sleep'&&interrupted)return Math.floor(hours)*Math.max(1,coBonus/2);
- if(mode==='sleep')return Math.floor(hours/3)*Math.max(3,coBonus*2);
+ if(mode==='sleep'){if(![1,3].includes(sleepMinimum))throw new Error('Choose the printed sleep minimum of 1 or 3.');return Math.floor(hours/3)*Math.max(sleepMinimum,coBonus*2);}
  throw new Error('Choose active, rest or sleep.');
 }
 export function nerveDamage(penalty,chanceRoll,permanentRoll,coBonus,{explicit=false,useless=false}={}){
