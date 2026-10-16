@@ -1,3 +1,4 @@
+import {readCampaign} from './campaign-rules.js';
 // Conversion between the editable sheet and a saved character record.
 import {statNames} from './app-data.js';
 import {$, $$} from './dom.js';
@@ -5,6 +6,7 @@ import {$, $$} from './dom.js';
 export function createCharacterForm({form, developedSkillRanks, syncLevelFromXp, makeStats, randomizePhysicalDetails, renderCategoryRecord, renderSkillTree, updateDevelopment}) {
   function formData() {
     const data = Object.fromEntries(new FormData(form).entries());
+    data.bodyDevelopmentFixed = readCampaign().bodyFixed;
     data.skills = $$('.skill-row', $('#skills-list')).map(row => ({
       name: $('[name="skill-name"]', row).value,
       category: row.dataset.category,

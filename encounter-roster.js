@@ -1,10 +1,11 @@
+import {readCampaign,skillAllowed,weaponAllowed,fixedSkillBonus,campaignHits} from './campaign-rules.js';
 // Project saved characters into encounter actors.
 import {statNames, raceStats, raceResistances, resistanceTypes, skillCategoryRules, statAbbreviations, professionSkillBonuses, armorTypes} from './app-data.js';
 import {basicStatBonus, strideBonus, trainingSpecialAwards, categoryGroup} from './character-rules.js';
 import {rankBonus} from './rules.js';
 import {isRecord, parseList, parseRecord, equipmentLedger} from './character-record.js';
 
-export function buildEncounterRoster(characters, {equipmentCatalog = [], trainingPackages = []} = {}) {
+export function buildEncounterRoster(characters, {equipmentCatalog = [], trainingPackages = [], campaign=readCampaign()} = {}) {
   return characters.filter(isRecord).map(character => {
     const totals = statNames.map((name, index) => {
       const stat = character.stats?.[name] || {};
@@ -22,9 +23,9 @@ export function buildEncounterRoster(characters, {equipmentCatalog = [], trainin
       const group = categoryGroup(category);
       categoryTotals.set(category, (progression && progression !== 'standard' ? 0 : rankBonus(ranks, 'category')) + statBonus + (profession[category] ?? profession[group] ?? 0) + (Number(record.special) || 0) + (Number(record.special2) || 0));
     });
-    const skills = (Array.isArray(character.skills) ? character.skills : []).filter(skill => isRecord(skill) && typeof skill.name === 'string' && typeof skill.category === 'string' && skill.name && !skill.name.startsWith('Choose ')).map(skill => ({
+    const skills = (Array.isArray(character.skills) ? character.skills : []).filter(skill => isRecord(skill) && typeof skill.name === 'string' && typeof skill.category === 'string' && skillAllowed(skill.category,skill.name,campaign) && skill.name && !skill.name.startsWith('Choose ')).map(skill => ({
       category:skill.category, name:skill.name, ranks:Number(skill.ranks) || 0,
-      bonus:rankBonus(skill.ranks, skillCategoryRules[skill.category]?.[1] || 'standard') + (categoryTotals.get(skill.category) || 0) + (Number(skill.item) || 0) + (Number(skill.special) || 0)
+      bonus:rankBonus(skill.ranks, skillCategoryRules[skill.category]?.[1] || 'standard') + (categoryTotals.get(skill.category) || 0) + (Number(skill.item) || 0) + (Number(skill.special) || 0) + fixedSkillBonus(skill.category,campaign)
     }));
     const armor = parseList(character.startingArmor);
     const at = Array.isArray(armor) ? Number(armor[1]) || 1 : 1;
@@ -53,11 +54,11 @@ export function buildEncounterRoster(characters, {equipmentCatalog = [], trainin
         if (/weapon/i.test(label) && (!/or armor/i.test(label) || target?.startsWith('Weapon •'))) weapons.push({name:special.notes?.[index] || label, category:target?.split(':')[0] || '', target, source:`${name} award`});
       });
     });
-    const attacks = weapons.map(weapon => {
+    const attacks = weapons.filter(w=>weaponAllowed(w.name,campaign)&&skillAllowed(w.category||'',w.name,campaign)).map(weapon => {
       const skill = skills.find(item => `${item.category}:${item.name}` === weapon.target) || skills.find(item => item.category === weapon.category && item.name === weapon.name) || skills.find(item => item.category.startsWith('Weapon •') && normalize(item.name) === normalize(weapon.name));
       return {...weapon, category:skill?.category || weapon.category || '', bonus:skill?.bonus || 0};
     });
     const height = strideBonus(character.roleHeight || '') || 0;
-    return {id:character.id, name:character.name || 'Unnamed', race:character.race || '', profession:character.profession || '', realm:character.realm || 'None', level:Number(character.level) || 1, stats:totals, constitution:Number(character.stats?.Constitution?.temp) || 0, skills, attacks, equipmentNames, at, db, shieldBonus:Number(character.dbShield) || 0, baseMove:50 + quickness * 3 + height, hitsMax:Number(character.hits) || 0, ppMax:Number(character.powerPoints) || 0, resistances};
+    return {id:character.id, name:character.name || 'Unnamed', race:character.race || '', profession:character.profession || '', realm:character.realm || 'None', level:Number(character.level) || 1, stats:totals, constitution:Number(character.stats?.Constitution?.temp) || 0, skills, attacks, equipmentNames, at, db, shieldBonus:Number(character.dbShield) || 0, baseMove:50 + quickness * 3 + height, hitsMax:campaignHits(character,campaign), ppMax:Number(character.powerPoints) || 0, resistances};
   });
 }

@@ -1,3 +1,4 @@
+import {readCampaign,skillAllowed,weaponAllowed,fixedSkillBonus} from './campaign-rules.js';
 import {equipmentIcon} from './equipment-art.js';
 import {appendExperience} from './experience-rules.js';
 import {
@@ -192,7 +193,7 @@ import {isRecord, equipmentLedger} from './character-record.js';
       const emptyGroup = categoryRanks === 0 && skillRows.every(row => row.classList.contains('is-zero-rank'));
       let shown = 0;
       skillRows.forEach(row => {
-        row.hidden = (hideSkills && row.classList.contains('is-zero-rank')) || (hideNonFavorites && !row.querySelector('.favorite-skill[aria-pressed="true"]'));
+        row.hidden = !skillAllowed(row.dataset.category,row.dataset.skill || '') || (hideSkills && row.classList.contains('is-zero-rank')) || (hideNonFavorites && !row.querySelector('.favorite-skill[aria-pressed="true"]'));
         if (!row.hidden) shown++;
       });
       category.hidden = (hideGroups && emptyGroup) || (hideNonFavorites && !shown);
@@ -225,14 +226,15 @@ import {isRecord, equipmentLedger} from './character-record.js';
         const developed = tree ? developedSkillRanks(tree) : 0;
         $('.a4-start-text', row).textContent = String((Number(start) || 0) + developed);
         $('.a4-item-text', row).textContent = item;
-        $('.a4-special-text', row).textContent = special;
+        $('.a4-special-text', row).textContent = String(Number(special || 0) + fixedSkillBonus(category));
+        $('.a4-special-text', row).title = category === 'Body Development' ? 'Includes campaign fixed bonus +' + fixedSkillBonus(category) : '';
         const ranks = (Number(start) || 0) + developed;
         const rank = rankBonus(ranks, skillCategoryRules[category][1] || 'standard');
         const record = $$('.category-record-row').find(item => item.dataset.category === category);
         const categoryBonus = $('.record-total', record).textContent;
         $('.a4-rank', row).textContent = String(rank);
         $('.a4-category', row).textContent = categoryBonus;
-        $('.a4-total', row).textContent = categoryBonus === '—' ? '—' : String(rank + Number(categoryBonus) + Number(item || 0) + Number(special || 0));
+        $('.a4-total', row).textContent = categoryBonus === '—' ? '—' : String(rank + Number(categoryBonus) + Number(item || 0) + Number(special || 0) + fixedSkillBonus(category));
         row.classList.toggle('is-zero-rank', ranks === 0);
       });
     });
@@ -348,9 +350,9 @@ import {isRecord, equipmentLedger} from './character-record.js';
     button.addEventListener('click', () => openSkillChoice(row));
   }
   function skillChoices(row) {
-    return row.dataset.raceGrant === 'race:open-spell-list'
+    return (row.dataset.raceGrant === 'race:open-spell-list'
       ? openSpellLists[form.elements.realm.value] || []
-      : raceWeaponChoices[form.elements.race.value]?.[row.dataset.raceGrant.slice('weapon:'.length)] || [];
+      : raceWeaponChoices[form.elements.race.value]?.[row.dataset.raceGrant.slice('weapon:'.length)] || []).filter(name=>skillAllowed(row.dataset.category,name));
   }
   function detachChoiceExtras(row) {
     const name = $('[name="skill-name"]', row).value;
@@ -415,7 +417,7 @@ import {isRecord, equipmentLedger} from './character-record.js';
       const row = $$('.skill-row[data-race-grant]', $('#skills-list')).find(item => item.dataset.raceGrant === `weapon:${category}`);
       if (!row) return '';
       const selected = $('[name="skill-name"]', row).value;
-      return `<section class="race-weapon-choice"><div><strong>${esc(category)}</strong><small>${esc($('[name="skill-start"]', row).value)} ranks · ${esc(selected)}</small></div><div>${names.map(name => `<button type="button" data-category="${esc(category)}" data-choice="${esc(name)}" aria-pressed="${name === selected}">${esc(name)}</button>`).join('')}</div></section>`;
+      return `<section class="race-weapon-choice"><div><strong>${esc(category)}</strong><small>${esc($('[name="skill-start"]', row).value)} ranks · ${esc(selected)}</small></div><div>${names.filter(name => skillAllowed(category,name)).map(name => `<button type="button" data-category="${esc(category)}" data-choice="${esc(name)}" aria-pressed="${name === selected}">${esc(name)}</button>`).join('')}</div></section>`;
     }).join('') || '<p>No racial weapon grants are on this character.</p>';
   }
   function languageSkillRow(name) {
@@ -1425,7 +1427,7 @@ import {isRecord, equipmentLedger} from './character-record.js';
       row.dataset.buyMax = String(max);
     }
     buy.value = String(previous);
-    buy.disabled = !max;
+    buy.disabled = !max || !skillAllowed(row.dataset.category,row.dataset.skill || $('[name="skill-name"]',row)?.value || '');
     if (max) delete row.dataset.pendingBuy;
     row.classList.toggle('unavailable', !max);
   }
@@ -1454,9 +1456,8 @@ import {isRecord, equipmentLedger} from './character-record.js';
     } catch { return null; }
   }
   function updateStartingOutfit(skills) {
-    const weaponSkills = skills.filter(skill => skill.category.startsWith('Weapon •') && skill.ranks >= 1);
-    const weaponKeys = new Set(weaponSkills.map(skill => favoriteSkillKey(skill.category, skill.name)));
-    const weapons = readStartingWeapons().filter(key => weaponKeys.has(key));
+    const weaponSkills = skills.filter(skill => skill.category.startsWith('Weapon •') && skill.ranks >= 1 && skillAllowed(skill.category,skill.name));
+        const weapons = readStartingWeapons();
     form.elements.startingWeapons.value = JSON.stringify(weapons);
     const weaponStrip = $('#final-weapon-options'), weaponScroll = weaponStrip.scrollLeft;
     weaponStrip.innerHTML = weaponSkills.length ? weaponSkills.map(skill => {
@@ -1541,6 +1542,8 @@ import {isRecord, equipmentLedger} from './character-record.js';
     updateFinalMetrics(skills, armor);
   }
   function updateDevelopment() {
+    const campaign=readCampaign();
+    $$('[name="race"]',form).forEach(input=>{input.disabled=!campaign.races.includes(input.value)&&!input.checked;input.closest('label').title=input.disabled?'Unavailable in this campaign':'';});
     if (!$('#dp-available')) return;
     applyBackgroundEffects();
     updateRuleBonuses();
@@ -1599,7 +1602,7 @@ import {isRecord, equipmentLedger} from './character-record.js';
         const skillRanks = (Number($('[name="skill-start"]', skill).value) || 0) + developedSkillRanks(skill);
         const skillRank = rankBonus(skillRanks, rule[1] || 'standard');
         const item = Number($('[name="skill-item"]', skill).value) || 0;
-        const skillSpecial = Number($('[name="skill-special"]', skill).value) || 0;
+        const skillSpecial = (Number($('[name="skill-special"]', skill).value) || 0) + fixedSkillBonus(category);
         $('.skill-bonus', skill).innerHTML = `<span>Rank ${skillRank} + category ${total ?? '—'} + item ${item} + special ${skillSpecial}</span><strong>Skill ${total === null ? '—' : skillRank + total + item + skillSpecial}</strong>`;
       });
     });
@@ -1767,7 +1770,7 @@ import {isRecord, equipmentLedger} from './character-record.js';
   function renderEquipmentCatalog() {
     const category = equipmentCategory;
     const needle = equipmentSearch.trim().toLowerCase();
-    const shown = equipmentCatalog.filter(item => (category === 'All' || item.category === category) && (!needle || `${item.name} ${item.id}`.toLowerCase().includes(needle)));
+    const shown = equipmentCatalog.filter(item => (item.category !== 'Weapons' || weaponAllowed(item.name)) && (category === 'All' || item.category === category) && (!needle || `${item.name} ${item.id}`.toLowerCase().includes(needle)));
     const balance = equipmentBalance();
     $('#equipment-catalog').innerHTML = equipmentCatalog.length ? shown.map(item => `<article class="equipment-item"><div><strong>${equipmentIcon(item.name)}${esc(item.name)}</strong><small>${esc(item.category)} · A-7 #${esc(item.id)}</small></div><span>${esc(item.price)}</span><div class="equipment-item-actions"><button type="button" data-equipment-buy="${esc(item.id)}"${balance < item.priceTin ? ' disabled' : ''}>Buy</button><button type="button" data-equipment-own="${esc(item.id)}">Add owned</button></div></article>`).join('') || '<p class="play-muted">No matching equipment.</p>' : '<p class="play-muted">Equipment prices are loading.</p>';
     $('#equipment-catalog-count').textContent = `${shown.length} item${shown.length === 1 ? '' : 's'}`;
@@ -1795,7 +1798,7 @@ import {isRecord, equipmentLedger} from './character-record.js';
   }
   function renderPlaySkills() {
     const favorites = readFavoriteSkills();
-    const rows = $$('.a4-skill-row[data-skill]').map(row => ({category:row.dataset.category, name:row.dataset.skill, ranks:Number($('.a4-start-text', row).textContent) || 0, total:$('.a4-total', row).textContent, favorite:favorites.has(favoriteSkillKey(row.dataset.category, row.dataset.skill))}));
+    const rows = $$('.a4-skill-row[data-skill]').filter(row => skillAllowed(row.dataset.category,row.dataset.skill)).map(row => ({category:row.dataset.category, name:row.dataset.skill, ranks:Number($('.a4-start-text', row).textContent) || 0, total:$('.a4-total', row).textContent, favorite:favorites.has(favoriteSkillKey(row.dataset.category, row.dataset.skill))}));
     const shown = rows.filter(row => playSkillFilter === 'all' || (playSkillFilter === 'favorites' ? row.favorite : row.ranks > 0 || row.favorite));
     let content = '';
     if (playSkillFilter === 'all') {
@@ -1808,7 +1811,7 @@ import {isRecord, equipmentLedger} from './character-record.js';
   }
   function renderPlayCombat() {
     const metric = (label, id) => `<div><span>${esc(label)}</span><strong>${playValue($(id).textContent)}</strong></div>`;
-    const weaponSkills = $$('.a4-skill-row[data-skill]').filter(row => row.dataset.category.startsWith('Weapon •')).map(row => ({category:row.dataset.category, name:row.dataset.skill, ranks:Number($('.a4-start-text', row).textContent) || 0, total:$('.a4-total', row).textContent}));
+    const weaponSkills = $$('.a4-skill-row[data-skill]').filter(row => row.dataset.category.startsWith('Weapon •') && skillAllowed(row.dataset.category,row.dataset.skill)).map(row => ({category:row.dataset.category, name:row.dataset.skill, ranks:Number($('.a4-start-text', row).textContent) || 0, total:$('.a4-total', row).textContent}));
     const normalizeWeapon = name => name.toLowerCase().replace(/[^a-z0-9]/g, '');
     const attackItems = readStartingWeapons().flatMap(key => { try { const [category, name] = JSON.parse(key); return [{category, name, source:'Starting weapon'}]; } catch { return []; } });
     const armorItems = [];
@@ -1830,7 +1833,7 @@ import {isRecord, equipmentLedger} from './character-record.js';
         else if (/armor|shield|helm/i.test(label)) armorItems.push({name:note || label, detail:`${name} award`});
       });
     });
-    const attacks = attackItems.map(item => {
+    const attacks = attackItems.filter(item=>weaponAllowed(item.name)&&skillAllowed(item.category||'',item.name)).map(item => {
       const match = weaponSkills.find(skill => item.category === skill.category && item.name === skill.name)
         || weaponSkills.find(skill => item.target === `${skill.category}:${skill.name}`)
         || weaponSkills.find(skill => normalizeWeapon(skill.name) === normalizeWeapon(item.name));
@@ -1898,7 +1901,7 @@ import {isRecord, equipmentLedger} from './character-record.js';
   function newCharacter() {
     equipmentMessage = ''; equipmentSearch = ''; equipmentCategory = 'All';
     currentId = crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random()}`;
-    fillForm({realm:'None'});
+    fillForm({realm:'None',race:readCampaign().races[0]});
     applyRaceAdolescence(form.elements.race.value);
     applyProfessionStatDefaults();
     setPotentialStats(fixedPotential, 'fixed');
@@ -1953,6 +1956,7 @@ import {isRecord, equipmentLedger} from './character-record.js';
       return Number(updated.xp);
     }
   };
+  window.addEventListener('rolemaster-campaign-updated',()=>{updateDevelopment();if(currentId)saveCurrent();renderPlay();window.dispatchEvent(new Event('rolemaster-roster-updated'));});
   makeStats(); makeResistances(); renderRoster(); loadReferenceData();
   $$('.nav-link').forEach(button => button.addEventListener('click', () => showView(button.dataset.view)));
   $('.brand').addEventListener('click', event => { event.preventDefault(); showView('encounter'); });
@@ -1998,7 +2002,7 @@ import {isRecord, equipmentLedger} from './character-record.js';
     } else {
       const id = buy?.dataset.equipmentBuy || own.dataset.equipmentOwn;
       const item = equipmentCatalog.find(entry => entry.id === id);
-      if (!item) return;
+      if (!item || item.category === 'Weapons' && !weaponAllowed(item.name)) return;
       if (buy && equipmentBalance(ledger) < item.priceTin) { equipmentMessage = 'Not enough cash for this item.'; renderPlayEquipment(); return; }
       if (buy) ledger.adjustment -= item.priceTin;
       const owned = ledger.items.find(entry => entry.id === id);

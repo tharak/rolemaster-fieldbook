@@ -16,6 +16,7 @@ try {
   await import('./religion-tools.js');
   await import('./economics-tools.js');
   await import('./miscellaneous-tools.js');
+  await import('./campaign-tools.js');
   if(location.hash==='#gm')document.querySelector('[data-view="gm"]').click();
   document.documentElement.dataset.appReady = 'true';
 } catch (error) {

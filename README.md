@@ -117,3 +117,20 @@ handles storage and UI. Unit tests check connectivity across 40 seeds, journey
 completion, camping, persistence boundaries and repeat-route XP. The browser test
 covers actual party selection, travel, completion, XP, reload, encounter/duel
 handoff and mobile layout. Visual previews are under `output/playwright/`.
+
+## Miscellaneous Topics · GM tools
+
+Open **GM tools** or `/#gm` for Core Rules §§24.1–24.6. The workbench includes
+wound/nerve recovery and death clocks, natural healing, magic-item appraisal and
+use tracking, religion and market records, barter, Trading, coin weight, weather,
+poison/disease records, and campaign customization. Records persist in this browser;
+archive/restore keeps notebook history. Calculations live in separate rule modules.
+
+Campaign settings affect available races, skills and weapons and the Body
+Development fixed bonus (+10, +15 or +20). Saved ranks remain intact. Older sheets
+adopt the explicit fixed bonus on opening/saving; remove any manual fixed-bonus
+workaround. Healing can apply reviewed hit recovery to a patient in the active
+encounter. Other GM records do not silently change sheet stats or inventory.
+Rules referred to Gamemaster Law, negotiated prices and narrative consequences
+remain explicit GM decisions. See [the topic tracker](MISCELLANEOUS-TOPICS.md)
+for source pages, coverage and interpretation notes.

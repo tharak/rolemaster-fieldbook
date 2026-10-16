@@ -37,4 +37,9 @@ keeps calculations and campaign records separate from editable character stats.
   daily weather journal, all ten A-7 poison summaries and preparation constraints,
   and poison/disease records. Missing Gamemaster Law weather/disease generation
   is not invented; these remain GM-entered conditions.
-- [ ] **24.6 Customizing Rolemaster (83)**
+- [x] **24.6 Customizing Rolemaster (83)** — persistent campaign race choices,
+  skill/weapon exclusions with categories and saved ranks preserved, and
+  +10/+15/+20 fixed Body Development bonus. Applies to sheet calculations, shop,
+  starting weapon choices, play rolls and character encounter/Coliseum projection.
+  Older sheets adopt the explicit fixed bonus when opened/saved; existing manual
+  +10 workarounds need removal. Printed NPCs and fights already started are unchanged.
