@@ -6,6 +6,5 @@ body:has(#guildmaster-view.active) .nav-link[data-view="adventure"]{display:none
 
 .manager-health.manager-power{margin-top:7px;border-color:#597c94;background:#10212e}.manager-power .manager-health-fill{background:#365e80}.manager-loadout .manager-item>span:not(.manager-item-bonus){flex:1}.manager-item .manager-item-bonus{flex:none;margin-left:auto;font:12px var(--mono);color:#ead6a1;white-space:nowrap}
 
-.manager-loadout{grid-template-columns:1fr}
 
 .manager-shop .manager-store{grid-template-columns:1fr}.manager-shop .manager-store li>span{flex:1;min-width:0}.manager-shop .manager-store .button{flex:none;padding:8px 12px;color:#e2d9bc;border:1px solid #85946a}.manager-shop .button:disabled{opacity:.4;cursor:not-allowed}.manager-shop details{margin-top:16px}.manager-shop .manager-store li{padding:8px 0;border-bottom:1px solid #3e5946}
