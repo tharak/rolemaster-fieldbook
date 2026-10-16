@@ -1938,6 +1938,7 @@ import {isRecord, equipmentLedger} from './character-record.js';
   }
   const encounterRoster = () => buildEncounterRoster(characters, {equipmentCatalog, trainingPackages});
   window.RolemasterEncounter = {roster:encounterRoster, openTable:tableBrowser.openTable,
+    characterRecord(id){const record=characters.find(character=>character.id===id);return record?structuredClone(record):null;},
     awardExperience(id, award) {
       const index=characters.findIndex(character=>character.id===id);
       if(index<0)throw new Error('This saved character no longer exists.');

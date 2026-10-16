@@ -1,3 +1,4 @@
+import {raceHealing} from './healing-rules.js';
 import './app.js';
 import {$, esc} from './dom.js';
 import {criticalEffectMarkup,refreshCriticalEffects} from './critical-presentation.js';
@@ -215,7 +216,7 @@ import {openEndedD100, parseCriticalSymbols, rollD10 as d10, rollD100 as d100} f
   }
   const whoQuickness=id=>actor(id)?.stats?.[8]||0;
   function checkDeaths() {
-    const soulDeparture={'Common Man':12,'High Man':10,'Wood Elf':3,Dwarf:21,Halfling:18};
+    const soulDeparture=Object.fromEntries(Object.entries(raceHealing).map(([race,factors])=>[race,factors[0]]));
     for(const [id,value] of Object.entries(state.tokens)) {
       const who=actor(id);
       if(!who?.hitsMax||value.lastHitCheckRound===state.round||(value.statuses||[]).includes('Dead'))continue;
@@ -894,6 +895,14 @@ import {openEndedD100, parseCriticalSymbols, rollD10 as d10, rollD100 as d100} f
     if(remove){const item=encounters.find(entry=>entry.id===remove.dataset.deleteEncounter);if(!item)return;if(!confirm(`Delete ${item.name}? This removes its map, round, and action log.`))return;encounters=encounters.filter(entry=>entry.id!==item.id);persist();renderList();}
   });
   window.addEventListener('rolemaster-view-changed',event=>{if(event.detail==='encounter')showList();});
+  window.RolemasterEncounter.healActiveEncounter=(id,amount)=>{
+    if(!activeEncounterId||!token(id))throw new Error('Open an encounter containing this patient first.');
+    if(!Number.isFinite(amount)||amount<=0)throw new Error('Healing must be a positive amount.');
+    const target=token(id);if(target.dead||(target.statuses||[]).includes('Dead'))throw new Error('Hit healing does not revive a dead character.');
+    const before=target.hits||0;target.hits=Math.max(0,before-amount);cancelCriticalDeathOnHealing(target,before);
+    delete target.lastHitCheckRound;checkDeaths();appendLog(id,`Recovered ${before-target.hits} hits (§24.1).`);save();render();
+    return `${actor(id).name}: ${target.hits} damage remains in the active encounter.`;
+  };
   window.addEventListener('rolemaster-roster-updated',refreshRoster);
   refreshRoster();
 })();
