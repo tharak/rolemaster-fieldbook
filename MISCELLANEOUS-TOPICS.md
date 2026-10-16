@@ -18,7 +18,11 @@ keeps calculations and campaign records separate from editable character stats.
   Tests: source table values/bounds, Onree's 34.5-day recovery, Solrac's permanent
   nerve damage, Jaide's 35-round shock countdown, first aid, natural/soul healing,
   and separate death clocks.
-- [ ] **24.2 Magic Items (80–81)**
+- [x] **24.2 Magic Items (80–81)** — T-5.3 appraisal (all worked examples),
+  spell-level/charge limits, consumable and daily uses, attunement prerequisites,
+  recharge/rune reuse, and one bonus spell item per rest with adder limits.
+  Item spells and bonuses remain reviewed inputs to the existing spell/skill
+  workflows. Daily resets use chronological GM-entered in-game day labels.
 - [ ] **24.3 Religion (82)**
 - [ ] **24.4 Economics (82)**
 - [ ] **24.5 Other Topics (83)**

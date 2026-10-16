@@ -12,6 +12,7 @@ try {
   // Keep the shared shell usable when a host omits the arena view.
   if (document.querySelector('#coliseum-view')) {await import('./coliseum.js');await import('./encounter-generator.js');await import('./adventures.js');}
   await import('./healing-tools.js');
+  await import('./magic-item-tools.js');
   if(location.hash==='#gm')document.querySelector('[data-view="gm"]').click();
   document.documentElement.dataset.appReady = 'true';
 } catch (error) {
