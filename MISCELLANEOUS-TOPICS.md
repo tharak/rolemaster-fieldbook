@@ -23,7 +23,10 @@ keeps calculations and campaign records separate from editable character stats.
   recharge/rune reuse, and one bonus spell item per rest with adder limits.
   Item spells and bonuses remain reviewed inputs to the existing spell/skill
   workflows. Daily resets use chronological GM-entered in-game day labels.
-- [ ] **24.3 Religion (82)**
+- [x] **24.3 Religion (82)** — editable, persistent character/community religious
+  records: local practices, ceremonies, duties, sacred places and healing-service
+  requirements. Archive/restore preserves history. No mechanical bonuses invented;
+  detailed religious systems are explicitly deferred to Gamemaster Law.
 - [ ] **24.4 Economics (82)**
 - [ ] **24.5 Other Topics (83)**
 - [ ] **24.6 Customizing Rolemaster (83)**
