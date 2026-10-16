@@ -94,33 +94,52 @@ bars and roll/critical readouts. Open `/#coliseum` to play it directly. See
 
 The human sprites cover warrior, ranger, rogue, mage, cleric and bard archetypes. Twenty-six original equipment icon families appear in inventory, the shop, arena equipment choices and weapon HUDs; unfamiliar items use a generic item icon. These are visual families, not paper-doll equipment layers. Rebuild with `python3 scripts/build-coliseum-art.py` and `python3 scripts/build-equipment-art.py`. Browser checks cover all 200 catalog entries and actual rendering of every SVG symbol.
 
-## Adventure maps
+## Guild adventures
 
-The site opens on **Adventures** (also `/#adventure`). Use **Create character**
-to open the character page. Generate a parchment map from a seed, choose one to
-six saved characters and a quest destination, then send the fellowship.
-Eighteen connected landmarks span six original Middle-earth-inspired regions.
-Click a landmark, or focus it with Tab and press Enter/Space, to plan the shortest
-travel-time route. The journey journal sits directly beneath the map. Maps,
-partial journeys, encounters and journals save locally.
+**Adventures** is the landing page (`/#adventure`). Recruit any of the 45 T-5.8
+characters; four level-one members are supplied to start. Select 1–6 ready members,
+choose adventure level 1–20, and send the party onto the seeded Middle-earth-inspired
+map. Each **Continue adventure** advances a four-hour stage and rolls T-5.1.
+Sightings/basic meetings are peaceful; hostile results automatically simulate
+party combat. Only round reports, surviving HP/PP, XP, gold and item drops appear;
+the guild never opens Coliseum. **Return to base** banks carried loot and unlocks
+equipment changes. Wounds, power points and XP persist between stages and reloads.
 
-Travel advances four hours at a time, with one T-5.1 check per watch. Twelve-mile
-routes take one to three watches depending on terrain; these are explicit campaign
-pacing choices. Camp takes eight hours and checks once for an encounter. Resolve
-encounters before continuing. An encounter opens the live Coliseum in an overlay
-over the map, with no page navigation. Closing pauses the fight; reopening resumes
-the same matchup. Results return to the journal without changing saved wounds.
-Confirm mission completion at the goal.
-Travel XP has a separate eligibility confirmation and uses the existing character
-XP journal and duplicate-award guard. GM-managed supplies, injuries, quest rewards
-and whole-party consequences are described in the campaign notes.
+The guild uses separate browser storage (`rolemaster-guild-v1`). Existing character
+sheets and legacy journey saves remain untouched. Transitions are immutable and
+saved atomically before reports appear; replaying a report does not grant rewards.
+Failed table loading leaves the stage unchanged. Defeat or an 80-round stalemate
+returns survivors to base. Dead members stay dead. Base rest affects only members
+at base; equipment is uniquely owned and locked while away.
 
-`adventure-rules.js` provides seeded geography, routing and immutable journey
-transitions. `adventure-map.js` draws original SVG cartography; `adventures.js`
-handles storage and UI. Unit tests check connectivity across 40 seeds, journey
-completion, camping, persistence boundaries and repeat-route XP. The browser test
-covers actual party selection, travel, completion, XP, reload, encounter/duel
-handoff and mobile layout. Visual previews are under `output/playwright/`.
+T-5.8 only supplies total spell ranks. `guild-spells.js` allocates those exact ranks
+to explicitly identified profession presets. The 96 core spell lists and 836 spell
+names (through level 10) are extracted from printed pp. 156–203 by
+`scripts/extract-guild-spells.py`. Known spells appear on each guild card. Supported
+automation includes healing, defensive wards, Shock Bolt, Jolts, Minor Pain,
+Sleep III, and concentrating songs, with PP spending and preparation rounds.
+Other spells remain reference-only. High-level definitions beyond the core book
+are not invented. Guild casting assumes success after two preparation rounds;
+hostile spells still use the basic attack/RR tables and bolts use attack/critical
+tables. Unknown stat RR bonuses are zero. This is a documented MVP abstraction,
+not a complete spell-casting implementation.
+
+Loot is now implemented: victories grant gold and have a 35% equipment-drop chance;
+weapon drops can receive +5. Drop rates, opponent composition/nearest printed level,
+free recruitment, safe return, infirmary wound treatment and extra armor penalties
+are explicit campaign choices, shown under **Guild campaign rules**. XP uses the
+shared §23 calculator for attacks and supported spells, with normal uniqueness,
+intelligent opponents and no same-race multiplier. It accumulates without automatic
+level advancement. The store holds individual weapon, armor, shield and helmet
+instances; two-handed weapons suppress shield DB without double-counting the
+printed shield. Equipment changes affect subsequent combat.
+
+`guild-rules.js`, `guild-battle.js`, and `guild-spells.js` are independent of DOM and
+storage; `adventures.js` owns presentation/persistence. The battle module reuses
+attack lookup and critical resolution, while legacy adventure rules/map generation
+remain independently tested. Tests cover rank totals, party combat, spell spending,
+loot transfer, equipment ownership, base-only recovery, determinism, defeat,
+reloads, network failures, and desktop/mobile reports.
 
 ## Miscellaneous Topics · GM tools
 

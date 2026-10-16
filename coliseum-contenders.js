@@ -1,5 +1,6 @@
 // Pure adapters from saved encounter actors and the printed master table.
 // No DOM, storage, random rolls, or changes to the source character records.
+import {masterSpells} from './guild-spells.js';
 import {criticalEquipment} from './critical-equipment.js';
 
 export const arenaWeaponStyles={
@@ -65,6 +66,7 @@ export function masterCharacterCatalog(data) {
       });
       contenders.push({id:`master:${profession.toLowerCase()}:${level}`,sourceKind:'master',name:`${profession} (level ${level})`,
         group:'T-5.8 enemy',profession,level,size:'M',armor_type:Number(m[3]),db:Number(m[4]),hits:Number(m[7]),ppMax:Number(m[8]),
+        ...masterSpells(profession,level,Number(raw.trim().slice(m[0].length).trim().split(/\s+/)[5])),
         attacks,sourceAttacks,suggestedEquipment:m[5]?['shield']:[],spellDefense:m[6]==='*',
         source:{code:'T-5.8',printedPage:page.printedPage,pdfPage:page.pdfPage,raw},
         special:`T-5.8 · ${m[8]} PPs. Printed DB ${m[4]}${m[5]?' includes shield':''}; spell increases are not added. Weapon types are configurable.${sourceAttacks.some(attack=>attack.kind==='ds')?' Directed-spell OB is preserved; no spell is specified in the table.':''}`});

@@ -1,0 +1,4018 @@
+[
+  {
+    "id": "A-9.5.1",
+    "name": "Barrier Law",
+    "page": 156,
+    "spells": [
+      {
+        "level": 1,
+        "name": "Light Wall I"
+      },
+      {
+        "level": 2,
+        "name": "Airwall"
+      },
+      {
+        "level": 3,
+        "name": "Light Wall II"
+      },
+      {
+        "level": 4,
+        "name": "Waterwall"
+      },
+      {
+        "level": 5,
+        "name": "Woodwall"
+      },
+      {
+        "level": 7,
+        "name": "Earthwall"
+      },
+      {
+        "level": 8,
+        "name": "Icewall I"
+      },
+      {
+        "level": 10,
+        "name": "Barrier Pit"
+      }
+    ]
+  },
+  {
+    "id": "A-9.5.2",
+    "name": "Concussion’S Ways",
+    "page": 156,
+    "spells": [
+      {
+        "level": 1,
+        "name": "Healing I"
+      },
+      {
+        "level": 2,
+        "name": "Frost/Burn Relief I"
+      },
+      {
+        "level": 3,
+        "name": "Minor Irritation Relief"
+      },
+      {
+        "level": 4,
+        "name": "Healing III"
+      },
+      {
+        "level": 5,
+        "name": "Stun Relief"
+      },
+      {
+        "level": 6,
+        "name": "Frost/Burn Relief II"
+      },
+      {
+        "level": 7,
+        "name": "Regeneration I"
+      },
+      {
+        "level": 8,
+        "name": "Healing V"
+      },
+      {
+        "level": 9,
+        "name": "Frost/Burn Relief III"
+      },
+      {
+        "level": 10,
+        "name": "Awakening"
+      }
+    ]
+  },
+  {
+    "id": "A-9.5.3",
+    "name": "Detection Mastery",
+    "page": 157,
+    "spells": [
+      {
+        "level": 1,
+        "name": "Detect Channeling"
+      },
+      {
+        "level": 2,
+        "name": "Detect Essence"
+      },
+      {
+        "level": 3,
+        "name": "Detect Mentalism"
+      },
+      {
+        "level": 4,
+        "name": "Detect Life"
+      },
+      {
+        "level": 5,
+        "name": "Detect Curse"
+      },
+      {
+        "level": 6,
+        "name": "Detect Undead"
+      },
+      {
+        "level": 7,
+        "name": "Detect Traps"
+      },
+      {
+        "level": 8,
+        "name": "Life Typing"
+      },
+      {
+        "level": 9,
+        "name": "Detect Invisible"
+      },
+      {
+        "level": 10,
+        "name": "Perceive Power I"
+      }
+    ]
+  },
+  {
+    "id": "A-9.5.4",
+    "name": "Light’S Way",
+    "page": 157,
+    "spells": [
+      {
+        "level": 1,
+        "name": "Projected Light"
+      },
+      {
+        "level": 2,
+        "name": "Light I"
+      },
+      {
+        "level": 3,
+        "name": "Aura"
+      },
+      {
+        "level": 4,
+        "name": "Light II"
+      },
+      {
+        "level": 5,
+        "name": "Sudden Light"
+      },
+      {
+        "level": 6,
+        "name": "True Aura"
+      },
+      {
+        "level": 7,
+        "name": "Shock Bolt"
+      },
+      {
+        "level": 8,
+        "name": "Light III"
+      },
+      {
+        "level": 9,
+        "name": "Utterlight I"
+      },
+      {
+        "level": 10,
+        "name": "Waiting Light"
+      }
+    ]
+  },
+  {
+    "id": "A-9.5.5",
+    "name": "Lofty Movements",
+    "page": 158,
+    "spells": [
+      {
+        "level": 2,
+        "name": "Edgewalking"
+      },
+      {
+        "level": 4,
+        "name": "Limbwalking"
+      },
+      {
+        "level": 5,
+        "name": "Stonewalking"
+      },
+      {
+        "level": 6,
+        "name": "Waterwalking"
+      },
+      {
+        "level": 7,
+        "name": "Merging Organic"
+      },
+      {
+        "level": 8,
+        "name": "Store Sanctuary"
+      },
+      {
+        "level": 9,
+        "name": "Limbrunning"
+      },
+      {
+        "level": 10,
+        "name": "Stonerunning"
+      }
+    ]
+  },
+  {
+    "id": "A-9.5.6",
+    "name": "Nature’S Law",
+    "page": 158,
+    "spells": [
+      {
+        "level": 2,
+        "name": "Plant Lore"
+      },
+      {
+        "level": 3,
+        "name": "Herb Lore"
+      },
+      {
+        "level": 5,
+        "name": "Stone Lore"
+      },
+      {
+        "level": 6,
+        "name": "Speed Growth"
+      },
+      {
+        "level": 7,
+        "name": "Animal Tongues"
+      },
+      {
+        "level": 9,
+        "name": "Animal Mastery I"
+      },
+      {
+        "level": 10,
+        "name": "Nature’s Awareness I"
+      }
+    ]
+  },
+  {
+    "id": "A-9.5.7",
+    "name": "Purifications",
+    "page": 159,
+    "spells": [
+      {
+        "level": 1,
+        "name": "Disease Purification"
+      },
+      {
+        "level": 2,
+        "name": "Food Preservation"
+      },
+      {
+        "level": 3,
+        "name": "Poison Purification"
+      },
+      {
+        "level": 4,
+        "name": "Disease Resistance I"
+      },
+      {
+        "level": 5,
+        "name": "Poison Resistance I"
+      },
+      {
+        "level": 6,
+        "name": "Sustenance Purification"
+      },
+      {
+        "level": 8,
+        "name": "Disease Resistance II"
+      },
+      {
+        "level": 9,
+        "name": "Poison Resistance II"
+      },
+      {
+        "level": 10,
+        "name": "Mind Disease Cures"
+      }
+    ]
+  },
+  {
+    "id": "A-9.5.8",
+    "name": "Sound’S Way",
+    "page": 159,
+    "spells": [
+      {
+        "level": 1,
+        "name": "Speech I"
+      },
+      {
+        "level": 3,
+        "name": "Quiet I"
+      },
+      {
+        "level": 5,
+        "name": "Soundwall I"
+      },
+      {
+        "level": 6,
+        "name": "Speech II"
+      },
+      {
+        "level": 7,
+        "name": "Silence I"
+      },
+      {
+        "level": 8,
+        "name": "Quiet III"
+      },
+      {
+        "level": 10,
+        "name": "Soundwall V"
+      }
+    ]
+  },
+  {
+    "id": "A-9.5.9",
+    "name": "Spell Defense",
+    "page": 160,
+    "spells": [
+      {
+        "level": 1,
+        "name": "Protection I"
+      },
+      {
+        "level": 2,
+        "name": "Cancel Channeling"
+      },
+      {
+        "level": 3,
+        "name": "Protection Sphere I"
+      },
+      {
+        "level": 4,
+        "name": "Cancel Essence"
+      },
+      {
+        "level": 5,
+        "name": "Protection II"
+      },
+      {
+        "level": 6,
+        "name": "Cancel Mentalism"
+      },
+      {
+        "level": 7,
+        "name": "Protection Sphere II"
+      },
+      {
+        "level": 8,
+        "name": "Dispel Channeling I"
+      },
+      {
+        "level": 9,
+        "name": "Channeling Shield"
+      },
+      {
+        "level": 10,
+        "name": "Protection III"
+      }
+    ]
+  },
+  {
+    "id": "A-9.5.10",
+    "name": "Weather Ways",
+    "page": 160,
+    "spells": [
+      {
+        "level": 1,
+        "name": "Living Gauge"
+      },
+      {
+        "level": 2,
+        "name": "Rain Prediction"
+      },
+      {
+        "level": 4,
+        "name": "Storm Prediction"
+      },
+      {
+        "level": 5,
+        "name": "Weather Prediction I"
+      },
+      {
+        "level": 7,
+        "name": "Breeze Call"
+      },
+      {
+        "level": 8,
+        "name": "Fog Call"
+      },
+      {
+        "level": 10,
+        "name": "Weather Prediction III"
+      }
+    ]
+  },
+  {
+    "id": "A-9.6.1",
+    "name": "Blood Law",
+    "page": 161,
+    "spells": [
+      {
+        "level": 1,
+        "name": "Flowstop I"
+      },
+      {
+        "level": 2,
+        "name": "Flowstop III"
+      },
+      {
+        "level": 3,
+        "name": "Clotting I"
+      },
+      {
+        "level": 4,
+        "name": "Flowstop V"
+      },
+      {
+        "level": 5,
+        "name": "Limb Preservation"
+      },
+      {
+        "level": 6,
+        "name": "Cut Repair I"
+      },
+      {
+        "level": 7,
+        "name": "Clotting III"
+      },
+      {
+        "level": 8,
+        "name": "Minor Vessel Repair"
+      },
+      {
+        "level": 9,
+        "name": "Cut Repair III"
+      },
+      {
+        "level": 10,
+        "name": "Major Vessel Repair"
+      }
+    ]
+  },
+  {
+    "id": "A-9.6.2",
+    "name": "Bone Law",
+    "page": 161,
+    "spells": [
+      {
+        "level": 1,
+        "name": "Bone Lore"
+      },
+      {
+        "level": 3,
+        "name": "Minor Fracture Repair"
+      },
+      {
+        "level": 4,
+        "name": "Cartilage Repair"
+      },
+      {
+        "level": 5,
+        "name": "Limb Preservation"
+      },
+      {
+        "level": 6,
+        "name": "Major Fracture Repair"
+      },
+      {
+        "level": 8,
+        "name": "Skull Repair"
+      },
+      {
+        "level": 10,
+        "name": "Joint Repair"
+      }
+    ]
+  },
+  {
+    "id": "A-9.6.3",
+    "name": "Calm Spirits",
+    "page": 162,
+    "spells": [
+      {
+        "level": 1,
+        "name": "Animal Calming I"
+      },
+      {
+        "level": 2,
+        "name": "Calm I"
+      },
+      {
+        "level": 3,
+        "name": "Animal Calming III"
+      },
+      {
+        "level": 4,
+        "name": "Calm II"
+      },
+      {
+        "level": 5,
+        "name": "Hold Kind"
+      },
+      {
+        "level": 6,
+        "name": "Calm III"
+      },
+      {
+        "level": 7,
+        "name": "Animal Calming V"
+      },
+      {
+        "level": 8,
+        "name": "Calm IV"
+      },
+      {
+        "level": 9,
+        "name": "Calm V"
+      },
+      {
+        "level": 10,
+        "name": "Mass Animal Calming I"
+      }
+    ]
+  },
+  {
+    "id": "A-9.6.4",
+    "name": "Creations",
+    "page": 162,
+    "spells": [
+      {
+        "level": 2,
+        "name": "Sustain Self"
+      },
+      {
+        "level": 3,
+        "name": "Water Production I"
+      },
+      {
+        "level": 4,
+        "name": "Food Production I"
+      },
+      {
+        "level": 5,
+        "name": "Fire Starting"
+      },
+      {
+        "level": 6,
+        "name": "Nutrient Conjures I"
+      },
+      {
+        "level": 7,
+        "name": "Water Production III"
+      },
+      {
+        "level": 8,
+        "name": "Food Production III"
+      },
+      {
+        "level": 9,
+        "name": "Herb Enhancement"
+      },
+      {
+        "level": 10,
+        "name": "Water Production V"
+      }
+    ]
+  },
+  {
+    "id": "A-9.6.5",
+    "name": "Locating Ways",
+    "page": 163,
+    "spells": [
+      {
+        "level": 2,
+        "name": "Guess"
+      },
+      {
+        "level": 3,
+        "name": "Pathfinding I"
+      },
+      {
+        "level": 4,
+        "name": "Guidance"
+      },
+      {
+        "level": 5,
+        "name": "Location I"
+      },
+      {
+        "level": 6,
+        "name": "Pathfinding III"
+      },
+      {
+        "level": 8,
+        "name": "Location III"
+      },
+      {
+        "level": 9,
+        "name": "Pathfinding V"
+      },
+      {
+        "level": 10,
+        "name": "Location V"
+      }
+    ]
+  },
+  {
+    "id": "A-9.6.6",
+    "name": "Lore",
+    "page": 163,
+    "spells": [
+      {
+        "level": 1,
+        "name": "Afterthoughts"
+      },
+      {
+        "level": 2,
+        "name": "Detect Evil"
+      },
+      {
+        "level": 3,
+        "name": "Detect Curse"
+      },
+      {
+        "level": 4,
+        "name": "Detect Emotion"
+      },
+      {
+        "level": 5,
+        "name": "Light Lore I"
+      },
+      {
+        "level": 6,
+        "name": "Poison Lore"
+      },
+      {
+        "level": 8,
+        "name": "Life Lore"
+      },
+      {
+        "level": 10,
+        "name": "Curse Tales"
+      }
+    ]
+  },
+  {
+    "id": "A-9.6.7",
+    "name": "Muscle Law",
+    "page": 164,
+    "spells": [
+      {
+        "level": 1,
+        "name": "Muscle Lore"
+      },
+      {
+        "level": 2,
+        "name": "Tendon Lore"
+      },
+      {
+        "level": 3,
+        "name": "Sprain Repair"
+      },
+      {
+        "level": 4,
+        "name": "Muscle Repair I"
+      },
+      {
+        "level": 5,
+        "name": "Limb Preservation"
+      },
+      {
+        "level": 6,
+        "name": "Tendon Repair I"
+      },
+      {
+        "level": 9,
+        "name": "Muscle Repair III"
+      },
+      {
+        "level": 10,
+        "name": "Tendon Repair III"
+      }
+    ]
+  },
+  {
+    "id": "A-9.6.8",
+    "name": "Nerve Law",
+    "page": 164,
+    "spells": [
+      {
+        "level": 1,
+        "name": "Nerve Lore"
+      },
+      {
+        "level": 4,
+        "name": "Minor Nerve Repair"
+      },
+      {
+        "level": 5,
+        "name": "Limb Preservation"
+      },
+      {
+        "level": 9,
+        "name": "Major Nerve Repair"
+      },
+      {
+        "level": 10,
+        "name": "Unparalysis"
+      }
+    ]
+  },
+  {
+    "id": "A-9.6.9",
+    "name": "Organ Law",
+    "page": 165,
+    "spells": [
+      {
+        "level": 1,
+        "name": "Organ Lore"
+      },
+      {
+        "level": 3,
+        "name": "Nasal Repair"
+      },
+      {
+        "level": 5,
+        "name": "Minor Ear Repair"
+      },
+      {
+        "level": 6,
+        "name": "Minor Eye Repair"
+      },
+      {
+        "level": 9,
+        "name": "Major Ear Repair"
+      }
+    ]
+  },
+  {
+    "id": "A-9.6.10",
+    "name": "Symbolic Ways",
+    "page": 165,
+    "spells": [
+      {
+        "level": 1,
+        "name": "Analyze Symbol"
+      },
+      {
+        "level": 2,
+        "name": "Spell Prime"
+      },
+      {
+        "level": 3,
+        "name": "Unsymbol I"
+      },
+      {
+        "level": 5,
+        "name": "Symbol I"
+      }
+    ]
+  },
+  {
+    "id": "A-9.7.1",
+    "name": "Channels",
+    "page": 166,
+    "spells": [
+      {
+        "level": 1,
+        "name": "Create Holy Water"
+      },
+      {
+        "level": 2,
+        "name": "Calming"
+      },
+      {
+        "level": 3,
+        "name": "Channels I"
+      },
+      {
+        "level": 5,
+        "name": "Stunning"
+      },
+      {
+        "level": 6,
+        "name": "Channels III"
+      },
+      {
+        "level": 8,
+        "name": "Golden Slumbers"
+      },
+      {
+        "level": 10,
+        "name": "Channels V"
+      }
+    ]
+  },
+  {
+    "id": "A-9.7.2",
+    "name": "Communal Ways",
+    "page": 166,
+    "spells": [
+      {
+        "level": 1,
+        "name": "Guess"
+      },
+      {
+        "level": 3,
+        "name": "Intuitions I"
+      },
+      {
+        "level": 4,
+        "name": "Dream I"
+      },
+      {
+        "level": 5,
+        "name": "Intuitions III"
+      },
+      {
+        "level": 6,
+        "name": "Death’s Tale"
+      },
+      {
+        "level": 7,
+        "name": "Channel Opening I"
+      },
+      {
+        "level": 8,
+        "name": "Intuitions V"
+      },
+      {
+        "level": 10,
+        "name": "Dreams III"
+      }
+    ]
+  },
+  {
+    "id": "A-9.7.3",
+    "name": "Life Mastery",
+    "page": 167,
+    "spells": [
+      {
+        "level": 1,
+        "name": "Preservation I"
+      },
+      {
+        "level": 2,
+        "name": "Lifekeeping I"
+      },
+      {
+        "level": 3,
+        "name": "Preservation II"
+      },
+      {
+        "level": 4,
+        "name": "Heal Life Essence I"
+      },
+      {
+        "level": 5,
+        "name": "Lifekeeping II"
+      },
+      {
+        "level": 6,
+        "name": "Heal Life Essence II"
+      },
+      {
+        "level": 7,
+        "name": "Preservation III"
+      },
+      {
+        "level": 9,
+        "name": "Heal Life Essence III"
+      },
+      {
+        "level": 10,
+        "name": "Preservation IV"
+      }
+    ]
+  },
+  {
+    "id": "A-9.7.4",
+    "name": "Protections",
+    "page": 167,
+    "spells": [
+      {
+        "level": 1,
+        "name": "Prayer I"
+      },
+      {
+        "level": 2,
+        "name": "Bless I"
+      },
+      {
+        "level": 3,
+        "name": "Resistance I"
+      },
+      {
+        "level": 4,
+        "name": "Heat Resistance"
+      },
+      {
+        "level": 5,
+        "name": "Cold Resistance"
+      },
+      {
+        "level": 8,
+        "name": "Temperature Sphere I"
+      },
+      {
+        "level": 10,
+        "name": "Protections Sphere I"
+      }
+    ]
+  },
+  {
+    "id": "A-9.7.5",
+    "name": "Repulsions",
+    "page": 168,
+    "spells": [
+      {
+        "level": 1,
+        "name": "Repel Undead V"
+      },
+      {
+        "level": 2,
+        "name": "Cancel Channeling"
+      },
+      {
+        "level": 3,
+        "name": "Anti-Channels I"
+      },
+      {
+        "level": 4,
+        "name": "Neutralize Curse I"
+      },
+      {
+        "level": 5,
+        "name": "Anti-Channels III"
+      },
+      {
+        "level": 6,
+        "name": "Repel Undead IX"
+      },
+      {
+        "level": 7,
+        "name": "Remove Curse"
+      },
+      {
+        "level": 8,
+        "name": "Dispel Channeling I"
+      },
+      {
+        "level": 9,
+        "name": "Neutralize Curse II"
+      },
+      {
+        "level": 10,
+        "name": "Anti-Channels V"
+      }
+    ]
+  },
+  {
+    "id": "A-9.7.6",
+    "name": "Summons",
+    "page": 168,
+    "spells": [
+      {
+        "level": 1,
+        "name": "Summons I"
+      },
+      {
+        "level": 2,
+        "name": "Summons II"
+      },
+      {
+        "level": 3,
+        "name": "Summons III"
+      },
+      {
+        "level": 4,
+        "name": "Summons IV"
+      },
+      {
+        "level": 5,
+        "name": "Summons V"
+      },
+      {
+        "level": 6,
+        "name": "Summons VI"
+      },
+      {
+        "level": 7,
+        "name": "Summons VII"
+      },
+      {
+        "level": 8,
+        "name": "Summons VIII"
+      },
+      {
+        "level": 9,
+        "name": "Summons X"
+      },
+      {
+        "level": 10,
+        "name": "Demonic Gate I"
+      }
+    ]
+  },
+  {
+    "id": "A-9.8.1",
+    "name": "Inner Walls",
+    "page": 169,
+    "spells": [
+      {
+        "level": 1,
+        "name": "Heat Resistance"
+      },
+      {
+        "level": 2,
+        "name": "Cold Resistance"
+      },
+      {
+        "level": 3,
+        "name": "Resistance I"
+      },
+      {
+        "level": 4,
+        "name": "Bless I"
+      },
+      {
+        "level": 5,
+        "name": "Prayer I"
+      },
+      {
+        "level": 7,
+        "name": "Sterilization"
+      },
+      {
+        "level": 8,
+        "name": "Resistance II"
+      },
+      {
+        "level": 9,
+        "name": "Bless II"
+      },
+      {
+        "level": 10,
+        "name": "Prayer II"
+      }
+    ]
+  },
+  {
+    "id": "A-9.8.2",
+    "name": "Moving Ways",
+    "page": 169,
+    "spells": [
+      {
+        "level": 1,
+        "name": "Rockrunning"
+      },
+      {
+        "level": 2,
+        "name": "Limbwalking"
+      },
+      {
+        "level": 3,
+        "name": "Swimming"
+      },
+      {
+        "level": 4,
+        "name": "Waterwalking"
+      },
+      {
+        "level": 5,
+        "name": "Sandrunning"
+      },
+      {
+        "level": 6,
+        "name": "Limbrunning"
+      },
+      {
+        "level": 7,
+        "name": "Traceless Passing"
+      },
+      {
+        "level": 8,
+        "name": "Hide Tracks I"
+      },
+      {
+        "level": 9,
+        "name": "Waterrunning"
+      },
+      {
+        "level": 10,
+        "name": "Hide Tracks II"
+      }
+    ]
+  },
+  {
+    "id": "A-9.8.3",
+    "name": "Nature’S Guises",
+    "page": 170,
+    "spells": [
+      {
+        "level": 1,
+        "name": "Hues"
+      },
+      {
+        "level": 2,
+        "name": "Shade"
+      },
+      {
+        "level": 3,
+        "name": "Freeze"
+      },
+      {
+        "level": 4,
+        "name": "Silent Moves"
+      },
+      {
+        "level": 5,
+        "name": "Self Cloaking"
+      },
+      {
+        "level": 6,
+        "name": "Light"
+      },
+      {
+        "level": 7,
+        "name": "Darkness I"
+      },
+      {
+        "level": 8,
+        "name": "Shadow"
+      },
+      {
+        "level": 9,
+        "name": "Study Form"
+      },
+      {
+        "level": 10,
+        "name": "Plant Facade"
+      }
+    ]
+  },
+  {
+    "id": "A-9.8.4",
+    "name": "Nature’S Summons",
+    "page": 170,
+    "spells": [
+      {
+        "level": 1,
+        "name": "Summon Nourishment"
+      },
+      {
+        "level": 2,
+        "name": "Summon Warmth"
+      },
+      {
+        "level": 3,
+        "name": "Summon Guide"
+      },
+      {
+        "level": 4,
+        "name": "Summon Guardian"
+      },
+      {
+        "level": 5,
+        "name": "Summon Mount"
+      },
+      {
+        "level": 6,
+        "name": "Summon Hunter"
+      },
+      {
+        "level": 7,
+        "name": "Summon Sense"
+      },
+      {
+        "level": 9,
+        "name": "Summon Group"
+      },
+      {
+        "level": 10,
+        "name": "Mass Summons"
+      }
+    ]
+  },
+  {
+    "id": "A-9.8.5",
+    "name": "Nature’S Way",
+    "page": 171,
+    "spells": [
+      {
+        "level": 1,
+        "name": "Trap Detection"
+      },
+      {
+        "level": 2,
+        "name": "Water Finding I"
+      },
+      {
+        "level": 3,
+        "name": "Fire Starting"
+      },
+      {
+        "level": 5,
+        "name": "Food Finding I"
+      },
+      {
+        "level": 6,
+        "name": "Water Purification"
+      },
+      {
+        "level": 7,
+        "name": "Shelter Finding I"
+      },
+      {
+        "level": 8,
+        "name": "Lesser Traps"
+      },
+      {
+        "level": 9,
+        "name": "Weather Prediction I"
+      },
+      {
+        "level": 10,
+        "name": "Nature’s Awareness I"
+      }
+    ]
+  },
+  {
+    "id": "A-9.8.6",
+    "name": "Path Mastery",
+    "page": 171,
+    "spells": [
+      {
+        "level": 1,
+        "name": "Pathlore"
+      },
+      {
+        "level": 2,
+        "name": "Nightvision"
+      },
+      {
+        "level": 3,
+        "name": "Tracking I"
+      },
+      {
+        "level": 4,
+        "name": "Path Tale"
+      },
+      {
+        "level": 5,
+        "name": "Pathfinding I"
+      },
+      {
+        "level": 6,
+        "name": "Tracks Lore"
+      },
+      {
+        "level": 7,
+        "name": "Detect Ambush I"
+      },
+      {
+        "level": 8,
+        "name": "Passing Lore"
+      },
+      {
+        "level": 9,
+        "name": "Pathfinding V"
+      },
+      {
+        "level": 10,
+        "name": "Animal Tongues"
+      }
+    ]
+  },
+  {
+    "id": "A-9.9.1",
+    "name": "Delving Ways",
+    "page": 172,
+    "spells": [
+      {
+        "level": 2,
+        "name": "Text Analysis I"
+      },
+      {
+        "level": 3,
+        "name": "Stone Analysis"
+      },
+      {
+        "level": 4,
+        "name": "Metal Analysis"
+      },
+      {
+        "level": 5,
+        "name": "Gas Analysis"
+      },
+      {
+        "level": 7,
+        "name": "Text Analysis II"
+      },
+      {
+        "level": 8,
+        "name": "Liquid Analysis"
+      },
+      {
+        "level": 10,
+        "name": "Delving"
+      }
+    ]
+  },
+  {
+    "id": "A-9.9.2",
+    "name": "Detecting Ways",
+    "page": 172,
+    "spells": [
+      {
+        "level": 1,
+        "name": "Detect Essence"
+      },
+      {
+        "level": 2,
+        "name": "Detect Mentalism"
+      },
+      {
+        "level": 3,
+        "name": "Detect Channeling"
+      },
+      {
+        "level": 5,
+        "name": "Detect Invisible"
+      },
+      {
+        "level": 6,
+        "name": "Detect Traps"
+      },
+      {
+        "level": 7,
+        "name": "Detect Evil"
+      },
+      {
+        "level": 8,
+        "name": "Location I"
+      },
+      {
+        "level": 10,
+        "name": "Perceive Power I"
+      }
+    ]
+  },
+  {
+    "id": "A-9.9.3",
+    "name": "Elemental Shields",
+    "page": 173,
+    "spells": [
+      {
+        "level": 1,
+        "name": "Resist Light"
+      },
+      {
+        "level": 2,
+        "name": "Resist Heat"
+      },
+      {
+        "level": 3,
+        "name": "Resist Cold"
+      },
+      {
+        "level": 4,
+        "name": "Resist Light Sphere"
+      },
+      {
+        "level": 5,
+        "name": "Resist Heat Sphere"
+      },
+      {
+        "level": 6,
+        "name": "Resist Cold Sphere"
+      },
+      {
+        "level": 8,
+        "name": "Lightarmor"
+      },
+      {
+        "level": 9,
+        "name": "Heatarmor"
+      },
+      {
+        "level": 10,
+        "name": "Coldarmor"
+      }
+    ]
+  },
+  {
+    "id": "A-9.9.4",
+    "name": "Essence Hand",
+    "page": 173,
+    "spells": [
+      {
+        "level": 1,
+        "name": "Vibrations I"
+      },
+      {
+        "level": 2,
+        "name": "Staying I"
+      },
+      {
+        "level": 3,
+        "name": "Telekinesis I"
+      },
+      {
+        "level": 4,
+        "name": "Vibrations II"
+      },
+      {
+        "level": 5,
+        "name": "Staying II"
+      },
+      {
+        "level": 6,
+        "name": "Telekinesis II"
+      },
+      {
+        "level": 7,
+        "name": "Vibrations III"
+      },
+      {
+        "level": 8,
+        "name": "Staying III"
+      },
+      {
+        "level": 9,
+        "name": "Vibrations IV"
+      },
+      {
+        "level": 10,
+        "name": "Aiming"
+      }
+    ]
+  },
+  {
+    "id": "A-9.9.5",
+    "name": "Essence’S Perceptions",
+    "page": 174,
+    "spells": [
+      {
+        "level": 2,
+        "name": "Presence"
+      },
+      {
+        "level": 3,
+        "name": "Listen I"
+      },
+      {
+        "level": 5,
+        "name": "Long Ear I"
+      },
+      {
+        "level": 6,
+        "name": "Watch I"
+      },
+      {
+        "level": 7,
+        "name": "Long Eye I"
+      },
+      {
+        "level": 8,
+        "name": "Listen II"
+      },
+      {
+        "level": 10,
+        "name": "Telepathy"
+      }
+    ]
+  },
+  {
+    "id": "A-9.9.6",
+    "name": "Lesser Illusions",
+    "page": 174,
+    "spells": [
+      {
+        "level": 1,
+        "name": "Ventriloquism"
+      },
+      {
+        "level": 2,
+        "name": "Sound/Light Mirage"
+      },
+      {
+        "level": 3,
+        "name": "Taste/Smell Mirage"
+      },
+      {
+        "level": 4,
+        "name": "Illusions II"
+      },
+      {
+        "level": 5,
+        "name": "Phantasm I"
+      },
+      {
+        "level": 6,
+        "name": "Light Glamour"
+      },
+      {
+        "level": 7,
+        "name": "Waiting Illusion II"
+      },
+      {
+        "level": 8,
+        "name": "Illusions III"
+      },
+      {
+        "level": 9,
+        "name": "Phantasm II"
+      },
+      {
+        "level": 10,
+        "name": "Waiting Phantasm II"
+      }
+    ]
+  },
+  {
+    "id": "A-9.9.7",
+    "name": "Physical Enhancement",
+    "page": 175,
+    "spells": [
+      {
+        "level": 1,
+        "name": "Mannish Scale"
+      },
+      {
+        "level": 2,
+        "name": "Sly Ears"
+      },
+      {
+        "level": 3,
+        "name": "Balance"
+      },
+      {
+        "level": 4,
+        "name": "Nightvision"
+      },
+      {
+        "level": 5,
+        "name": "Sidevision"
+      },
+      {
+        "level": 6,
+        "name": "Sounding"
+      },
+      {
+        "level": 7,
+        "name": "Watervision"
+      },
+      {
+        "level": 8,
+        "name": "Waterlungs"
+      },
+      {
+        "level": 9,
+        "name": "Heatvision"
+      },
+      {
+        "level": 10,
+        "name": "Gaslungs"
+      }
+    ]
+  },
+  {
+    "id": "A-9.9.8",
+    "name": "Rune Mastery",
+    "page": 175,
+    "spells": [
+      {
+        "level": 2,
+        "name": "Spell Store"
+      },
+      {
+        "level": 3,
+        "name": "Rune I"
+      },
+      {
+        "level": 6,
+        "name": "Rune II"
+      },
+      {
+        "level": 8,
+        "name": "Rune III"
+      },
+      {
+        "level": 10,
+        "name": "Rune V"
+      }
+    ]
+  },
+  {
+    "id": "A-9.9.9",
+    "name": "Spell Wall",
+    "page": 176,
+    "spells": [
+      {
+        "level": 1,
+        "name": "Protection I"
+      },
+      {
+        "level": 2,
+        "name": "Cancel Essence"
+      },
+      {
+        "level": 3,
+        "name": "Protection Sphere I"
+      },
+      {
+        "level": 4,
+        "name": "Cancel Mentalism"
+      },
+      {
+        "level": 5,
+        "name": "Protection II"
+      },
+      {
+        "level": 6,
+        "name": "Cancel Channeling"
+      },
+      {
+        "level": 7,
+        "name": "Protection Sphere II"
+      },
+      {
+        "level": 8,
+        "name": "Dispel Essence Sphere I"
+      },
+      {
+        "level": 9,
+        "name": "Essence Shield"
+      },
+      {
+        "level": 10,
+        "name": "Mind Shield"
+      }
+    ]
+  },
+  {
+    "id": "A-9.9.10",
+    "name": "Unbarring Ways",
+    "page": 176,
+    "spells": [
+      {
+        "level": 1,
+        "name": "Lock"
+      },
+      {
+        "level": 2,
+        "name": "Magic Lock"
+      },
+      {
+        "level": 3,
+        "name": "Locklore"
+      },
+      {
+        "level": 4,
+        "name": "Opening I"
+      },
+      {
+        "level": 5,
+        "name": "Traplore"
+      },
+      {
+        "level": 6,
+        "name": "Disarm I"
+      },
+      {
+        "level": 7,
+        "name": "Jamming"
+      },
+      {
+        "level": 8,
+        "name": "Weakening"
+      },
+      {
+        "level": 9,
+        "name": "Open Prison I"
+      },
+      {
+        "level": 10,
+        "name": "Opening II"
+      }
+    ]
+  },
+  {
+    "id": "A-9.10.1",
+    "name": "Dispelling Ways",
+    "page": 177,
+    "spells": [
+      {
+        "level": 1,
+        "name": "Cancel Essence I"
+      },
+      {
+        "level": 2,
+        "name": "Cancel Mentalism I"
+      },
+      {
+        "level": 3,
+        "name": "Cancel Channeling I"
+      },
+      {
+        "level": 4,
+        "name": "Dispel Essence I"
+      },
+      {
+        "level": 5,
+        "name": "Dispel Mentalism I"
+      },
+      {
+        "level": 6,
+        "name": "Dispel Channeling I"
+      },
+      {
+        "level": 7,
+        "name": "Dispel Essence Sphere I"
+      },
+      {
+        "level": 8,
+        "name": "Dispel Mentalism Sphere I"
+      },
+      {
+        "level": 9,
+        "name": "Dispel Channeling Sphere I"
+      },
+      {
+        "level": 10,
+        "name": "Dispel Essence Sphere V"
+      }
+    ]
+  },
+  {
+    "id": "A-9.10.2",
+    "name": "Gate Mastery",
+    "page": 177,
+    "spells": [
+      {
+        "level": 1,
+        "name": "Familiar"
+      },
+      {
+        "level": 2,
+        "name": "Summons I"
+      },
+      {
+        "level": 3,
+        "name": "Companion"
+      },
+      {
+        "level": 5,
+        "name": "Summons II"
+      },
+      {
+        "level": 6,
+        "name": "Control Demon I"
+      },
+      {
+        "level": 7,
+        "name": "Summons III"
+      },
+      {
+        "level": 8,
+        "name": "Lesser Demonic Gate"
+      },
+      {
+        "level": 9,
+        "name": "Summons V"
+      },
+      {
+        "level": 10,
+        "name": "Control Demon II"
+      }
+    ]
+  },
+  {
+    "id": "A-9.10.3",
+    "name": "Invisible Ways",
+    "page": 178,
+    "spells": [
+      {
+        "level": 2,
+        "name": "Unseen I"
+      },
+      {
+        "level": 4,
+        "name": "Invisibility I"
+      },
+      {
+        "level": 6,
+        "name": "Invisibility II"
+      },
+      {
+        "level": 8,
+        "name": "Invisibility Sphere I"
+      },
+      {
+        "level": 10,
+        "name": "Unseen III"
+      }
+    ]
+  },
+  {
+    "id": "A-9.10.4",
+    "name": "Living Change",
+    "page": 178,
+    "spells": [
+      {
+        "level": 1,
+        "name": "Shrink Self"
+      },
+      {
+        "level": 2,
+        "name": "Enlarge Self"
+      },
+      {
+        "level": 3,
+        "name": "Change Lore"
+      },
+      {
+        "level": 5,
+        "name": "Change to Kind"
+      },
+      {
+        "level": 7,
+        "name": "Shrink"
+      },
+      {
+        "level": 10,
+        "name": "Enlarge"
+      }
+    ]
+  },
+  {
+    "id": "A-9.10.5",
+    "name": "Lofty Bridge",
+    "page": 179,
+    "spells": [
+      {
+        "level": 1,
+        "name": "Leaping"
+      },
+      {
+        "level": 2,
+        "name": "Landing"
+      },
+      {
+        "level": 3,
+        "name": "Leaving I"
+      },
+      {
+        "level": 4,
+        "name": "Levitation"
+      },
+      {
+        "level": 5,
+        "name": "Fly I"
+      },
+      {
+        "level": 6,
+        "name": "Portal"
+      },
+      {
+        "level": 7,
+        "name": "Fly I"
+      },
+      {
+        "level": 8,
+        "name": "Long Door I"
+      },
+      {
+        "level": 9,
+        "name": "Leaving III"
+      },
+      {
+        "level": 10,
+        "name": "Teleport I"
+      }
+    ]
+  },
+  {
+    "id": "A-9.10.6",
+    "name": "Rapid Ways",
+    "page": 179,
+    "spells": [
+      {
+        "level": 1,
+        "name": "Run I"
+      },
+      {
+        "level": 2,
+        "name": "Speed I"
+      },
+      {
+        "level": 3,
+        "name": "Speed Reading"
+      },
+      {
+        "level": 4,
+        "name": "Speed II"
+      },
+      {
+        "level": 5,
+        "name": "Sprint I"
+      },
+      {
+        "level": 6,
+        "name": "Haste I"
+      },
+      {
+        "level": 7,
+        "name": "Speed III"
+      },
+      {
+        "level": 8,
+        "name": "Haste II"
+      },
+      {
+        "level": 9,
+        "name": "Fast Sprint"
+      },
+      {
+        "level": 10,
+        "name": "Speed V"
+      }
+    ]
+  },
+  {
+    "id": "A-9.10.7",
+    "name": "Shield Mastery",
+    "page": 180,
+    "spells": [
+      {
+        "level": 1,
+        "name": "Enchanted Shield"
+      },
+      {
+        "level": 2,
+        "name": "Shield"
+      },
+      {
+        "level": 3,
+        "name": "Blur"
+      },
+      {
+        "level": 4,
+        "name": "Enchanted Robes"
+      },
+      {
+        "level": 5,
+        "name": "Deflections I"
+      },
+      {
+        "level": 6,
+        "name": "Enchanted Leather"
+      },
+      {
+        "level": 7,
+        "name": "Bladeturn I"
+      },
+      {
+        "level": 9,
+        "name": "Deflections II"
+      },
+      {
+        "level": 10,
+        "name": "Aim Untrue I"
+      }
+    ]
+  },
+  {
+    "id": "A-9.10.8",
+    "name": "Spell Enhancement",
+    "page": 180,
+    "spells": [
+      {
+        "level": 1,
+        "name": "Special Effects"
+      },
+      {
+        "level": 2,
+        "name": "Extension II"
+      },
+      {
+        "level": 4,
+        "name": "Ranging I"
+      },
+      {
+        "level": 5,
+        "name": "Extension III"
+      },
+      {
+        "level": 6,
+        "name": "Instant Ranging I"
+      },
+      {
+        "level": 7,
+        "name": "Increased Radius I"
+      },
+      {
+        "level": 8,
+        "name": "Ranging II"
+      },
+      {
+        "level": 9,
+        "name": "Extension IV"
+      },
+      {
+        "level": 10,
+        "name": "Instant Ranging II"
+      }
+    ]
+  },
+  {
+    "id": "A-9.10.9",
+    "name": "Spell Reins",
+    "page": 181,
+    "spells": [
+      {
+        "level": 1,
+        "name": "Spell Store"
+      },
+      {
+        "level": 2,
+        "name": "Identify Casting"
+      },
+      {
+        "level": 3,
+        "name": "Spell Hold I"
+      },
+      {
+        "level": 5,
+        "name": "Spell Bending I"
+      },
+      {
+        "level": 6,
+        "name": "Spell Hold II"
+      },
+      {
+        "level": 8,
+        "name": "Spell Bending II"
+      },
+      {
+        "level": 9,
+        "name": "Spell Hold III"
+      },
+      {
+        "level": 10,
+        "name": "Reverse Spell I"
+      }
+    ]
+  },
+  {
+    "id": "A-9.10.10",
+    "name": "Spirit Mastery",
+    "page": 181,
+    "spells": [
+      {
+        "level": 1,
+        "name": "Sleep V"
+      },
+      {
+        "level": 2,
+        "name": "Charm Kind"
+      },
+      {
+        "level": 3,
+        "name": "Sleep VII"
+      },
+      {
+        "level": 4,
+        "name": "Confusion"
+      },
+      {
+        "level": 5,
+        "name": "Suggestion"
+      },
+      {
+        "level": 6,
+        "name": "Sleep X"
+      },
+      {
+        "level": 7,
+        "name": "Hold Kind"
+      },
+      {
+        "level": 8,
+        "name": "Master of Kind"
+      },
+      {
+        "level": 9,
+        "name": "Lord Sleep"
+      },
+      {
+        "level": 10,
+        "name": "True Charm"
+      }
+    ]
+  },
+  {
+    "id": "A-9.11.1",
+    "name": "Earth Law",
+    "page": 182,
+    "spells": [
+      {
+        "level": 1,
+        "name": "Enchanted Rope"
+      },
+      {
+        "level": 2,
+        "name": "Loosen Earth"
+      },
+      {
+        "level": 4,
+        "name": "Earthwall"
+      },
+      {
+        "level": 5,
+        "name": "Cracks Call"
+      },
+      {
+        "level": 6,
+        "name": "Repair"
+      },
+      {
+        "level": 7,
+        "name": "Stonewall"
+      },
+      {
+        "level": 8,
+        "name": "Earthen Spikes"
+      },
+      {
+        "level": 9,
+        "name": "Stone/Earth"
+      },
+      {
+        "level": 10,
+        "name": "Earthwall True"
+      }
+    ]
+  },
+  {
+    "id": "A-9.11.2",
+    "name": "Fire Law",
+    "page": 182,
+    "spells": [
+      {
+        "level": 1,
+        "name": "Boil Liquid"
+      },
+      {
+        "level": 2,
+        "name": "Warm Solid"
+      },
+      {
+        "level": 3,
+        "name": "Woodfires"
+      },
+      {
+        "level": 4,
+        "name": "Wall of Fire"
+      },
+      {
+        "level": 5,
+        "name": "Heat Solid"
+      },
+      {
+        "level": 6,
+        "name": "Fire Bolt I"
+      },
+      {
+        "level": 7,
+        "name": "Call Flame I"
+      },
+      {
+        "level": 8,
+        "name": "Fire Ball"
+      },
+      {
+        "level": 9,
+        "name": "Ignite"
+      },
+      {
+        "level": 10,
+        "name": "Circle Aflame"
+      }
+    ]
+  },
+  {
+    "id": "A-9.11.3",
+    "name": "Ice Law",
+    "page": 183,
+    "spells": [
+      {
+        "level": 1,
+        "name": "Freeze Liquid"
+      },
+      {
+        "level": 2,
+        "name": "Cool Solid"
+      },
+      {
+        "level": 3,
+        "name": "Wall of Cold"
+      },
+      {
+        "level": 5,
+        "name": "Chill Solid"
+      },
+      {
+        "level": 6,
+        "name": "Ice Bolt I"
+      },
+      {
+        "level": 7,
+        "name": "Cold Ball II"
+      },
+      {
+        "level": 8,
+        "name": "Wall of Ice"
+      },
+      {
+        "level": 9,
+        "name": "Call Cold I"
+      },
+      {
+        "level": 10,
+        "name": "Circle of Cold"
+      }
+    ]
+  },
+  {
+    "id": "A-9.11.4",
+    "name": "Light Law",
+    "page": 183,
+    "spells": [
+      {
+        "level": 1,
+        "name": "Projected Light"
+      },
+      {
+        "level": 2,
+        "name": "Shock Bolt I"
+      },
+      {
+        "level": 3,
+        "name": "Light I"
+      },
+      {
+        "level": 4,
+        "name": "Shade"
+      },
+      {
+        "level": 5,
+        "name": "Sudden Light"
+      },
+      {
+        "level": 6,
+        "name": "Dark I"
+      },
+      {
+        "level": 7,
+        "name": "Light V"
+      },
+      {
+        "level": 8,
+        "name": "Shock Bolt III"
+      },
+      {
+        "level": 9,
+        "name": "Dark V"
+      },
+      {
+        "level": 10,
+        "name": "Lightning Bolt I"
+      }
+    ]
+  },
+  {
+    "id": "A-9.11.5",
+    "name": "Water Law",
+    "page": 184,
+    "spells": [
+      {
+        "level": 1,
+        "name": "Condensation"
+      },
+      {
+        "level": 2,
+        "name": "Fog"
+      },
+      {
+        "level": 3,
+        "name": "Waterwall"
+      },
+      {
+        "level": 4,
+        "name": "Water Bolt I"
+      },
+      {
+        "level": 5,
+        "name": "Unfog"
+      },
+      {
+        "level": 8,
+        "name": "Calm Water"
+      },
+      {
+        "level": 10,
+        "name": "Waterwall True"
+      }
+    ]
+  },
+  {
+    "id": "A-9.11.6",
+    "name": "Wind Law",
+    "page": 184,
+    "spells": [
+      {
+        "level": 1,
+        "name": "Breezes"
+      },
+      {
+        "level": 2,
+        "name": "Airwall"
+      },
+      {
+        "level": 3,
+        "name": "Slumber Mist"
+      },
+      {
+        "level": 4,
+        "name": "Stun Cloud I"
+      },
+      {
+        "level": 5,
+        "name": "Airstop I"
+      },
+      {
+        "level": 6,
+        "name": "Stun Cloud X"
+      },
+      {
+        "level": 7,
+        "name": "Vacuum I"
+      },
+      {
+        "level": 8,
+        "name": "Air Stop II"
+      },
+      {
+        "level": 9,
+        "name": "Slumber Cloud"
+      },
+      {
+        "level": 10,
+        "name": "Stun Cloud IV"
+      }
+    ]
+  },
+  {
+    "id": "A-9.12.1",
+    "name": "Concealment Mastery",
+    "page": 185,
+    "spells": [
+      {
+        "level": 1,
+        "name": "Shadow"
+      },
+      {
+        "level": 2,
+        "name": "Unseen III"
+      },
+      {
+        "level": 3,
+        "name": "Conceal I"
+      },
+      {
+        "level": 4,
+        "name": "Locate Object"
+      },
+      {
+        "level": 5,
+        "name": "Darkness"
+      },
+      {
+        "level": 6,
+        "name": "Secret I"
+      },
+      {
+        "level": 7,
+        "name": "Unseen V"
+      },
+      {
+        "level": 8,
+        "name": "Displacement I"
+      },
+      {
+        "level": 9,
+        "name": "Conceal III"
+      },
+      {
+        "level": 10,
+        "name": "Unseen X"
+      }
+    ]
+  },
+  {
+    "id": "A-9.12.2",
+    "name": "Influences",
+    "page": 185,
+    "spells": [
+      {
+        "level": 1,
+        "name": "Sleep III"
+      },
+      {
+        "level": 2,
+        "name": "Charm Animals"
+      },
+      {
+        "level": 3,
+        "name": "Charm Kind"
+      },
+      {
+        "level": 4,
+        "name": "Sleep V"
+      },
+      {
+        "level": 5,
+        "name": "Suggestion"
+      },
+      {
+        "level": 6,
+        "name": "Telepathy I"
+      },
+      {
+        "level": 7,
+        "name": "Sleep VII"
+      },
+      {
+        "level": 8,
+        "name": "Hold Kind"
+      },
+      {
+        "level": 9,
+        "name": "Greater Charm Kind"
+      },
+      {
+        "level": 10,
+        "name": "Sleep X"
+      }
+    ]
+  },
+  {
+    "id": "A-9.12.3",
+    "name": "Mechanisms",
+    "page": 186,
+    "spells": [
+      {
+        "level": 1,
+        "name": "Machine Lore"
+      },
+      {
+        "level": 2,
+        "name": "Tune"
+      },
+      {
+        "level": 3,
+        "name": "Jam I"
+      },
+      {
+        "level": 4,
+        "name": "Unlock I"
+      },
+      {
+        "level": 5,
+        "name": "Untrap I"
+      },
+      {
+        "level": 6,
+        "name": "Operate I"
+      },
+      {
+        "level": 7,
+        "name": "Detect Active Power"
+      },
+      {
+        "level": 8,
+        "name": "Jam II"
+      },
+      {
+        "level": 9,
+        "name": "Unlock II"
+      },
+      {
+        "level": 10,
+        "name": "Untrap II"
+      }
+    ]
+  },
+  {
+    "id": "A-9.12.4",
+    "name": "Movement Mastery",
+    "page": 186,
+    "spells": [
+      {
+        "level": 1,
+        "name": "Run"
+      },
+      {
+        "level": 2,
+        "name": "Longjump"
+      },
+      {
+        "level": 3,
+        "name": "Landing"
+      },
+      {
+        "level": 4,
+        "name": "Shadow Steps"
+      },
+      {
+        "level": 5,
+        "name": "Underwater Movement"
+      },
+      {
+        "level": 6,
+        "name": "Balance I"
+      },
+      {
+        "level": 7,
+        "name": "Spider’s Step"
+      },
+      {
+        "level": 8,
+        "name": "Long Dive"
+      },
+      {
+        "level": 9,
+        "name": "Traceless Passing"
+      },
+      {
+        "level": 10,
+        "name": "Spider’s Step True"
+      }
+    ]
+  },
+  {
+    "id": "A-9.12.5",
+    "name": "Senses",
+    "page": 187,
+    "spells": [
+      {
+        "level": 1,
+        "name": "Sly Ears"
+      },
+      {
+        "level": 2,
+        "name": "Nightvision"
+      },
+      {
+        "level": 3,
+        "name": "Scent"
+      },
+      {
+        "level": 4,
+        "name": "Sensory Marker"
+      },
+      {
+        "level": 5,
+        "name": "Far Sense I"
+      },
+      {
+        "level": 6,
+        "name": "Sidevision"
+      },
+      {
+        "level": 7,
+        "name": "Touch"
+      },
+      {
+        "level": 8,
+        "name": "Watervision"
+      },
+      {
+        "level": 9,
+        "name": "Darkvision"
+      },
+      {
+        "level": 10,
+        "name": "Far Sense II"
+      }
+    ]
+  },
+  {
+    "id": "A-9.12.6",
+    "name": "Thieving Law",
+    "page": 187,
+    "spells": [
+      {
+        "level": 1,
+        "name": "Gauge Wealth"
+      },
+      {
+        "level": 2,
+        "name": "Weigh Pockets"
+      },
+      {
+        "level": 3,
+        "name": "Mark Target"
+      },
+      {
+        "level": 4,
+        "name": "Find Buyer I"
+      },
+      {
+        "level": 5,
+        "name": "Locate Target"
+      },
+      {
+        "level": 6,
+        "name": "Jewel/Metal Assessment"
+      },
+      {
+        "level": 7,
+        "name": "Item Assessment"
+      },
+      {
+        "level": 8,
+        "name": "Find Buyer II"
+      },
+      {
+        "level": 9,
+        "name": "Detect Power"
+      },
+      {
+        "level": 10,
+        "name": "Item Analysis I"
+      }
+    ]
+  },
+  {
+    "id": "A-9.13.1",
+    "name": "Anticipations",
+    "page": 188,
+    "spells": [
+      {
+        "level": 1,
+        "name": "Anticipate Missile"
+      },
+      {
+        "level": 2,
+        "name": "Anticipate Blow"
+      },
+      {
+        "level": 3,
+        "name": "Guess"
+      },
+      {
+        "level": 4,
+        "name": "Anticipate Spell"
+      },
+      {
+        "level": 5,
+        "name": "Intuitions I"
+      },
+      {
+        "level": 6,
+        "name": "Anticipate Hostility"
+      },
+      {
+        "level": 8,
+        "name": "Dream I"
+      },
+      {
+        "level": 9,
+        "name": "Room Feel I"
+      },
+      {
+        "level": 10,
+        "name": "Anticipations"
+      }
+    ]
+  },
+  {
+    "id": "A-9.13.2",
+    "name": "Attack Avoidance",
+    "page": 188,
+    "spells": [
+      {
+        "level": 1,
+        "name": "Turn Missile"
+      },
+      {
+        "level": 2,
+        "name": "Turn Blade"
+      },
+      {
+        "level": 3,
+        "name": "Shield"
+      },
+      {
+        "level": 5,
+        "name": "Deflect I"
+      },
+      {
+        "level": 6,
+        "name": "Bladeturn I"
+      },
+      {
+        "level": 8,
+        "name": "Aim Untrue I"
+      },
+      {
+        "level": 10,
+        "name": "Still Air"
+      }
+    ]
+  },
+  {
+    "id": "A-9.13.3",
+    "name": "Brilliance",
+    "page": 189,
+    "spells": [
+      {
+        "level": 1,
+        "name": "Projected Light"
+      },
+      {
+        "level": 2,
+        "name": "Glow"
+      },
+      {
+        "level": 3,
+        "name": "Light I"
+      },
+      {
+        "level": 4,
+        "name": "Self Aura"
+      },
+      {
+        "level": 5,
+        "name": "Light Eruption"
+      },
+      {
+        "level": 6,
+        "name": "Shock Bolt"
+      },
+      {
+        "level": 7,
+        "name": "Darkness I"
+      },
+      {
+        "level": 8,
+        "name": "True Aura"
+      },
+      {
+        "level": 10,
+        "name": "Light V"
+      }
+    ]
+  },
+  {
+    "id": "A-9.13.4",
+    "name": "Cloaking",
+    "page": 189,
+    "spells": [
+      {
+        "level": 1,
+        "name": "Blur"
+      },
+      {
+        "level": 2,
+        "name": "Shadow"
+      },
+      {
+        "level": 3,
+        "name": "Unseen"
+      },
+      {
+        "level": 4,
+        "name": "Cloaking I"
+      },
+      {
+        "level": 5,
+        "name": "Facades I"
+      },
+      {
+        "level": 6,
+        "name": "Cloaking III"
+      },
+      {
+        "level": 7,
+        "name": "Cloaking Sphere I"
+      },
+      {
+        "level": 8,
+        "name": "Cloaking V"
+      },
+      {
+        "level": 9,
+        "name": "Cloaking Sphere II"
+      },
+      {
+        "level": 10,
+        "name": "Shadow Mentalist I"
+      }
+    ]
+  },
+  {
+    "id": "A-9.13.5",
+    "name": "Damage Resistance",
+    "page": 190,
+    "spells": [
+      {
+        "level": 1,
+        "name": "Heat Resistance"
+      },
+      {
+        "level": 2,
+        "name": "Cold Resistance"
+      },
+      {
+        "level": 5,
+        "name": "Unpain I"
+      },
+      {
+        "level": 6,
+        "name": "Stun Relief I"
+      },
+      {
+        "level": 7,
+        "name": "Resist Poison"
+      },
+      {
+        "level": 10,
+        "name": "Unpain II"
+      }
+    ]
+  },
+  {
+    "id": "A-9.13.6",
+    "name": "Delving",
+    "page": 190,
+    "spells": [
+      {
+        "level": 1,
+        "name": "Item Feel"
+      },
+      {
+        "level": 2,
+        "name": "Detect Power"
+      },
+      {
+        "level": 3,
+        "name": "Origins"
+      },
+      {
+        "level": 5,
+        "name": "Detect Curse"
+      },
+      {
+        "level": 6,
+        "name": "Power Lore"
+      },
+      {
+        "level": 7,
+        "name": "Rock Lore"
+      },
+      {
+        "level": 8,
+        "name": "Item Vision"
+      },
+      {
+        "level": 10,
+        "name": "Delving"
+      }
+    ]
+  },
+  {
+    "id": "A-9.13.7",
+    "name": "Detections",
+    "page": 191,
+    "spells": [
+      {
+        "level": 1,
+        "name": "Detect Mentalism"
+      },
+      {
+        "level": 2,
+        "name": "Detect Essence"
+      },
+      {
+        "level": 3,
+        "name": "Detect Channeling"
+      },
+      {
+        "level": 4,
+        "name": "Detect Emotion"
+      },
+      {
+        "level": 5,
+        "name": "Detect Invisible"
+      },
+      {
+        "level": 6,
+        "name": "Detect Evil"
+      },
+      {
+        "level": 7,
+        "name": "Detect Traps"
+      },
+      {
+        "level": 8,
+        "name": "Perceive Power I"
+      },
+      {
+        "level": 10,
+        "name": "Power Typing"
+      }
+    ]
+  },
+  {
+    "id": "A-9.13.8",
+    "name": "Illusions",
+    "page": 191,
+    "spells": [
+      {
+        "level": 1,
+        "name": "Bending"
+      },
+      {
+        "level": 3,
+        "name": "Light/Sound Mirage"
+      },
+      {
+        "level": 5,
+        "name": "Illusion II"
+      },
+      {
+        "level": 6,
+        "name": "Phantasm I"
+      },
+      {
+        "level": 7,
+        "name": "Light Glamour"
+      },
+      {
+        "level": 8,
+        "name": "Illusion III"
+      },
+      {
+        "level": 10,
+        "name": "Waiting Illusion I"
+      }
+    ]
+  },
+  {
+    "id": "A-9.13.9",
+    "name": "Self Healing",
+    "page": 192,
+    "spells": [
+      {
+        "level": 2,
+        "name": "Clot I"
+      },
+      {
+        "level": 4,
+        "name": "Clot III"
+      },
+      {
+        "level": 5,
+        "name": "Pain Relief I"
+      },
+      {
+        "level": 6,
+        "name": "Fracture Repair"
+      },
+      {
+        "level": 7,
+        "name": "Cut Repair I"
+      },
+      {
+        "level": 8,
+        "name": "Muscle/Tendon Repair"
+      },
+      {
+        "level": 10,
+        "name": "Minor Nerve Repair"
+      }
+    ]
+  },
+  {
+    "id": "A-9.13.10",
+    "name": "Spell Resistance",
+    "page": 192,
+    "spells": [
+      {
+        "level": 1,
+        "name": "Protection I"
+      },
+      {
+        "level": 2,
+        "name": "Cancel Mentalism"
+      },
+      {
+        "level": 4,
+        "name": "Cancel Essence"
+      },
+      {
+        "level": 5,
+        "name": "Protection II"
+      },
+      {
+        "level": 6,
+        "name": "Cancel Channeling"
+      },
+      {
+        "level": 8,
+        "name": "Mind Shield"
+      },
+      {
+        "level": 10,
+        "name": "Essence Shield"
+      }
+    ]
+  },
+  {
+    "id": "A-9.14.1",
+    "name": "Gas Manipulation",
+    "page": 193,
+    "spells": [
+      {
+        "level": 1,
+        "name": "Condensation"
+      },
+      {
+        "level": 2,
+        "name": "Warm Air"
+      },
+      {
+        "level": 3,
+        "name": "Fog I"
+      },
+      {
+        "level": 4,
+        "name": "Airwall"
+      },
+      {
+        "level": 5,
+        "name": "Air Stop I"
+      },
+      {
+        "level": 6,
+        "name": "Vacuum I"
+      },
+      {
+        "level": 7,
+        "name": "Fog V"
+      },
+      {
+        "level": 8,
+        "name": "Unfog V"
+      },
+      {
+        "level": 9,
+        "name": "Curved Airwall"
+      },
+      {
+        "level": 10,
+        "name": "Airwall True"
+      }
+    ]
+  },
+  {
+    "id": "A-9.14.2",
+    "name": "Liquid Manipulation",
+    "page": 193,
+    "spells": [
+      {
+        "level": 1,
+        "name": "Boil Water"
+      },
+      {
+        "level": 2,
+        "name": "Freeze Water"
+      },
+      {
+        "level": 3,
+        "name": "Clear Water"
+      },
+      {
+        "level": 5,
+        "name": "Desalination"
+      },
+      {
+        "level": 6,
+        "name": "Waterwall"
+      },
+      {
+        "level": 7,
+        "name": "Evaporation"
+      },
+      {
+        "level": 8,
+        "name": "Water Corridor I"
+      },
+      {
+        "level": 9,
+        "name": "Water Bolt"
+      },
+      {
+        "level": 10,
+        "name": "Curved Waterwall"
+      }
+    ]
+  },
+  {
+    "id": "A-9.14.3",
+    "name": "Mind Mastery",
+    "page": 194,
+    "spells": [
+      {
+        "level": 1,
+        "name": "Storing"
+      },
+      {
+        "level": 2,
+        "name": "Presence"
+      },
+      {
+        "level": 3,
+        "name": "Inner Wall I"
+      },
+      {
+        "level": 5,
+        "name": "Recall"
+      },
+      {
+        "level": 6,
+        "name": "Misfeel Kind"
+      },
+      {
+        "level": 7,
+        "name": "Observation"
+      },
+      {
+        "level": 8,
+        "name": "Inner Wall II"
+      },
+      {
+        "level": 9,
+        "name": "Misfeel Calling"
+      },
+      {
+        "level": 10,
+        "name": "Correlation"
+      }
+    ]
+  },
+  {
+    "id": "A-9.14.4",
+    "name": "Mind’S Door",
+    "page": 194,
+    "spells": [
+      {
+        "level": 2,
+        "name": "Leave Item I"
+      },
+      {
+        "level": 4,
+        "name": "Long Door Item I"
+      },
+      {
+        "level": 5,
+        "name": "Leaving I"
+      },
+      {
+        "level": 6,
+        "name": "Leave Item III"
+      },
+      {
+        "level": 7,
+        "name": "Long Door Item V"
+      },
+      {
+        "level": 8,
+        "name": "Leaving III"
+      },
+      {
+        "level": 9,
+        "name": "Leave Item V"
+      },
+      {
+        "level": 10,
+        "name": "Minor Long Door"
+      }
+    ]
+  },
+  {
+    "id": "A-9.14.5",
+    "name": "Movement",
+    "page": 195,
+    "spells": [
+      {
+        "level": 1,
+        "name": "Leaping"
+      },
+      {
+        "level": 2,
+        "name": "Landing"
+      },
+      {
+        "level": 3,
+        "name": "Levitation I"
+      },
+      {
+        "level": 4,
+        "name": "Wind Drift"
+      },
+      {
+        "level": 5,
+        "name": "Underwater Movement"
+      },
+      {
+        "level": 6,
+        "name": "Fly I"
+      },
+      {
+        "level": 7,
+        "name": "Levitation V"
+      },
+      {
+        "level": 8,
+        "name": "Long Dive"
+      },
+      {
+        "level": 10,
+        "name": "Merging"
+      }
+    ]
+  },
+  {
+    "id": "A-9.14.6",
+    "name": "Sense Mastery",
+    "page": 195,
+    "spells": [
+      {
+        "level": 1,
+        "name": "Sly Ears"
+      },
+      {
+        "level": 2,
+        "name": "Nightvision"
+      },
+      {
+        "level": 3,
+        "name": "Sidevision"
+      },
+      {
+        "level": 4,
+        "name": "Detect Illusion"
+      },
+      {
+        "level": 5,
+        "name": "Watervision"
+      },
+      {
+        "level": 6,
+        "name": "Scent"
+      },
+      {
+        "level": 7,
+        "name": "Fogvision"
+      },
+      {
+        "level": 8,
+        "name": "Touch"
+      },
+      {
+        "level": 9,
+        "name": "Darkvision"
+      },
+      {
+        "level": 10,
+        "name": "Mentalist Ear"
+      }
+    ]
+  },
+  {
+    "id": "A-9.14.7",
+    "name": "Shifting",
+    "page": 196,
+    "spells": [
+      {
+        "level": 1,
+        "name": "Balance"
+      },
+      {
+        "level": 2,
+        "name": "Contraction"
+      },
+      {
+        "level": 3,
+        "name": "Face Shifting"
+      },
+      {
+        "level": 5,
+        "name": "Waterlungs"
+      },
+      {
+        "level": 7,
+        "name": "Change to Kind"
+      },
+      {
+        "level": 8,
+        "name": "Gaslungs"
+      },
+      {
+        "level": 10,
+        "name": "Greater Face Shifting"
+      }
+    ]
+  },
+  {
+    "id": "A-9.14.8",
+    "name": "Solid Manipulation",
+    "page": 196,
+    "spells": [
+      {
+        "level": 1,
+        "name": "Warm Stone"
+      },
+      {
+        "level": 2,
+        "name": "Warm Metal"
+      },
+      {
+        "level": 3,
+        "name": "Warm Solid"
+      },
+      {
+        "level": 4,
+        "name": "Heat Stone"
+      },
+      {
+        "level": 5,
+        "name": "Heat Metal"
+      },
+      {
+        "level": 6,
+        "name": "Heat Solid"
+      },
+      {
+        "level": 7,
+        "name": "Cool Solid"
+      },
+      {
+        "level": 9,
+        "name": "Chill Solid"
+      },
+      {
+        "level": 10,
+        "name": "Cracks Call"
+      }
+    ]
+  },
+  {
+    "id": "A-9.14.9",
+    "name": "Speed",
+    "page": 197,
+    "spells": [
+      {
+        "level": 1,
+        "name": "Run"
+      },
+      {
+        "level": 2,
+        "name": "Speed Reading"
+      },
+      {
+        "level": 3,
+        "name": "Speed I"
+      },
+      {
+        "level": 5,
+        "name": "Speed II"
+      },
+      {
+        "level": 6,
+        "name": "Haste I"
+      },
+      {
+        "level": 7,
+        "name": "Speed III"
+      },
+      {
+        "level": 8,
+        "name": "Sprint"
+      },
+      {
+        "level": 9,
+        "name": "Haste II"
+      },
+      {
+        "level": 10,
+        "name": "Fast Swim"
+      }
+    ]
+  },
+  {
+    "id": "A-9.14.10",
+    "name": "Telekinesis",
+    "page": 197,
+    "spells": [
+      {
+        "level": 1,
+        "name": "Telekinesis I"
+      },
+      {
+        "level": 2,
+        "name": "Staying II"
+      },
+      {
+        "level": 3,
+        "name": "Telekinesis II"
+      },
+      {
+        "level": 4,
+        "name": "Staying III"
+      },
+      {
+        "level": 5,
+        "name": "Greater Staying II"
+      },
+      {
+        "level": 6,
+        "name": "Greater Telekinesis II"
+      },
+      {
+        "level": 7,
+        "name": "Telekinesis III"
+      },
+      {
+        "level": 8,
+        "name": "Staying IV"
+      },
+      {
+        "level": 9,
+        "name": "Telekinesis IV"
+      },
+      {
+        "level": 10,
+        "name": "Hurling I"
+      }
+    ]
+  },
+  {
+    "id": "A-9.15.1",
+    "name": "Mind Attack",
+    "page": 198,
+    "spells": [
+      {
+        "level": 1,
+        "name": "Jolts I"
+      },
+      {
+        "level": 2,
+        "name": "Hesitation"
+      },
+      {
+        "level": 3,
+        "name": "Minor Pain"
+      },
+      {
+        "level": 4,
+        "name": "Shock A"
+      },
+      {
+        "level": 5,
+        "name": "Jolts III"
+      },
+      {
+        "level": 7,
+        "name": "Paralyze I"
+      },
+      {
+        "level": 8,
+        "name": "Shock B"
+      },
+      {
+        "level": 9,
+        "name": "Major Pain"
+      },
+      {
+        "level": 10,
+        "name": "Mind Shout I"
+      }
+    ]
+  },
+  {
+    "id": "A-9.15.2",
+    "name": "Mind Control",
+    "page": 198,
+    "spells": [
+      {
+        "level": 1,
+        "name": "Question"
+      },
+      {
+        "level": 2,
+        "name": "Sleep"
+      },
+      {
+        "level": 3,
+        "name": "Charm Kind"
+      },
+      {
+        "level": 4,
+        "name": "Calm"
+      },
+      {
+        "level": 5,
+        "name": "Confusion"
+      },
+      {
+        "level": 6,
+        "name": "Fear"
+      },
+      {
+        "level": 7,
+        "name": "Suggestion"
+      },
+      {
+        "level": 8,
+        "name": "Hold Kind"
+      },
+      {
+        "level": 9,
+        "name": "Emotions"
+      },
+      {
+        "level": 10,
+        "name": "Master of Kind"
+      }
+    ]
+  },
+  {
+    "id": "A-9.15.3",
+    "name": "Mind Merge",
+    "page": 199,
+    "spells": [
+      {
+        "level": 1,
+        "name": "Empathy"
+      },
+      {
+        "level": 2,
+        "name": "Read Emotions"
+      },
+      {
+        "level": 3,
+        "name": "Merge With Mentalist"
+      },
+      {
+        "level": 4,
+        "name": "Focus Merge"
+      },
+      {
+        "level": 5,
+        "name": "Thoughts"
+      },
+      {
+        "level": 6,
+        "name": "Mind Merge I"
+      },
+      {
+        "level": 7,
+        "name": "Prepare Merge"
+      },
+      {
+        "level": 8,
+        "name": "Mind Merge II"
+      },
+      {
+        "level": 10,
+        "name": "Inner Thoughts"
+      }
+    ]
+  },
+  {
+    "id": "A-9.15.4",
+    "name": "Mind Speech",
+    "page": 199,
+    "spells": [
+      {
+        "level": 1,
+        "name": "Mentalist Tongue"
+      },
+      {
+        "level": 2,
+        "name": "Prepare Mind I"
+      },
+      {
+        "level": 3,
+        "name": "Mind Tongue I"
+      },
+      {
+        "level": 4,
+        "name": "Focus Mind"
+      },
+      {
+        "level": 5,
+        "name": "Prepare Mind II"
+      },
+      {
+        "level": 6,
+        "name": "Mind Tongue II"
+      },
+      {
+        "level": 8,
+        "name": "Prepare Mind III"
+      },
+      {
+        "level": 9,
+        "name": "Mind Speech I"
+      },
+      {
+        "level": 10,
+        "name": "Mind Tongue III"
+      }
+    ]
+  },
+  {
+    "id": "A-9.15.5",
+    "name": "Presence",
+    "page": 200,
+    "spells": [
+      {
+        "level": 1,
+        "name": "Presence"
+      },
+      {
+        "level": 2,
+        "name": "Feel I"
+      },
+      {
+        "level": 3,
+        "name": "Mind Store"
+      },
+      {
+        "level": 4,
+        "name": "Transfer Mind Store"
+      },
+      {
+        "level": 5,
+        "name": "Feel III"
+      },
+      {
+        "level": 6,
+        "name": "Mind Typing"
+      },
+      {
+        "level": 7,
+        "name": "Finding I"
+      },
+      {
+        "level": 8,
+        "name": "Direction I"
+      },
+      {
+        "level": 9,
+        "name": "Presence True"
+      },
+      {
+        "level": 10,
+        "name": "Awareness"
+      }
+    ]
+  },
+  {
+    "id": "A-9.15.6",
+    "name": "Sense Control",
+    "page": 200,
+    "spells": [
+      {
+        "level": 1,
+        "name": "Distraction"
+      },
+      {
+        "level": 2,
+        "name": "Numbing"
+      },
+      {
+        "level": 3,
+        "name": "Blur Vision"
+      },
+      {
+        "level": 4,
+        "name": "Minor Sense Control"
+      },
+      {
+        "level": 5,
+        "name": "Audio Attack"
+      },
+      {
+        "level": 6,
+        "name": "Audio Control"
+      },
+      {
+        "level": 7,
+        "name": "Fumble"
+      },
+      {
+        "level": 8,
+        "name": "Vision Control"
+      },
+      {
+        "level": 9,
+        "name": "Vision Attack"
+      },
+      {
+        "level": 10,
+        "name": "Nerve Stun"
+      }
+    ]
+  },
+  {
+    "id": "A-9.16.1",
+    "name": "Controlling Songs",
+    "page": 201,
+    "spells": [
+      {
+        "level": 1,
+        "name": "Calm Song"
+      },
+      {
+        "level": 2,
+        "name": "Holding Song"
+      },
+      {
+        "level": 3,
+        "name": "Stun Song"
+      },
+      {
+        "level": 5,
+        "name": "Sleep Song"
+      },
+      {
+        "level": 6,
+        "name": "Charm Song"
+      },
+      {
+        "level": 7,
+        "name": "Fear’s Song"
+      },
+      {
+        "level": 8,
+        "name": "Calm Song True"
+      },
+      {
+        "level": 9,
+        "name": "Stun Song True"
+      },
+      {
+        "level": 10,
+        "name": "Forgetting Song"
+      }
+    ]
+  },
+  {
+    "id": "A-9.16.2",
+    "name": "Entertaining Ways",
+    "page": 201,
+    "spells": [
+      {
+        "level": 1,
+        "name": "Spotlight"
+      },
+      {
+        "level": 2,
+        "name": "Dim Lights"
+      },
+      {
+        "level": 3,
+        "name": "Hush"
+      },
+      {
+        "level": 4,
+        "name": "Fanfare"
+      },
+      {
+        "level": 5,
+        "name": "Showman I"
+      },
+      {
+        "level": 6,
+        "name": "Legerdemain"
+      },
+      {
+        "level": 7,
+        "name": "Enthrall I"
+      },
+      {
+        "level": 8,
+        "name": "Hidden Pocket"
+      },
+      {
+        "level": 9,
+        "name": "Lightshow"
+      },
+      {
+        "level": 10,
+        "name": "Showman II"
+      }
+    ]
+  },
+  {
+    "id": "A-9.16.3",
+    "name": "Item Lore",
+    "page": 202,
+    "spells": [
+      {
+        "level": 1,
+        "name": "Jewel/Metal Assessment"
+      },
+      {
+        "level": 2,
+        "name": "Item Assessment"
+      },
+      {
+        "level": 3,
+        "name": "Detect Power"
+      },
+      {
+        "level": 4,
+        "name": "Item Analysis I"
+      },
+      {
+        "level": 5,
+        "name": "Assessment True"
+      },
+      {
+        "level": 6,
+        "name": "Significance"
+      },
+      {
+        "level": 7,
+        "name": "Item Analysis II"
+      },
+      {
+        "level": 8,
+        "name": "Origins"
+      },
+      {
+        "level": 9,
+        "name": "Item Vision"
+      },
+      {
+        "level": 10,
+        "name": "Item Analysis III"
+      }
+    ]
+  },
+  {
+    "id": "A-9.16.4",
+    "name": "Lores",
+    "page": 202,
+    "spells": [
+      {
+        "level": 1,
+        "name": "Recall"
+      },
+      {
+        "level": 2,
+        "name": "Learn Language II"
+      },
+      {
+        "level": 3,
+        "name": "Language Lore"
+      },
+      {
+        "level": 4,
+        "name": "Mind’s Lore I"
+      },
+      {
+        "level": 5,
+        "name": "Study II"
+      },
+      {
+        "level": 7,
+        "name": "Learn Language III"
+      },
+      {
+        "level": 8,
+        "name": "Mind’s Lore III"
+      },
+      {
+        "level": 10,
+        "name": "Study III"
+      }
+    ]
+  },
+  {
+    "id": "A-9.16.5",
+    "name": "Sound Control",
+    "page": 203,
+    "spells": [
+      {
+        "level": 1,
+        "name": "Quiet I"
+      },
+      {
+        "level": 2,
+        "name": "Sonic Law I"
+      },
+      {
+        "level": 4,
+        "name": "Silence I"
+      },
+      {
+        "level": 5,
+        "name": "Sonic Law II"
+      },
+      {
+        "level": 6,
+        "name": "Sudden Sound"
+      },
+      {
+        "level": 7,
+        "name": "Deafen"
+      },
+      {
+        "level": 8,
+        "name": "Cracks"
+      },
+      {
+        "level": 10,
+        "name": "Silence III"
+      }
+    ]
+  },
+  {
+    "id": "A-9.16.6",
+    "name": "Sound Projection",
+    "page": 203,
+    "spells": [
+      {
+        "level": 1,
+        "name": "Long Whisper I"
+      },
+      {
+        "level": 2,
+        "name": "Sounding II"
+      },
+      {
+        "level": 3,
+        "name": "Song Sounding II"
+      },
+      {
+        "level": 4,
+        "name": "Song II"
+      },
+      {
+        "level": 5,
+        "name": "Long Whisper III"
+      },
+      {
+        "level": 6,
+        "name": "Sounding V"
+      },
+      {
+        "level": 7,
+        "name": "Great Song I"
+      },
+      {
+        "level": 8,
+        "name": "Song Sounding III"
+      },
+      {
+        "level": 9,
+        "name": "Long Whisper V"
+      },
+      {
+        "level": 10,
+        "name": "Song III"
+      }
+    ]
+  }
+]

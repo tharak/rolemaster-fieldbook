@@ -90,7 +90,7 @@ function finish(fight, checkLimit = true) {
   }
 }
 
-function resolveCritical(target,attacker,attack,severity,tables,d100,round) {
+export function resolveCritical(target,attacker,attack,severity,tables,d100,round,{allies}={}) {
   let code = attack.criticalTable||attackTypes[attack.type][2], column = severity.charCodeAt(0) - 65;
   const large = target.creature.size === 'L*', huge = target.creature.size === 'H*';
   if (!code || large && severity === 'A' || huge && severity <= 'C') return {ignored:true,severity};
@@ -111,6 +111,7 @@ function resolveCritical(target,attacker,attack,severity,tables,d100,round) {
   const recoils=[];
   const manualEffects=[];
   for (const effect of parseCriticalSymbols(selected.effect,selected.description)) {
+    if(effect.kind==='allyBonus'&&allies){for(const ally of allies)ally.effects.push({kind:'bonus',amount:effect.amount,roundsLeft:effect.roundsLeft,starts:round+1});continue;}
     if(effect.kind==='allyBonus'){manualEffects.push(`All allies gain +${effect.amount} for ${effect.roundsLeft} round(s); GM-managed because arena allies are not simulated.`);continue;}
     if(effect.kind==='recoil'){recoils.push(effect.feet);continue;}
     if(effect.kind==='dies'){applyCriticalDeath(target,target.creature.hits,round,effect.roundsLeft);continue;}
