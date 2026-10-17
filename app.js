@@ -1,3 +1,4 @@
+import {createSkillCatalog, skillNames} from './skill-catalog.js';
 import {hitRecovery} from './healing-rules.js';
 import {readCampaign,skillAllowed,weaponAllowed,fixedSkillBonus} from './campaign-rules.js';
 import {equipmentIcon} from './equipment-art.js';
@@ -9,7 +10,7 @@ import {
   adolescenceRaces, adolescenceCategoryRanks, adolescenceSkillRanks, raceStartingLanguages,
   raceAdolescenceLanguages, backgroundChoices, backgroundExtraLanguages, backgroundMoney,
   backgroundItems, raceBackgroundNotes, armorTypes, armorSkillTypes,
-  raceWeaponChoices, openSpellLists, resistanceTypes,
+  raceWeaponChoices, resistanceTypes,
   coinUnits
 } from './app-data.js';
 import {createTableBrowser} from './table-browser.js';
@@ -28,6 +29,7 @@ import {isRecord, equipmentLedger} from './character-record.js';
 
 (() => {
   const STORAGE_KEY = 'rolemaster-fieldbook-characters-v1';
+  let skillCatalog = createSkillCatalog();
   let developmentRules = null;
   let trainingPackages = [];
   let equipmentCatalog = [];
@@ -167,7 +169,11 @@ import {isRecord, equipmentLedger} from './character-record.js';
     const bonuses = professionSkillBonuses[form.elements.profession.value] || {};
     return bonuses[category] ?? bonuses[categoryGroup(category)] ?? 0;
   }
-  function catalogNames(category) { return (a4Skills[category] || '').split('|').filter(Boolean); }
+  function refreshCatalogSelect(prefix) {
+    const category = $(`#${prefix === 'background' ? 'background-skill' : prefix}-category-options input:checked`)?.value;
+    $(`#${prefix}-skill-name`).innerHTML = '<option value="">Choose a skill</option>' + catalogNames(category).map(name => `<option value="${esc(name)}">${esc(name)}</option>`).join('');
+  }
+  function catalogNames(category) { return skillNames(skillCatalog, category, {realm:form.elements.realm.value, profession:form.elements.profession.value}).filter(name => skillAllowed(category, name)); }
   function favoriteSkillKey(category, name) { return JSON.stringify([category, name]); }
   function readFavoriteSkills() {
     try {
@@ -176,12 +182,8 @@ import {isRecord, equipmentLedger} from './character-record.js';
     } catch { return new Set(); }
   }
   function a4SkillRow(category, name, skill = {}, extra = false, favorites = readFavoriteSkills()) {
-    if (!extra && name.endsWith('*')) {
-      const label = name.slice(0, -1);
-      return `<div class="a4-skill-row a4-template is-zero-rank" data-category="${esc(category)}"><strong>${esc(label)} <small>each instance separately</small></strong><span class="a4-template-note">Specific skills appear when chosen</span></div>`;
-    }
     const favorite = favorites.has(favoriteSkillKey(category, name));
-    return `<div class="a4-skill-row${extra ? ' a4-extra' : ''}" data-category="${esc(category)}" data-skill="${esc(name)}"><div class="a4-skill-title"><button type="button" class="favorite-skill" aria-label="${favorite ? 'Remove' : 'Add'} ${esc(name)} ${favorite ? 'from' : 'to'} favorites" aria-pressed="${favorite}" title="${favorite ? 'Remove from favorites' : 'Add to favorites'}">${favorite ? '★' : '☆'}</button><strong>${esc(name)}</strong></div><output class="a4-total">—</output><output class="a4-start-text">0</output><input name="a4-start" type="hidden" value="${esc(skill.start ?? skill.ranks ?? 0)}"><select name="a4-buy" hidden></select><output class="a4-rank">—</output><output class="a4-category">—</output><output class="a4-item-text">0</output><input name="a4-item" type="hidden" value="${esc(skill.item ?? 0)}"><output class="a4-special-text">0</output><input name="a4-special" type="hidden" value="${esc(skill.special ?? 0)}"></div>`;
+    return `<div class="a4-skill-row${extra ? ' a4-extra' : ''}" data-category="${esc(category)}" data-skill="${esc(name)}"><div class="a4-skill-title"><button type="button" class="favorite-skill" aria-label="${favorite ? 'Remove' : 'Add'} ${esc(name)} ${favorite ? 'from' : 'to'} favorites" aria-pressed="${favorite}" title="${favorite ? 'Remove from favorites' : 'Add to favorites'}">${favorite ? '★' : '☆'}</button><strong>${esc(name)}</strong>${extra ? `<button type="button" class="replace-skill" aria-label="Replace ${esc(name)} with a catalog skill">Choose skill</button>` : ''}</div><output class="a4-total">—</output><output class="a4-start-text">0</output><input name="a4-start" type="hidden" value="${esc(skill.start ?? skill.ranks ?? 0)}"><select name="a4-buy" hidden></select><output class="a4-rank">—</output><output class="a4-category">—</output><output class="a4-item-text">0</output><input name="a4-item" type="hidden" value="${esc(skill.item ?? 0)}"><output class="a4-special-text">0</output><input name="a4-special" type="hidden" value="${esc(skill.special ?? 0)}"></div>`;
   }
   function updateA4Visibility() {
     const hideSkills = $('#hide-zero-skills').checked;
@@ -294,7 +296,7 @@ import {isRecord, equipmentLedger} from './character-record.js';
     branch.innerHTML = `<div class="category-row"><strong>${esc(group ? category.slice(group.length + 3) : category)} <small>Category</small></strong><output class="category-row-summary"></output><button type="button" class="add-category-skill" aria-label="Add skill to ${esc(category)}">＋ Skill</button><button type="button" class="remove-category" aria-label="Remove ${esc(category)} category">×</button></div><div class="bonus-breakdown category-bonus"></div><div class="category-skills"></div>`;
     parent.append(branch);
     const row = $('.category-row', branch); row.dataset.category = category;
-    $('.add-category-skill', row).addEventListener('click', () => { const skill = skillRow({category}); $('[name="skill-name"]', skill).focus(); updateDevelopment(); saveCurrent(); });
+    $('.add-category-skill', row).addEventListener('click', () => { const skill = skillRow({category}); openSkillChoice(skill); updateDevelopment(); saveCurrent(); });
     $('.remove-category', row).addEventListener('click', () => {
       if ($('.skill-row', branch)) return;
       const record = $$('.category-record-row').find(item => item.dataset.category === category);
@@ -324,8 +326,7 @@ import {isRecord, equipmentLedger} from './character-record.js';
     if (skill.backgroundSpecialBase) row.dataset.backgroundSpecialBase = skill.backgroundSpecialBase;
     if (skill.backgroundItemBase) row.dataset.backgroundItemBase = skill.backgroundItemBase;
     if (skill.skillClass) row.dataset.skillClass = skill.skillClass;
-    const choice = skill.raceGrant?.startsWith('weapon:') || skill.raceGrant === 'race:open-spell-list';
-    row.innerHTML = `<div class="rank-title"><label>Skill<input ${choice ? 'type="hidden"' : 'type="text"'} aria-label="Skill name" name="skill-name" maxlength="60" placeholder="Skill name" value="${esc(skill.name || '')}"></label>${choice ? `<button type="button" class="choose-skill" aria-haspopup="dialog">${esc(skill.name || 'Choose skill')} ▾</button>` : ''}<button type="button" class="change-skill-category" aria-label="Change category for ${esc(skill.name || 'skill')}">${esc(category)}</button></div><label>Before<input aria-label="Ranks before this level" name="skill-start" type="number" min="0" max="99" value="${esc(skill.start ?? skill.ranks ?? 0)}"></label><label>Buy<select aria-label="Ranks purchased this level" name="skill-buy"></select></label><label>Item<input aria-label="Item bonus" name="skill-item" type="number" value="${esc(skill.item ?? 0)}"></label><label>Special<input aria-label="Skill special bonus" name="skill-special" type="number" value="${esc(skill.special ?? 0)}"></label><output class="rank-cost"></output><button type="button" class="remove-skill" aria-label="Remove skill">×</button><div class="bonus-breakdown skill-bonus"></div>`;
+    row.innerHTML = `<div class="rank-title"><label>Skill<input type="hidden" aria-label="Skill name" name="skill-name" maxlength="60" placeholder="Skill name" value="${esc(skill.name || '')}"></label><button type="button" class="choose-skill" aria-haspopup="dialog">${esc(skill.name || 'Choose skill')} ▾</button><button type="button" class="change-skill-category" aria-label="Change category for ${esc(skill.name || 'skill')}">${esc(category)}</button></div><label>Before<input aria-label="Ranks before this level" name="skill-start" type="number" min="0" max="99" value="${esc(skill.start ?? skill.ranks ?? 0)}"></label><label>Buy<select aria-label="Ranks purchased this level" name="skill-buy"></select></label><label>Item<input aria-label="Item bonus" name="skill-item" type="number" value="${esc(skill.item ?? 0)}"></label><label>Special<input aria-label="Skill special bonus" name="skill-special" type="number" value="${esc(skill.special ?? 0)}"></label><output class="rank-cost"></output><button type="button" class="remove-skill" aria-label="Remove skill">×</button><div class="bonus-breakdown skill-bonus"></div>`;
     $('.category-skills', parent).append(row);
     if (!developmentRules && skill.buy) row.dataset.pendingBuy = skill.buy;
     updateSkillBuyOptions(row, Number(skill.buy) || 0);
@@ -335,7 +336,7 @@ import {isRecord, equipmentLedger} from './character-record.js';
       row.remove(); updateDevelopment(); saveCurrent();
     });
     $('.change-skill-category', row).addEventListener('click', () => openSkillCategoryPicker(row));
-    if (choice) attachSkillChoice(row);
+    attachSkillChoice(row);
     return row;
   }
   function attachSkillChoice(row) {
@@ -352,8 +353,8 @@ import {isRecord, equipmentLedger} from './character-record.js';
   }
   function skillChoices(row) {
     return (row.dataset.raceGrant === 'race:open-spell-list'
-      ? openSpellLists[form.elements.realm.value] || []
-      : raceWeaponChoices[form.elements.race.value]?.[row.dataset.raceGrant.slice('weapon:'.length)] || []).filter(name=>skillAllowed(row.dataset.category,name));
+      ? catalogNames('Spells • Own Realm Open Lists')
+      : row.dataset.raceGrant?.startsWith('weapon:') ? raceWeaponChoices[form.elements.race.value]?.[row.dataset.raceGrant.slice('weapon:'.length)] || [] : catalogNames(row.dataset.category)).filter(name=>skillAllowed(row.dataset.category,name));
   }
   function detachChoiceExtras(row) {
     const name = $('[name="skill-name"]', row).value;
@@ -376,7 +377,7 @@ import {isRecord, equipmentLedger} from './character-record.js';
   function validateSkillChoices() {
     $$('.skill-row[data-race-grant]', $('#skills-list')).forEach(row => {
       const button = $('.choose-skill', row);
-      if (!button) return;
+      if (!button || !(row.dataset.raceGrant?.startsWith('weapon:') || row.dataset.raceGrant === 'race:open-spell-list')) return;
       const field = $('[name="skill-name"]', row);
       if (!skillChoices(row).includes(field.value)) {
         detachChoiceExtras(row);
@@ -387,17 +388,25 @@ import {isRecord, equipmentLedger} from './character-record.js';
   }
   function openSkillChoice(row) {
     skillChoiceTarget = row;
-    const choices = skillChoices(row);
+    const choices = skillChoices(row).filter(name => { const existing = findSkillRow(row.dataset.category, name); return !existing || existing === row || row.dataset.raceGrant?.startsWith('weapon:') || row.dataset.raceGrant === 'race:open-spell-list'; });
     const spell = row.dataset.raceGrant === 'race:open-spell-list';
-    $('#skill-choice-title').textContent = spell ? 'Choose an open spell list' : 'Choose a racial weapon';
+    $('#skill-choice-title').textContent = spell ? 'Choose an open spell list' : row.dataset.raceGrant?.startsWith('weapon:') ? 'Choose a racial weapon' : 'Choose a skill';
     $('#skill-choice-subtitle').textContent = spell ? `${form.elements.realm.value} open lists` : `${form.elements.race.value} · ${row.dataset.category}`;
     $('#skill-choice-list').innerHTML = choices.length
       ? choices.map(name => `<button type="button" data-choice="${esc(name)}" aria-pressed="${name === $('[name="skill-name"]', row).value}">${esc(name)}</button>`).join('')
-      : '<p>Choose a realm of power in Character first.</p>';
+      : '<p>No core-book choices are available for this category and character.</p>';
+    $('#skill-choice-search').value = '';
     $('#skill-choice-dialog').showModal();
   }
   function assignSkillChoice(row, name) {
-    if ($('[name="skill-name"]', row).value !== name) detachChoiceExtras(row);
+    if (!skillChoices(row).includes(name)) return;
+    const oldName = $('[name="skill-name"]', row).value;
+    const favorites = readFavoriteSkills();
+    if (favorites.delete(favoriteSkillKey(row.dataset.category, oldName))) {
+      favorites.add(favoriteSkillKey(row.dataset.category, name));
+      form.elements.favoriteSkills.value = JSON.stringify([...favorites]);
+    }
+    if ((row.dataset.raceGrant?.startsWith('weapon:') || row.dataset.raceGrant === 'race:open-spell-list') && $('[name="skill-name"]', row).value !== name) detachChoiceExtras(row);
     const existing = findSkillRow(row.dataset.category, name);
     if (existing && existing !== row) {
       for (const fieldName of ['skill-start','skill-item','skill-special']) {
@@ -486,7 +495,7 @@ import {isRecord, equipmentLedger} from './character-record.js';
       if (allowAll ? !categoryCosts(category) : !hobbyRankLimit(category) && !Number(findSkillRow(category, name)?.dataset.hobbySpent)) return;
       options.set(`${category}:${name}`, {category, name});
     };
-    Object.entries(a4Skills).forEach(([category, names]) => names.split('|').filter(name => name && !name.endsWith('*')).forEach(name => add(category, name)));
+    Object.keys(a4Skills).forEach(category => catalogNames(category).forEach(name => add(category, name)));
     $$('.skill-row', $('#skills-list')).forEach(row => add(row.dataset.category, $('[name="skill-name"]', row).value));
     Object.entries(raceWeaponChoices[form.elements.race.value] || {}).forEach(([category, names]) => names.forEach(name => add(category, name)));
     (raceAdolescenceLanguages[form.elements.race.value] || []).forEach(([name]) => { add('Communications', `${name} (spoken)`); add('Communications', `${name} (written)`); });
@@ -807,13 +816,12 @@ import {isRecord, equipmentLedger} from './character-record.js';
     return source;
   }
   function packageSkillOptions(category, languageOnly = false) {
-    const names = new Set((a4Skills[category] || '').split('|').filter(name => name && !name.endsWith('*')));
+    const names = new Set(catalogNames(category));
     $$('.skill-row', $('#skills-list')).filter(row => row.dataset.category === category).forEach(row => {
       const name = $('[name="skill-name"]', row).value;
       if (name && !name.startsWith('Choose ')) names.add(name);
     });
     (raceWeaponChoices[form.elements.race.value]?.[category] || []).forEach(name => names.add(name));
-    if (category === 'Spells • Own Realm Open Lists') (openSpellLists[form.elements.realm.value] || []).forEach(name => names.add(name));
     if (languageOnly) return [...names].filter(name => /\((spoken|written)\)$/.test(name)).sort();
     return [...names].sort();
   }
@@ -1063,9 +1071,9 @@ import {isRecord, equipmentLedger} from './character-record.js';
   function backgroundMoneyAmount(roll) { return backgroundMoney.find(([maximum]) => Number(roll) <= maximum)?.[1] || 0; }
   function backgroundSkillCandidates(allowAll = false) {
     const results = new Map();
-    Object.entries(a4Skills).forEach(([category, names]) => {
+    Object.keys(a4Skills).forEach(category => {
       if (!allowAll && !['standard','combined'].includes(skillCategoryRules[category]?.[1] || 'standard')) return;
-      names.split('|').filter(name => name && !name.endsWith('*')).forEach(name => results.set(`${category}:${name}`, {category, name}));
+      catalogNames(category).forEach(name => results.set(`${category}:${name}`, {category, name}));
     });
     $$('.skill-row', $('#skills-list')).forEach(row => {
       const category = row.dataset.category;
@@ -1277,6 +1285,7 @@ import {isRecord, equipmentLedger} from './character-record.js';
     $('#background-picker-list').innerHTML = backgroundChoices.map(([key, label, cost, detail]) => `<label class="background-choice"><span><strong>${esc(label)}</strong><small>${esc(detail)}</small></span><b>${cost} ${cost === 1 ? 'option' : 'options'} each</b><input type="number" inputmode="numeric" min="0" max="99" value="${Math.max(0, Number(selections[key]) || 0)}" data-background-choice="${key}" data-cost="${cost}" aria-label="${esc(label)} count"></label>`).join('');
     $('#background-picker-notes').value = form.elements.backgroundOptions.value;
     $('#background-skill-category-options').innerHTML = Object.keys(skillCategoryRules).map((category, index) => `<label class="choice-tile"><input type="radio" name="backgroundSkillCategory" value="${esc(category)}"${index === 0 ? ' checked' : ''}><span>${esc(category)}</span></label>`).join('');
+    refreshCatalogSelect('background');
     renderBackgroundOptionDetails();
     updateBackgroundLimits(); updateBackgroundPickerBudget();
   }
@@ -1925,8 +1934,9 @@ import {isRecord, equipmentLedger} from './character-record.js';
   }
   async function loadReferenceData() {
     try {
-      const [tableResponse, costResponse, packageResponse, equipmentResponse] = await Promise.all([fetch('tables/index.json'), fetch('tables/T-2.8.json'), fetch('tables/apprenticeship-packages.json'), fetch('tables/A-7-equipment.json')]);
-      if (!tableResponse.ok || !costResponse.ok || !packageResponse.ok) throw new Error('Reference files could not be loaded');
+      const [tableResponse, costResponse, packageResponse, equipmentResponse, spellResponse] = await Promise.all([fetch('tables/index.json'), fetch('tables/T-2.8.json'), fetch('tables/apprenticeship-packages.json'), fetch('tables/A-7-equipment.json'), fetch('data/guild/spell-lists.json')]);
+      if (!tableResponse.ok || !costResponse.ok || !packageResponse.ok || !spellResponse.ok) throw new Error('Reference files could not be loaded');
+      skillCatalog = createSkillCatalog(await spellResponse.json());
       tableBrowser.setTables(await tableResponse.json());
       developmentRules = await costResponse.json();
       trainingPackages = await packageResponse.json();
@@ -2052,11 +2062,17 @@ import {isRecord, equipmentLedger} from './character-record.js';
       updateSkillBuyOptions(skillCategoryPickerTarget);
     } else {
       const row = skillRow({category});
-      $('[name="skill-name"]', row).focus();
+      openSkillChoice(row);
     }
     $('#skill-category-picker').hidden = true;
     skillCategoryPickerTarget = null;
     updateDevelopment(); saveCurrent();
+  });
+  $('#apprenticeship-category-options').addEventListener('change', () => refreshCatalogSelect('apprenticeship'));
+  $('#background-skill-category-options').addEventListener('change', () => refreshCatalogSelect('background'));
+  $('#skill-choice-search').addEventListener('input', event => {
+    const term = event.target.value.trim().toLowerCase();
+    $$('#skill-choice-list button[data-choice]').forEach(button => { button.hidden = !button.dataset.choice.toLowerCase().includes(term); });
   });
   $('#skill-choice-list').addEventListener('click', event => {
     const button = event.target.closest('button[data-choice]');
@@ -2080,6 +2096,13 @@ import {isRecord, equipmentLedger} from './character-record.js';
   $('#hide-zero-groups').addEventListener('change', updateA4Visibility);
   $('#hide-non-favorites').addEventListener('change', updateA4Visibility);
   $('#category-record-list').addEventListener('click', event => {
+    const replacement = event.target.closest('.replace-skill');
+    if (replacement) {
+      const record = replacement.closest('.a4-skill-row');
+      const skill = findSkillRow(record.dataset.category, record.dataset.skill);
+      if (skill) openSkillChoice(skill);
+      return;
+    }
     const button = event.target.closest('.favorite-skill');
     if (!button) return;
     const row = button.closest('.a4-skill-row');
@@ -2105,6 +2128,7 @@ import {isRecord, equipmentLedger} from './character-record.js';
     $('#apprenticeship-search').value = '';
     $('#apprenticeship-add-message').textContent = '';
     $('#apprenticeship-category-options').innerHTML = Object.keys(skillCategoryRules).map((category, index) => `<label class="choice-tile"><input type="radio" name="apprenticeshipCategory" value="${esc(category)}"${index === 0 ? ' checked' : ''}><span>${esc(category)}</span></label>`).join('');
+    refreshCatalogSelect('apprenticeship');
     renderApprenticeshipPicker();
     $('#apprenticeship-picker').showModal();
     renderApprenticeshipStatGains();
@@ -2292,8 +2316,8 @@ import {isRecord, equipmentLedger} from './character-record.js';
   $('#apprenticeship-add-skill').addEventListener('click', () => {
     const category = $('#apprenticeship-category-options input:checked')?.value;
     const name = $('#apprenticeship-skill-name').value.trim();
-    if (!category || !name || name.startsWith('Choose ')) {
-      $('#apprenticeship-add-message').textContent = 'Choose a category and enter a skill name.';
+    if (!category || !catalogNames(category).includes(name)) {
+      $('#apprenticeship-add-message').textContent = 'Choose a category and a listed skill.';
       return;
     }
     if (!categoryCosts(category)) {
@@ -2329,8 +2353,8 @@ import {isRecord, equipmentLedger} from './character-record.js';
   $('#background-add-skill').addEventListener('click', () => {
     const category = $('#background-skill-category-options input:checked')?.value;
     const name = $('#background-skill-name').value.trim();
-    if (!category || !name || name.startsWith('Choose ')) {
-      $('#background-option-message').textContent = 'Choose a category and enter a skill name.';
+    if (!category || !catalogNames(category).includes(name)) {
+      $('#background-option-message').textContent = 'Choose a category and a listed skill.';
       return;
     }
     if (!findSkillRow(category, name)) skillRow({category, name});
@@ -2486,7 +2510,10 @@ import {isRecord, equipmentLedger} from './character-record.js';
       setPotentialStats(fixedPotential, 'fixed');
     }
     if (event.target.name === 'realm' && realmByProfession[form.elements.profession.value] !== 'Choose at table') form.elements.realm.value = realmByProfession[form.elements.profession.value];
-    if (event.target.name === 'profession' || event.target.name === 'realm') validateSkillChoices();
+    if (event.target.name === 'profession' || event.target.name === 'realm') {
+      // Keep developed choices when changing context; only refresh the offered catalog.
+      renderCategoryRecord(formData());
+    }
     updateDevelopment();
     saveCurrent();
   });

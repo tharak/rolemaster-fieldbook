@@ -14,6 +14,24 @@ For browser checks, serve the site locally, open it with Playwright CLI, and run
 
 Run `playwright-cli run-code --filename tests/coliseum-browser-smoke.js` for creature search, failed-loading recovery, stepping, pause/resume, full fights, choice persistence, and mobile layout checks.
 
+## Specific skill choices
+
+The character sheet, development, training packages, and background bonuses share
+`skill-catalog.js`. New skills use fixed choices from Core Rules A-1, A-4, and the
+A-7 Weapon Chart. Unspecified “other” specializations are omitted. All 96 core
+spell lists reuse `data/guild/spell-lists.json`, filtered to own-realm open/closed
+lists and own-profession base lists. Category costs and rank progressions remain
+in the existing rules engine.
+
+Saved custom skills remain available. Saved names outside the current catalog
+have a **Choose skill** button for explicit replacement, retaining their ranks
+and bonuses. Realm/profession changes refresh catalog choices without deleting
+previously developed skills.
+
+Run `playwright-cli run-code --filename tests/skill-catalog-browser-smoke.js` to
+check catalog selection, spell visibility, search, favorites, and legacy saves
+in an isolated browser context.
+
 ## JavaScript layout
 
 The browser loads `browser-startup.js`, awaits the Rust/WebAssembly rank engine (or an explicitly labeled JavaScript fallback), then loads `encounter.js` and `coliseum.js`. They import `app.js` first, so the character roster is available when encounters start. All imports use relative paths and work on a static server without a build step.

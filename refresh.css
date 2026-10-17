@@ -902,3 +902,6 @@ input::placeholder, textarea::placeholder { color: #82998a; opacity: 1; }
 /* Keep all remaining navigation controls reachable on narrow screens. */
 .topbar nav { min-width:0; overflow-x:auto; }
 .topbar nav > * { flex-shrink:0; }
+
+.replace-skill { border: 0; background: none; color: var(--accent-text); font: 10px var(--sans); cursor: pointer; }
+@media print { .replace-skill { display: none; } }

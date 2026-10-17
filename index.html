@@ -287,13 +287,14 @@
         <details class="apprenticeship-packages"><summary>Training packages · 6.3</summary><p class="language-picker-note">Choose at most one lifestyle package. Vocational packages may be combined. Package costs share this DP pool.</p><div id="apprenticeship-package-list"></div><p id="apprenticeship-package-message" class="language-picker-note" role="status"></p></details>
         <label class="hobby-search">Find a skill or category<input id="apprenticeship-search" type="search" placeholder="Search choices"></label>
         <div class="hobby-filters" role="group" aria-label="Apprenticeship filters"><button type="button" id="hide-zero-apprenticeship-skills" aria-pressed="false">Hide 0-rank skills</button><button type="button" id="hide-zero-apprenticeship-categories" aria-pressed="false">Hide 0-rank categories</button></div>
-        <details class="apprenticeship-add"><summary>Add a specific skill</summary><div id="apprenticeship-category-options" class="choice-strip"></div><label class="hobby-search">Skill name<input id="apprenticeship-skill-name" type="text" maxlength="60" placeholder="Specific skill"></label><button type="button" id="apprenticeship-add-skill" class="creation-pick-button">Add skill</button><p id="apprenticeship-add-message" class="language-picker-note" role="status"></p></details>
+        <details class="apprenticeship-add"><summary>Add a specific skill</summary><div id="apprenticeship-category-options" class="choice-strip"></div><label class="hobby-search">Skill name<select id="apprenticeship-skill-name" aria-label="Specific skill"></select></label><button type="button" id="apprenticeship-add-skill" class="creation-pick-button">Add skill</button><p id="apprenticeship-add-message" class="language-picker-note" role="status"></p></details>
         <details class="apprenticeship-stat-gains"><summary>Extra stat gain rolls · 8 DP each</summary><p class="language-picker-note">Roll 2d10 for a chosen stat. The result changes its temporary value, up to its potential.</p><div id="apprenticeship-stat-list"></div><div id="apprenticeship-stat-history" class="language-picker-note"></div></details>
         <div id="apprenticeship-picker-list" class="hobby-picker-list"></div>
         <p id="apprenticeship-picker-empty" class="language-picker-note" hidden>No matching choices.</p>
       </dialog>
       <dialog id="skill-choice-dialog" aria-labelledby="skill-choice-title">
         <div class="language-picker-head"><div><h2 id="skill-choice-title">Choose a racial weapon</h2><p id="skill-choice-subtitle"></p></div><button type="button" id="close-skill-choice" aria-label="Close skill picker">×</button></div>
+        <label class="hobby-search">Find a skill<input id="skill-choice-search" type="search" placeholder="Search specific skills"></label>
         <div id="skill-choice-list" class="skill-choice-dialog-list"></div>
       </dialog>
       <dialog id="training-item-picker" aria-labelledby="training-item-title">
@@ -312,7 +313,7 @@
         <p class="language-picker-note">Choose options from T-1.5, then set each target or result below. Rolled results are saved with your character.</p>
         <div id="background-picker-list" class="background-picker-list"></div>
         <div id="background-option-details"></div>
-        <details class="apprenticeship-add"><summary>Add a specific skill for a background bonus</summary><div id="background-skill-category-options" class="choice-strip"></div><label class="hobby-search">Skill name<input id="background-skill-name" type="text" maxlength="60" placeholder="Specific skill"></label><button type="button" id="background-add-skill" class="creation-pick-button">Add skill</button></details>
+        <details class="apprenticeship-add"><summary>Add a specific skill for a background bonus</summary><div id="background-skill-category-options" class="choice-strip"></div><label class="hobby-search">Skill name<select id="background-skill-name" aria-label="Specific skill"></select></label><button type="button" id="background-add-skill" class="creation-pick-button">Add skill</button></details>
         <p id="background-option-message" class="language-picker-note" role="status"></p>
         <p id="background-race-note" class="language-picker-note"></p>
         <label class="background-picker-notes">Chosen or rolled details<textarea id="background-picker-notes" rows="3" placeholder="Item, money, extra language, or special bonus target"></textarea></label>
