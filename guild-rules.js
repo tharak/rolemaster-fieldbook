@@ -1,7 +1,7 @@
 // Guild campaign state and rules, independent of UI, storage and rendering.
 import {generateWorld,seededRandom,findRoute} from './adventure-rules.js';
 import {generateEncounter} from './encounter-generation-rules.js';
-import {attackTypes,attackName} from './coliseum-rules.js';
+import {profileAssignments,assignedProfileAttacks,armorDescription} from './guildmaster-assignments.js';
 import {arenaWeaponStyles} from './coliseum-contenders.js';
 import {simulateGuildBattle} from './guild-battle.js';
 import {hitRecovery} from './healing-rules.js';
@@ -29,7 +29,7 @@ export function recruitMember(state,template){
  if(!template||template.sourceKind!=='master')throw new Error('Choose a T-5.8 member template.');
  if(state.members.length>=24)throw new Error('The guild has room for 24 recruits.');
  const next=clone(state),id=`member-${next.nextId++}`,member={...clone(template),id,templateId:template.id,name:`${template.profession} ${next.members.filter(m=>m.profession===template.profession).length+1}`,damage:0,pp:template.ppMax,xp:0,dead:false,effects:[],equipped:{},restHours:0};
- if(next.tableOnly){member.tableOnly=true;member.spellLists=[];member.selectedSpells=[];next.members.push(member);return next;}
+ if(next.tableOnly){member.tableOnly=true;member.assignments=profileAssignments(member,`${next.management?.seed||'guildmaster'}:${id}:${member.templateId}`);member.spellLists=[];member.selectedSpells=[];next.members.push(member);return next;}
  const first=template.attacks[0];
  for(const key of [first.rawKind==='ms'?'bow':'sword',...(template.suggestedEquipment.includes('shield')?['shield']:[])]){
   const item={...guildItems.find(i=>i.key===key),id:`item-${next.nextId++}`,bonus:0};next.inventory.push(item);member.equipped[item.slot]=item.id;
@@ -49,11 +49,9 @@ export function equipMember(state,memberId,itemId,slot){
  if(owner&&owner.id!==memberId)throw new Error('Unequip this item from its current owner first.');
  member.equipped[slot]=itemId;return next;
 }
-export function printedContender(member){
- const attacks=clone(member.attacks).map(attack=>attack&&!attack.both?{...attack,name:attackName(attack),attackTable:attack.attackTable||attackTypes[attack.type][1]}:attack);
- // T-5.8 lists OB by attack slot, but no weapon or directed-spell name.
- if(member.sourceKind==='master')attacks.forEach((attack,index)=>{attack.chance=index===0?100:0;attack.optional=index!==0;});
- return {...clone(member),attacks,spellLists:[],selectedSpells:[],equipment:{shield:member.suggestedEquipment?.includes('shield')||false},pp:member.pp??member.ppMax??0};
+export function printedContender(member,seed=member.id){
+ const assignments=profileAssignments(member,seed),attacks=assignedProfileAttacks(member,assignments);
+ return {...clone(member),assignments,attacks,armorName:armorDescription(member),tableOnly:true,spellLists:[],selectedSpells:[],equipment:{shield:member.suggestedEquipment?.includes('shield')||false},pp:member.pp??member.ppMax??0};
 }
 export function guildContender(state,member){
  if(state.tableOnly)return printedContender(member);
@@ -139,13 +137,13 @@ export function continueGuild(state,catalog,tables){
   const count=Math.max(1,Math.min(6,members.filter(availableMember).length-1+Math.floor(random()*3)));
   const enemies=Array.from({length:count},(_,i)=>{
    const template=pool[Math.floor(random()*pool.length)];
-   if(next.tableOnly)return {...printedContender(template),id:`enemy-${i}`,name:`${template.name} ${i+1}`};
+   if(next.tableOnly)return {...printedContender(template,`${exp.seed}:${report.id}:enemy:${i}`),id:`enemy-${i}`,name:`${template.name} ${i+1}`};
    const stateWithEnemy=recruitMember({...next,members:[]},template),member=stateWithEnemy.members[0];
    return {...guildContender(stateWithEnemy,member),id:`enemy-${i}`,name:`${template.profession} ${i+1} (L${template.level})`};
   });
   const battle=simulateGuildBattle(members.filter(m=>!m.dead&&m.damage<m.hits).map(m=>guildContender(next,m)),enemies,tables,random);
   report.party=battle.units.filter(u=>u.team===0).map(u=>({name:u.creature.name,hp:Math.max(0,u.creature.hits-u.hits),maxHp:u.creature.hits,pp:u.pp,dead:!!u.dead||u.deathRound!==undefined}));
-  report.rounds=battle.log.map(r=>({round:r.round,events:r.events.map(({kind,text})=>({kind,text}))}));report.enemies=enemies.map(e=>({name:e.name,level:e.level}));report.winner=battle.winner;report.xp=battle.xp;
+  report.rounds=battle.log.map(r=>({round:r.round,events:r.events.map(({kind,text})=>({kind,text}))}));report.enemies=enemies.map(e=>({name:e.name,level:e.level,...(next.tableOnly?{armorName:e.armorName,armorType:e.armor_type,assignments:e.assignments,attacks:e.attacks.filter(a=>a&&!a.both).map(a=>({name:a.name,ob:a.ob}))}:{})}));report.winner=battle.winner;report.xp=battle.xp;
   report.conclusion=battle.winner===0?'Victory.':battle.winner===1?'Defeat. The expedition ends; survivors are recovered to base.':'Neither side prevailed. The party withdraws to base.';
   for(const unit of battle.units.filter(u=>u.team===0)){
    const member=next.members.find(m=>m.id===unit.id);member.damage=Math.min(member.hits,unit.hits);member.pp=unit.pp;member.dead=!!unit.dead||unit.deathRound!==undefined;

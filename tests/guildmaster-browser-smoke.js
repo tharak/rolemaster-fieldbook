@@ -13,6 +13,11 @@ async existingPage=>{
   assert(state.members.every(member=>member.spellLists.length===0),'Invented spells remain');
   assert(await page.locator('#manager-recruit option').count()===45,'Recruit catalog wrong');
   assert(await page.locator('.manager-printed-stats').count()===4,'Printed stats missing');
+  assert(state.members.every(member=>member.assignments?.version===1),'Assignments not saved');
+  const statsText=await page.locator('.manager-printed-stats').allTextContents();
+  assert(statsText.every(text=>text.includes('Active')&&text.includes('Armor')),'Named active attacks or armor missing');
+  assert(!statsText.some(text=>text.includes('Directed spell (reference)')),'Directed spell still reference only');
+  assert(statsText.some(text=>text.includes('Bolt')),'Named bolt missing');
   assert(await page.locator('[data-pick-equipment],[data-pick-spells],[data-shop-buy]').count()===0,'Custom loadout UI remains');
   const catalogs=await page.evaluate(async()=>{const {catalog,opponents}=await (await import('./guild-data.js')).loadGuildMasterData();return {members:catalog.length,monsters:opponents.filter(c=>c.group==='Monster').length,animals:opponents.filter(c=>c.group==='Animal').length};});
   assert(catalogs.members===45&&catalogs.monsters>0&&catalogs.animals>0,'Missing opponent table');
@@ -27,8 +32,27 @@ async existingPage=>{
   await page.reload();await ready();await advance();assert((await snapshot()).management.journeys[id],'Adventure failed');
   await order(id,'work');assert(await page.locator(`[data-member-id="${id}"][data-order-action="rest"]`).isDisabled(),'Return not locked');await advance();state=await snapshot();assert(!state.management.journeys[id]&&state.management.orders[id].action==='work','Return failed');
   const saved=JSON.stringify(state);await page.reload();await ready();assert(JSON.stringify(await snapshot())===saved,'Reload changed save');
+  const combatFixture=await page.evaluate(async()=>{
+   const {advanceGuildMaster}=await import('./guildmaster-rules.js');const {loadGuildMasterData,loadGuildCombat}=await import('./guild-data.js');const {assignmentCatalog}=await import('./guildmaster-assignments.js');
+   const {opponents}=await loadGuildMasterData(),tables=await loadGuildCombat(),key='rolemaster-guildmaster-v1',base=JSON.parse(localStorage.getItem(key));
+   const caster=base.members.find(m=>m.profession==='Magician');base.management.orders[caster.id].action='adventure';
+   const name=assignmentCatalog.find(item=>item.id===caster.assignments.slots[1]).name;
+   for(let i=0;i<100;i++){
+    base.management.seed='browser-bolt-'+i;const next=advanceGuildMaster(base,opponents,tables);
+    const report=next.management.reports[0].results.find(result=>result.memberId===caster.id).encounter;
+    if(report?.rounds.some(round=>round.events.some(event=>event.text.startsWith(caster.name+' →')&&event.text.includes(name)))){
+     localStorage.setItem(key,JSON.stringify(base));return {id:caster.id,name,pp:caster.pp};
+    }
+   }
+   throw Error('No bolt combat fixture');
+  });
+  await page.reload();await ready();await advance();
+  const combatCard=page.locator(`#guildmaster-app [data-member="${combatFixture.id}"]`);
+  assert((await combatCard.textContent()).includes(combatFixture.name),'Assigned attack missing from combat report');
+  assert((await snapshot()).members.find(m=>m.id===combatFixture.id).pp===combatFixture.pp,'Simple bolt spent PP');
+  const afterCombat=JSON.stringify(await snapshot());await page.reload();await ready();assert(JSON.stringify(await snapshot())===afterCombat,'Combat reload rerolled assignments');
   await page.setViewportSize({width:390,height:844});assert(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth),'Mobile overflow');
   await page.screenshot({path:'output/playwright/guildmaster-printed-mobile.png',fullPage:true});
-  assert(!errors.length,errors.join('\n'));return {printedProfiles:true,catalogs,recruitment:true,work:true,adventure:true,return:true,reload:true,mobile:true,pageErrors:0};
+  assert(!errors.length,errors.join('\n'));return {printedProfiles:true,namedAssignments:true,boltCombat:true,catalogs,recruitment:true,work:true,adventure:true,return:true,reload:true,mobile:true,pageErrors:0};
  }finally{await context.close();}
 }

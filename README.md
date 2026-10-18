@@ -131,19 +131,28 @@ Dead members do not act.
 
 GuildMaster uses fixed T-5.8 member profiles and opponents from T-5.8, the
 Monster Statistics Chart, and the Animal Statistics Chart (A-8). Cards show
-printed hits, AT, DB, both OB slots, PP and spell ranks. Combat uses the first
-non-directed-spell OB, with the existing edged-melee or missile attack table;
-T-5.8 does not specify weapon names. Creature attacks retain their printed types,
-chances, and same/next-round follow-ups. Special abilities and group/swarm
-attacks remain unsupported. Entries with no supported attack are excluded.
+printed hits, AT, DB, both OB slots, PP and spell ranks. Each recruit receives
+persistent weapon/bolt assignments, with armor named from the core armor
+descriptions for its AT. The highest printed OB is active (ties use slot 1).
+Assignments add no equipment bonuses or armor penalties. Creature Wp attacks
+receive melee weapons; natural attacks, sizes, probabilities, and follow-ups
+remain intact. Special abilities and group/swarm attacks remain unsupported.
 
-There are no equipment or spell pickers, shop, or new equipment drops in this
-mode. Printed DB and OB are used directly. PP, spell ranks, and directed-spell
-OB are reference values: no named spell lists are inferred and no spells are
-cast. Wounds, gold, XP, orders, and history persist; XP does not advance a fixed
-profile. Existing inventory and carried items stay in the save but do not affect
-combat. Loading an old save restores canonical printed stats without resetting
-member progress. These changes apply only to GuildMaster.
+Directed spells randomly receive Fire, Ice, Lightning, Shock, or Water Bolt.
+These are simple attacks every round, without preparation, PP cost, or spell-list
+requirements. A-10.9.9 supplies their OB adjustments (0, −10, +10, −40, −20),
+modified-result caps (150, 150, 150, 90, 120), and critical types/caps. Natural
+100 retains its unmodified result. Cards show printed OB; reports separately
+identify bolt adjustments. PP and spell ranks remain reference values.
+
+There are no equipment/spell pickers, shop, or new equipment drops in this mode.
+Versioned assignment IDs are saved per member; older members receive assignments
+once without losing progress. Opponents receive deterministic assignments per
+encounter, retained in reports, so retries cannot reroll equipment. Wounds, gold,
+XP, orders, and history persist; XP does not advance a fixed profile. Existing
+inventory stays in the save but does not affect combat. Loading an old save
+restores canonical printed stats without resetting member progress. These
+changes apply only to GuildMaster.
 
 GuildMaster has no map or link to Adventures. The older party-based Adventures
 mode retains its own save. On upgrade, the previously shared roster and progress

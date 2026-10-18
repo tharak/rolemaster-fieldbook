@@ -1,3 +1,4 @@
+import {profileAssignments} from './guildmaster-assignments.js';
 // Per-member orders and one shared clock tick. No DOM, storage, or random globals.
 import {spellKey} from './guild-spells.js';
 import {availableMember,departGuild,continueGuild,returnGuild,restGuild} from './guild-rules.js';
@@ -12,6 +13,7 @@ export function prepareGuildMaster(state,catalog=[]){
  for(const member of next.members){
   const template=catalog.find(entry=>entry.id===member.templateId);
   if(template)for(const key of ['hits','armor_type','db','level','ppMax','spellRanks','sourceAttacks','attacks','suggestedEquipment','source'])member[key]=structuredClone(template[key]);
+  member.assignments=profileAssignments(member,`${next.management.seed}:${member.id}:${member.templateId}`);
   member.spellLists=[];member.selectedSpells=[];member.tableOnly=true;
   const order=memberOrder(next,member.id);next.management.orders[member.id]={...order,level:member.level};
   if(order.action==='return')next.management.orders[member.id].nextAction=order.nextAction||'rest';

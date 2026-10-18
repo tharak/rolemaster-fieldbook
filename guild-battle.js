@@ -79,7 +79,7 @@ export function simulateGuildBattle(party,enemies,tables,random=Math.random,{rou
    }
    const targets=units.filter(a=>a.team!==u.team&&alive(a));if(!targets.length)break;
    const target=targets[Math.floor(random()*targets.length)];
-   const attacks=u.pending.length?[...u.pending]:(u.creature.sourceKind==='master'?[0]:chooseAttacks(u.creature,d100()));u.pending=[];
+   const attacks=u.pending.length?[...u.pending]:(u.creature.sourceKind==='master'?[Math.max(0,u.creature.attacks.findIndex(a=>a?.chance>0))]:chooseAttacks(u.creature,d100()));u.pending=[];
    const used=new Set();
    for(const index of attacks){
     if(used.has(index)||!alive(target))continue;
@@ -114,12 +114,12 @@ export function simulateGuildBattle(party,enemies,tables,random=Math.random,{rou
  function strike(u,target,attack,round,record){
   const roll=openEndedD100(d100),db=target.creature.db+(target.ward?.until>=round?target.ward.bonus:0)-(attack.spell&&target.creature.equipment.shield?10:0);
   const woundFraction=u.hits/u.creature.hits,woundPenalty=woundFraction>.75?-30:woundFraction>.5?-20:woundFraction>.25?-10:0;
-  const total=roll.total+attack.ob-db+modifier(u,round)+woundPenalty+(attack.spell&&!target.creature.equipment.helmet?5:0),result=attackLookup(tables[attack.attackTable],Math.min(attack.cap??Infinity,total),roll.first,target.creature.armor_type,attack.size);
-  if(attack.maxCritical&&result.critical>attack.maxCritical)result.critical=attack.maxCritical;
+  const total=roll.total+attack.ob+(attack.obModifier||0)-db+modifier(u,round)+woundPenalty+(attack.spell&&!target.creature.equipment.helmet?5:0),result=attackLookup(tables[attack.attackTable],Math.min(attack.cap??Infinity,total),roll.first,target.creature.armor_type,attack.size);
+  if(attack.maxCritical&&!(attack.simpleBolt&&roll.first===100)&&result.critical>attack.maxCritical)result.critical=attack.maxCritical;
   const before=target.hits,targetState=blocked(target,round)?'stunned':'active';target.hits+=result.hits;
   const critical=result.critical?resolveCritical(target,u,attack,result.critical,tables,d100,round,{allies:units.filter(a=>a.team===u.team&&a.id!==u.id&&alive(a))}):null;
   target.lastAttacker=u.id;
-  record(u,'attack',`${u.creature.name} → ${target.creature.name}: ${attack.name}, roll ${roll.total}, OB ${attack.ob}, DB ${db}, modifiers ${total-roll.total-attack.ob+db} → ${total}; ${target.hits-before} hits${critical?` · ${critical.severity} critical: ${critical.description}`:''}${!alive(target)?' · defeated':''}.`,{target:target.id,hits:result.hits,experienceHits:result.hits+(critical?.experienceHits||0),critical,targetState,melee:attack.rawKind!=='ms'&&!attack.spell,defeated:!alive(target),mortal:!!target.dead||target.deathRound!==undefined});
+  record(u,'attack',`${u.creature.name} → ${target.creature.name}: ${attack.name}, roll ${roll.total}, OB ${attack.ob}${attack.simpleBolt?` (${attack.obModifier>=0?'+':''}${attack.obModifier} bolt)`:''}, DB ${db}, modifiers ${total-roll.total-attack.ob-(attack.obModifier||0)+db} → ${total}; ${target.hits-before} hits${critical?` · ${critical.severity} critical: ${critical.description}`:''}${!alive(target)?' · defeated':''}.`,{target:target.id,hits:result.hits,experienceHits:result.hits+(critical?.experienceHits||0),critical,targetState,melee:attack.rawKind!=='ms'&&!attack.spell&&!attack.simpleBolt,defeated:!alive(target),mortal:!!target.dead||target.deathRound!==undefined});
   return result;
  }
 }
