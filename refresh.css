@@ -921,3 +921,18 @@ input::placeholder, textarea::placeholder { color: #82998a; opacity: 1; }
   .hobby-choice { grid-template-columns: minmax(0, 1fr) 100px; }
   .language-choice { grid-template-columns: 1fr 1fr; }
 }
+
+/* Shared numeric controls, including calculated character statistics. */
+.rank-control { max-width: 100%; vertical-align: middle; }
+.rank-control.number-readonly { min-width: 0; }
+.rank-control button[hidden] { display: none; }
+.stat-row .rank-control, .rr-row .rank-control { min-width: 0; gap: 1px; }
+.stat-row .rank-control button, .rr-row .rank-control button { flex-basis: 22px; width: 22px; height: 30px; font-size: 16px; }
+.stat-row .rank-control output, .rr-row .rank-control output { min-width: 24px; font-size: 11px; }
+.record-stats .stat-header, .record-stats .stat-row { grid-template-columns: minmax(125px, 1.7fr) minmax(72px, .8fr) repeat(5, minmax(54px, .7fr)); }
+.rr-head, .rr-row { grid-template-columns: minmax(100px, 1.6fr) repeat(2, minmax(42px, .65fr)) minmax(72px, .8fr) minmax(42px, .65fr); }
+@media print {
+  .rank-control button { display: none; }
+  .rank-control { min-width: 0; }
+  .rank-control output { color: #111; }
+}
