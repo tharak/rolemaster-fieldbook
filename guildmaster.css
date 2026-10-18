@@ -13,3 +13,75 @@ body:has(#guildmaster-view.active) .nav-link[data-view="adventure"]{display:none
 .manager-printed-stats div { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; border-bottom: 1px solid var(--line); padding-bottom: 5px; }
 .manager-printed-stats dt { color: var(--muted); font-size: 11px; }
 .manager-printed-stats dd { margin: 0; font-weight: 700; }
+
+/* Dedicated journal and compact roster. */
+.manager-view-tabs { display:flex; gap:8px; border-bottom:1px solid #526b4b; margin:18px 0 24px; }
+.manager-view-tabs button { border:0; border-bottom:3px solid transparent; padding:14px 18px; background:transparent; color:#b4c3a7; font:16px var(--sans); cursor:pointer; }
+.manager-view-tabs button[aria-selected="true"] { color:#eedab0; border-bottom-color:#d0b477; }
+.manager-view-tabs span { font:10px var(--mono); margin-left:8px; }
+.manager-view-tabs button:focus-visible,.journal-kind-filter button:focus-visible { outline:2px solid #eedab0; outline-offset:-3px; }
+#manager-members-panel[hidden],#manager-journal-panel[hidden] { display:none; }
+.journal-heading { display:flex; align-items:center; justify-content:space-between; gap:16px; }
+.journal-heading h2 { font:36px var(--serif); color:#eedab0; margin:4px 0 10px; }
+.journal-heading p { color:#b4c3a7; font-size:13px; line-height:1.6; }
+.journal-heading>span,.journal-count { color:#b4c3a7; font:11px var(--mono); }
+.journal-filters { display:flex; flex-wrap:wrap; align-items:end; gap:20px; padding:18px; background:#192f24; border:1px solid #526b4b; margin-top:18px; }
+.journal-filters label { display:grid; gap:8px; font:12px var(--sans); color:#d5dfc7; min-width:180px; }
+.journal-filters select { background:#10271c; color:#e9dec0; border:1px solid #62724d; padding:10px; width:100%; }
+.journal-kind-filter { display:flex; flex-wrap:wrap; gap:6px; }
+.journal-kind-filter button { padding:10px 14px; border:1px solid #62724d; background:#10271c; color:#cdddbb; font:12px var(--sans); cursor:pointer; border-radius:4px; }
+.journal-kind-filter button[aria-pressed="true"] { background:#d0b477; color:#172b1d; border-color:#d0b477; }
+.journal-count { margin:16px 0 24px; }
+.journal-turn { margin-bottom:30px; }
+.journal-turn-heading { display:flex; align-items:center; justify-content:space-between; gap:16px; padding:0 0 14px; border-bottom:1px solid #526b4b; margin-bottom:14px; }
+.journal-turn-heading>div { display:flex; align-items:baseline; gap:14px; flex-wrap:wrap; }
+.journal-turn-heading h3 { margin:0; font:26px var(--serif); color:#eedab0; }
+.journal-turn-heading span,.journal-turn-heading p { color:#b4c3a7; font:11px var(--mono); }
+.journal-entries { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,360px),1fr)); gap:14px; align-items:start; }
+.journal-entry { min-width:0; padding:20px; background:#192f24; border:1px solid #526b4b; border-left:3px solid #6a8363; }
+.journal-entry-combat { border-left-color:#d0b477; }.journal-entry-travel { border-left-color:#7898a3; }
+.journal-entry>header { display:flex; align-items:start; justify-content:space-between; gap:12px; }
+.journal-entry h4 { margin:0; color:#eedab0; font:22px var(--serif); overflow-wrap:anywhere; }
+.journal-entry-location { color:#a9bf9e; font:11px var(--mono); margin:6px 0 0; line-height:1.5; }
+.journal-outcome { font:10px var(--mono); color:#dcc58f; border:1px solid #62724d; border-radius:14px; padding:5px 8px; flex:none; }
+.journal-outcome.is-loss { color:#f1b6a1; border-color:#ad7760; }
+.journal-summary { font-size:13px; line-height:1.7; color:#d4ddc7; }
+.journal-changes { display:flex; flex-wrap:wrap; gap:6px; padding:0; list-style:none; margin:14px 0; }
+.journal-changes li { background:#10271c; padding:7px; color:#cfdfbd; font:11px var(--mono); }
+.journal-combat,.journal-source { border-top:1px solid #405b44; padding-top:12px; margin-top:14px; }
+.journal-combat>summary { color:#ead19a; font-size:13px; cursor:pointer; }
+.journal-source>summary { color:#a4b99a; font-size:11px; cursor:pointer; }
+.journal-source p,.journal-combat p { font-size:12px; line-height:1.7; }
+.journal-combat h5 { font:12px var(--sans); color:#cdddbb; margin-bottom:10px; }
+.journal-opponents { padding-left:18px; font-size:12px; line-height:1.6; }
+.journal-opponents li { margin-bottom:10px; }.journal-opponents span { display:block; color:#b1c3a4; }
+.journal-rounds { max-height:440px; overflow:auto; margin-top:18px; padding-right:8px; }
+.journal-rounds details { border-top:1px solid #405b44; padding:12px 0; }
+.journal-rounds summary { color:#d8c18f; font-size:13px; cursor:pointer; }
+.journal-rounds ol { padding-left:22px; font-size:12px; line-height:1.8; }.journal-rounds li { margin:8px 0; }
+.journal-empty { padding:40px 24px; text-align:center; border:1px dashed #62724d; color:#b4c3a7; }
+.journal-empty h3 { font:25px var(--serif); color:#eedab0; }
+.journal-empty p { font-size:13px; line-height:1.7; }
+.journal-older,.journal-empty .button { color:#eedab0; border:1px solid #62724d; margin-bottom:20px; }
+@media(max-width:650px) {
+ .manager-view-tabs button { padding:12px; }.manager-view-tabs span { display:block; margin:5px 0 0; }
+ .journal-heading,.journal-turn-heading { align-items:start; flex-direction:column; gap:6px; }
+ .journal-filters { align-items:stretch; flex-direction:column; gap:14px; padding:14px; }
+ .journal-kind-filter { display:grid; grid-template-columns:1fr 1fr; }
+ .journal-entry { padding:15px; }.journal-entry h4 { font-size:20px; }
+ .journal-outcome { max-width:120px; white-space:normal; }.journal-entries { grid-template-columns:1fr; }
+}
+.manager-heading-actions { display:flex; flex-wrap:wrap; justify-content:flex-end; gap:8px; }
+#guildmaster-manage-dialog { width:min(700px,calc(100vw - 24px)); max-height:90dvh; padding:24px; background:#142a20; color:#d9dec9; border:1px solid #a38d58; border-radius:8px; overflow:auto; }
+#guildmaster-manage-dialog::backdrop { background:#07150dcc; }
+.manager-manage-heading { display:flex; align-items:center; justify-content:space-between; gap:12px; }
+.manager-manage-heading h2 { font:28px var(--serif); margin:0; color:#eedab0; }
+#guildmaster-manage-dialog>p { font-size:13px; line-height:1.7; }
+#guildmaster-manage-dialog .button-quiet { color:#e2d9bc; border:1px solid #85946a; }
+.manager-manage-member { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:12px; border-top:1px solid #526b4b; padding:16px 0; }
+.manager-manage-member h3 { margin:0; font:22px var(--serif); color:#eedab0; }
+.manager-manage-member p { margin:6px 0; font-size:12px; line-height:1.6; }
+.manager-dismiss-button { background:#4c2c25; border:1px solid #bd8870; color:#f0c7b4; }
+.manager-dismiss-confirm { flex-basis:100%; }.manager-dismiss-confirm .button { margin:6px 8px 0 0; }
+.manager-dismiss-note { color:#b4c3a7; }
+@media(max-width:650px){.manager-heading-actions{flex-direction:column}.manager-heading-actions .button{font-size:11px;padding:10px}#guildmaster-manage-dialog{padding:16px}}

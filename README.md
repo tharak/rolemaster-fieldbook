@@ -122,7 +122,7 @@ is clicked. Adventure difficulty always equals the member's level.
 
 Adventure starts or continues a single-member expedition. Encounters use the
 existing random encounter and automatic combat rules. Results appear on the
-member's card: HP/PP changes, XP, loot, and expandable round conclusions.
+Journal tab: HP/PP changes, XP, rewards, and expandable combat rounds.
 Selecting Rest or Work while away queues a return and locks the control until
 arrival. The next turn returns the member and banks loot; subsequent turns perform
 the selected base action. Rest follows the infirmary rules. Work earns one gold
@@ -153,6 +153,17 @@ XP, orders, and history persist; XP does not advance a fixed profile. Existing
 inventory stays in the save but does not affect combat. Loading an old save
 restores canonical printed stats without resetting member progress. These
 changes apply only to GuildMaster.
+
+Member cards show current stats and orders; turn/travel results live in the
+Journal tab. Advancing time opens the newest turn with filters reset. The journal
+groups entries by turn, filters by member and Combat/Travel/At base, and shows
+five matching turns at a time with a Show older turns action. Archived encounters
+keep their outcome and rewards. Keyboard arrows switch Members/Journal tabs.
+
+Manage guild opens the roster management dialog. Dismissal requires confirmation
+and is allowed only at base, including dead members. Away members must return
+first. Dismissal preserves guild inventory, gold, and all retained journal entries;
+historical member IDs remain valid after removal and are never reused.
 
 GuildMaster has no map or link to Adventures. The older party-based Adventures
 mode retains its own save. On upgrade, the previously shared roster and progress

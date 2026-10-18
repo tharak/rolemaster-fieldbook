@@ -29,7 +29,11 @@ export function recruitMember(state,template){
  if(!template||template.sourceKind!=='master')throw new Error('Choose a T-5.8 member template.');
  if(state.members.length>=24)throw new Error('The guild has room for 24 recruits.');
  const next=clone(state),id=`member-${next.nextId++}`,member={...clone(template),id,templateId:template.id,name:`${template.profession} ${next.members.filter(m=>m.profession===template.profession).length+1}`,damage:0,pp:template.ppMax,xp:0,dead:false,effects:[],equipped:{},restHours:0};
- if(next.tableOnly){member.tableOnly=true;member.assignments=profileAssignments(member,`${next.management?.seed||'guildmaster'}:${id}:${member.templateId}`);member.spellLists=[];member.selectedSpells=[];next.members.push(member);return next;}
+ if(next.tableOnly){
+  const names=[...next.members,...(next.management?.reports||[]).flatMap(turn=>turn.results)].map(item=>item.name);
+  const prefix=template.profession+' ',numbers=names.filter(name=>name.startsWith(prefix)&&/^\d+$/.test(name.slice(prefix.length))).map(name=>Number(name.slice(prefix.length)));
+  member.name=prefix+(Math.max(0,...numbers)+1);
+  member.tableOnly=true;member.assignments=profileAssignments(member,`${next.management?.seed||'guildmaster'}:${id}:${member.templateId}`);member.spellLists=[];member.selectedSpells=[];next.members.push(member);return next;}
  const first=template.attacks[0];
  for(const key of [first.rawKind==='ms'?'bow':'sword',...(template.suggestedEquipment.includes('shield')?['shield']:[])]){
   const item={...guildItems.find(i=>i.key===key),id:`item-${next.nextId++}`,bonus:0};next.inventory.push(item);member.equipped[item.slot]=item.id;
@@ -166,5 +170,5 @@ function validManagement(state){
  const ids=new Set(state.members.map(member=>member.id));
  if(!Object.entries(m.orders).every(([id,o])=>ids.has(id)&&o&&['adventure','return','rest','work'].includes(o.action)&&(!o.nextAction||['rest','work'].includes(o.nextAction))&&Number.isInteger(o.level)&&o.level>=1&&o.level<=20))return false;
  if(!Object.entries(m.journeys).every(([id,j])=>ids.has(id)&&j&&j.party?.length===1&&j.party[0]===id&&!state.expedition?.party.includes(id)&&validGuild({...state,management:undefined,expedition:j})&&Array.isArray(j.items)&&Number.isFinite(j.gold)))return false;
- return m.reports.every(t=>t&&Number.isInteger(t.number)&&Number.isFinite(t.hour)&&Array.isArray(t.results)&&t.results.every(r=>r&&ids.has(r.memberId)&&typeof r.summary==='string'&&(!r.encounter||Array.isArray(r.encounter.rounds))));
+ return m.reports.every(t=>t&&Number.isInteger(t.number)&&Number.isFinite(t.hour)&&Array.isArray(t.results)&&t.results.every(r=>r&&typeof r.memberId==='string'&&r.memberId.length>0&&typeof r.summary==='string'&&(!r.encounter||Array.isArray(r.encounter.rounds))));
 }

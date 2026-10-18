@@ -21,6 +21,15 @@ export function prepareGuildMaster(state,catalog=[]){
  }
  return next;
 }
+export function dismissGuildMember(state,id){
+ const member=state.members.find(item=>item.id===id);
+ if(!member)throw new Error('This member is no longer in the guild.');
+ if(managementState(state).journeys[id]||state.expedition?.party.includes(id))throw new Error('This member must return to the guild before dismissal.');
+ const next=structuredClone(state);next.members=next.members.filter(item=>item.id!==id);
+ next.management=structuredClone(managementState(next));delete next.management.orders[id];
+ // Keep report snapshots and guild-owned inventory; dismissed IDs are never reused.
+ return next;
+}
 export function setMemberOrder(state,id,{action}){
  const member=state.members.find(m=>m.id===id),management=managementState(state);
  if(!member||member.dead)throw new Error('Choose a living guild member.');
