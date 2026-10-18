@@ -905,3 +905,19 @@ input::placeholder, textarea::placeholder { color: #82998a; opacity: 1; }
 
 .replace-skill { border: 0; background: none; color: var(--accent-text); font: 10px var(--sans); cursor: pointer; }
 @media print { .replace-skill { display: none; } }
+
+/* Rank allocation controls */
+.rank-control { display: inline-flex; align-items: center; justify-content: center; gap: 4px; min-width: 100px; }
+.rank-control input[hidden] { display: none; }
+.rank-control button { flex: 0 0 30px; width: 30px; height: 32px; padding: 0; border: 1px solid #729279; border-radius: 4px; background: var(--input); color: var(--ink); font: 18px var(--sans); cursor: pointer; }
+.rank-control button:disabled { opacity: .35; cursor: default; }
+.rank-control button:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+.rank-control output { min-width: 28px; text-align: center; color: var(--ink); font: 12px var(--mono); }
+.hobby-choice { grid-template-columns: minmax(0, 1fr) 100px auto; }
+.language-choice { grid-template-columns: minmax(100px, 1fr) repeat(2, minmax(100px, 150px)); }
+.language-choice label { grid-template-columns: 1fr; }
+.language-choice .rank-control { grid-column: 1; }
+@media (max-width: 480px) {
+  .hobby-choice { grid-template-columns: minmax(0, 1fr) 100px; }
+  .language-choice { grid-template-columns: 1fr 1fr; }
+}

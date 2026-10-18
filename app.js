@@ -1,3 +1,4 @@
+import {rankControl, syncRankControls, installRankControls} from './rank-controls.js';
 import {createSkillCatalog, skillNames} from './skill-catalog.js';
 import {hitRecovery} from './healing-rules.js';
 import {readCampaign,skillAllowed,weaponAllowed,fixedSkillBonus} from './campaign-rules.js';
@@ -28,6 +29,7 @@ import {createCharacterAdvancement} from './character-advancement.js';
 import {isRecord, equipmentLedger} from './character-record.js';
 
 (() => {
+  installRankControls();
   const STORAGE_KEY = 'rolemaster-fieldbook-characters-v1';
   let skillCatalog = createSkillCatalog();
   let developmentRules = null;
@@ -326,7 +328,7 @@ import {isRecord, equipmentLedger} from './character-record.js';
     if (skill.backgroundSpecialBase) row.dataset.backgroundSpecialBase = skill.backgroundSpecialBase;
     if (skill.backgroundItemBase) row.dataset.backgroundItemBase = skill.backgroundItemBase;
     if (skill.skillClass) row.dataset.skillClass = skill.skillClass;
-    row.innerHTML = `<div class="rank-title"><label>Skill<input type="hidden" aria-label="Skill name" name="skill-name" maxlength="60" placeholder="Skill name" value="${esc(skill.name || '')}"></label><button type="button" class="choose-skill" aria-haspopup="dialog">${esc(skill.name || 'Choose skill')} ▾</button><button type="button" class="change-skill-category" aria-label="Change category for ${esc(skill.name || 'skill')}">${esc(category)}</button></div><label>Before<input aria-label="Ranks before this level" name="skill-start" type="number" min="0" max="99" value="${esc(skill.start ?? skill.ranks ?? 0)}"></label><label>Buy<select aria-label="Ranks purchased this level" name="skill-buy"></select></label><label>Item<input aria-label="Item bonus" name="skill-item" type="number" value="${esc(skill.item ?? 0)}"></label><label>Special<input aria-label="Skill special bonus" name="skill-special" type="number" value="${esc(skill.special ?? 0)}"></label><output class="rank-cost"></output><button type="button" class="remove-skill" aria-label="Remove skill">×</button><div class="bonus-breakdown skill-bonus"></div>`;
+    row.innerHTML = `<div class="rank-title"><label>Skill<input type="hidden" aria-label="Skill name" name="skill-name" maxlength="60" placeholder="Skill name" value="${esc(skill.name || '')}"></label><button type="button" class="choose-skill" aria-haspopup="dialog">${esc(skill.name || 'Choose skill')} ▾</button><button type="button" class="change-skill-category" aria-label="Change category for ${esc(skill.name || 'skill')}">${esc(category)}</button></div><label>Before${rankControl(`<input aria-label="Ranks before this level" name="skill-start" type="number" min="0" max="99" value="${esc(skill.start ?? skill.ranks ?? 0)}">`)}</label><label>Buy<select aria-label="Ranks purchased this level" name="skill-buy"></select></label><label>Item<input aria-label="Item bonus" name="skill-item" type="number" value="${esc(skill.item ?? 0)}"></label><label>Special<input aria-label="Skill special bonus" name="skill-special" type="number" value="${esc(skill.special ?? 0)}"></label><output class="rank-cost"></output><button type="button" class="remove-skill" aria-label="Remove skill">×</button><div class="bonus-breakdown skill-bonus"></div>`;
     $('.category-skills', parent).append(row);
     if (!developmentRules && skill.buy) row.dataset.pendingBuy = skill.buy;
     updateSkillBuyOptions(row, Number(skill.buy) || 0);
@@ -453,7 +455,7 @@ import {isRecord, equipmentLedger} from './character-record.js';
         const spent = Number(row?.dataset.languageSpent) || 0;
         const current = row ? Number($('[name="skill-start"]', row).value) || 0 : 0;
         const base = Math.max(0, current - spent);
-        return `<label>${mode === 'spoken' ? 'Spoken' : 'Written'}<input type="number" inputmode="numeric" min="${base}" max="${Math.max(base, cap)}" value="${current}" data-language="${esc(language)}" data-mode="${mode}" aria-label="${esc(language)} ${mode} total ranks"><small>Base ${base} · max ${cap}</small></label>`;
+        return `<label>${mode === 'spoken' ? 'Spoken' : 'Written'}${rankControl(`<input type="number" inputmode="numeric" min="${base}" max="${Math.max(base, cap)}" value="${current}" data-language="${esc(language)}" data-mode="${mode}" aria-label="${esc(language)} ${mode} total ranks">`)}<small>Base ${base} · max ${cap}</small></label>`;
       }).join('');
       return `<div class="language-choice"><strong>${esc(language)}</strong>${fields}</div>`;
     }).join('');
@@ -523,7 +525,7 @@ import {isRecord, equipmentLedger} from './character-record.js';
     const base = Math.max(0, current - spent);
     const max = Math.min(99, base + hobbyRankLimit(category));
     const label = kind === 'category' ? category : name;
-    return `<label class="hobby-choice" data-search="${esc(`${category} ${name}`.toLowerCase())}"><span><strong>${esc(label)}</strong>${kind === 'skill' ? `<small>${esc(category)}</small>` : '<small>Skill category</small>'}</span><input type="number" inputmode="numeric" min="${base}" max="${max}" value="${current}" data-kind="${kind}" data-category="${esc(category)}" data-name="${esc(name)}" aria-label="${esc(label)} total hobby ranks"><em>Base ${base} · +${hobbyRankLimit(category)} max</em></label>`;
+    return `<label class="hobby-choice" data-search="${esc(`${category} ${name}`.toLowerCase())}"><span><strong>${esc(label)}</strong>${kind === 'skill' ? `<small>${esc(category)}</small>` : '<small>Skill category</small>'}</span>${rankControl(`<input type="number" inputmode="numeric" min="${base}" max="${max}" value="${current}" data-kind="${kind}" data-category="${esc(category)}" data-name="${esc(name)}" aria-label="${esc(label)} total hobby ranks">`)}<em>Base ${base} · +${hobbyRankLimit(category)} max</em></label>`;
   }
   function findSkillRow(category, name) {
     return $$('.skill-row', $('#skills-list')).find(row => row.dataset.category === category && $('[name="skill-name"]', row).value === name);
@@ -558,8 +560,9 @@ import {isRecord, equipmentLedger} from './character-record.js';
       input.max = String(maxTotal);
       const overLimit = spent > perLevel;
       input.closest('.hobby-choice').classList.toggle('is-over-limit', overLimit);
-      input.nextElementSibling.textContent = overLimit ? `Above ${form.elements.profession.value} limit of ${perLevel}` : `Max total ${maxTotal}`;
+      input.closest('.hobby-choice').querySelector('em').textContent = overLimit ? `Above ${form.elements.profession.value} limit of ${perLevel}` : `Max total ${maxTotal}`;
     });
+    syncRankControls();
   }
   function hobbyOverLimitCount() {
     const skills = $$('.skill-row[data-hobby-spent]', $('#skills-list')).filter(row => Number(row.dataset.hobbySpent) > hobbyRankLimit(row.dataset.category));
@@ -623,7 +626,7 @@ import {isRecord, equipmentLedger} from './character-record.js';
     const label = kind === 'category' ? category : name;
     const spent = costs.slice(0, current).reduce((sum, cost) => sum + cost, 0);
     const classification = kind === 'skill' && current ? `<select data-skill-class="${esc(name)}" data-category="${esc(category)}" aria-label="${esc(name)} skill classification">${['auto','standard','everyman','occupational','restricted'].map(value => `<option value="${value}"${(row?.dataset.skillClass || 'auto') === value ? ' selected' : ''}>${value === 'auto' ? `Auto: ${skillClass(row)}` : value}</option>`).join('')}</select>` : '';
-    return `<label class="hobby-choice${classification ? ' apprenticeship-classified' : ''}" data-search="${esc(`${category} ${name}`.toLowerCase())}"><span><strong>${esc(label)}</strong>${kind === 'skill' ? `<small>${esc(category)}</small>` : '<small>Skill category</small>'}</span><input type="number" inputmode="numeric" min="0" max="${costs.length}" value="${current}" data-kind="${kind}" data-category="${esc(category)}" data-name="${esc(name)}" aria-label="${esc(label)} apprenticeship ranks">${classification}<em>${base} prior · ${costs.join('/')} DP · ${spent} spent</em></label>`;
+    return `<label class="hobby-choice${classification ? ' apprenticeship-classified' : ''}" data-search="${esc(`${category} ${name}`.toLowerCase())}"><span><strong>${esc(label)}</strong>${kind === 'skill' ? `<small>${esc(category)}</small>` : '<small>Skill category</small>'}</span>${rankControl(`<input type="number" inputmode="numeric" min="0" max="${costs.length}" value="${current}" data-kind="${kind}" data-category="${esc(category)}" data-name="${esc(name)}" aria-label="${esc(label)} apprenticeship ranks">`)}${classification}<em>${base} prior · ${costs.join('/')} DP · ${spent} spent</em></label>`;
   }
   function updateApprenticeshipVisibility() {
     const term = $('#apprenticeship-search').value.trim().toLowerCase();
@@ -680,6 +683,7 @@ import {isRecord, equipmentLedger} from './character-record.js';
       input.max = String(Math.max(current, max));
       input.disabled = available === '—';
     });
+    syncRankControls();
     if ($('#apprenticeship-picker').open) renderApprenticeshipStatGains();
   }
   function updateApprenticeshipAllocation(input) {
@@ -838,7 +842,7 @@ import {isRecord, equipmentLedger} from './character-record.js';
       const selected = choices[pack.name]?.[id] || {};
       const options = packageSkillOptions(category, id === 'language');
       const used = Object.values(selected).reduce((sum, value) => sum + (Number(value) || 0), 0);
-      return `<div class="package-grant-choice"><strong>${esc(label)}</strong><small>${used} of ${ranks} ranks assigned · up to ${maxDistinct} skills</small><div class="package-grant-skills">${options.map(name => `<label><span>${esc(name)}</span><input type="number" inputmode="numeric" min="0" max="${ranks}" value="${Number(selected[name]) || 0}" data-package-skill="${esc(name)}" data-package="${esc(pack.name)}" data-rule="${esc(id)}" aria-label="${esc(name)} package ranks"></label>`).join('') || '<p>Add a specific skill above, then choose it here.</p>'}</div></div>`;
+      return `<div class="package-grant-choice"><strong>${esc(label)}</strong><small>${used} of ${ranks} ranks assigned · up to ${maxDistinct} skills</small><div class="package-grant-skills">${options.map(name => `<label><span>${esc(name)}</span>${rankControl(`<input type="number" inputmode="numeric" min="0" max="${ranks}" value="${Number(selected[name]) || 0}" data-package-skill="${esc(name)}" data-package="${esc(pack.name)}" data-rule="${esc(id)}" aria-label="${esc(name)} package ranks">`)}</label>`).join('') || '<p>Add a specific skill above, then choose it here.</p>'}</div></div>`;
     }).join('');
   }
   function trainingPackageCost() {
@@ -1252,7 +1256,7 @@ import {isRecord, equipmentLedger} from './character-record.js';
           const row = findSkillRow('Communications', name);
           const current = Number(allocations[name]) || 0;
           const total = Number($('[name="skill-start"]', row)?.value) || 0;
-          return `<label>${mode}<input type="number" inputmode="numeric" min="0" max="${cap}" value="${current}" data-background-language="${esc(name)}" data-background-index="${index}" aria-label="${esc(name)} background ranks"><small>${total} total · max ${cap}</small></label>`;
+          return `<label>${mode}${rankControl(`<input type="number" inputmode="numeric" min="0" max="${cap}" value="${current}" data-background-language="${esc(name)}" data-background-index="${index}" aria-label="${esc(name)} background ranks">`)}<small>${total} total · max ${cap}</small></label>`;
         }).join('')}</div>`).join('')}</div>`;
       } else if (key === 'extraStatRolls') {
         body = `<p>One free stat gain roll for each stat.</p><div class="background-stat-list">${statNames.map((name, statIndex) => {
