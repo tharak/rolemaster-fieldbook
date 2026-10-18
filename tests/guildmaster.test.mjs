@@ -1,6 +1,9 @@
+import {creatureCatalog} from '../coliseum-rules.js';
+import {simulateGuildBattle} from '../guild-battle.js';
+import {seededRandom} from '../adventure-rules.js';
 import test from 'node:test';import assert from 'node:assert/strict';import {readFileSync,readdirSync} from 'node:fs';
 import {masterCharacterCatalog} from '../coliseum-contenders.js';
-import {newGuild,equipMember,validGuild,encounterLoot} from '../guild-rules.js';
+import {newGuild,equipMember,validGuild,encounterLoot,guildContender,printedContender} from '../guild-rules.js';
 import {managementState,memberOrder,setMemberOrder,advanceGuildMaster,prepareGuildMaster,availableMemberSpells,setMemberSpells} from '../guildmaster-rules.js';
 import {knownAutomatedSpells} from '../guild-spells.js';
 import {splitLegacyGuild,adventureGuildKey,guildMasterKey} from '../guild-save-migration.js';
@@ -35,13 +38,47 @@ test('switching an away member to work queues a locked return and banks loot onc
  assert.equal(s.gold,0);const next=advanceGuildMaster(s,catalog,{});assert.equal(next.gold,loot.gold);assert.equal(next.members[0].damage,10);assert.equal(next.inventory.filter(i=>i.id==='loot-return-item').length,1);assert.equal(next.management.journeys[id],undefined);assert.equal(memberOrder(next,id).action,'work');
  const worked=advanceGuildMaster(next,catalog,{});assert.equal(worked.gold,next.gold+1);assert.equal(worked.members[0].damage,10);assert.equal(worked.inventory.filter(i=>i.id==='loot-return-item').length,1);
 });
-test('spell equipment is limited to learned lists and levels and controls automatic casting',()=>{
- const s=fresh(),member=s.members.find(m=>m.profession==='Cleric'),available=availableMemberSpells(member,lists);
- assert.ok(available.every(spell=>spell.level===1));assert.ok(available.some(spell=>spell.key==='A-9.5.2:1'));
- const empty=setMemberSpells(s,member.id,[],lists);assert.deepEqual(knownAutomatedSpells(empty.members.find(m=>m.id===member.id)),[]);
- const selected=setMemberSpells(empty,member.id,['A-9.5.2:1'],lists);assert.equal(knownAutomatedSpells(selected.members.find(m=>m.id===member.id))[0].name,'Healing I');
- assert.throws(()=>setMemberSpells(s,member.id,['A-9.5.2:8'],lists));assert.throws(()=>setMemberSpells(s,member.id,['A-9.15.1:1'],lists));assert.throws(()=>setMemberSpells(s,member.id,['A-9.5.2:1','A-9.5.2:1'],lists));assert.equal(availableMemberSpells(s.members[0],lists).length,0);
- let away=setMemberOrder(s,member.id,{action:'adventure'});away=advanceGuildMaster(away,catalog,tables);if(away.management.journeys[member.id])assert.throws(()=>setMemberSpells(away,member.id,[],lists));
+test('printed profiles preserve progress but ignore custom equipment and spells',()=>{
+ const old=newGuild(catalog);old.gold=37;old.members[0].damage=7;old.members[0].xp=123;
+ old.inventory.find(item=>item.id===old.members[0].equipped.weapon).bonus=100;
+ old.members[0].db=999;
+ const state=prepareGuildMaster(old,catalog),member=state.members[0],template=catalog.find(c=>c.id===member.templateId);
+ assert.equal(state.gold,37);assert.equal(member.damage,7);assert.equal(member.xp,123);assert.deepEqual(state.inventory,old.inventory);
+ assert.equal(member.db,template.db);assert.equal(guildContender(state,member).attacks[0].ob,template.attacks[0].ob);
+ assert.equal(guildContender(state,member).armor_type,template.armor_type);
+ assert.equal(guildContender(state,member).db,template.db);
+ for(const member of state.members){assert.deepEqual(availableMemberSpells(member,lists),[]);assert.deepEqual(knownAutomatedSpells(guildContender(state,member)),[]);}
+ assert.throws(()=>equipMember(state,member.id,'','shield'));
+ assert.throws(()=>setMemberSpells(state,member.id,[],lists));
+ assert.equal(old.members[0].db,999);assert.ok(validGuild(state));
+ assert.deepEqual(prepareGuildMaster(state,catalog),state);
+});
+test('all monster and animal profiles can resolve with printed attacks',()=>{
+ const creatures=creatureCatalog(json('tables/creatures.json'));
+ assert.equal(creatures.length,130);
+ for(const creature of creatures.filter(c=>c.attacks.some(a=>a&&!a.both))){
+  const foe={...printedContender(creature),id:'foe'};
+  const member={...printedContender(catalog[0]),id:'member',hits:1000};
+  const battle=simulateGuildBattle([member],[foe],tables,seededRandom(creature.id),{roundLimit:5});
+  assert.ok(battle.log.length,creature.name);
+  assert.ok(battle.units.every(unit=>Number.isFinite(unit.hits)),creature.name);
+  assert.ok(battle.log.flatMap(round=>round.events).every(event=>!['spell','prepare'].includes(event.kind)),creature.name);
+ }
+});
+test('GuildMaster can encounter both creature charts and awards no new equipment',()=>{
+ const creatures=creatureCatalog(json('tables/creatures.json'));
+ for(const group of ['Monster','Animal']){
+  let state=fresh();const id=state.members[0].id;state=setMemberOrder(state,id,{action:'adventure'});
+  const opponent=creatures.find(c=>c.group===group&&c.level===1&&c.attacks.some(a=>a&&!a.both));
+  let found=false;
+  for(let i=0;i<100&&!found;i++){
+   state.management.seed='creature-'+i;
+   const next=advanceGuildMaster(state,[opponent],tables),report=next.management.reports[0].results[0].encounter;
+   if(!report?.enemies)continue;
+   found=true;assert.ok(report.enemies.every(enemy=>enemy.name.startsWith(opponent.name)));assert.deepEqual(report.items,[]);assert.ok(validGuild(next));
+  }
+  assert.ok(found,group);
+ }
 });
 test('legacy progress forks once, preserving independent saves and no duplicate transfers',()=>{
  const old=fresh();delete old.mode;old.gold=37;old.management.turn=4;old.management.orders[old.members[0].id]={action:'return',level:5};

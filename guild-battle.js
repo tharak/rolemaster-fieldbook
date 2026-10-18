@@ -1,5 +1,5 @@
 // DOM-free party combat. Reuses the existing attack tables and critical resolver.
-import {attackLookup,resolveCritical} from './coliseum-rules.js';
+import {attackLookup,resolveCritical,chooseAttacks} from './coliseum-rules.js';
 import {openEndedD100} from './rules.js';
 import {advanceCriticalDeath} from './critical-death.js';
 import {expireCriticalEffects,accumulatedStunRounds} from './critical-stun.js';
@@ -49,7 +49,7 @@ export function simulateGuildBattle(party,enemies,tables,random=Math.random,{rou
   for(const {u} of order){
    if(![0,1].every(team=>units.some(a=>a.team===team&&alive(a))))break;
    if(!alive(u))continue;
-   if(blocked(u,round)){u.casting=null;u.song=null;record(u,'stun',`${u.creature.name} cannot act while stunned or forced to parry.`);continue;}
+   if(blocked(u,round)){u.casting=null;u.song=null;u.pending=[];record(u,'stun',`${u.creature.name} cannot act while stunned or forced to parry.`);continue;}
    if(u.song){const target=units.find(a=>a.id===u.song);if(target&&alive(target)){target.effects.push({kind:'stun',roundsLeft:1,starts:round});record(u,'concentrate',`${u.creature.name} maintains the song on ${target.creature.name}.`);continue;}u.song=null;}
    const choice=u.casting||spellChoice(u,units,round);
    if(choice){
@@ -78,8 +78,19 @@ export function simulateGuildBattle(party,enemies,tables,random=Math.random,{rou
     u.casting=null;
    }
    const targets=units.filter(a=>a.team!==u.team&&alive(a));if(!targets.length)break;
-   const target=targets[Math.floor(random()*targets.length)],attack=u.creature.attacks[0];
-   strike(u,target,attack,round,record);
+   const target=targets[Math.floor(random()*targets.length)];
+   const attacks=u.pending.length?[...u.pending]:(u.creature.sourceKind==='master'?[0]:chooseAttacks(u.creature,d100()));u.pending=[];
+   const used=new Set();
+   for(const index of attacks){
+    if(used.has(index)||!alive(target))continue;
+    used.add(index);const attack=u.creature.attacks[index];
+    const result=strike(u,target,attack,round,record);
+    if(result.critical&&attack.type!=='Ti'){
+     const follow=u.creature.attacks[index+1];
+     if(follow?.follow==='same')attacks.push(index+1);
+     if(follow?.follow==='next')u.pending.push(index+1);
+    }
+   }
   }
   for(const u of units)u.effects=expireCriticalEffects(u.effects,round,'starts');
   log.push(entry);
@@ -94,7 +105,7 @@ export function simulateGuildBattle(party,enemies,tables,random=Math.random,{rou
     e.kind==='attack'&&((e.actor===self.id&&e.target===foe.id)||(e.actor===foe.id&&e.target===self.id))||
     ['bleed','dies'].includes(e.kind)&&((e.actor===self.id&&e.source===foe.id)||(e.actor===foe.id&&e.source===self.id))
    ).map(e=>({...e,side:e.actor===self.id?0:1,sourceSide:e.source===self.id?0:e.source===foe.id?1:undefined}))}));
-   total+=combatExperience({fighters:[self,foe],log:pairLog},0,{trueConflict:true,intelligent:true}).total;
+   total+=combatExperience({fighters:[self,foe],log:pairLog},0,{trueConflict:true,intelligent:!!foe.creature.sourceKind,size:foe.creature.size==='H*'?'super-large':foe.creature.size==='L*'?'large':'normal'}).total;
   }
   total+=log.flatMap(r=>r.events).filter(e=>e.actor===self.id&&e.kind==='spell'&&e.success).reduce((s,e)=>s+activityExperience({kind:'spell',casterLevel:self.creature.level,spellLevel:e.spellLevel}),0);
   xp[self.id]=total;
@@ -108,6 +119,7 @@ export function simulateGuildBattle(party,enemies,tables,random=Math.random,{rou
   const before=target.hits,targetState=blocked(target,round)?'stunned':'active';target.hits+=result.hits;
   const critical=result.critical?resolveCritical(target,u,attack,result.critical,tables,d100,round,{allies:units.filter(a=>a.team===u.team&&a.id!==u.id&&alive(a))}):null;
   target.lastAttacker=u.id;
-  record(u,'attack',`${u.creature.name} → ${target.creature.name}: ${attack.name}, roll ${roll.total}, OB ${attack.ob}, DB ${db}, modifiers ${total-roll.total-attack.ob+db} → ${total}; ${target.hits-before} hits${critical?` · ${critical.severity} critical: ${critical.description}`:''}${!alive(target)?' · defeated':''}.`,{target:target.id,hits:result.hits,experienceHits:result.hits+(critical?.experienceHits||0),critical,targetState,melee:attack.rawKind==='me',defeated:!alive(target),mortal:!!target.dead||target.deathRound!==undefined});
+  record(u,'attack',`${u.creature.name} → ${target.creature.name}: ${attack.name}, roll ${roll.total}, OB ${attack.ob}, DB ${db}, modifiers ${total-roll.total-attack.ob+db} → ${total}; ${target.hits-before} hits${critical?` · ${critical.severity} critical: ${critical.description}`:''}${!alive(target)?' · defeated':''}.`,{target:target.id,hits:result.hits,experienceHits:result.hits+(critical?.experienceHits||0),critical,targetState,melee:attack.rawKind!=='ms'&&!attack.spell,defeated:!alive(target),mortal:!!target.dead||target.deathRound!==undefined});
+  return result;
  }
 }

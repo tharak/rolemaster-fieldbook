@@ -8,3 +8,8 @@ body:has(#guildmaster-view.active) .nav-link[data-view="adventure"]{display:none
 
 
 .manager-shop .manager-store{grid-template-columns:1fr}.manager-shop .manager-store li>span{flex:1;min-width:0}.manager-shop .manager-store .button{flex:none;padding:8px 12px;color:#e2d9bc;border:1px solid #85946a}.manager-shop .button:disabled{opacity:.4;cursor:not-allowed}.manager-shop details{margin-top:16px}.manager-shop .manager-store li{padding:8px 0;border-bottom:1px solid #3e5946}
+
+.manager-printed-stats { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin: 12px 0; }
+.manager-printed-stats div { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; border-bottom: 1px solid var(--line); padding-bottom: 5px; }
+.manager-printed-stats dt { color: var(--muted); font-size: 11px; }
+.manager-printed-stats dd { margin: 0; font-weight: 700; }

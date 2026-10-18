@@ -1,16 +1,18 @@
 // Per-member orders and one shared clock tick. No DOM, storage, or random globals.
-import {knownAutomatedSpells,spellKey} from './guild-spells.js';
+import {spellKey} from './guild-spells.js';
 import {availableMember,departGuild,continueGuild,returnGuild,restGuild} from './guild-rules.js';
 export const MEMBER_ACTIONS=['adventure','rest','work'];
 export const WORK_GOLD_PER_TURN=1;
 export const GUILD_TURN_HOURS=4;
 export function managementState(state){return state.management||{version:1,turn:0,seed:'guildmaster-roads',orders:{},journeys:{},reports:[]};}
 export function memberOrder(state,id){return managementState(state).orders[id]||{action:managementState(state).journeys[id]?'adventure':'rest',level:state.members.find(m=>m.id===id)?.level||1};}
-export function prepareGuildMaster(state){
- const next=structuredClone(state);next.mode='guildmaster';next.expedition=null;next.history=[];
+export function prepareGuildMaster(state,catalog=[]){
+ const next=structuredClone(state);next.mode='guildmaster';next.tableOnly=true;next.expedition=null;next.history=[];
  next.management=structuredClone(managementState(next));
  for(const member of next.members){
-  if(!Array.isArray(member.selectedSpells))member.selectedSpells=knownAutomatedSpells(member).map(spellKey);
+  const template=catalog.find(entry=>entry.id===member.templateId);
+  if(template)for(const key of ['hits','armor_type','db','level','ppMax','spellRanks','sourceAttacks','attacks','suggestedEquipment','source'])member[key]=structuredClone(template[key]);
+  member.spellLists=[];member.selectedSpells=[];member.tableOnly=true;
   const order=memberOrder(next,member.id);next.management.orders[member.id]={...order,level:member.level};
   if(order.action==='return')next.management.orders[member.id].nextAction=order.nextAction||'rest';
   if(next.management.journeys[member.id])next.management.journeys[member.id].level=member.level;
@@ -32,6 +34,7 @@ export function availableMemberSpells(member,lists){
  return member.spellLists.flatMap(known=>{const list=lists.find(l=>l.id===known.id);return (list?.spells||[]).filter(s=>s.level<=known.ranks&&s.level<=member.level).map(s=>({...s,list:known.id,listName:list.name,key:spellKey({...s,list:known.id})}));});
 }
 export function setMemberSpells(state,id,keys,lists){
+ if(state.tableOnly)throw new Error('Printed profiles do not define selectable spells.');
  const member=state.members.find(m=>m.id===id);
  if(!member||member.dead||managementState(state).journeys[id])throw new Error('Spell equipment can only change while this member is at base.');
  const available=new Set(availableMemberSpells(member,lists).map(s=>s.key));

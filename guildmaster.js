@@ -1,20 +1,17 @@
-import {shopStock,salePrice,buyGuildItem,sellGuildItem} from './guild-shop.js';
-import {loadGuildData,loadGuildCombat} from './guild-data.js';
+import {loadGuildMasterData,loadGuildCombat} from './guild-data.js';
 import {readGuild,writeGuild,guildStorageKey} from './guildmaster-store.js';
-import {newGuild,recruitMember,equipMember,availableMember} from './guild-rules.js';
-import {managementState,memberOrder,setMemberOrder,advanceGuildMaster,prepareGuildMaster,availableMemberSpells,setMemberSpells} from './guildmaster-rules.js';
-import {guildMasterMemberCard,itemName,originalArmor} from './guildmaster-member-view.js';
-import {automatedSpells,spellKey} from './guild-spells.js';
+import {newGuild,recruitMember,availableMember} from './guild-rules.js';
+import {managementState,memberOrder,setMemberOrder,advanceGuildMaster,prepareGuildMaster} from './guildmaster-rules.js';
+import {guildMasterMemberCard} from './guildmaster-member-view.js';
 import {equipmentIcon} from './equipment-art.js';
 import {esc} from './dom.js';
-const root=document.querySelector('#guildmaster-app'),picker=document.querySelector('#guildmaster-item-dialog'),pickerContent=document.querySelector('#guildmaster-item-content');
-let picking=null,spellDraft=new Set(),pickerTrigger=null;
-let state,catalog=[],lists=[],busy=false,notice='';
+const root=document.querySelector('#guildmaster-app');
+let state,catalog=[],opponents=[],busy=false,notice='';
 const clock=hours=>`Day ${1+Math.floor(hours/24)} · ${String(hours%24).padStart(2,'0')}:00`;
 function save(next){writeGuild(next,'guildmaster');state=next;}
 function message(text){notice=text;const box=root.querySelector('[data-manager-message]');if(box)box.textContent=text;}
 async function load(){
- try{({catalog,lists}=await loadGuildData());state=readGuild();if(!state)save(prepareGuildMaster(newGuild(catalog)));else {const normalized=prepareGuildMaster(state);if(JSON.stringify(normalized)!==JSON.stringify(state))save(normalized);}root.dataset.ready='true';render();}
+ try{({catalog,opponents}=await loadGuildMasterData());state=readGuild();if(!state)save(prepareGuildMaster(newGuild(catalog,{tableOnly:true}),catalog));else {const normalized=prepareGuildMaster(state,catalog);if(JSON.stringify(normalized)!==JSON.stringify(state))save(normalized);}root.dataset.ready='true';render();}
  catch(error){root.innerHTML=`<header class="adventure-heading"><h1 id="guildmaster-title">GuildMaster</h1></header><p role="alert">${esc(error.message)}</p><button class="button button-dark" data-manager-action="retry">Retry loading</button><button class="button button-quiet" data-manager-action="export">Export guild save</button>`;}
 }
 function orderControls(member){
@@ -28,7 +25,7 @@ function resultMarkup(result,{compact=false}={}){
 function render(){
  if(!state)return;
  const manager=managementState(state),latest=manager.reports[0],away=Object.keys(manager.journeys).length,living=state.members.filter(m=>!m.dead).length;
- root.innerHTML=`<header class="adventure-heading manager-heading"><div><p class="adventure-eyebrow">Your members. Your orders.</p><h1 id="guildmaster-title">GuildMaster</h1><p>Assign each member an action, then advance time to resolve their turn.</p></div><button class="button button-quiet" data-manager-action="recruit-focus">Recruit member</button></header><div class="manager-toolbar"><div class="manager-clock"><strong>${clock(state.hours)}</strong><span>Turn ${manager.turn} · ${living} living members · ${away} away · ${state.gold} gold in store</span></div><button class="button button-dark" data-manager-action="advance" ${living?'':'disabled'}>Advance time · 4 hours →</button></div><p class="adventure-notice" data-manager-message role="status">${esc(notice||'Orders are queued. Nothing changes until you advance time.')}</p><section class="manager-main" aria-labelledby="manager-members-title"><div class="manager-section-heading"><h2 id="manager-members-title">Members</h2><span>${latest?`Last resolved: turn ${latest.number} · ${clock(latest.hour)}`:'Ready for the first turn'}</span></div><div class="guild-members manager-members">${state.members.map(member=>{const result=latest?.results.find(r=>r.memberId===member.id);return guildMasterMemberCard(state,member,lists,{controls:orderControls(member),result:result?`<section class="manager-member-result" aria-label="${esc(member.name)} last result"><h4>Last turn</h4>${resultMarkup(result,{compact:true})}</section>`:''});}).join('')}</div></section><div class="manager-secondary"><section class="manager-panel"><h2>Recruit members</h2><form id="manager-recruit"><label>Master Character Table T-5.8<select name="template">${catalog.map(c=>`<option value="${esc(c.id)}">${esc(c.name)} · ${c.hits} HP · ${c.ppMax} PP</option>`).join('')}</select></label><button class="button button-dark" ${state.members.length>=24?'disabled':''}>Recruit member</button></form><p>Recruitment is free for this prototype. Up to 24 guild members.</p></section><section class="manager-panel manager-shop"><h2>Store · ${state.gold} gold</h2><p>Buy equipment for the guild, or sell unequipped items. Expedition loot becomes available after returning to base.</p><details open><summary>Buy equipment</summary><ul class="manager-store">${shopStock.map(i=>`<li>${equipmentIcon(i.name)}<span>${esc(itemName(i))}<small>${i.price} gold</small></span><button type="button" class="button button-quiet" data-shop-buy="${i.key}" aria-label="Buy ${esc(itemName(i))} for ${i.price} gold" ${state.gold<i.price?'disabled':''}>Buy</button></li>`).join('')}</ul></details><details open><summary>Sell items · ${state.inventory.length} owned</summary><ul class="manager-store">${state.inventory.map(i=>{const owner=state.members.find(m=>Object.values(m.equipped).includes(i.id)),price=salePrice(i);return `<li>${equipmentIcon(i.name)}<span>${esc(itemName(i))}<small>${owner?`Equipped by ${esc(owner.name)} · unequip to sell`:`${price} gold`}</small></span><button type="button" class="button button-quiet" data-shop-sell="${esc(i.id)}" aria-label="Sell ${esc(itemName(i))} for ${price} gold" ${owner||!price?'disabled':''}>Sell</button></li>`;}).join('')||'<li>No items in the guild store.</li>'}</ul></details><p>Campaign prices in gold. Resale pays half value; enchanted bonuses add 10 gold per +1 before resale.</p></section></div><details class="manager-panel manager-history"><summary>Turn journal · ${manager.reports.length} turns</summary>${manager.reports.map(turn=>`<details><summary>Turn ${turn.number} · ${clock(turn.hour)}</summary>${turn.results.map(r=>`<article><h3>${esc(r.name)}</h3>${resultMarkup(r)}</article>`).join('')}</details>`).join('')||'<p>Results from every member appear here after advancing time.</p>'}</details><details class="adventure-notes"><summary>How member turns work</summary><p>Assign Adventure, Rest, or Work, then advance four hours. Each member adventures at their own level. Switching an away member to Rest or Work queues a return; their action control locks until they arrive next turn. Their chosen base action begins on the following turn.</p><p>Work earns 1 gold per four-hour turn. Working does not restore HP or PP. Rest at base restores 4 HP per turn, with PP recovery after eight resting hours and infirmary wound treatment. Dead members cannot act. Equipment and spell selections can only change at base.</p><p>Select individual spells from the member’s learned lists. Selected supported spells are used automatically in combat; other known spells are labeled reference-only in the picker. GuildMaster has its own members, items, gold and clock. The latest 30 turns and up to 400 combat rounds save in this browser. XP accumulates without automatic level advancement.</p></details>`;
+ root.innerHTML=`<header class="adventure-heading manager-heading"><div><p class="adventure-eyebrow">Your members. Your orders.</p><h1 id="guildmaster-title">GuildMaster</h1><p>Recruit a printed T-5.8 profile, assign an action, and advance time.</p></div><button class="button button-quiet" data-manager-action="recruit-focus">Recruit member</button></header><div class="manager-toolbar"><div class="manager-clock"><strong>${clock(state.hours)}</strong><span>Turn ${manager.turn} · ${living} living members · ${away} away · ${state.gold} gold in store</span></div><button class="button button-dark" data-manager-action="advance" ${living?'':'disabled'}>Advance time · 4 hours →</button></div><p class="adventure-notice" data-manager-message role="status">${esc(notice||'Orders are queued. Nothing changes until you advance time.')}</p><section class="manager-main" aria-labelledby="manager-members-title"><div class="manager-section-heading"><h2 id="manager-members-title">Members</h2><span>${latest?`Last resolved: turn ${latest.number} · ${clock(latest.hour)}`:'Ready for the first turn'}</span></div><div class="guild-members manager-members">${state.members.map(member=>{const result=latest?.results.find(r=>r.memberId===member.id);return guildMasterMemberCard(state,member,[],{controls:orderControls(member),result:result?`<section class="manager-member-result" aria-label="${esc(member.name)} last result"><h4>Last turn</h4>${resultMarkup(result,{compact:true})}</section>`:''});}).join('')}</div></section><div class="manager-secondary"><section class="manager-panel"><h2>Recruit members</h2><form id="manager-recruit"><label>Master Character Table T-5.8<select name="template">${catalog.map(c=>`<option value="${esc(c.id)}">${esc(c.name)} · ${c.hits} HP · ${c.ppMax} PP</option>`).join('')}</select></label><button class="button button-dark" ${state.members.length>=24?'disabled':''}>Recruit member</button></form><p>45 fixed T-5.8 profiles. Recruitment is free; up to 24 members. Opponents come from T-5.8, the Monster Statistics Chart, and the Animal Statistics Chart.</p></section></div><details class="manager-panel manager-history"><summary>Turn journal · ${manager.reports.length} turns</summary>${manager.reports.map(turn=>`<details><summary>Turn ${turn.number} · ${clock(turn.hour)}</summary>${turn.results.map(r=>`<article><h3>${esc(r.name)}</h3>${resultMarkup(r)}</article>`).join('')}</details>`).join('')||'<p>Results from every member appear here after advancing time.</p>'}</details><details class="adventure-notes"><summary>How member turns work</summary><p>Assign Adventure, Rest, or Work, then advance four hours. Each member adventures at their own level. Switching an away member to Rest or Work queues a return; their action control locks until they arrive next turn. Their chosen base action begins on the following turn.</p><p>Work earns 1 gold per turn. Rest restores 4 HP per turn and treats wounds; PP recovers after eight resting hours. Dead members cannot act. Victories award gold; equipment drops and the shop are disabled.</p><p>Members use printed hits, armor type, DB and OB. T-5.8 does not name weapons or spell lists: its first non-spell attack uses the existing edged-melee or missile attack table. Directed-spell OB, PP and spell ranks are shown for reference; spells are not invented or cast. Monster and animal attacks use their printed attack types, chances and follow-ups. Special abilities and group/swarm attacks are not automated.</p><p>Wounds, XP, gold and the turn journal persist. XP does not change the fixed profile. Previously stored items are retained in the save but do not affect these stats.</p></details>`;
  setBusy(busy);
 }
 function setBusy(value){
@@ -45,11 +42,8 @@ root.addEventListener('submit',event=>{
 });
 root.addEventListener('click',async event=>{
  if(busy)return;
- const buy=event.target.closest('[data-shop-buy]'),sell=event.target.closest('[data-shop-sell]');
- if(buy||sell){try{const current=readGuild();save(buy?buyGuildItem(current,buy.dataset.shopBuy):sellGuildItem(current,sell.dataset.shopSell));notice=buy?'Item purchased and added to the guild store.':'Item sold. Gold added to the guild store.';render();}catch(error){message(error.message);}return;}
- const orderButton=event.target.closest('[data-order-action]'),equipment=event.target.closest('[data-pick-equipment]'),spells=event.target.closest('[data-pick-spells]');
+ const orderButton=event.target.closest('[data-order-action]');
  if(orderButton){try{save(setMemberOrder(state,orderButton.dataset.memberId,{action:orderButton.dataset.orderAction}));notice='Action queued. Advance time to resolve it.';render();root.querySelector(`[data-member-id="${orderButton.dataset.memberId}"][data-order-action="${orderButton.dataset.orderAction}"]`)?.focus();}catch(error){message(error.message);}return;}
- if(equipment||spells){openPicker(equipment||spells);return;}
  const button=event.target.closest('[data-manager-action]');if(!button)return;
  try{switch(button.dataset.managerAction){
  case 'retry':await load();break;
@@ -61,44 +55,12 @@ root.addEventListener('click',async event=>{
   const needsCombat=before.members.some(m=>!m.dead&&memberOrder(before,m.id).action==='adventure');
   const tables=needsCombat?await loadGuildCombat():{};
   if(JSON.stringify(readGuild())!==expected)throw new Error('The guild changed while loading. Review the orders and advance again.');
-  const next=advanceGuildMaster(before,catalog,tables);save(next);
+  const next=advanceGuildMaster(before,opponents,tables);save(next);
   const reports=managementState(next).reports[0].results,encounters=reports.filter(r=>r.encounter?.rounds.length).length;
   notice=`Turn ${managementState(next).turn} complete. ${encounters} combat encounter${encounters===1?'':'s'}. Review each member’s result and choose their next action.`;
   setBusy(false);render();break;
  }
  }}catch(error){setBusy(false);message(error.message);}
 });
-window.addEventListener('storage',event=>{if(event.key===guildStorageKey&&!busy)try{const latest=readGuild();if(latest){state=latest;if(picker.open)picker.close();render();}}catch(error){message(error.message);}});
-function openPicker(trigger){
- const id=trigger.dataset.memberId||trigger.dataset.pickSpells,member=state.members.find(m=>m.id===id);
- if(!member||member.dead||managementState(state).journeys[id])return;
- pickerTrigger={id,slot:trigger.dataset.pickEquipment||'spells'};picking={...pickerTrigger};spellDraft=new Set(member.selectedSpells||[]);
- renderPicker();picker.showModal();
-}
-function renderPicker(){
- const member=state.members.find(m=>m.id===picking.id),slot=picking.slot;
- document.querySelector('#guildmaster-item-title').textContent=`${member.name} · ${slot==='spells'?'Spells':slot[0].toUpperCase()+slot.slice(1)}`;
- document.querySelector('#guildmaster-item-message').textContent='';
- if(slot==='spells'){
-  const available=availableMemberSpells(member,lists),groups=[...new Set(available.map(s=>s.list))];
-  pickerContent.innerHTML=`<p>Select the spells this member will carry. Only spells within their learned lists and levels are available.</p>${groups.map(id=>{const entries=available.filter(s=>s.list===id);return `<section class="manager-picker-group"><h3>${esc(entries[0].listName)}</h3><div class="manager-picker-grid">${entries.map(spell=>`<button type="button" class="manager-pick-item" data-spell-choice="${esc(spell.key)}" aria-pressed="${spellDraft.has(spell.key)}">${equipmentIcon('Spell book')}<span><strong>${esc(spell.name)}</strong><small>Level ${spell.level} · ${automatedSpells.some(s=>spellKey(s)===spell.key)?'Automatic in combat':'Reference only'}</small></span><span class="manager-choice-mark" aria-hidden="true">${spellDraft.has(spell.key)?'✓':'+'}</span></button>`).join('')}</div></section>`;}).join('')}<div class="manager-picker-actions"><button type="button" class="button button-dark" data-save-spells>Save spells</button><button type="button" class="button button-quiet" data-close-picker>Cancel</button></div>`;
- }else{
-  const items=state.inventory.filter(i=>i.slot===slot&&(slot!=='weapon'||member.sourceAttacks.some(a=>a.kind===i.kind)));
-  pickerContent.innerHTML=`<div class="manager-picker-grid">${slot!=='weapon'?`<button type="button" class="manager-pick-item" data-item-choice="" aria-pressed="${!member.equipped[slot]}">${equipmentIcon(slot==='armor'?originalArmor(member):slot)}<span><strong>${esc(slot==='armor'?originalArmor(member):`No ${slot}`)}</strong><small>${slot==='armor'?'Original armor':'Unequip'}</small></span></button>`:''}${items.map(item=>{
-   const owner=state.members.find(m=>Object.values(m.equipped).includes(item.id)),equipped=member.equipped[slot]===item.id;
-   return `<button type="button" class="manager-pick-item" data-item-choice="${esc(item.id)}" aria-pressed="${equipped}" ${owner&&owner.id!==member.id?'disabled':''}>${equipmentIcon(item.name)}<span><strong>${esc(itemName(item))}</strong><small>${owner?equipped?'Equipped':`Used by ${esc(owner.name)}`:'In store'}</small></span>${equipped?'<span aria-hidden="true">✓</span>':''}</button>`;
-  }).join('')}</div>`;
- }
-}
-picker.addEventListener('click',event=>{
- const item=event.target.closest('[data-item-choice]'),spell=event.target.closest('[data-spell-choice]');
- try{
-  if(event.target.closest('[data-close-picker]')){picker.close();return;}
-  if(item){save(equipMember(state,picking.id,item.dataset.itemChoice,picking.slot));notice='Equipment updated.';render();picker.close();}
-  if(spell){const key=spell.dataset.spellChoice;spellDraft.has(key)?spellDraft.delete(key):spellDraft.add(key);spell.setAttribute('aria-pressed',String(spellDraft.has(key)));spell.querySelector('.manager-choice-mark').textContent=spellDraft.has(key)?'✓':'+';}
-  if(event.target.closest('[data-save-spells]')){save(setMemberSpells(state,picking.id,[...spellDraft],lists));notice='Spell selection updated.';render();picker.close();}
- }catch(error){document.querySelector('#guildmaster-item-message').textContent=error.message;}
-});
-picker.addEventListener('close',()=>{const trigger=pickerTrigger;if(trigger)root.querySelector(trigger.slot==='spells'?`[data-pick-spells="${trigger.id}"]`:`[data-member-id="${trigger.id}"][data-pick-equipment="${trigger.slot}"]`)?.focus({preventScroll:true});picking=null;});
-window.addEventListener('rolemaster-view-changed',()=>{if(picker.open)picker.close();});
+window.addEventListener('storage',event=>{if(event.key===guildStorageKey&&!busy)try{const latest=readGuild();if(latest){state=latest;render();}}catch(error){message(error.message);}});
 await load();

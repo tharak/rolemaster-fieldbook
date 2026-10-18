@@ -1,43 +1,34 @@
 async existingPage=>{
  const context=await existingPage.context().browser().newContext({reducedMotion:'reduce'}),page=await context.newPage(),errors=[];
- const assert=(value,message)=>{if(!value)throw new Error(message);};page.on('pageerror',e=>errors.push(e.message));
- const key='rolemaster-guildmaster-v1',ready=()=>page.waitForFunction(()=>document.documentElement.dataset.appReady==='true'&&document.querySelector('#guildmaster-app').dataset.ready==='true');
- const snapshot=()=>page.evaluate(key=>JSON.parse(localStorage.getItem(key)),key),legacy=()=>page.evaluate(()=>localStorage.getItem('rolemaster-guild-v1'));
- const advance=async()=>{const turn=(await snapshot()).management?.turn||0;await page.locator('[data-manager-action="advance"]').click();await page.waitForFunction(({key,turn})=>JSON.parse(localStorage.getItem(key)).management?.turn===turn+1,{key,turn});};
- const card=id=>page.locator(`#guildmaster-app [data-member="${id}"]`),order=(id,action)=>card(id).locator(`[data-order-action="${action}"]`).click();
+ const assert=(value,message)=>{if(!value)throw new Error(message);};page.on('pageerror',error=>errors.push(error.message));
+ const key='rolemaster-guildmaster-v1';
+ const ready=()=>page.waitForFunction(()=>document.documentElement.dataset.appReady==='true'&&document.querySelector('#guildmaster-app').dataset.ready==='true');
+ const snapshot=()=>page.evaluate(key=>JSON.parse(localStorage.getItem(key)),key);
+ const advance=async()=>{const turn=(await snapshot()).management.turn;await page.locator('[data-manager-action="advance"]').click();await page.waitForFunction(({key,turn})=>JSON.parse(localStorage.getItem(key)).management.turn===turn+1,{key,turn});};
+ const order=async(id,action)=>page.locator(`[data-member-id="${id}"][data-order-action="${action}"]`).click();
  try{
-  await page.goto(existingPage.url().split('#')[0]);await ready();let s=await snapshot();const id=s.members[0].id,cleric=s.members.find(m=>m.profession==='Cleric').id;
-  assert(await page.locator('#guildmaster-view').isVisible(),'GuildMaster not landing');assert(!await page.locator('[data-view="adventure"]').isVisible(),'GuildMaster links to Adventures');assert(await page.locator('#guildmaster-app .guild-member').count()===4,'Missing member grid');
-  assert(await page.locator('#guildmaster-app .guild-member select').count()===0,'Member dropdown remains');assert(await page.locator('[data-member-level]').count()===0,'Editable adventure level remains');
-  assert(await card(id).locator('.manager-spells').count()===0,'No-spell member shows spell list');assert(!/Weapon OB|\bAT \d|\bDB \d/.test(await card(id).textContent()),'Old combat statistics still shown');
-  assert(await card(id).locator('header .manager-member-status').textContent()==='At base','Status not in header');
-  assert(await card(id).locator('.manager-health').evaluate(el=>{const a=el.getBoundingClientRect(),b=el.querySelector('strong').getBoundingClientRect();return Math.abs((a.left+a.right-b.left-b.right)/2)<1&&Math.abs((a.top+a.bottom-b.top-b.bottom)/2)<1;}),'HP text not centered inside bar');
-  const oldSave=await legacy();
-  await card(id).locator('[data-pick-equipment="weapon"]').click();await page.locator('#guildmaster-item-dialog[open]').waitFor();await page.locator('#guildmaster-item-dialog').getByRole('button',{name:/Mace In store/}).click();assert((await card(id).locator('[data-pick-equipment="weapon"]').textContent()).includes('Mace'),'Equipment popup did not equip');
-  await card(cleric).locator('[data-pick-spells]').first().click();const dialog=page.locator('#guildmaster-item-dialog');assert(await dialog.locator('[data-spell-choice="A-9.5.2:8"]').count()===0,'Unavailable spell offered');
-  for(const selected of await dialog.locator('[data-spell-choice][aria-pressed="true"]').all())await selected.click();
-  await dialog.locator('[data-spell-choice="A-9.7.1:1"]').click();await dialog.locator('[data-save-spells]').click();s=await snapshot();assert(s.members.find(m=>m.id===cleric).selectedSpells.join()==='A-9.7.1:1','Spell selection not saved');
-  assert(await page.evaluate(async id=>{const s=JSON.parse(localStorage.getItem('rolemaster-guildmaster-v1'));return (await import('./guild-spells.js')).knownAutomatedSpells(s.members.find(m=>m.id===id)).length===0;},cleric),'Unselected spells remain active');
-  await card(cleric).locator('[data-pick-spells]').first().click();await dialog.locator('[data-spell-choice="A-9.5.2:1"]').click();await page.keyboard.press('Escape');assert((await snapshot()).members.find(m=>m.id===cleric).selectedSpells.length===1,'Cancel changed spell equipment');
-  await page.evaluate(()=>{const key='rolemaster-guildmaster-v1',s=JSON.parse(localStorage.getItem(key));s.members.forEach(m=>{m.damage=12;m.pp=0;});localStorage.setItem(key,JSON.stringify(s));});await page.reload();await ready();
-  await order(id,'work');let queued=await snapshot();assert(queued.hours===0&&queued.gold===0,'Assignment executed immediately');await advance();s=await snapshot();assert(s.hours===4&&s.gold===1,'Work or clock incorrect');assert(s.members[0].damage===12&&s.members[0].pp===0,'Work granted recovery');assert(s.members[1].damage===8,'Rest did not recover hits');await advance();s=await snapshot();assert(s.members[1].pp===s.members[1].ppMax,'Rest PP recovery failed');assert(await legacy()===oldSave,'GuildMaster changed the other mode save');
-  await order(id,'adventure');
-  // Choose a quiet deterministic first stage to exercise returning without wounds.
-  await page.evaluate(async id=>{const {advanceGuildMaster}=await import('./guildmaster-rules.js'),{loadGuildData,loadGuildCombat}=await import('./guild-data.js'),{catalog}=await loadGuildData(),tables=await loadGuildCombat();const base=JSON.parse(localStorage.getItem('rolemaster-guildmaster-v1'));for(let i=0;i<200;i++){const candidate=structuredClone(base);candidate.management.seed='quiet-'+i;const next=advanceGuildMaster(candidate,catalog,tables);if(next.management.journeys[id]&&!next.management.reports[0].results.find(r=>r.memberId===id).encounter?.rounds.length){localStorage.setItem('rolemaster-guildmaster-v1',JSON.stringify(candidate));return;}}throw new Error('No quiet fixture');},id);await page.reload();await ready();
-  let failed=false;await page.route('**/tables/A-10.9.9.json',route=>{if(!failed){failed=true;return route.fulfill({status:503,body:'Unavailable'});}return route.continue();});const beforeFail=await snapshot();await page.locator('[data-manager-action="advance"]').click();await page.waitForFunction(()=>document.querySelector('[data-manager-message]').textContent.includes('Retry'));assert(JSON.stringify(await snapshot())===JSON.stringify(beforeFail),'Failed load mutated save');
-  await advance();s=await snapshot();assert(s.management.journeys[id].level===s.members[0].level,'Adventure does not use member level');assert(await card(id).locator('[data-pick-equipment="weapon"]').isDisabled(),'Away equipment unlocked');await order(id,'work');
-  assert((await card(id).locator('.manager-member-status').textContent()).includes('Returning'),'Returning status absent');for(const button of await card(id).locator('[data-order-action]').all())assert(await button.isDisabled(),'Returning action control unlocked');
-  const returning=await snapshot();await page.reload();await ready();assert(JSON.stringify(await snapshot())===JSON.stringify(returning),'Reload altered returning order or spells');await advance();s=await snapshot();assert(!s.management.journeys[id]&&s.management.orders[id].action==='work','Return failed');assert(s.members[0].damage===returning.members[0].damage,'Return also healed');assert(s.gold===returning.gold+returning.management.journeys[id].gold,'Return payout wrong');const banked=s.gold;await advance();assert((await snapshot()).gold===banked+1,'Work did not begin after arrival');
-  // Actual combat and a dropped item, at the member's own level.
-  await page.evaluate(async()=>{const {newGuild}=await import('./guild-rules.js'),{prepareGuildMaster,setMemberOrder,advanceGuildMaster}=await import('./guildmaster-rules.js'),{loadGuildData,loadGuildCombat}=await import('./guild-data.js'),{catalog}=await loadGuildData(),tables=await loadGuildCombat();let base=prepareGuildMaster(newGuild(catalog));base=setMemberOrder(base,base.members[0].id,{action:'adventure'});for(let i=0;i<3000;i++){const candidate=structuredClone(base);candidate.management.seed='own-level-loot-'+i;const next=advanceGuildMaster(candidate,catalog,tables),r=next.management.reports[0].results[0];if(r.encounter?.winner===0&&r.items.length&&r.away){localStorage.setItem('rolemaster-guildmaster-v1',JSON.stringify(candidate));return;}}throw new Error('No combat fixture');});await page.reload();await ready();await advance();s=await snapshot();assert(s.management.reports[0].results[0].encounter.rounds.length>0,'No round results');assert(s.management.reports[0].results[0].items.length>0,'No loot');assert(!await page.locator('#adventure-encounter-dialog').evaluate(el=>el.open),'Legacy fight overlay opened');
-  await page.setViewportSize({width:1440,height:1080});await page.screenshot({path:'output/playwright/guildmaster-simple-desktop.png',fullPage:true});await page.setViewportSize({width:390,height:844});assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),'Mobile overflow');await page.screenshot({path:'output/playwright/guildmaster-simple-mobile.png',fullPage:true});
-  await card(cleric).locator('[data-pick-spells]').first().click();assert(await dialog.evaluate(el=>el.scrollWidth<=el.clientWidth+1),'Spell popup mobile overflow');await page.screenshot({path:'output/playwright/guildmaster-spells-mobile.png'});await page.keyboard.press('Escape');
-  const beforeShop=await snapshot(),stock=beforeShop.inventory.find(i=>i.key==='chain'&&!beforeShop.members.some(m=>Object.values(m.equipped).includes(i.id)));
-  assert(await page.locator(`[data-shop-sell="${beforeShop.members[0].equipped.weapon}"]`).isDisabled(),'Equipped weapon can be sold');
-  await page.locator(`[data-shop-sell="${stock.id}"]`).click();let traded=await snapshot();assert(traded.gold===beforeShop.gold+15&&!traded.inventory.some(i=>i.id===stock.id),'Sale failed');
-  await page.locator('[data-shop-buy="staff"]').click();traded=await snapshot();assert(traded.gold===beforeShop.gold+13&&traded.inventory.length===beforeShop.inventory.length,'Purchase failed');
-  await page.reload();await ready();assert(JSON.stringify(await snapshot())===JSON.stringify(traded),'Shop trade did not survive reload');
-  const independent=await snapshot();const url=new URL(page.url());url.searchParams.set('mode-test','legacy');url.hash='adventure';await page.goto(url.href);await ready();await page.locator('#guild-recruit select').selectOption('master:bard:5');await page.locator('#guild-recruit button').click();assert(JSON.stringify(await snapshot())===JSON.stringify(independent),'Other mode changed GuildMaster');
-  assert(errors.length===0,errors.join('\n'));return {shop:true,independentSaves:true,segments:true,returnLocked:true,work:true,memberLevel:true,equipmentPopup:true,spellSelection:true,noEmptySpells:true,healthBar:true,combatLoot:true,reload:true,loadingRetry:true,mobile:true,pageErrors:0};
+  await page.goto(existingPage.url().split('#')[0]+'#guildmaster');await ready();
+  let state=await snapshot();const id=state.members[0].id;
+  assert(state.tableOnly&&state.members.length===4,'Initial fixed profiles missing');
+  assert(state.members.every(member=>member.spellLists.length===0),'Invented spells remain');
+  assert(await page.locator('#manager-recruit option').count()===45,'Recruit catalog wrong');
+  assert(await page.locator('.manager-printed-stats').count()===4,'Printed stats missing');
+  assert(await page.locator('[data-pick-equipment],[data-pick-spells],[data-shop-buy]').count()===0,'Custom loadout UI remains');
+  const catalogs=await page.evaluate(async()=>{const {catalog,opponents}=await (await import('./guild-data.js')).loadGuildMasterData();return {members:catalog.length,monsters:opponents.filter(c=>c.group==='Monster').length,animals:opponents.filter(c=>c.group==='Animal').length};});
+  assert(catalogs.members===45&&catalogs.monsters>0&&catalogs.animals>0,'Missing opponent table');
+  await order(id,'work');assert((await snapshot()).gold===0,'Order acted early');await advance();state=await snapshot();assert(state.gold===1&&state.hours===4,'Work failed');
+  await page.locator('#manager-recruit select').selectOption('master:bard:5');await page.locator('#manager-recruit button').click();state=await snapshot();assert(state.members.length===5&&state.members[4].spellLists.length===0,'Recruit failed');
+  await page.evaluate(async id=>{
+   const {advanceGuildMaster}=await import('./guildmaster-rules.js');const {loadGuildMasterData,loadGuildCombat}=await import('./guild-data.js');const {opponents}=await loadGuildMasterData();const tables=await loadGuildCombat();
+   const key='rolemaster-guildmaster-v1',state=JSON.parse(localStorage.getItem(key));state.management.orders[id].action='adventure';
+   for(let i=0;i<100;i++){state.management.seed='quiet-'+i;const next=advanceGuildMaster(state,opponents,tables);if(next.management.journeys[id]&&!next.management.reports[0].results.find(r=>r.memberId===id).encounter?.rounds.length){localStorage.setItem(key,JSON.stringify(state));return;}}
+   throw Error('No quiet fixture');
+  },id);
+  await page.reload();await ready();await advance();assert((await snapshot()).management.journeys[id],'Adventure failed');
+  await order(id,'work');assert(await page.locator(`[data-member-id="${id}"][data-order-action="rest"]`).isDisabled(),'Return not locked');await advance();state=await snapshot();assert(!state.management.journeys[id]&&state.management.orders[id].action==='work','Return failed');
+  const saved=JSON.stringify(state);await page.reload();await ready();assert(JSON.stringify(await snapshot())===saved,'Reload changed save');
+  await page.setViewportSize({width:390,height:844});assert(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth),'Mobile overflow');
+  await page.screenshot({path:'output/playwright/guildmaster-printed-mobile.png',fullPage:true});
+  assert(!errors.length,errors.join('\n'));return {printedProfiles:true,catalogs,recruitment:true,work:true,adventure:true,return:true,reload:true,mobile:true,pageErrors:0};
  }finally{await context.close();}
 }

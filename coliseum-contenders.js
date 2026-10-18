@@ -45,7 +45,7 @@ export function characterContenders(actors) {
       special:`${actor.race} ${actor.profession} · Saved character. Uses the calculated stats and equipped weapons from Encounters.`};
   });
 }
-export function masterCharacterCatalog(data) {
+export function masterCharacterCatalog(data,{spellPresets=true}={}) {
   if(data?.code!=='T-5.8')throw new Error('Master Character table T-5.8 is required.');
   const pages=data.tablePages||[];
   const pattern=/^(?:(Fighter|Thief|Rogue|Cleric|Magician|Mentalist|Ranger|Dabbler|Bard)\s+)?(1|5|10|15|20)\s+(\d+)\((\d+)(s?)(\*?)\)\s+(\d+)\s+(\d+)\s+(-?\d+)(me|ms|ds)\s+(-?\d+)(me|ms|ds)(?=\s)/;
@@ -66,7 +66,7 @@ export function masterCharacterCatalog(data) {
       });
       contenders.push({id:`master:${profession.toLowerCase()}:${level}`,sourceKind:'master',name:`${profession} (level ${level})`,
         group:'T-5.8 enemy',profession,level,size:'M',armor_type:Number(m[3]),db:Number(m[4]),hits:Number(m[7]),ppMax:Number(m[8]),
-        ...masterSpells(profession,level,Number(raw.trim().slice(m[0].length).trim().split(/\s+/)[5])),
+        ...(spellPresets?masterSpells(profession,level,Number(raw.trim().slice(m[0].length).trim().split(/\s+/)[5])):{spellRanks:Number(raw.trim().slice(m[0].length).trim().split(/\s+/)[5]),spellLists:[]}),
         attacks,sourceAttacks,suggestedEquipment:m[5]?['shield']:[],spellDefense:m[6]==='*',
         source:{code:'T-5.8',printedPage:page.printedPage,pdfPage:page.pdfPage,raw},
         special:`T-5.8 · ${m[8]} PPs. Printed DB ${m[4]}${m[5]?' includes shield':''}; spell increases are not added. Weapon types are configurable.${sourceAttacks.some(attack=>attack.kind==='ds')?' Directed-spell OB is preserved; no spell is specified in the table.':''}`});

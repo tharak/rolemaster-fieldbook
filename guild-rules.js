@@ -1,6 +1,7 @@
 // Guild campaign state and rules, independent of UI, storage and rendering.
 import {generateWorld,seededRandom,findRoute} from './adventure-rules.js';
 import {generateEncounter} from './encounter-generation-rules.js';
+import {attackTypes,attackName} from './coliseum-rules.js';
 import {arenaWeaponStyles} from './coliseum-contenders.js';
 import {simulateGuildBattle} from './guild-battle.js';
 import {hitRecovery} from './healing-rules.js';
@@ -18,16 +19,17 @@ export const guildItems=[
 const clone=value=>structuredClone(value);
 export const atBase=(state,id)=>!state.expedition?.party.includes(id)&&!state.management?.journeys?.[id];
 export const availableMember=m=>!m.dead&&m.damage<m.hits&&!m.effects.some(e=>e.kind==='bleed');
-export function newGuild(catalog){
- let state={version:1,members:[],inventory:[],gold:0,hours:0,expedition:null,history:[],nextId:1};
+export function newGuild(catalog,{tableOnly=false}={}){
+ let state={version:1,...(tableOnly?{tableOnly:true}:{}),members:[],inventory:[],gold:0,hours:0,expedition:null,history:[],nextId:1};
  for(const profession of ['Fighter','Ranger','Cleric','Magician'])state=recruitMember(state,catalog.find(c=>c.profession===profession&&c.level===1));
- for(const key of ['mace','staff','bow','helmet','leather','chain'])state.inventory.push({...guildItems.find(i=>i.key===key),id:`item-${state.nextId++}`,bonus:0});
+ if(!tableOnly)for(const key of ['mace','staff','bow','helmet','leather','chain'])state.inventory.push({...guildItems.find(i=>i.key===key),id:`item-${state.nextId++}`,bonus:0});
  return state;
 }
 export function recruitMember(state,template){
  if(!template||template.sourceKind!=='master')throw new Error('Choose a T-5.8 member template.');
  if(state.members.length>=24)throw new Error('The guild has room for 24 recruits.');
  const next=clone(state),id=`member-${next.nextId++}`,member={...clone(template),id,templateId:template.id,name:`${template.profession} ${next.members.filter(m=>m.profession===template.profession).length+1}`,damage:0,pp:template.ppMax,xp:0,dead:false,effects:[],equipped:{},restHours:0};
+ if(next.tableOnly){member.tableOnly=true;member.spellLists=[];member.selectedSpells=[];next.members.push(member);return next;}
  const first=template.attacks[0];
  for(const key of [first.rawKind==='ms'?'bow':'sword',...(template.suggestedEquipment.includes('shield')?['shield']:[])]){
   const item={...guildItems.find(i=>i.key===key),id:`item-${next.nextId++}`,bonus:0};next.inventory.push(item);member.equipped[item.slot]=item.id;
@@ -35,6 +37,7 @@ export function recruitMember(state,template){
  next.members.push(member);return next;
 }
 export function equipMember(state,memberId,itemId,slot){
+ if(state.tableOnly)throw new Error('Printed profiles use their fixed armor and attack bonuses.');
  const next=clone(state),member=next.members.find(m=>m.id===memberId);
  if(!member||!atBase(next,memberId)||member.dead)throw new Error('Only living members at base can change equipment.');
  if(!['weapon','shield','helmet','armor'].includes(slot))throw new Error('Invalid equipment slot.');
@@ -46,7 +49,14 @@ export function equipMember(state,memberId,itemId,slot){
  if(owner&&owner.id!==memberId)throw new Error('Unequip this item from its current owner first.');
  member.equipped[slot]=itemId;return next;
 }
+export function printedContender(member){
+ const attacks=clone(member.attacks).map(attack=>attack&&!attack.both?{...attack,name:attackName(attack),attackTable:attack.attackTable||attackTypes[attack.type][1]}:attack);
+ // T-5.8 lists OB by attack slot, but no weapon or directed-spell name.
+ if(member.sourceKind==='master')attacks.forEach((attack,index)=>{attack.chance=index===0?100:0;attack.optional=index!==0;});
+ return {...clone(member),attacks,spellLists:[],selectedSpells:[],equipment:{shield:member.suggestedEquipment?.includes('shield')||false},pp:member.pp??member.ppMax??0};
+}
 export function guildContender(state,member){
+ if(state.tableOnly)return printedContender(member);
  const item=slot=>state.inventory.find(i=>i.id===member.equipped[slot]);
  const weapon=item('weapon'),armor=item('armor'),shield=item('shield');
  if(!weapon)throw new Error(`${member.name} needs a weapon.`);
@@ -124,11 +134,13 @@ export function continueGuild(state,catalog,tables){
  if(encounter.type==='none'||encounter.code==='s'||encounter.code==='e'){
   report.conclusion=encounter.type==='none'?'The road was quiet.':encounter.code==='s'?'The party spotted travelers and passed without conflict.':'A peaceful meeting; the party exchanged news and continued.';
  }else{
-  // T-5.1 leaves composition and strength to the GM. Guild uses T-5.8 for both sides.
+  // T-5.1 leaves composition and strength to the GM; choose the nearest printed level.
   const distance=Math.min(...catalog.map(c=>Math.abs(c.level-exp.level))),pool=catalog.filter(c=>Math.abs(c.level-exp.level)===distance);
   const count=Math.max(1,Math.min(6,members.filter(availableMember).length-1+Math.floor(random()*3)));
   const enemies=Array.from({length:count},(_,i)=>{
-   const template=pool[Math.floor(random()*pool.length)],stateWithEnemy=recruitMember({...next,members:[]},template),member=stateWithEnemy.members[0];
+   const template=pool[Math.floor(random()*pool.length)];
+   if(next.tableOnly)return {...printedContender(template),id:`enemy-${i}`,name:`${template.name} ${i+1}`};
+   const stateWithEnemy=recruitMember({...next,members:[]},template),member=stateWithEnemy.members[0];
    return {...guildContender(stateWithEnemy,member),id:`enemy-${i}`,name:`${template.profession} ${i+1} (L${template.level})`};
   });
   const battle=simulateGuildBattle(members.filter(m=>!m.dead&&m.damage<m.hits).map(m=>guildContender(next,m)),enemies,tables,random);
@@ -140,7 +152,7 @@ export function continueGuild(state,catalog,tables){
    member.effects=unit.effects.map(e=>({...e,starts:1}));member.xp+=battle.xp[unit.id]||0;member.restHours=0;exp.xp[unit.id]=(exp.xp[unit.id]||0)+(battle.xp[unit.id]||0);
    if(member.dead)report.conclusion+=` ${member.name} died.`;
   }
-  if(battle.winner===0){const loot=encounterLoot(exp.level,random,report.id);report.gold=loot.gold;report.items=loot.items;exp.gold+=loot.gold;exp.items.push(...loot.items);}
+  if(battle.winner===0){const loot=encounterLoot(exp.level,random,report.id);report.gold=loot.gold;report.items=next.tableOnly?[]:loot.items;exp.gold+=loot.gold;exp.items.push(...report.items);}
  }
  exp.reports.unshift(report);
  if(report.winner===1||report.winner===null||!members.some(m=>!m.dead&&m.damage<m.hits))next=returnGuild(next,report.conclusion);

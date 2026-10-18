@@ -129,16 +129,21 @@ the selected base action. Rest follows the infirmary rules. Work earns one gold
 per four-hour turn without healing or recovering power points (a campaign default).
 Dead members do not act.
 
-The store buys equipment with guild gold and buys back unequipped inventory at
-half value. Equipped items and unbanked expedition loot cannot be sold. Prices
-are campaign defaults, with enchanted bonuses valued at 10 gold per +1.
+GuildMaster uses fixed T-5.8 member profiles and opponents from T-5.8, the
+Monster Statistics Chart, and the Animal Statistics Chart (A-8). Cards show
+printed hits, AT, DB, both OB slots, PP and spell ranks. Combat uses the first
+non-directed-spell OB, with the existing edged-melee or missile attack table;
+T-5.8 does not specify weapon names. Creature attacks retain their printed types,
+chances, and same/next-round follow-ups. Special abilities and group/swarm
+attacks remain unsupported. Entries with no supported attack are excluded.
 
-Cards show location beside the name, centered HP inside the health bar, and named
-equipment. Equipment buttons open an item picker; spells use the same item-style
-presentation and can be selected from the member's learned lists and levels.
-Selected supported spells are available to automatic combat; other spells are
-marked reference-only. Members without available spells have no spell section.
-Equipment and spell selections can change only at base.
+There are no equipment or spell pickers, shop, or new equipment drops in this
+mode. Printed DB and OB are used directly. PP, spell ranks, and directed-spell
+OB are reference values: no named spell lists are inferred and no spells are
+cast. Wounds, gold, XP, orders, and history persist; XP does not advance a fixed
+profile. Existing inventory and carried items stay in the save but do not affect
+combat. Loading an old save restores canonical printed stats without resetting
+member progress. These changes apply only to GuildMaster.
 
 GuildMaster has no map or link to Adventures. The older party-based Adventures
 mode retains its own save. On upgrade, the previously shared roster and progress
@@ -152,7 +157,7 @@ progress, and `guildmaster-member-view.js` renders compact member cards.
 A turn is saved atomically after all results resolve. Failed loading or simulation
 does not consume time or pay rewards. The journal retains 30 turns and up to 400
 combat rounds. Tests cover save isolation and migration, simultaneous orders,
-recovery, work, return locking, equipment and spell selection, failed simulation,
+recovery, work, return locking, printed profiles, all 130 creature entries, failed simulation,
 reloads, actual combat/loot, and mobile layout.
 
 ## Guild adventures
