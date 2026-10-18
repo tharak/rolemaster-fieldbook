@@ -6,7 +6,6 @@ import {masterCharacterCatalog} from '../coliseum-contenders.js';
 import {newGuild,equipMember,validGuild,encounterLoot,guildContender,printedContender} from '../guild-rules.js';
 import {managementState,memberOrder,setMemberOrder,advanceGuildMaster,prepareGuildMaster,availableMemberSpells,setMemberSpells} from '../guildmaster-rules.js';
 import {knownAutomatedSpells} from '../guild-spells.js';
-import {splitLegacyGuild,adventureGuildKey,guildMasterKey} from '../guild-save-migration.js';
 const json=path=>JSON.parse(readFileSync(new URL('../'+path,import.meta.url)));
 const catalog=masterCharacterCatalog(json('tables/T-5.8.json')),lists=json('data/guild/spell-lists.json');
 const tables=Object.fromEntries(readdirSync(new URL('../tables/',import.meta.url)).filter(n=>n.startsWith('A-10.')).map(n=>[n.slice(0,-5),json('tables/'+n)]));
@@ -79,14 +78,6 @@ test('GuildMaster can encounter both creature charts and awards no new equipment
   }
   assert.ok(found,group);
  }
-});
-test('legacy progress forks once, preserving independent saves and no duplicate transfers',()=>{
- const old=fresh();delete old.mode;old.gold=37;old.management.turn=4;old.management.orders[old.members[0].id]={action:'return',level:5};
- const values=new Map([[adventureGuildKey,JSON.stringify(old)]]),storage={getItem:key=>values.get(key)||null,setItem:(key,value)=>values.set(key,value)};
- splitLegacyGuild(storage);const manager=JSON.parse(storage.getItem(guildMasterKey)),adventure=JSON.parse(storage.getItem(adventureGuildKey));
- assert.equal(manager.gold,37);assert.equal(manager.management.turn,4);assert.equal(manager.management.orders[manager.members[0].id].level,1);assert.equal(manager.management.orders[manager.members[0].id].nextAction,'rest');assert.equal(manager.mode,'guildmaster');assert.equal(manager.expedition,null);assert.equal(adventure.management,undefined);assert.equal(adventure.gold,37);
- manager.gold=99;storage.setItem(guildMasterKey,JSON.stringify(manager));splitLegacyGuild(storage);assert.equal(JSON.parse(storage.getItem(guildMasterKey)).gold,99);assert.equal(JSON.parse(storage.getItem(adventureGuildKey)).gold,37);
- const untouched=JSON.stringify(old),failing={getItem:key=>key===adventureGuildKey?untouched:null,setItem:()=>{throw new Error('full');}};assert.throws(()=>splitLegacyGuild(failing));assert.equal(failing.getItem(adventureGuildKey),untouched);
 });
 test('a failed combat turn is atomic and saved selections survive reload',()=>{
  let s=fresh();const id=s.members[0].id;s=setMemberOrder(s,id,{action:'adventure'});let fixture;

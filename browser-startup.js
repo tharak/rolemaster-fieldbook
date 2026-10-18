@@ -1,28 +1,12 @@
-import {initializeRankBonusEngine} from './rules.js';
-
-const status = document.querySelector('#rules-engine-status');
-const engine = await initializeRankBonusEngine();
-document.documentElement.dataset.rulesEngine = engine.backend;
-status.textContent = engine.backend === 'wasm'
-  ? 'Character rules: Rust / WebAssembly'
-  : 'Character rules: JavaScript fallback (Rust unavailable)';
-status.title = engine.reason || 'Rust engine initialized successfully';
+import {resetLegacyBeta} from './guild-beta-store.js';
 try {
-  await import('./encounter.js');
-  // Keep the shared shell usable when a host omits the arena view.
-  if (document.querySelector('#coliseum-view')) {await import('./coliseum.js');await import('./encounter-generator.js');await import('./adventures.js');if(document.querySelector('#guildmaster-view'))await import('./guildmaster.js');}
-  await import('./healing-tools.js');
-  await import('./magic-item-tools.js');
-  await import('./religion-tools.js');
-  await import('./economics-tools.js');
-  await import('./miscellaneous-tools.js');
-  await import('./campaign-tools.js');
-  if(location.hash==='#adventure')document.querySelector('[data-view="adventure"]').click();
-  if(location.hash==='#guildmaster')document.querySelector('[data-view="guildmaster"]').click();
-  if(location.hash==='#encounters')window.RolemasterEncounter.openEncounters();
-  if(location.hash==='#gm')document.querySelector('[data-view="gm"]').click();
-  document.documentElement.dataset.appReady = 'true';
-} catch (error) {
-  status.textContent += ' — Application startup failed; reload to retry.';
-  console.error('Fieldbook startup failed', error);
+ resetLegacyBeta(localStorage);
+ await import('./guild-game.js');
+} catch(error) {
+ const root=document.querySelector('#game-app');root.replaceChildren();
+ const main=document.createElement('main');main.className='game-loading';
+ const title=document.createElement('h1');title.textContent='The guild could not open';
+ const message=document.createElement('p');message.textContent=error.message;
+ const button=document.createElement('button');button.textContent='Try again';button.addEventListener('click',()=>location.reload());
+ main.append(title,message,button);root.append(main);
 }
