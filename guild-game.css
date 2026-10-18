@@ -107,3 +107,18 @@ h1 { font:36px/1.12 var(--serif); margin:6px 0 16px; }h2 { font:25px var(--serif
 .member-actions [aria-pressed="true"] { border-color:var(--gold); background:#3c5030; }
 .manage-row form { min-width:0; flex:1; }
 .manage-row .text-field { margin-top:0; }
+
+.game-nav { grid-template-columns:repeat(2,minmax(0,1fr)); }
+.member-result { display:flex; justify-content:space-between; align-items:center; gap:8px; padding:10px 12px; margin:-4px -4px 16px; border:1px solid #b99e65; border-radius:8px; background:#34472b; }
+.member-result>div { min-width:0; }
+.member-result small { display:block; color:#d1cfac; font-size:10px; }
+.member-result strong { display:block; color:#ffe4a0; font:16px var(--mono); overflow-wrap:anywhere; }
+.member-result button { flex-shrink:0; font-size:21px; min-width:44px; padding:5px; }
+.result-flash { animation:reward-flash .8s ease-out 2; }
+@keyframes reward-flash { 0%,100% { background:#34472b; } 50% { background:#6c6031; box-shadow:0 0 14px #d0b47766; } }
+@media(prefers-reduced-motion:reduce) { .result-flash { animation:none; } }
+.member-combat-log { font-size:13px; }
+.member-combat-log details { border-top:1px solid var(--line); margin-top:8px; }
+.member-combat-log summary { cursor:pointer; padding:12px 0; min-height:44px; color:var(--gold); }
+.member-combat-log ol { padding-left:22px; }
+.member-combat-log li { margin:8px 0; overflow-wrap:anywhere; }

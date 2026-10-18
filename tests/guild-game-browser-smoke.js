@@ -9,7 +9,7 @@ async existingPage => {
   await page.goto('http://127.0.0.1:8011');await ready();
   check((await saved()).members.length===0,'empty start');
   check(await page.evaluate(()=>!localStorage.getItem('rolemaster-guild-v1')&&localStorage.getItem('unrelated-fixture')==='keep'),'reset namespace');
-  check(await page.locator('.game-nav button').allTextContents().then(a=>a.join(',')==='Guild,Adventures,Journal'),'single game navigation');
+  check(await page.locator('.game-nav button').allTextContents().then(a=>a.join(',')==='Guild,Adventures'),'single game navigation');
   await page.locator('[data-recruit]').click();await page.locator('#game-dialog [name="name"]').fill('Rowan');await page.locator('[data-hire] button[type="submit"]').click();
   check((await saved()).gold===20,'free founder');
   check(await page.locator('[data-open-member], [data-order="work"]').count()===0,'no detail view or Work');
@@ -27,7 +27,25 @@ async existingPage => {
   await page.locator('[data-tab="adventures"]').click();await page.locator('#game-app [data-order="adventure"]').click();await page.locator('[data-advance]').click();
   await page.waitForFunction(()=>JSON.parse(localStorage.getItem('rolemaster-guild-beta-v2')).management.turn===2);
   check((await saved()).members[0].xp>=5,'exploration XP');
-  await page.locator('[data-tab="journal"]').click();check((await page.locator('#game-main').innerText()).includes('Rowan'),'journal member');
+  check(await page.locator('.pet-card [data-member-result]').count()===1,'adventure rewards above member');
+  check(await page.locator('[data-tab="journal"]').count()===0,'journal removed');
+  await page.evaluate(async()=>{
+   const {advanceGame,assignActivity}=await import('/guild-game-rules.js?v=20261018-6');
+   const {loadGuildMasterData,loadGuildCombat}=await import('/guild-data.js');
+   const {opponents}=await loadGuildMasterData(),tables=await loadGuildCombat();
+   const key='rolemaster-guild-beta-v2',original=JSON.parse(localStorage.getItem(key));
+   for(let i=0;i<100;i++){
+    let s=structuredClone(original),m=s.members[0];m.damage=0;m.effects=[];m.care={food:100,energy:100,morale:100};
+    s.management.journeys={};s.management.orders[m.id]={action:'rest',level:m.level};s.management.seed='popup-'+i;
+    s=advanceGame(assignActivity(s,m.id,'adventure'),opponents,tables);
+    if(Object.hasOwn(s.management.reports[0].results[0].encounter||{},'winner')){localStorage.setItem(key,JSON.stringify(s));return;}
+   }
+   throw new Error('No combat fixture found');
+  });
+  await page.reload();await ready();const beforeLog=await saved();
+  await page.locator('[data-combat-member]').click();check(await page.locator('#game-dialog .member-combat-log').isVisible(),'combat popup');
+  check((await page.locator('.member-combat-log').innerText()).includes('Round 1'),'combat rounds');
+  await page.locator('[data-close-dialog]').click();check(JSON.stringify(await saved())===JSON.stringify(beforeLog),'opening log does not award rewards twice');
   const before=await saved();await page.reload();await ready();check(JSON.stringify(await saved())===JSON.stringify(before),'reload preserves beta');
   await page.locator('[data-tab="guild"]').click();
   await page.screenshot({path:'output/playwright/guild-game-mobile.png',fullPage:true});
@@ -36,6 +54,6 @@ async existingPage => {
   await page.reload();await ready();check((await saved()).members[0].level>=5,'automatic XP level on load');
   await page.setViewportSize({width:320,height:700});check(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'mobile page overflow');check(await page.locator('.pet-card').evaluate(el=>el.scrollWidth<=el.clientWidth),'member card overflow');
   await page.setViewportSize({width:1280,height:900});await page.screenshot({path:'output/playwright/guild-game-desktop.png',fullPage:true});
-  check(errors.length===0,errors.join('\n'));return 'PASS: fresh reset, recruitment, compact cards, equipment icons, manage renaming, automatic leveling, rest, dismissal, adventure, journal, reload, mobile and desktop layouts';
+  check(errors.length===0,errors.join('\n'));return 'PASS: fresh reset, recruitment, compact cards, equipment icons, manage renaming, automatic leveling, rest, dismissal, adventure rewards, combat popup, reload, mobile and desktop layouts';
  }finally{await context.close();}
 }
