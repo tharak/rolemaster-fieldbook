@@ -4,9 +4,9 @@ A turn-based guild companion game. Guild and Adventures are views of the same ga
 
 Recruit a free first companion from the level-one T-5.8 profiles, then care for up to six members. Meals cost 1 gold and restore food and morale immediately. Rest includes free food, healing, energy, and morale. All orders resolve together when you tap **Next turn · 4h**; nothing changes while you are away.
 
-Adventures explore up to three stages and return on the following turn. Tired or wounded members return early. Each stage grants 5 XP and 1 gold, in addition to combat rewards; a completed three-stage trip earns 2 extra gold on return. Defeated members are rescued with 1 HP. Rest brings them back into action. Promote recovered companions through the printed level 5/10/15/20 profiles with total XP of 100/300/600/1000 and 20/40/60/80 gold. These care, reward, rescue, and progression rules are game-specific beta choices.
+Adventures explore up to three stages and return on the following turn. Tired or wounded members return early. Each stage grants 5 XP and 1 gold, in addition to combat rewards; a completed three-stage trip earns 2 extra gold on return. Defeated members are rescued with 1 HP. Rest brings them back into action. Companions automatically advance through the printed level 5/10/15/20 profiles at total XP of 100/300/600/1000, with no gold cost. These care, reward, rescue, and progression rules are game-specific beta choices.
 
-Recruiting additional members costs 12 gold. Manage guild lets you rename the guild or dismiss companions after confirmation; keep at least one member and recall away members first. Member cards contain meals, Rest and Adventure orders, promotion, equipment information, and renaming, without a detail view. The journal retains recent turns, rewards, and expandable battle reports, with filters by member and activity.
+Recruiting additional members costs 12 gold. Manage guild lets you rename the guild or dismiss companions after confirmation; keep at least one member and recall away members first. Compact member cards show equipment icon buttons, bars with their labels and values inside, and Rest/Recall, Adventure, and Meal actions. Tap an equipment icon for its name and stats. Rename members in Manage guild. The journal retains recent turns, rewards, and expandable battle reports, with filters by member and activity.
 
 ## Fresh beta saves
 
@@ -26,7 +26,7 @@ Open http://localhost:8011. Static hosting and project subpaths work without a b
 ## Implementation
 
 - `browser-startup.js` performs the one-time beta reset and starts `guild-game.js`.
-- `guild-game.js` and `guild-game.css` provide the mobile shell, member cards, adventures, and journal.
+- `guild-ui.js` supplies reusable stat bars and equipment icons. `guild-game.js` and `guild-game.css` provide the mobile shell, member cards, adventures, and journal.
 - `guild-game-rules.js` implements immutable care, recruitment, progression, and turn resolution.
 - `guild-beta-store.js` validates and saves completed changes atomically; failed simulation does not advance the clock.
 - `guildmaster-rules.js`, `guild-rules.js`, and `guild-battle.js` supply the underlying adventure and combat rules.

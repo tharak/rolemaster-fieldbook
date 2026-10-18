@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync,readdirSync} from 'node:fs';
 import {masterCharacterCatalog} from '../coliseum-contenders.js';
-import {newGame,validGame,hireMember,careForMember,assignActivity,dismissMember,promoteMember,advanceGame} from '../guild-game-rules.js';
+import {newGame,validGame,hireMember,careForMember,assignActivity,dismissMember,levelMembers,advanceGame} from '../guild-game-rules.js';
 const json=name=>JSON.parse(readFileSync(new URL('../'+name,import.meta.url)));
 const catalog=masterCharacterCatalog(json('tables/T-5.8.json'));
 const tables=Object.fromEntries(readdirSync(new URL('../tables/',import.meta.url)).filter(n=>n.startsWith('A-10.')).map(n=>[n.slice(0,-5),json('tables/'+n)]));
@@ -35,9 +35,14 @@ test('three exploration stages queue return and bank rewards exactly once',()=>{
  }
  assert.ok(completed);
 });
-test('promotion preserves identity, care, experience, and equipment assignment',()=>{
- let s=fresh(),m=s.members[0];assert.throws(()=>promoteMember(s,m.id,catalog));m.xp=100;s.gold=30;
- const old=structuredClone(m);s=promoteMember(s,m.id,catalog);m=s.members[0];assert.equal(m.level,5);assert.equal(m.id,old.id);assert.equal(m.name,old.name);assert.equal(m.xp,100);assert.deepEqual(m.care,old.care);assert.equal(s.gold,10);assert.ok(validGame(s));
+test('XP automatically levels members without gold or recovery requirements',()=>{
+ let s=fresh(),m=s.members[0];m.xp=100;s.gold=0;m.care.energy=0;m.damage=10;
+ const old=structuredClone(m);s=levelMembers(s,catalog);m=s.members[0];assert.equal(m.level,5);assert.equal(m.id,old.id);assert.equal(m.name,old.name);assert.equal(m.xp,100);assert.equal(m.hits-m.damage,old.hits-old.damage);assert.deepEqual(m.care,old.care);assert.deepEqual(m.assignments,old.assignments);assert.equal(s.gold,0);assert.ok(validGame(s));
+ s.members[0].xp=1000;s=levelMembers(s,catalog);assert.equal(s.members[0].level,20);assert.deepEqual(levelMembers(s,catalog),s);
+});
+test('adventure XP triggers leveling within the same turn',()=>{
+ let s=fresh();s.members[0].xp=99;s=assignActivity(s,s.members[0].id,'adventure');
+ s=advanceGame(s,catalog,tables);assert.ok(s.members[0].level>=5);assert.ok(validGame(s));
 });
 test('defeat returns a living wounded member and all simulated states remain valid',()=>{
  let rescued=false;

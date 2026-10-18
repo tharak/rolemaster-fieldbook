@@ -92,3 +92,20 @@ h1 { font:36px/1.12 var(--serif); margin:6px 0 16px; }h2 { font:25px var(--serif
 .pet-card h3 { font-size:18px; margin:18px 0 10px; }
 .pet-card .promotion { margin:18px 0; }
 .pet-card header>div { min-width:0; }
+
+.stat-bar { position:relative; height:30px; margin:8px 0; border-radius:6px; overflow:hidden; background:#0c2118; border:1px solid #526849; }
+.stat-bar-fill { position:absolute; inset:0 auto 0 0; background:#46613d; }
+.stat-bar-text { position:relative; display:flex; justify-content:space-between; align-items:center; height:100%; padding:0 8px; font-size:11px; color:#fff8e6; text-shadow:0 1px 2px #000; }
+.stat-bar-text strong { font:10px var(--mono); }
+.care-meters .stat-bar { height:36px; }
+.care-meters .stat-bar-text { flex-direction:column; justify-content:center; padding:0 2px; }
+.member-equipment-icons { display:flex; flex-wrap:wrap; gap:4px; margin:8px 0; }
+.equipment-button { padding:5px; width:44px; min-height:44px; }
+.equipment-button .equipment-pixel-icon { width:30px; height:30px; }
+.equipment-button.unequipped { opacity:.45; }
+.equipment-caption { font-size:11px; margin:4px 0; }
+.member-actions { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:6px; margin-top:14px; }
+.member-actions button { padding:10px 3px; font-size:12px; }
+.member-actions [aria-pressed="true"] { border-color:var(--gold); background:#3c5030; }
+.manage-row form { min-width:0; flex:1; }
+.manage-row .text-field { margin-top:0; }

@@ -53,21 +53,27 @@ export function renameMember(state,id,name){
 export function promotion(member,catalog){
  const index=[1,5,10,15,20].indexOf(member.level),level=[5,10,15,20][index];
  if(!level)return null;
- return {level,xp:[100,300,600,1000][index],gold:(index+1)*20,template:catalog.find(item=>item.profession===member.profession&&item.level===level)};
+ return {level,xp:[100,300,600,1000][index],template:catalog.find(item=>item.profession===member.profession&&item.level===level)};
 }
-export function promoteMember(state,id,catalog){
- const old=state.members.find(item=>item.id===id),upgrade=old&&promotion(old,catalog);
- if(!upgrade?.template)throw new Error('This member has reached the highest rank.');
- if(!atGuild(state,id)||readiness(old))throw new Error('Return and recover before promotion.');
- if(old.xp<upgrade.xp||state.gold<upgrade.gold)throw new Error(`Promotion needs ${upgrade.xp} total XP and ${upgrade.gold} gold.`);
- const next=clone(state),member=next.members.find(item=>item.id===id);
- const progress={id:member.id,name:member.name,damage:member.damage,xp:member.xp,care:member.care,effects:member.effects,restHours:member.restHours,assignments:member.assignments};
- Object.assign(member,clone(upgrade.template),progress,{templateId:upgrade.template.id,pp:upgrade.template.ppMax,dead:false,tableOnly:true,spellLists:[],selectedSpells:[],equipped:{}});
- member.assignments=profileAssignments(member);next.gold-=upgrade.gold;next.management.orders[id]={action:'rest',level:member.level};return next;
+export function levelMembers(state,catalog){
+ const next=clone(state);
+ for(const member of next.members){
+  let upgrade=promotion(member,catalog);
+  while(upgrade?.template&&member.xp>=upgrade.xp){
+   const currentHP=member.hits-member.damage;
+   const progress={id:member.id,name:member.name,damage:member.damage,xp:member.xp,care:member.care,effects:member.effects,restHours:member.restHours,assignments:member.assignments,pp:member.pp};
+   Object.assign(member,clone(upgrade.template),progress,{templateId:upgrade.template.id,dead:false,tableOnly:true,spellLists:[],selectedSpells:[],equipped:{}});
+   if(progress.damage>0)member.damage=Math.max(0,member.hits-currentHP);
+   member.pp=Math.min(member.pp,member.ppMax);member.assignments=profileAssignments(member);
+   if(next.management.orders[member.id])next.management.orders[member.id].level=member.level;
+   upgrade=promotion(member,catalog);
+  }
+ }
+ return next;
 }
 export function advanceGame(state,opponents,tables){
  if(!state.members.length)throw new Error('Recruit your first member to begin.');
- const prepared=clone(state),warnings=new Map();
+ const prepared=levelMembers(state,opponents),warnings=new Map();
  for(const member of prepared.members){
   const savedOrder=prepared.management.orders[member.id];
   if(savedOrder?.action==='work')savedOrder.action='rest';
@@ -113,5 +119,11 @@ export function advanceGame(state,opponents,tables){
   result.hpAfter=member.hits-member.damage;result.dead=false;result.away=!!journey;
   result.careBefore=clone(original.care);result.careAfter=clone(care);
  }
- return next;
+ const leveled=levelMembers(next,opponents);
+ for(const result of leveled.management.reports[0].results){
+  const member=leveled.members.find(item=>item.id===result.memberId),previous=state.members.find(item=>item.id===result.memberId);
+  result.hpAfter=member.hits-member.damage;
+  if(member.level>previous.level)result.summary+=` Reached level ${member.level}!`;
+ }
+ return leveled;
 }
