@@ -1,5 +1,5 @@
 import {recruitMember,validGuild,availableMember} from './guild-rules.js';
-import {prepareGuildMaster,advanceGuildMaster,setMemberOrder,dismissGuildMember,memberOrder} from './guildmaster-rules.js?v=20261018-3';
+import {prepareGuildMaster,advanceGuildMaster,setMemberOrder,dismissGuildMember,memberOrder} from './guildmaster-rules.js?v=20261018-4';
 import {profileAssignments} from './guildmaster-assignments.js';
 export const GUILD_CAPACITY=6,RECRUIT_PRICE=12,MEAL_PRICE=1;
 const clone=state=>structuredClone(state),clamp=value=>Math.max(0,Math.min(100,value));

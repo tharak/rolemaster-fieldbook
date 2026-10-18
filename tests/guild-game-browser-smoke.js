@@ -14,7 +14,7 @@ async existingPage => {
   check((await saved()).gold===20,'free founder');
   check(await page.locator('[data-open-member], [data-order="work"]').count()===0,'no detail view or Work');
   check(await page.locator('.pet-card [data-rename-member], [data-promote]').count()===0,'no rename or promotion on cards');
-  await page.locator('.equipment-button').first().click();check(await page.locator('[data-equipment-caption]').isVisible(),'equipment button description');
+  await page.locator('.equipment-button').first().click();check(await page.locator('[data-equipment-caption], .unequipped, .equipment-button[title]').count()===0,'no missing items or item descriptions');
   await page.locator('[data-manage]').click();
   await page.locator('[data-rename-member] input').fill('Rowan II');await page.locator('[data-rename-member] button').click();
   check((await saved()).members[0].name==='Rowan II','manage rename');await page.locator('[data-close-dialog]').click();

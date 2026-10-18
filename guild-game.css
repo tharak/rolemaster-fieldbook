@@ -102,8 +102,6 @@ h1 { font:36px/1.12 var(--serif); margin:6px 0 16px; }h2 { font:25px var(--serif
 .member-equipment-icons { display:flex; flex-wrap:wrap; gap:4px; margin:8px 0; }
 .equipment-button { padding:5px; width:44px; min-height:44px; }
 .equipment-button .equipment-pixel-icon { width:30px; height:30px; }
-.equipment-button.unequipped { opacity:.45; }
-.equipment-caption { font-size:11px; margin:4px 0; }
 .member-actions { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:6px; margin-top:14px; }
 .member-actions button { padding:10px 3px; font-size:12px; }
 .member-actions [aria-pressed="true"] { border-color:var(--gold); background:#3c5030; }

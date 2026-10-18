@@ -6,7 +6,7 @@ Recruit a free first companion from the level-one T-5.8 profiles, then care for 
 
 Adventures continue without a stage limit until the player chooses Recall. Low food, energy, morale, or wounds do not automatically recall a living companion. Recall returns them on the following turn. Each stage grants 5 XP and 1 gold, in addition to combat rewards. Defeated members are rescued with 1 HP. Rest brings them back into action. Companions automatically advance through the printed level 5/10/15/20 profiles at total XP of 100/300/600/1000, with no gold cost. These care, reward, rescue, and progression rules are game-specific beta choices.
 
-Recruiting additional members costs 12 gold. Manage guild lets you rename the guild or dismiss companions after confirmation; keep at least one member and recall away members first. Compact member cards show equipment icon buttons, bars with their labels and values inside, and Rest/Recall, Adventure, and Meal actions. Tap an equipment icon for its name and stats. Rename members in Manage guild. The journal retains recent turns, rewards, and expandable battle reports, with filters by member and activity.
+Recruiting additional members costs 12 gold. Manage guild lets you rename the guild or dismiss companions after confirmation; keep at least one member and recall away members first. Compact member cards show equipment icon buttons, bars with their labels and values inside, and Rest/Recall, Adventure, and Meal actions. Only equipped items appear; icons have accessibility labels without visible descriptions. Rename members in Manage guild. The journal retains recent turns, rewards, and expandable battle reports, with filters by member and activity.
 
 ## Fresh beta saves
 

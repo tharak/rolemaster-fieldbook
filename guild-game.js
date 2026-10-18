@@ -1,8 +1,8 @@
 import {loadGuildMasterData,loadGuildCombat} from './guild-data.js';
 import {readBeta,writeBeta,betaSaveKey} from './guild-beta-store.js';
-import {newGame,validGame,hireMember,careForMember,assignActivity,dismissMember,renameGuild,renameMember,levelMembers,advanceGame,readiness,atGuild,GUILD_CAPACITY,RECRUIT_PRICE} from './guild-game-rules.js?v=20261018-3';
+import {newGame,validGame,hireMember,careForMember,assignActivity,dismissMember,renameGuild,renameMember,levelMembers,advanceGame,readiness,atGuild,GUILD_CAPACITY,RECRUIT_PRICE} from './guild-game-rules.js?v=20261018-4';
 import {memberOrder} from './guildmaster-rules.js';
-import {statBar as meter,memberEquipment} from './guild-ui.js?v=20261018-3';
+import {statBar as meter,memberEquipment} from './guild-ui.js?v=20261018-4';
 import {guildMasterJournal,journalClock} from './guildmaster-journal.js';
 import {creatureProfile} from './coliseum-battle.js';
 import {esc} from './dom.js';
@@ -61,11 +61,6 @@ async function handleClick(event){
   if(button.hasAttribute('data-close-dialog')){dialog.close();return;}
   if(button.hasAttribute('data-recruit')){openModal({type:'recruit'});return;}
   if(button.hasAttribute('data-manage')){openModal({type:'manage'});return;}
-  if(button.hasAttribute('data-equipment')){
-   const group=button.closest('header'),caption=group.querySelector('[data-equipment-caption]'),expanded=button.getAttribute('aria-expanded')==='true';
-   group.querySelectorAll('[data-equipment]').forEach(item=>item.setAttribute('aria-expanded','false'));
-   button.setAttribute('aria-expanded',String(!expanded));caption.textContent=button.dataset.equipment;caption.hidden=expanded;return;
-  }
   if(button.hasAttribute('data-feed')){apply(()=>careForMember(state,button.dataset.feed),'A good meal lifts their spirits.');return;}
   if(button.hasAttribute('data-order')){apply(()=>assignActivity(state,button.dataset.memberId,button.dataset.order),'Order set for the next turn.');return;}
   if(button.hasAttribute('data-dismiss')){openModal({type:'dismiss',id:button.dataset.dismiss});return;}
