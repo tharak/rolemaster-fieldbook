@@ -1,8 +1,8 @@
 import {loadGuildMasterData,loadGuildCombat} from './guild-data.js';
 import {readBeta,writeBeta,betaSaveKey} from './guild-beta-store.js';
-import {newGame,validGame,hireMember,careForMember,assignActivity,dismissMember,renameGuild,renameMember,levelMembers,advanceGame,readiness,atGuild,GUILD_CAPACITY,RECRUIT_PRICE} from './guild-game-rules.js';
+import {newGame,validGame,hireMember,careForMember,assignActivity,dismissMember,renameGuild,renameMember,levelMembers,advanceGame,readiness,atGuild,GUILD_CAPACITY,RECRUIT_PRICE} from './guild-game-rules.js?v=20261018-2';
 import {memberOrder} from './guildmaster-rules.js';
-import {statBar as meter,memberEquipment} from './guild-ui.js';
+import {statBar as meter,memberEquipment} from './guild-ui.js?v=20261018-2';
 import {guildMasterJournal,journalClock} from './guildmaster-journal.js';
 import {creatureProfile} from './coliseum-battle.js';
 import {esc} from './dom.js';

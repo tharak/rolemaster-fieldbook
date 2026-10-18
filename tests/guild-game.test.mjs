@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync,readdirSync} from 'node:fs';
 import {masterCharacterCatalog} from '../coliseum-contenders.js';
-import {newGame,validGame,hireMember,careForMember,assignActivity,dismissMember,levelMembers,advanceGame} from '../guild-game-rules.js';
+import {newGame,validGame,hireMember,careForMember,assignActivity,dismissMember,levelMembers,promoteMember,advanceGame} from '../guild-game-rules.js';
 const json=name=>JSON.parse(readFileSync(new URL('../'+name,import.meta.url)));
 const catalog=masterCharacterCatalog(json('tables/T-5.8.json'));
 const tables=Object.fromEntries(readdirSync(new URL('../tables/',import.meta.url)).filter(n=>n.startsWith('A-10.')).map(n=>[n.slice(0,-5),json('tables/'+n)]));
@@ -52,4 +52,10 @@ test('defeat returns a living wounded member and all simulated states remain val
   const m=s.members[0];assert.equal(m.dead,false);assert.equal(m.hits-m.damage,1);assert.ok(!s.management.journeys[m.id]);s=advanceGame(s,catalog,{});assert.ok(s.members[0].hits-s.members[0].damage>1);rescued=true;
  }
  assert.ok(rescued);
+});
+
+test('cached clients can import the former promotion action without spending gold',()=>{
+ const s=fresh();s.members[0].xp=100;
+ const next=promoteMember(s,s.members[0].id,catalog);
+ assert.equal(next.members[0].level,5);assert.equal(next.gold,s.gold);
 });

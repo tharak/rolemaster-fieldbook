@@ -127,3 +127,9 @@ export function advanceGame(state,opponents,tables){
  }
  return leveled;
 }
+
+// Keep the previous named import valid while cached beta clients refresh.
+// Leveling remains automatic and never charges gold.
+export function promoteMember(state,_id,catalog){
+ return levelMembers(state,catalog);
+}
