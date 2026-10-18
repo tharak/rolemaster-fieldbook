@@ -68,3 +68,30 @@ test('cached clients can import the former promotion action without spending gol
  const next=promoteMember(s,s.members[0].id,catalog);
  assert.equal(next.members[0].level,5);assert.equal(next.gold,s.gold);
 });
+
+import {guildCombatEncounter,departGuild} from '../guild-rules.js';
+test('exactly half the d100 outcomes cause combat in the beta',()=>{
+ let combats=0;
+ for(let roll=1;roll<=100;roll++){
+  const result=guildCombatEncounter(()=>roll);
+  assert.equal(result.roll,roll);assert.equal(result.system,'guild-beta');
+  assert.equal(result.code,roll<=50?'h':'-');if(result.type!=='none')combats++;
+ }
+ assert.equal(combats,50);
+});
+test('day and night adventures use the 50% check and combat matches its roll',()=>{
+ for(let i=0;i<30;i++){
+  const initial=fresh();initial.management.seed='frequency-'+i;
+  const s=assignActivity(initial,initial.members[0].id,'adventure');
+  const id=s.members[0].id;
+  s.management.journeys[id]=departGuild(s,{party:[id],level:1,seed:'frequency-'+i,id:'frequency-trip'}).expedition;
+  const day=advanceGame(s,catalog,tables);
+  const night=structuredClone(s);night.hours=8;night.management.journeys[id].hours=8;
+  const dark=advanceGame(night,catalog,tables);
+  for(const result of [day,dark]){
+   const report=result.management.reports[0].results[0].encounter;
+   assert.equal(report.encounter.chance,50);
+   assert.equal(Object.hasOwn(report,'winner'),report.encounter.roll<=50);
+  }
+ }
+});

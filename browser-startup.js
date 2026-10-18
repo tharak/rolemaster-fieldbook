@@ -1,7 +1,7 @@
 import {resetLegacyBeta} from './guild-beta-store.js';
 try {
  resetLegacyBeta(localStorage);
- await import('./guild-game.js?v=20261018-4');
+ await import('./guild-game.js?v=20261018-5');
 } catch(error) {
  const root=document.querySelector('#game-app');root.replaceChildren();
  const main=document.createElement('main');main.className='game-loading';

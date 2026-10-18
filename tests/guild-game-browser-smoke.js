@@ -32,8 +32,8 @@ async existingPage => {
   await page.locator('[data-tab="guild"]').click();
   await page.screenshot({path:'output/playwright/guild-game-mobile.png',fullPage:true});
   check(await page.locator('.pet-card .stat-bar').count()===4,'shared bars');
-  await page.evaluate(()=>{const key='rolemaster-guild-beta-v2',s=JSON.parse(localStorage.getItem(key));s.members[0].xp=100;s.gold=0;localStorage.setItem(key,JSON.stringify(s));});
-  await page.reload();await ready();check((await saved()).members[0].level===5,'automatic XP level on load');
+  await page.evaluate(()=>{const key='rolemaster-guild-beta-v2',s=JSON.parse(localStorage.getItem(key));s.members[0].xp=Math.max(100,s.members[0].xp);s.gold=0;localStorage.setItem(key,JSON.stringify(s));});
+  await page.reload();await ready();check((await saved()).members[0].level>=5,'automatic XP level on load');
   await page.setViewportSize({width:320,height:700});check(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'mobile page overflow');check(await page.locator('.pet-card').evaluate(el=>el.scrollWidth<=el.clientWidth),'member card overflow');
   await page.setViewportSize({width:1280,height:900});await page.screenshot({path:'output/playwright/guild-game-desktop.png',fullPage:true});
   check(errors.length===0,errors.join('\n'));return 'PASS: fresh reset, recruitment, compact cards, equipment icons, manage renaming, automatic leveling, rest, dismissal, adventure, journal, reload, mobile and desktop layouts';

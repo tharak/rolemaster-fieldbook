@@ -119,6 +119,11 @@ export function encounterLoot(level,random,encounterId){
  if(random()<.35){const base=guildItems[Math.floor(random()*guildItems.length)],bonus=base.slot==='weapon'&&random()<.2?5:0;items.push({...base,id:`loot-${encounterId}`,bonus,name:base.name+(bonus?` +${bonus}`:'')});}
  return {gold,items};
 }
+// Mobile beta pacing: one independent combat check per member and stage.
+export function guildCombatEncounter(d100){
+ const roll=d100(),combat=roll<=50;
+ return {system:'guild-beta',chance:50,roll,type:combat?'wild':'none',code:combat?'h':'-',label:combat?'Hostile encounter':'No encounter',frequency:'Every adventure turn'};
+}
 export function continueGuild(state,catalog,tables){
  if(!state.expedition)throw new Error('Send a party first.');
  let next=clone(state);const exp=next.expedition;
@@ -131,7 +136,7 @@ export function continueGuild(state,catalog,tables){
  if(!exp.route.length){const choices=world.nodes.filter(n=>n.id!==exp.current);exp.goal=choices[Math.floor(random()*choices.length)].id;exp.route=findRoute(world,exp.current,exp.goal);}
  exp.current=exp.route.shift();exp.explored=[...new Set([...exp.explored,exp.current])];exp.visitedEdges.push([previous,exp.current].sort().join(':'));
  const half=members.filter(m=>m.profession==='Ranger').length;
- const encounter=generateEncounter({density:'Moderate',terrain:'Open',full:members.length-half,half,hostile:true,night:(exp.hours%24)>=12},d100);
+ const encounter=state.gameVersion===2?guildCombatEncounter(d100):generateEncounter({density:'Moderate',terrain:'Open',full:members.length-half,half,hostile:true,night:(exp.hours%24)>=12},d100);
  const report={id:`${exp.id}:${exp.stage}`,stage:exp.stage,location:world.nodes.find(n=>n.id===exp.current).name,encounter,rounds:[],xp:{},gold:0,items:[],conclusion:''};
  if(encounter.type==='none'||encounter.code==='s'||encounter.code==='e'){
   report.conclusion=encounter.type==='none'?'The road was quiet.':encounter.code==='s'?'The party spotted travelers and passed without conflict.':'A peaceful meeting; the party exchanged news and continued.';

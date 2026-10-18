@@ -1,7 +1,7 @@
 import {profileAssignments} from './guildmaster-assignments.js';
 // Per-member orders and one shared clock tick. No DOM, storage, or random globals.
 import {spellKey} from './guild-spells.js';
-import {availableMember,departGuild,continueGuild,returnGuild,restGuild} from './guild-rules.js?v=20261018-4';
+import {availableMember,departGuild,continueGuild,returnGuild,restGuild} from './guild-rules.js?v=20261018-5';
 export const MEMBER_ACTIONS=['adventure','rest','work'];
 export const WORK_GOLD_PER_TURN=1;
 export const GUILD_TURN_HOURS=4;
