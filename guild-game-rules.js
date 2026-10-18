@@ -33,6 +33,7 @@ export function careForMember(state,id){
  next.gold-=MEAL_PRICE;member.care.food=clamp(member.care.food+40);member.care.morale=clamp(member.care.morale+5);return next;
 }
 export function assignActivity(state,id,action){
+ if(!['rest','adventure'].includes(action))throw new Error('Choose Rest or Adventure.');
  const member=state.members.find(item=>item.id===id);if(!member)throw new Error('Choose a guild member.');
  if(atGuild(state,id)&&action!=='rest'&&readiness(member))throw new Error(`${readiness(member)}. Give this member a meal or time to rest first.`);
  return setMemberOrder(state,id,{action});
@@ -68,6 +69,9 @@ export function advanceGame(state,opponents,tables){
  if(!state.members.length)throw new Error('Recruit your first member to begin.');
  const prepared=clone(state),warnings=new Map();
  for(const member of prepared.members){
+  const savedOrder=prepared.management.orders[member.id];
+  if(savedOrder?.action==='work')savedOrder.action='rest';
+  if(savedOrder?.nextAction==='work')savedOrder.nextAction='rest';
   const order=memberOrder(prepared,member.id),away=!atGuild(prepared,member.id),reason=readiness(member);
   if(reason&&order.action!=='return'&&order.action!=='rest'){
    prepared.management.orders[member.id]={action:away?'return':'rest',...(away?{nextAction:'rest'}:{}),level:member.level};
@@ -81,9 +85,6 @@ export function advanceGame(state,opponents,tables){
    care.food=clamp(care.food+12);care.energy=clamp(care.energy+25);care.morale=clamp(care.morale+6);
    member.damage=Math.max(0,original.damage-Math.max(4,Math.ceil(member.hits*.2)));
    result.summary=`Rested at the guild: free meals, renewed energy, and ${original.damage-member.damage} HP recovered.`;
-  }else if(result.action==='work'){
-   care.food=clamp(care.food-8);care.energy=clamp(care.energy-12);care.morale=clamp(care.morale-4);
-   if(result.gold){next.gold+=2;result.gold+=2;result.summary='Helped around the village and earned 3 gold.';}
   }else if(result.action==='return'){
    care.food=clamp(care.food-8);care.energy=clamp(care.energy-6);care.morale=clamp(care.morale+4);next.completedTrips++;
    if(state.management.journeys[member.id]?.stage>=3){next.gold+=2;result.gold+=2;}

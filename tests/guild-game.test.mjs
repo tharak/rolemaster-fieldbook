@@ -14,10 +14,12 @@ test('empty beta, free founder, paid recruitment and capacity',()=>{
  s.gold=100;while(s.members.length<6)s=hireMember(s,catalog[0]);assert.throws(()=>hireMember(s,catalog[0]));assert.ok(validGame(s));
  assert.throws(()=>hireMember(fresh(),catalog.find(m=>m.level===5)));assert.throws(()=>dismissMember(fresh(),fresh().members[0].id));
 });
-test('work costs care, meals are instant, and free rest prevents softlocks',()=>{
+test('work is unavailable, meals are instant, and free rest prevents softlocks',()=>{
  const initial=fresh(),id=initial.members[0].id;
- let s=assignActivity(initial,id,'work');assert.equal(s.hours,0);s=advanceGame(s,catalog,{});assert.equal(s.gold,23);assert.equal(s.hours,4);assert.equal(s.members[0].care.energy,88);assert.equal(initial.gold,20);
- s=careForMember(s,id);assert.equal(s.gold,22);assert.equal(s.members[0].care.food,100);
+ assert.throws(()=>assignActivity(initial,id,'work'));
+ let s=structuredClone(initial);s.management.orders[id]={action:'work',level:1};
+ s=advanceGame(s,catalog,{});assert.equal(s.gold,20);assert.equal(s.hours,4);assert.equal(s.management.reports[0].results[0].action,'rest');assert.equal(initial.hours,0);
+ s=careForMember(s,id);assert.equal(s.gold,19);assert.equal(s.members[0].care.food,100);
  s.gold=0;s.members[0].care={food:0,energy:0,morale:0};s.members[0].damage=10;
  assert.throws(()=>assignActivity(s,id,'adventure'));s=advanceGame(s,catalog,{});assert.equal(s.management.reports[0].results[0].action,'rest');assert.ok(s.members[0].care.food>0);assert.ok(s.members[0].damage<10);assert.ok(validGame(s));
 });

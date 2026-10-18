@@ -10,13 +10,16 @@ async existingPage => {
   check((await saved()).members.length===0,'empty start');
   check(await page.evaluate(()=>!localStorage.getItem('rolemaster-guild-v1')&&localStorage.getItem('unrelated-fixture')==='keep'),'reset namespace');
   check(await page.locator('.game-nav button').allTextContents().then(a=>a.join(',')==='Guild,Adventures,Journal'),'single game navigation');
-  await page.locator('[data-recruit]').click();await page.locator('[name="name"]').fill('Rowan');await page.locator('[data-hire] button[type="submit"]').click();
+  await page.locator('[data-recruit]').click();await page.locator('#game-dialog [name="name"]').fill('Rowan');await page.locator('[data-hire] button[type="submit"]').click();
   check((await saved()).gold===20,'free founder');
-  await page.locator('[data-open-member]').click();await page.locator('#game-dialog [data-order="work"]').click();await page.locator('[data-close-dialog]').click();
+  check(await page.locator('[data-open-member], [data-order="work"]').count()===0,'no detail view or Work');
+  await page.locator('[data-rename-member] input').fill('Rowan II');await page.locator('[data-rename-member] button').click();
+  check((await saved()).members[0].name==='Rowan II','inline rename');
+  await page.locator('.pet-card [data-order="rest"]').click();
   await page.locator('[data-advance]').click();await page.waitForFunction(()=>JSON.parse(localStorage.getItem('rolemaster-guild-beta-v2')).management.turn===1);
-  check((await saved()).gold===23,'work earns 3');
+  check((await saved()).gold===20,'rest earns no gold');
   await page.locator('#game-app [data-feed]').click();check((await saved()).members[0].care.food===100,'meal');
-  await page.locator('[data-recruit]').click();await page.locator('[name="name"]').fill('Willow');await page.locator('[data-hire] button[type="submit"]').click();
+  await page.locator('[data-recruit]').click();await page.locator('#game-dialog [name="name"]').fill('Willow');await page.locator('[data-hire] button[type="submit"]').click();
   await page.locator('[data-manage]').click();await page.locator('[data-dismiss]').last().click();await page.locator('[data-confirm-dismiss]').click();check((await saved()).members.length===1,'dismiss');await page.locator('[data-close-dialog]').click();
   await page.locator('[data-tab="adventures"]').click();await page.locator('#game-app [data-order="adventure"]').click();await page.locator('[data-advance]').click();
   await page.waitForFunction(()=>JSON.parse(localStorage.getItem('rolemaster-guild-beta-v2')).management.turn===2);
@@ -25,9 +28,10 @@ async existingPage => {
   const before=await saved();await page.reload();await ready();check(JSON.stringify(await saved())===JSON.stringify(before),'reload preserves beta');
   await page.locator('[data-tab="guild"]').click();
   await page.screenshot({path:'output/playwright/guild-game-mobile.png',fullPage:true});
-  await page.locator('[data-open-member]').click();await page.screenshot({path:'output/playwright/guild-game-care.png'});
-  await page.setViewportSize({width:320,height:700});check(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'mobile page overflow');check(await page.locator('#game-dialog').evaluate(el=>el.scrollWidth<=el.clientWidth),'dialog overflow');
-  await page.locator('[data-close-dialog]').click();await page.setViewportSize({width:1280,height:900});await page.screenshot({path:'output/playwright/guild-game-desktop.png',fullPage:true});
-  check(errors.length===0,errors.join('\n'));return 'PASS: fresh reset, recruitment, care, work, dismissal, adventure, journal, reload, mobile and desktop layouts';
+  check(await page.locator('.pet-card [data-promote]').count()===1,'inline promotion');
+  await page.locator('.member-equipment summary').click();
+  await page.setViewportSize({width:320,height:700});check(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'mobile page overflow');check(await page.locator('.pet-card').evaluate(el=>el.scrollWidth<=el.clientWidth),'member card overflow');
+  await page.setViewportSize({width:1280,height:900});await page.screenshot({path:'output/playwright/guild-game-desktop.png',fullPage:true});
+  check(errors.length===0,errors.join('\n'));return 'PASS: fresh reset, recruitment, inline care and renaming, rest, dismissal, adventure, journal, reload, mobile and desktop layouts';
  }finally{await context.close();}
 }
