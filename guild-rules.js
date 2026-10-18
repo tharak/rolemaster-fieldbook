@@ -122,9 +122,9 @@ export function encounterLoot(level,random,encounterId){
 export function continueGuild(state,catalog,tables){
  if(!state.expedition)throw new Error('Send a party first.');
  let next=clone(state);const exp=next.expedition;
- if(exp.stage>=50)throw new Error('This expedition has reached 50 stages. Return to base.');
+ if(state.gameVersion!==2&&exp.stage>=50)throw new Error('This expedition has reached 50 stages. Return to base.');
  const members=next.members.filter(m=>exp.party.includes(m.id));
- if(!members.some(availableMember))return returnGuild(next,'No one remains fit to continue; the expedition ends.');
+ if(!members.some(state.gameVersion===2?m=>!m.dead&&m.damage<m.hits:availableMember))return returnGuild(next,'No one remains fit to continue; the expedition ends.');
  const random=seededRandom(`${exp.seed}:${exp.id}:${exp.stage}`),d100=()=>Math.floor(random()*100)+1;
  exp.stage++;exp.hours+=4;next.hours+=4;
  const world=generateWorld(exp.seed),previous=exp.current;
@@ -157,7 +157,7 @@ export function continueGuild(state,catalog,tables){
   if(battle.winner===0){const loot=encounterLoot(exp.level,random,report.id);report.gold=loot.gold;report.items=next.tableOnly?[]:loot.items;exp.gold+=loot.gold;exp.items.push(...report.items);}
  }
  exp.reports.unshift(report);
- if(report.winner===1||report.winner===null||!members.some(m=>!m.dead&&m.damage<m.hits))next=returnGuild(next,report.conclusion);
+ if(report.winner===1||(report.winner===null&&state.gameVersion!==2)||!members.some(m=>!m.dead&&m.damage<m.hits))next=returnGuild(next,report.conclusion);
  return compactReports(next);
 }
 export function validGuild(state){

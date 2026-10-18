@@ -1,5 +1,5 @@
 import {recruitMember,validGuild,availableMember} from './guild-rules.js';
-import {prepareGuildMaster,advanceGuildMaster,setMemberOrder,dismissGuildMember,memberOrder} from './guildmaster-rules.js';
+import {prepareGuildMaster,advanceGuildMaster,setMemberOrder,dismissGuildMember,memberOrder} from './guildmaster-rules.js?v=20261018-3';
 import {profileAssignments} from './guildmaster-assignments.js';
 export const GUILD_CAPACITY=6,RECRUIT_PRICE=12,MEAL_PRICE=1;
 const clone=state=>structuredClone(state),clamp=value=>Math.max(0,Math.min(100,value));
@@ -79,7 +79,7 @@ export function advanceGame(state,opponents,tables){
   if(savedOrder?.action==='work')savedOrder.action='rest';
   if(savedOrder?.nextAction==='work')savedOrder.nextAction='rest';
   const order=memberOrder(prepared,member.id),away=!atGuild(prepared,member.id),reason=readiness(member);
-  if(reason&&order.action!=='return'&&order.action!=='rest'){
+  if(!away&&reason&&order.action!=='return'&&order.action!=='rest'){
    prepared.management.orders[member.id]={action:away?'return':'rest',...(away?{nextAction:'rest'}:{}),level:member.level};
    warnings.set(member.id,`${reason}; ${away?'returning for care':'resting instead'}.`);
   }
@@ -93,7 +93,6 @@ export function advanceGame(state,opponents,tables){
    result.summary=`Rested at the guild: free meals, renewed energy, and ${original.damage-member.damage} HP recovered.`;
   }else if(result.action==='return'){
    care.food=clamp(care.food-8);care.energy=clamp(care.energy-6);care.morale=clamp(care.morale+4);next.completedTrips++;
-   if(state.management.journeys[member.id]?.stage>=3){next.gold+=2;result.gold+=2;}
    result.summary=`Returned to the guild with ${result.gold} gold. Ready for a meal and rest.`;
   }else if(result.action==='adventure'){
    care.food=clamp(care.food-12);care.energy=clamp(care.energy-18);care.morale=clamp(care.morale-3+(result.encounter?.winner===0?8:0));
@@ -112,9 +111,6 @@ export function advanceGame(state,opponents,tables){
    delete next.management.journeys[member.id];next.management.orders[member.id]={action:'rest',level:member.level};
   }
   const journey=next.management.journeys[member.id];
-  if(journey&&(journey.stage>=3||readiness(member))&&next.management.orders[member.id].action!=='return'){
-   next.management.orders[member.id]={action:'return',nextAction:'rest',level:member.level};result.summary+=' Returning next turn for food and rest.';
-  }
   if(warnings.has(member.id))result.summary=warnings.get(member.id)+' '+result.summary;
   result.hpAfter=member.hits-member.damage;result.dead=false;result.away=!!journey;
   result.careBefore=clone(original.care);result.careAfter=clone(care);

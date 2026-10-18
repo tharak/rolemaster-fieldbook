@@ -1,7 +1,7 @@
 import {profileAssignments} from './guildmaster-assignments.js';
 // Per-member orders and one shared clock tick. No DOM, storage, or random globals.
 import {spellKey} from './guild-spells.js';
-import {availableMember,departGuild,continueGuild,returnGuild,restGuild} from './guild-rules.js';
+import {availableMember,departGuild,continueGuild,returnGuild,restGuild} from './guild-rules.js?v=20261018-3';
 export const MEMBER_ACTIONS=['adventure','rest','work'];
 export const WORK_GOLD_PER_TURN=1;
 export const GUILD_TURN_HOURS=4;
@@ -88,7 +88,7 @@ export function advanceGuildMaster(state,catalog,tables){
    member.restHours=0;
    if(!journey&&!availableMember(member)){
     result.summary='Unable to depart because of wounds. Order changed to Rest for the next turn.';management.orders[id]={action:'rest',level:member.level};
-   }else if(journey?.stage>=50){
+   }else if(state.gameVersion!==2&&journey?.stage>=50){
     result.summary='Adventure limit reached. Come back is queued for the next turn.';management.orders[id]={action:'return',nextAction:'rest',level:member.level};
    }else{
     let expedition=journey;

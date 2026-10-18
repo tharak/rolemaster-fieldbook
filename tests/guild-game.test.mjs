@@ -23,14 +23,23 @@ test('work is unavailable, meals are instant, and free rest prevents softlocks',
  s.gold=0;s.members[0].care={food:0,energy:0,morale:0};s.members[0].damage=10;
  assert.throws(()=>assignActivity(s,id,'adventure'));s=advanceGame(s,catalog,{});assert.equal(s.management.reports[0].results[0].action,'rest');assert.ok(s.members[0].care.food>0);assert.ok(s.members[0].damage<10);assert.ok(validGame(s));
 });
-test('three exploration stages queue return and bank rewards exactly once',()=>{
+test('adventures continue past three and fifty stages with empty care until recalled',()=>{
  let completed=false;
  for(let seed=0;seed<200&&!completed;seed++){
   let s=fresh();const id=s.members[0].id;s.management.seed='trip-'+seed;s=assignActivity(s,id,'adventure');
   for(let turn=0;turn<3;turn++)s=advanceGame(s,catalog,tables);
   const journey=s.management.journeys[id];if(journey?.stage!==3)continue;
-  assert.equal(s.management.orders[id].action,'return');assert.throws(()=>careForMember(s,id));assert.ok(s.members[0].xp>=15);
-  const gold=s.gold,carried=journey.gold;s=advanceGame(s,catalog,tables);assert.equal(s.gold,gold+carried+2);assert.equal(s.completedTrips,1);assert.ok(!s.management.journeys[id]);assert.ok(validGame(s));
+  assert.equal(s.management.orders[id].action,'adventure');assert.throws(()=>careForMember(s,id));assert.ok(s.members[0].xp>=15);
+  s.members[0].care={food:0,energy:0,morale:0};s.management.journeys[id].stage=50;
+  // Select a quiet next stage so this checks recall policy independently of defeat.
+  let continued;
+  for(let i=0;i<200;i++){
+   const candidate=structuredClone(s);candidate.management.journeys[id].seed='endless-'+i;
+   const result=advanceGame(candidate,catalog,tables);
+   if(result.management.journeys[id]?.stage===51){continued=result;break;}
+  }
+  assert.ok(continued);s=continued;assert.equal(s.management.orders[id].action,'adventure');
+  const gold=s.gold,carried=s.management.journeys[id].gold;s=assignActivity(s,id,'rest');s=advanceGame(s,catalog,{});assert.equal(s.gold,gold+carried);assert.equal(s.completedTrips,1);assert.ok(!s.management.journeys[id]);assert.ok(validGame(s));
   const rested=advanceGame(s,catalog,{});assert.equal(rested.gold,s.gold);completed=true;
  }
  assert.ok(completed);
