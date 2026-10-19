@@ -14,7 +14,7 @@ async existingPage => {
   await page.locator('[name="name"]').fill('Rowan');await page.locator('[data-hire] button').click();check((await saved()).gold===20,'free founder');
   const first=await saved();await page.locator('[data-generate]').click();const regenerated=await saved();check(regenerated.arena.revision===first.arena.revision+1&&regenerated.gold===20,'free reroll');
   await page.locator('[data-offer]').first().click();await page.locator('[data-fight]').click();await page.waitForSelector('[data-arena-playback]');await page.locator('[data-skip]').click();await page.waitForSelector('.arena-result');
-  const after=await saved();check(after.arena.reports.length===1,'one battle');check(after.arena.offers.length===2,'consumed matchup');
+  const after=await saved();check(after.arena.reports.length===1,'one battle');check(after.arena.offers.length===3&&after.arena.revision===regenerated.arena.revision+1,'all matchups refreshed');
   check(await page.locator('.arena-rounds').count()===1,'round log available');
   check(await page.locator('.arena-critical').count()===after.arena.reports[0].criticals.length,'all recorded criticals presented');
   await page.screenshot({path:'output/playwright/arena-result-mobile.png',fullPage:true});

@@ -21,11 +21,11 @@ test('battle saves actual critical data, victory rewards once, and leaves nonpar
  let victories=0,losses=0;
  for(let i=0;i<12;i++){
   const state=recruitArena(start('match-'+i),fighter,'Bench'),before=structuredClone(state),id=state.arena.offers[0].id;
-  const next=fightArena(state,id,[state.members[0].id],catalog,tables),r=next.arena.reports[0];
-  assert.ok(validArena(next));assert.deepEqual(state,before);assert.deepEqual(next.members[1],state.members[1]);assert.equal(next.arena.offers.length,2);
+  const next=fightArena(state,id,[state.members[0].id],catalog,tables,opponents),r=next.arena.reports[0];
+  assert.ok(validArena(next));assert.deepEqual(state,before);assert.deepEqual(next.members[1],state.members[1]);assert.equal(next.arena.offers.length,3);
   assert.equal(next.gold-state.gold,r.winner===0?state.arena.offers[0].gold:0);
-  assert.equal(next.members[0].xp-state.members[0].xp,r.winner===0?state.arena.offers[0].xp:0);
-  assert.throws(()=>fightArena(next,id,[state.members[0].id],catalog,tables),/no longer/);
+  assert.equal(r.rewards[0].xp,r.winner===0&&!r.rewards[0].dead?state.arena.offers[0].xp:0);assert.equal(next.ludus.xp-state.ludus.xp,r.winner===0?state.arena.offers[0].xp:0);assert.ok(next.arena.offers.every(o=>!state.arena.offers.some(old=>old.id===o.id)));
+  assert.throws(()=>fightArena(next,id,[state.members[0].id],catalog,tables,opponents),/no longer/);
   for(const c of r.criticals){assert.ok(c.code&&c.description&&Number.isFinite(c.roll));assert.ok(c.attacker&&c.defender);}
   if(r.winner===0)victories++;else losses++;
  }
@@ -33,7 +33,7 @@ test('battle saves actual critical data, victory rewards once, and leaves nonpar
 });
 test('invalid selections and failed simulations never mutate the roster',()=>{
  const s=start('guard'),id=s.arena.offers[0].id,before=JSON.stringify(s);
- for(const party of [[],['missing'],[s.members[0].id,s.members[0].id]])assert.throws(()=>fightArena(s,id,party,catalog,tables));
+ for(const party of [[],['missing'],[s.members[0].id,s.members[0].id]])assert.throws(()=>fightArena(s,id,party,catalog,tables,opponents));
  assert.throws(()=>fightArena(s,id,[s.members[0].id],catalog,{}));assert.equal(JSON.stringify(s),before);
 });
 test('critical wounds stack, persist, and require multiple treatment days',()=>{
@@ -57,7 +57,7 @@ test('whole selected party fights and receives XP; promotion preserves lasting w
  state.members[0].xp=99;state.members[0].injuries=[{id:'old',description:'Old wound',penalty:10,days:2}];
  // A weak printed profile creates a controlled victory while using the real battle engine.
  state.arena.offers[0].enemies=[{...state.arena.offers[0].enemies[0],hits:1,db:-100,attacks:[{name:'Weak bash',type:'Ba',attackTable:'A-10.9.7',size:'S',ob:-100,chance:100}]}];
- const next=fightArena(state,state.arena.offers[0].id,state.members.map(m=>m.id),catalog,tables),report=next.arena.reports[0];
+ const next=fightArena(state,state.arena.offers[0].id,state.members.map(m=>m.id),catalog,tables,opponents),report=next.arena.reports[0];
  assert.equal(report.winner,0);assert.equal(report.rewards.length,2);
  assert.ok(next.members.every(m=>m.xp>0));assert.equal(next.members[0].level,5);assert.deepEqual(next.members[0].injuries[0],state.members[0].injuries[0]);assert.ok(validArena(next));
 });

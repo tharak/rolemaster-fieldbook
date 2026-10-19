@@ -2,7 +2,7 @@
 
 Choose one of three randomly generated enemy groups, select one to six fighters, and resolve a party battle. Generate new opponents for free whenever you want. Themes include goblin raiders, undead, giant insects, wild beasts, and rival mercenaries. Enemy lineups and victory prizes are fixed when generated; changing your team only changes the estimated difficulty.
 
-Your first level-one fighter is free. Start with 20 gold; additional recruits cost 12 gold, with six roster slots. Victory awards the displayed gold once to the company and the displayed XP to every participating fighter. Benched fighters earn nothing, and defeats or draws pay nothing. Automatic progression uses the printed level 5/10/15/20 profiles at total XP 100/300/600/1000. A completed matchup is consumed; remaining matchups stay available until rerolled.
+Your first level-one fighter is free. Start with 20 gold; additional recruits cost 12 gold, with six roster slots. Victory awards the displayed gold once to the company and the displayed XP to every surviving participating fighter. Benched fighters earn nothing, and defeats or draws pay nothing. Automatic progression uses the printed level 5/10/15/20 profiles at total XP 100/300/600/1000. Every completed fight replaces all enemy offers with fresh groups. Replaying a report never refreshes opponents or repeats rewards.
 
 Battles play automatically on a side-view stage, one action at a time. Opposing teams show their starting health, damage, bleeding, healing, status effects, and fallen fighters. Criticals get a longer spotlight with their actual table description. Pause, advance one action, choose 1×/2×/4× speed, or skip to the result. Motion respects reduced-motion preferences; switching away from the page pauses playback.
 
@@ -10,13 +10,21 @@ Outcomes are saved before playback begins. Reloading, closing, skipping, or watc
 
 The result dialog features every resolved critical in order: attacker, defender, round, critical type, severity, recorded roll, description, and readable effects. Full round logs remain expandable. The ten most recent matches can be reopened without awarding rewards again.
 
-## Lasting injuries
+## Critical consequences
 
-Damage persists between matches. C, D, and E criticals suffered cause arena injuries with combat penalties of −10, −15, and −20, requiring 2, 3, and 4 treatment days respectively. Mortal wounds cause −20 for 4 days regardless of severity. Penalties stack. Defeated fighters are rescued with 1 HP; a rescue without another critical injury adds −15 for 3 days.
+Critical descriptions now have consequences beyond a damage penalty. Explicit paralysis, severed limbs, and recognized permanent disabilities incapacitate the victim immediately. They persist through matches, rest, reloads, and leveling. Ordinary infirmary rest never repairs them.
 
-The Fighters & infirmary view provides free one-day treatment: heal 25% maximum HP, restore power points, and advance every injury one day toward recovery. Injury penalties remain until treatment is complete. Fighters can enter while injured. These lasting injury and reward rules are game-specific abstractions, not a full simulation of the printed recovery rules. Combat still uses the existing attack and critical resolution engine. Creature special abilities and swarms are unsupported.
+The **Ludus** is your school's shared caster character. Nerve Law, Concussion’s Ways, and Protections buildings provide spell-list ranks. Victories award the Ludus XP once; milestone promotions require gold. Building ranks, promotions, and services have gold costs, and all buildings share one PP pool. Resident specialists currently provide +0; gladiator assignment is a future feature.
 
-Food, morale, energy, travel, and idle turn orders are no longer part of the active game.
+Nerve Law provides diagnosis, Minor/Major Nerve Repair with recovery time, and temporary **Unparalysis**. Unparalysis suppresses paralysis for its printed duration; it does not delete the injury. Destroyed nerves cannot be repaired by these spells. Limb Preservation requires other, not-yet-available lists. Concussion’s Ways heals HP, burns, and other supported conditions. Protections offers chosen pre-battle blessings. Casting preparation, depleted-power checks, failures, costs, durations, and treatment are recorded and persist through reloads.
+
+Tune the system in **[src/ludus-config.js](src/ludus-config.js)**. See **[the tuning guide](docs/ludus-tuning.md)** for editable prices, XP, PP, spell parameters, recovery, enemy refresh, and the explicit arena conventions.
+
+Instant-death criticals kill immediately. Mortal-wound countdowns continue after fighting stops: a leg-severing critical that says death in six rounds still kills six rounds later. Generic HP healing cannot cancel a structural mortal wound. Actual deaths remove fighters from the active roster, free their roster places, and preserve their identity and fatal critical in **The fallen**. Dead fighters receive no victory XP and cannot be recruited back under the same identity. Leveling and rest never resurrect anyone.
+
+A nonfatal HP knockout is different: that fighter is recovered with 1 HP. Ordinary C/D/E critical wounds retain −10/−15/−20 penalties and 2/3/4 treatment days; a nonfatal knockout without another injury gets −15 for 3 days. Free one-day infirmary treatment heals 25% maximum HP, restores PP, and advances only ordinary wounds. The recovery and cleric-repertoire rules are arena abstractions, not a complete implementation of all printed healing rules.
+
+Still-present paralysis or severed-limb injuries from older arena saves are upgraded to permanent disabilities when loaded. Historical battles do not retroactively kill previously rescued living fighters. If the whole company is lost and replacement recruitment is unaffordable, start a new company using the confirmed reset action.
 
 ## Saves
 
@@ -29,7 +37,7 @@ python3 -m http.server 8011
 npm test
 ```
 
-Open http://localhost:8011. Serve the repository root with any static HTTP host; project subpaths work without a build step. The active browser smoke test is `tests/arena-browser-smoke.js`, run using Playwright CLI's `run-code --filename` against the local site. It uses a fresh browser context. `tests/arena-playback-browser-smoke.js` additionally checks six-fighter playback, exact HP, pause/step/speed controls, criticals, completion, replay, skip, and older reports. Existing adventure and older interface browser scripts are historical coverage, not smoke tests for the current entrypoint.
+Open http://localhost:8011. Serve the repository root with any static HTTP host; project subpaths work without a build step. The active browser smoke test is `tests/arena-browser-smoke.js`, run using Playwright CLI's `run-code --filename` against the local site. It uses a fresh browser context. `tests/arena-consequences-browser-smoke.js` covers persistent paralysis, temporary suppression, permanent deaths, and memorials. `tests/ludus-browser-smoke.js` covers paid progression, treatment, shared PP, blessings, and post-battle refresh. `tests/arena-playback-browser-smoke.js` additionally checks six-fighter playback, exact HP, pause/step/speed controls, criticals, completion, replay, skip, and older reports. Existing adventure and older interface browser scripts are historical coverage, not smoke tests for the current entrypoint.
 
 For environments where Node subprocess test isolation is unavailable:
 

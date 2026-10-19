@@ -24,3 +24,19 @@
 @keyframes arena-lunge {50%{transform:translateX(18px)}}@keyframes arena-lunge-left {50%{transform:translateX(-18px)}}@keyframes arena-impact {50%{filter:brightness(2) drop-shadow(0 0 7px #ffe3b0)}}@keyframes arena-number {from{opacity:0;transform:translate(-50%,12px)}20%{opacity:1}to{opacity:1;transform:translate(-50%,-5px)}}
 @media(max-width:600px){#game-dialog.arena-battle-dialog {padding:10px}.arena-battle-dialog .dialog-heading h2 {font-size:19px}.replay-stage {padding:14px 5px;gap:8%;min-height:240px}.replay-team {gap:10px 2px}.replay-unit {padding:2px}.replay-sprite {height:56px}.replay-sprite svg {height:56px;width:68px}.replay-name {font-size:10px}.replay-unit small {font-size:9px}.replay-versus {font-size:11px}.replay-message {font-size:12px;padding:10px;min-height:72px}.replay-critical {padding:10px}.replay-critical p {font-size:18px}.replay-controls {gap:6px}.replay-controls button {padding:9px}.replay-damage {font-size:18px}.replay-stage:has(.replay-team>.replay-unit:nth-child(5)) {min-height:330px}}
 @media(prefers-reduced-motion:reduce){.arena-playback *,.arena-playback *::before,.arena-playback *::after {animation:none!important;transition:none!important}.replay-damage {transform:translateX(-50%)}}
+.arena-injury {border-top:1px solid var(--line);padding:8px 0}.arena-injury button {margin:4px 0;font-size:12px}.arena-fallen {margin-top:32px}.arena-fallen .pet-card {margin:12px 0;border-color:#9c786b}.arena-fallen h3 {color:#d5ac9d}
+
+/* Ludus facilities: readable on narrow phones and wide arena screens. */
+.ludus-summary{display:flex;flex-wrap:wrap;gap:1rem;align-items:center;padding:1rem;background:var(--panel,#20242b);border-radius:.6rem}
+.ludus-buildings{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,280px),1fr));gap:1rem;margin-top:1.5rem}
+.ludus-building,.ludus-blessings{border:1px solid #78674d;border-radius:.6rem;padding:1rem;min-width:0}
+.ludus-spell{border-top:1px solid #78674d;padding:.65rem 0}
+.ludus-spell summary{cursor:pointer;line-height:1.5}.ludus-spell summary span{display:block;font-size:.85rem;opacity:.8}
+.ludus-building button,.ludus-target button{white-space:normal;max-width:100%}
+.ludus-target{padding:.6rem 0;border-bottom:1px solid #78674d}.ludus-target summary{cursor:pointer}
+.ludus-target form,.ludus-target fieldset{display:grid;gap:.75rem;margin-top:.75rem;min-width:0}
+.ludus-target label{display:block}.ludus-target input[type=radio],.ludus-target input[type=checkbox]{width:auto}
+.ludus-history{margin-top:1.5rem}.ludus-history article{border-bottom:1px solid #78674d;padding:.6rem 0}
+.ludus-blessings{margin:1rem 0}.ludus-blessings h3{margin-top:0}
+.arena-shell .game-nav{grid-template-columns:repeat(3,minmax(0,1fr))}
+.ludus-summary{background:#172d20}

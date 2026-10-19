@@ -37,7 +37,7 @@ test('playback captures existing wounds, bleeding, and healing without deriving 
 test('timelines include empty rounds and statuses distinguish being down from zero HP',()=>{
  assert.deepEqual(playbackSteps({rounds:[{round:1,events:[]}]}),[{kind:'round',round:1}]);
  assert.deepEqual(playbackStatuses({standing:false,dead:false,asleep:true,hp:20}),['Asleep']);
- assert.deepEqual(playbackStatuses({standing:false,dead:true,hp:20}),['Fallen']);
+ assert.deepEqual(playbackStatuses({standing:false,dead:true,hp:20}),['Dead']);
  const units=[{id:'x',hp:5}],changed=applyPlaybackChanges(units,[{id:'x',hp:8}]);assert.equal(units[0].hp,5);assert.equal(changed[0].hp,8);
  assert.match(playbackNarration({kind:'attack',actor:'a',target:'b',attackName:'Sword',damage:7},[{id:'a',name:'One'},{id:'b',name:'Two'}]),/One uses Sword on Two — 7 damage/);
 });

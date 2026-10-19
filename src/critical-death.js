@@ -37,7 +37,7 @@ export function criticalDeathLabel(death) {
   return 'Dies: in '+death.rounds+(death.inactive?' inactive':'')+' round'+(death.rounds===1?'':'s')+' unless healed'+(death.inactive?' (GM-managed)':'');
 }
 export function cancelCriticalDeathOnHealing(target,oldDamage) {
-  if(target.deathRound!==undefined&&target.hits<oldDamage){delete target.deathRound;delete target.deathDamage;return true;}
+  if(!target.deathRequiresRepair&&target.deathRound!==undefined&&target.hits<oldDamage){delete target.deathRound;delete target.deathDamage;return true;}
   return false;
 }
 function kill(target,maxHits) {

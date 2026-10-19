@@ -2,19 +2,19 @@ import {esc} from './dom.js';
 import {creatureProfile} from './coliseum-battle.js';
 import {formatCriticalEffect} from './critical-presentation.js';
 
-export const playbackSteps=report=>report.rounds.flatMap(round=>[{kind:'round',round:round.round},...round.events.map(event=>({...event,round:round.round}))]);
+export const playbackSteps=report=>[...(report.services||[]).map(s=>({kind:'service',round:0,text:`${s.name}: ${s.description}`})),...report.rounds.flatMap(round=>[{kind:'round',round:round.round},...round.events.map(event=>({...event,round:round.round}))])];
 export function applyPlaybackChanges(units,changes=[]){
  const updates=new Map(changes.map(u=>[u.id,u]));
  return units.map(u=>structuredClone(updates.get(u.id)||u));
 }
 export function playbackStatuses(unit){
- if(!unit.standing)return [unit.dead?'Fallen':unit.asleep?'Asleep':'Defeated'];
+ if(!unit.standing)return unit.dead?['Dead']:[...(unit.conditions?.length?unit.conditions:[unit.asleep?'Asleep':'Defeated']),...(unit.mortalIn!==undefined?[`Dying · ${unit.mortalIn}r`]:[])];
  const labels=unit.effects.map(e=>{
   const name={bleed:`Bleeding ${e.amount}/round`,stun:'Stunned',stunNoParry:'Stunned · no parry',noParry:'Cannot parry',mustParry:'Must parry',downOrOut:'Down',penalty:`−${e.amount} penalty`,bonus:`+${e.amount} bonus`}[e.kind]||e.kind;
   return name+(e.pending?' · next round':e.roundsLeft===null?'':` · ${e.roundsLeft}r`);
  });
  if(unit.mortalIn!==undefined)labels.push(`Mortal wound · ${unit.mortalIn}r`);
- return labels;
+ return [...(unit.conditions||[]),...labels];
 }
 export function playbackNarration(event,fighters){
  if(event.kind==='round')return `Round ${event.round}`;
@@ -42,7 +42,7 @@ export function mountArenaPlayback(root,report,onResult){
   if(index>=steps.length){
    finished=true;units=applyPlaybackChanges(units,report.playback.final);draw();
    root.querySelector('[data-round-label]').textContent=report.winner===0?'Victory':report.winner===1?'Defeat':'Draw';
-   message.textContent=report.winner===0?'The opposition falls. Your company wins!':report.winner===1?'Your fighters have fallen. The infirmary comes to their aid.':'Neither side prevails. Both teams withdraw.';
+   message.textContent=report.winner===0?'The opposition falls. Your company wins!':report.winner===1?'Your company is defeated. Review the casualties and injuries.':'Neither side prevails. Both teams withdraw.';
    critical.innerHTML='';root.querySelector('.replay-controls').hidden=true;root.querySelector('[data-view-result]').hidden=false;root.querySelector('[data-view-result]').focus();return;
   }
   const event=steps[index],before=units;units=applyPlaybackChanges(units,event.changes);

@@ -1,3 +1,4 @@
+import {criticalConsequences} from './critical-consequences.js';
 import {openEndedD100, parseCriticalSymbols} from './rules.js';
 import {automaticInitiative} from './critical-initiative.js';
 import {applyCriticalDeath,advanceCriticalDeath} from './critical-death.js';
@@ -90,7 +91,7 @@ function finish(fight, checkLimit = true) {
   }
 }
 
-export function resolveCritical(target,attacker,attack,severity,tables,d100,round,{allies}={}) {
+export function resolveCritical(target,attacker,attack,severity,tables,d100,round,{allies,persistentConsequences=false}={}) {
   let code = attack.criticalTable||attackTypes[attack.type][2], column = severity.charCodeAt(0) - 65;
   const large = target.creature.size === 'L*', huge = target.creature.size === 'H*';
   if (!code || large && severity === 'A' || huge && severity <= 'C') return {ignored:true,severity};
@@ -119,7 +120,9 @@ export function resolveCritical(target,attacker,attack,severity,tables,d100,roun
     if (effect.kind === 'hits') {target.hits += effect.amount;experienceHits+=effect.amount;}
     else (effect.kind === 'bonus' ? attacker : target).effects.push({...effect, starts:round+1});
   }
-  return {experienceHits,severity,code,roll,description:selected.description,effect:selected.effect,sourceDescription:cell.sourceCorrection?.original.description??cell.description,sourceEffect:cell.sourceCorrection?.original.effect??cell.effect,conditional,equipmentConditions:selected.conditions,recoils,manualEffects};
+  const consequences=persistentConsequences?criticalConsequences(selected.description,selected.effect):[];
+  if(consequences.length){if(consequences.some(c=>c.disabling))target.incapacitated=true;target.consequences=[...(target.consequences||[]),...consequences];if(target.deathRound!==undefined)target.deathRequiresRepair=true;}
+  return {...(persistentConsequences?{consequences}:{}),experienceHits,severity,code,roll,description:selected.description,effect:selected.effect,sourceDescription:cell.sourceCorrection?.original.description??cell.description,sourceEffect:cell.sourceCorrection?.original.effect??cell.effect,conditional,equipmentConditions:selected.conditions,recoils,manualEffects};
 }
 
 export function stepFight(fight,tables,random = Math.random) {
