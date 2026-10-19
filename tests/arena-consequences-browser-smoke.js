@@ -29,7 +29,6 @@ async existingPage => {
   await page.locator('[data-close-dialog]').click();await page.locator('[data-tab="concussion"]').click();for(let i=0;i<5;i++)await page.locator('[data-rest]').click();
   check((await saved()).members[0].injuries[0].permanent,'rest preserves paralysis');await page.reload();await ready();
   const before=await saved();await page.locator('[data-tab="nerve"]').click();
-  await page.locator('.ludus-spell').filter({has:page.locator('[data-ludus-spell="nerve:10"]')}).locator('summary').click();
   await page.locator('[data-ludus-spell="nerve:10"]').click();await page.locator('.ludus-target').first().locator('summary').click();
   await page.locator('[name="injuryId"]').first().check();await page.locator('[data-ludus-service]').first().locator('button').click();await page.waitForSelector('[data-upgrade-building="nerve"]');const after=await saved();
   check(after.members[0].injuries[0].suppressed,'Unparalysis temporarily suppresses paralysis');check(after.ludus.pp===before.ludus.pp-10,'Ludus pays PP');

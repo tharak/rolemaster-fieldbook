@@ -20,22 +20,25 @@ export function spellDescription(s){
 }
 export function ludusPage(state,building=null){
  const l=state.ludus,p=nextPromotion(state);
- return `<section class="ludus">${building&&building!=='hall'?'':`<p class="eyebrow">Your gladiator school</p><h1>The Ludus</h1><div class="ludus-summary"><strong>Level ${l.level} · ${l.xp} XP</strong><strong>${l.pp}/${l.ppMax} PP</strong><span>${Math.max(0,l.hits-l.damage)}/${l.hits} caster HP</span><button data-rest>Rest ${C.time.restDays} day(s)</button></div>
+ return `<section class="ludus">${building&&building!=='hall'?'':`<div class="ludus-summary"><strong>Level ${l.level}</strong><span>${l.xp} XP</span><strong>${l.pp}/${l.ppMax} PP</strong><span>${Math.max(0,l.hits-l.damage)}/${l.hits} caster HP</span><button data-rest>Rest ${C.time.restDays} day(s)</button></div>
  <details><summary>About the Ludus</summary><p>Buildings are the Ludus’s spell-list skills. They share its power points. A resident currently contributes +${C.starting.residentBonus}; gladiator assignments will come later.</p></details>
- ${p?`<p>Next promotion: level ${p.level} · ${p.xp} total XP · ${p.gold} gold</p><button data-promote-ludus ${l.xp<p.xp||state.gold<p.gold?'disabled':''}>Promote Ludus to level ${p.level} · ${p.gold} gold</button>`:'<p>Maximum Ludus level reached.</p>'}
+ ${p?`<button class="building-action building-promotion" data-promote-ludus ${l.xp<p.xp||state.gold<p.gold?'disabled':''}><span class="action-kind">Ludus upgrade</span><strong>Promote to level ${p.level}</strong><span>${p.gold} gold · ${l.xp}/${p.xp} XP</span></button>`:'<p>Maximum Ludus level reached.</p>'}
  ${l.conditions.length?`<p role="status">Caster recovery: ${l.conditions.map(c=>`${esc(c.kind)} (${Math.ceil((c.until-l.clock)/roundsPerMinute())} min remaining)`).join(', ')}</p>`:''}
  ${l.disorder?`<p>${esc(l.disorder)}</p>`:''}
  `}<div class="ludus-buildings">${Object.entries(C.buildings).filter(([id])=>!building||id===building).map(([id,b])=>{
  const owned=l.buildings[id],cost=C.economy.rankPrices[owned.rank],capped=owned.rank>=Math.min(l.level,C.progression.maxRank);
- return `<article class="ludus-building"><h2>${esc(b.name)}</h2><p>Rank ${owned.rank} · Resident +${owned.residentBonus}</p><button data-upgrade-building="${id}" ${capped||state.gold<cost?'disabled':''}>${owned.rank>=C.progression.maxRank?'List complete':capped?'Promote Ludus to unlock more ranks':`Rank ${owned.rank} → ${owned.rank+1} · ${cost} gold`}</button><p class="small">${esc(b.source)}</p>
+ return `<article class="ludus-building"><div class="building-status"><span>Rank <strong>${owned.rank}</strong></span><span>${state.gold} gold</span><span>${l.pp}/${l.ppMax} shared PP</span></div><div class="building-actions">
+ <button class="building-action building-upgrade" data-upgrade-building="${id}" ${capped||state.gold<cost?'disabled':''}><span class="action-kind">Building</span><strong>Upgrade</strong><span>${owned.rank>=C.progression.maxRank?'Fully upgraded':capped?'Promote Ludus first':`Rank ${owned.rank+1} · ${cost} gold`}</span></button>
  ${C.spells.filter(s=>s.building===id).map(s=>{
  const reason=spellRequirement(state,s);
- return `<details class="ludus-spell"><summary>${esc(s.name)} <span>Level ${s.level} · ${servicePrice(s)} gold · ${spellPp(s)} PP</span></summary><p>${esc(spellDescription(s))}</p>${reason?`<p class="small">${esc(reason)}</p>`:''}<button data-ludus-spell="${s.id}" ${reason?'disabled':''}>${s.kind==='blessing'?'Choose for next battle':'Choose treatment target'}</button></details>`;
- }).join('')}</article>`;
+ return `<button class="building-action ludus-spell ${reason?'is-locked':''}" data-ludus-spell="${s.id}"><span class="action-kind">${reason?'Locked · ':''}Level ${s.level}</span><strong>${esc(s.name)}</strong><span>${servicePrice(s)} gold · ${spellPp(s)} PP</span></button>`;
+ }).join('')}</div><details class="building-about"><summary>About this building</summary><p>${esc(b.name)} · Resident +${owned.residentBonus}</p><p>${esc(b.source)}</p><p>Upgrade the building to learn higher-level spells. Building ranks cannot exceed the Ludus level.</p></details></article>`;
  }).join('')}</div>
  ${building&&building!=='hall'?'':`<details class="ludus-history"><summary>Recent services</summary>${l.history.map(r=>`<article><strong>${esc(r.name)} · ${esc(r.target)}</strong><p>${esc(r.description)}</p><p class="small">${r.success?'Completed':'Failed'} · ${r.gold} gold · ${r.pp??0} PP${r.failureCheck!==undefined?` · casting roll ${r.failureCheck}`:''}${r.maneuver?` · maneuver ${r.maneuver.total}`:''}${r.roll!==undefined?` · failure table ${r.roll}`:''}</p></article>`).join('')||'<p>No services yet.</p>'}</details>`}</section>`;
 }
 export function serviceDialog(state,s){
+ const reason=spellRequirement(state,s);
+ if(reason)return `<div class="spell-detail"><p>${esc(spellDescription(s))}</p><p>${servicePrice(s)} gold · ${spellPp(s)} PP</p><p class="spell-locked" role="status">${esc(reason)}</p></div>`;
  return `<p>${esc(spellDescription(s))}</p><p>${servicePrice(s)} gold per attempt · ${spellPp(s)} PP before failure adjustments. Casting can fail.</p>${state.members.length?'':'<p>Recruit a living gladiator first.</p>'}${state.members.filter(m=>!m.dead).map(m=>`<details class="ludus-target" ${state.members.length===1?'open':''}><summary>${esc(m.name)} · ${m.hits-m.damage}/${m.hits} HP</summary><form data-ludus-service><input type="hidden" name="spellId" value="${s.id}"><input type="hidden" name="targetId" value="${esc(m.id)}">
  ${['nerveRepair','unparalysis','burn','irritation'].includes(s.kind)?`<fieldset><legend>Select ${s.kind==='burn'?'affected areas':'one injury'}</legend>${m.injuries.map(i=>`<label><input type="${s.kind==='burn'?'checkbox':'radio'}" name="injuryId" value="${esc(i.id)}"> ${esc(i.label||i.description)}${i.destroyed?' · destroyed':''}${i.suppressed?' · temporarily suppressed':''}${i.recoveryUntil?' · recovering':''}</label>`).join('')||'<p>No recorded injuries.</p>'}</fieldset>`:''}
  ${s.choices?`<label>Effect<select name="choice">${s.choices.map(id=>`<option value="${id}">${esc(spellById(id).name)}</option>`).join('')}</select></label>`:''}
