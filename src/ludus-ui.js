@@ -18,14 +18,14 @@ export function spellDescription(s){
  }
  return '';
 }
-export function ludusPage(state){
+export function ludusPage(state,building=null){
  const l=state.ludus,p=nextPromotion(state);
- return `<section class="ludus"><p class="eyebrow">Your gladiator school</p><h1>The Ludus</h1><div class="ludus-summary"><strong>Level ${l.level} · ${l.xp} XP</strong><strong>${l.pp}/${l.ppMax} PP</strong><span>${Math.max(0,l.hits-l.damage)}/${l.hits} caster HP</span><button data-rest>Rest ${C.time.restDays} day(s)</button></div>
- <p>Buildings are the Ludus’s spell-list skills. They share its power points. A resident currently contributes +${C.starting.residentBonus}; gladiator assignments will come later.</p>
+ return `<section class="ludus">${building&&building!=='hall'?'':`<p class="eyebrow">Your gladiator school</p><h1>The Ludus</h1><div class="ludus-summary"><strong>Level ${l.level} · ${l.xp} XP</strong><strong>${l.pp}/${l.ppMax} PP</strong><span>${Math.max(0,l.hits-l.damage)}/${l.hits} caster HP</span><button data-rest>Rest ${C.time.restDays} day(s)</button></div>
+ <details><summary>About the Ludus</summary><p>Buildings are the Ludus’s spell-list skills. They share its power points. A resident currently contributes +${C.starting.residentBonus}; gladiator assignments will come later.</p></details>
  ${p?`<p>Next promotion: level ${p.level} · ${p.xp} total XP · ${p.gold} gold</p><button data-promote-ludus ${l.xp<p.xp||state.gold<p.gold?'disabled':''}>Promote Ludus to level ${p.level} · ${p.gold} gold</button>`:'<p>Maximum Ludus level reached.</p>'}
  ${l.conditions.length?`<p role="status">Caster recovery: ${l.conditions.map(c=>`${esc(c.kind)} (${Math.ceil((c.until-l.clock)/roundsPerMinute())} min remaining)`).join(', ')}</p>`:''}
  ${l.disorder?`<p>${esc(l.disorder)}</p>`:''}
- <div class="ludus-buildings">${Object.entries(C.buildings).map(([id,b])=>{
+ `}<div class="ludus-buildings">${Object.entries(C.buildings).filter(([id])=>!building||id===building).map(([id,b])=>{
  const owned=l.buildings[id],cost=C.economy.rankPrices[owned.rank],capped=owned.rank>=Math.min(l.level,C.progression.maxRank);
  return `<article class="ludus-building"><h2>${esc(b.name)}</h2><p>Rank ${owned.rank} · Resident +${owned.residentBonus}</p><button data-upgrade-building="${id}" ${capped||state.gold<cost?'disabled':''}>${owned.rank>=C.progression.maxRank?'List complete':capped?'Promote Ludus to unlock more ranks':`Rank ${owned.rank} → ${owned.rank+1} · ${cost} gold`}</button><p class="small">${esc(b.source)}</p>
  ${C.spells.filter(s=>s.building===id).map(s=>{
@@ -33,7 +33,7 @@ export function ludusPage(state){
  return `<details class="ludus-spell"><summary>${esc(s.name)} <span>Level ${s.level} · ${servicePrice(s)} gold · ${spellPp(s)} PP</span></summary><p>${esc(spellDescription(s))}</p>${reason?`<p class="small">${esc(reason)}</p>`:''}<button data-ludus-spell="${s.id}" ${reason?'disabled':''}>${s.kind==='blessing'?'Choose for next battle':'Choose treatment target'}</button></details>`;
  }).join('')}</article>`;
  }).join('')}</div>
- <details class="ludus-history" ${l.history.length?'open':''}><summary>Recent services</summary>${l.history.map(r=>`<article><strong>${esc(r.name)} · ${esc(r.target)}</strong><p>${esc(r.description)}</p><p class="small">${r.success?'Completed':'Failed'} · ${r.gold} gold · ${r.pp??0} PP${r.failureCheck!==undefined?` · casting roll ${r.failureCheck}`:''}${r.maneuver?` · maneuver ${r.maneuver.total}`:''}${r.roll!==undefined?` · failure table ${r.roll}`:''}</p></article>`).join('')||'<p>No services yet.</p>'}</details></section>`;
+ ${building&&building!=='hall'?'':`<details class="ludus-history"><summary>Recent services</summary>${l.history.map(r=>`<article><strong>${esc(r.name)} · ${esc(r.target)}</strong><p>${esc(r.description)}</p><p class="small">${r.success?'Completed':'Failed'} · ${r.gold} gold · ${r.pp??0} PP${r.failureCheck!==undefined?` · casting roll ${r.failureCheck}`:''}${r.maneuver?` · maneuver ${r.maneuver.total}`:''}${r.roll!==undefined?` · failure table ${r.roll}`:''}</p></article>`).join('')||'<p>No services yet.</p>'}</details>`}</section>`;
 }
 export function serviceDialog(state,s){
  return `<p>${esc(spellDescription(s))}</p><p>${servicePrice(s)} gold per attempt · ${spellPp(s)} PP before failure adjustments. Casting can fail.</p>${state.members.length?'':'<p>Recruit a living gladiator first.</p>'}${state.members.filter(m=>!m.dead).map(m=>`<details class="ludus-target" ${state.members.length===1?'open':''}><summary>${esc(m.name)} · ${m.hits-m.damage}/${m.hits} HP</summary><form data-ludus-service><input type="hidden" name="spellId" value="${s.id}"><input type="hidden" name="targetId" value="${esc(m.id)}">
@@ -47,5 +47,5 @@ export function blessingPanel(state,party){
  return `<section class="ludus-blessings"><h3>Ludus blessings</h3>${state.members.filter(m=>party.includes(m.id)).map(m=>{
  const selections=state.ludus.selections[m.id]||[];
  return `<p>${esc(m.name)}: ${selections.map(o=>esc(spellById(o.spellId)?.name||o.spellId)).join(', ')||'None'}${selections.length?` <button class="quiet" data-clear-blessing="${esc(m.id)}">Clear</button>`:''}</p>`;
- }).join('')}<p>Preparation: ${q.gold} gold · ${q.pp} PP. Current Ludus PP: ${state.ludus.pp}/${state.ludus.ppMax}.</p><button class="quiet" data-tab="ludus">Choose support spells at the Ludus</button></section>`;
+ }).join('')}<p>Preparation: ${q.gold} gold · ${q.pp} PP. Current Ludus PP: ${state.ludus.pp}/${state.ludus.ppMax}.</p></section>`;
 }

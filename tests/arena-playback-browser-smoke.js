@@ -4,17 +4,17 @@ async existingPage => {
  const saved=()=>page.evaluate(()=>localStorage.getItem('rolemaster-coliseum-v1'));
  page.on('pageerror',e=>errors.push(e.message));
  try{
-  await page.goto(existingPage.url());await page.waitForSelector('[data-recruit]');
+  await page.goto(existingPage.url());await page.waitForSelector('.courtyard');
   await page.evaluate(async()=>{
    const {newArena,recruitArena,generateOffers,saveArena}=await import('./src/arena-rules.js');
    const {catalog,opponents}=await (await import('./src/guild-data.js')).loadGuildMasterData();
    let s=newArena('playback-browser',opponents);s.gold=100;
    const template=catalog.find(c=>c.profession==='Fighter'&&c.level===1);
    for(let i=0;i<6;i++)s=recruitArena(s,template,'Fighter '+(i+1));
-   s=generateOffers(s,opponents);saveArena(localStorage,s);
+   s.arena.lineup=s.members.map(m=>m.id);s=generateOffers(s,opponents);saveArena(localStorage,s);
   });
-  await page.reload();await page.waitForSelector('[data-fighter]');
-  await page.locator('[data-offer]').last().click();await page.locator('[data-fight]').click();await page.waitForSelector('[data-arena-playback]');
+  await page.reload();await page.waitForSelector('.courtyard');await page.locator('[data-tab="coliseum"]').click();
+  await page.locator('[data-fight]').last().click();await page.waitForSelector('[data-arena-playback]');
   await page.locator('[data-pause]').click();
   const committed=await saved(),report=JSON.parse(committed).arena.reports[0];
   check(report.playback.fighters.length===6+report.enemies.length,'all fighters recorded');
@@ -36,10 +36,10 @@ async existingPage => {
   await page.setViewportSize({width:390,height:844});await page.screenshot({path:'output/playwright/arena-playback-mobile.png'});
   await page.locator('[data-skip]').click();check(await saved()===committed,'skip and replay never pay again');
   await page.locator('[data-replay]').click();await page.keyboard.press('Escape');await page.waitForTimeout(1400);check(!await page.locator('#game-dialog').isVisible(),'escape closes playback');
-  await page.reload();await page.waitForSelector('[data-report]');check(await saved()===committed,'reload preserves outcome');
+  await page.reload();await page.locator('[data-tab="hall"]').click();await page.waitForSelector('[data-report]');check(await saved()===committed,'reload preserves outcome');
   // Old reports still open their recap without pretending to have health snapshots.
   await page.evaluate(()=>{const key='rolemaster-coliseum-v1',s=JSON.parse(localStorage.getItem(key));delete s.arena.reports[0].playback;localStorage.setItem(key,JSON.stringify(s));});
-  await page.reload();await page.locator('[data-report]').first().click();check(await page.locator('.arena-result').isVisible()&&await page.locator('[data-replay]').count()===0,'legacy report fallback');
+  await page.reload();await page.locator('[data-tab="hall"]').click();await page.locator('[data-report]').first().click();check(await page.locator('.arena-result').isVisible()&&await page.locator('[data-replay]').count()===0,'legacy report fallback');
   check(errors.length===0,errors.join('\n'));return 'PASS: six-fighter playback, exact HP, pause, step, speed, criticals, completion, replay, skip, Escape, reload, old reports, and mobile layouts';
  }finally{await context.close();}
 }

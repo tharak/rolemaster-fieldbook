@@ -32,7 +32,7 @@ test('actual severed-spine critical disables immediately and persists through re
 });
 test('actual severed-leg critical expires after six rounds, removes fighter, and never revives during rest or progression',()=>{
  const initial=start(),id=initial.members[0].id,s=woundFight(initial,amputation),report=s.arena.reports[0];
- assert.equal(s.members.length,0);assert.equal(s.arena.fallen.length,1);assert.equal(s.arena.fallen[0].id,id);assert.equal(s.arena.fallen[0].dead,true);assert.equal(s.arena.fallen[0].xp,0);assert.equal(report.rewards[0].dead,true);assert.equal(report.rewards[0].rescued,false);
+ assert.deepEqual(s.arena.lineup,[]);assert.equal(s.members.length,0);assert.equal(s.arena.fallen.length,1);assert.equal(s.arena.fallen[0].id,id);assert.equal(s.arena.fallen[0].dead,true);assert.equal(s.arena.fallen[0].xp,0);assert.equal(report.rewards[0].dead,true);assert.equal(report.rewards[0].rescued,false);
  const hit=report.rounds.find(r=>r.events.some(e=>e.target===id&&e.critical)),death=report.rounds.find(r=>r.events.some(e=>e.actor===id&&e.kind==='dies'));
  assert.equal(death.round,hit.round+6);assert.equal(report.playback.final.find(u=>u.id===id).dead,true);assert.ok(validArena(s));
  assert.deepEqual(levelMembers(restArena(s),catalog).arena.fallen,s.arena.fallen);

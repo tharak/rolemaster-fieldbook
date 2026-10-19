@@ -61,3 +61,20 @@ test('whole selected party fights and receives XP; promotion preserves lasting w
  assert.equal(report.winner,0);assert.equal(report.rewards.length,2);
  assert.ok(next.members.every(m=>m.xp>0));assert.equal(next.members[0].level,5);assert.deepEqual(next.members[0].injuries[0],state.members[0].injuries[0]);assert.ok(validArena(next));
 });
+
+test('saved lineup migrates, validates, persists and only the founder is automatically selected',async()=>{
+ const {setLineup,readyLineup}=await import('../src/arena-rules.js');
+ const fresh=newArena('lineup',opponents),snapshot=structuredClone(fresh);
+ const founder=recruitArena(fresh,fighter,'Rowan');assert.deepEqual(fresh,snapshot);
+ let s=recruitArena(founder,fighter,'Bench');
+ assert.deepEqual(s.arena.lineup,[s.members[0].id]);
+ const map=new Map(),storage={getItem:k=>map.get(k)??null,setItem:(k,v)=>map.set(k,v)};
+ delete s.arena.lineup;saveArena(storage,s);s=readArena(storage);
+ assert.deepEqual(s.arena.lineup,s.members.map(m=>m.id));
+ s.members[0].damage=s.members[0].hits;
+ assert.deepEqual(readyLineup(s).map(m=>m.id),[s.members[1].id]);
+ assert.equal(s.arena.lineup.length,2);
+ s=setLineup(s,[]);saveArena(storage,s);assert.deepEqual(readArena(storage).arena.lineup,[]);assert.deepEqual(readyLineup(s),[]);
+ for(const ids of [['missing'],[s.members[0].id,s.members[0].id],[null]])assert.throws(()=>setLineup(s,ids));
+ assert.throws(()=>fightArena(s,s.arena.offers[0].id,[],catalog,tables,opponents));
+});

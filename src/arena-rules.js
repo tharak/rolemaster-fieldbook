@@ -50,14 +50,21 @@ export function generateOffers(state,opponents){
 export function newArena(seed,opponents){
  const state=newGame(seed);state.name='Wayfarers’ Coliseum';
  state.ludus=newLudus();
- state.arena={version:1,revision:0,day:1,offers:[],reports:[],fallen:[]};
+ state.arena={version:1,revision:0,day:1,offers:[],reports:[],fallen:[],lineup:[]};
  return generateOffers(state,opponents);
 }
 export function recruitArena(state,template,name){
- const next=hireMember(state,template,name);next.members.at(-1).injuries=[];next.members.at(-1).conditions=[];next.members.at(-1).supportEffects=[];return next;
+ const next=hireMember(state,template,name);next.arena.lineup=[...lineupIds(state)];if(!state.founderClaimed)next.arena.lineup.push(next.members.at(-1).id);next.members.at(-1).injuries=[];next.members.at(-1).conditions=[];next.members.at(-1).supportEffects=[];return next;
+}
+export const lineupIds=state=>state.arena.lineup??state.members.filter(m=>!m.dead).map(m=>m.id);
+export const readyLineup=state=>state.members.filter(m=>lineupIds(state).includes(m.id)&&canFight(m));
+export function setLineup(state,ids){
+ const next=copy(state);next.arena.lineup=[...ids];
+ if(!validArena(next))throw new Error('Choose living roster members once each.');
+ return next;
 }
 export function validArena(state){
- return validGame(state)&&(!state.ludus||validLudus(state.ludus))&&state.arena?.version===1&&Number.isSafeInteger(state.arena.revision)&&state.arena.revision>0&&Number.isSafeInteger(state.arena.day)&&state.arena.day>0&&Array.isArray(state.arena.offers)&&state.arena.offers.length<=themes.length&&new Set(state.arena.offers.map(o=>o.id)).size===state.arena.offers.length&&state.arena.offers.every(o=>typeof o.id==='string'&&typeof o.seed==='string'&&typeof o.name==='string'&&typeof o.description==='string'&&Number.isSafeInteger(o.gold)&&o.gold>0&&Number.isSafeInteger(o.xp)&&o.xp>0&&Array.isArray(o.enemies)&&o.enemies.length>0&&o.enemies.length<=4&&o.enemies.every(e=>typeof e.id==='string'&&typeof e.name==='string'&&Number.isFinite(e.hits)&&e.hits>0&&Array.isArray(e.attacks)))&&Array.isArray(state.arena.reports)&&state.arena.reports.length<=10&&state.arena.reports.every(r=>typeof r.id==='string'&&Array.isArray(r.rounds)&&Array.isArray(r.criticals)&&Array.isArray(r.rewards))&&state.members.every(m=>Array.isArray(m.injuries)&&m.injuries.every(i=>typeof i.description==='string'&&(i.permanent===true?i.days===null&&typeof i.kind==='string'&&typeof i.treatment==='string'&&typeof i.label==='string'&&typeof i.disabling==='boolean':Number.isInteger(i.days)&&i.days>0)&&Number.isInteger(i.penalty)&&i.penalty>=0));
+ return validGame(state)&&(state.arena?.lineup===undefined||(Array.isArray(state.arena.lineup)&&new Set(state.arena.lineup).size===state.arena.lineup.length&&state.arena.lineup.every(id=>typeof id==='string'&&state.members.some(m=>m.id===id&&!m.dead))))&&(!state.ludus||validLudus(state.ludus))&&state.arena?.version===1&&Number.isSafeInteger(state.arena.revision)&&state.arena.revision>0&&Number.isSafeInteger(state.arena.day)&&state.arena.day>0&&Array.isArray(state.arena.offers)&&state.arena.offers.length<=themes.length&&new Set(state.arena.offers.map(o=>o.id)).size===state.arena.offers.length&&state.arena.offers.every(o=>typeof o.id==='string'&&typeof o.seed==='string'&&typeof o.name==='string'&&typeof o.description==='string'&&Number.isSafeInteger(o.gold)&&o.gold>0&&Number.isSafeInteger(o.xp)&&o.xp>0&&Array.isArray(o.enemies)&&o.enemies.length>0&&o.enemies.length<=4&&o.enemies.every(e=>typeof e.id==='string'&&typeof e.name==='string'&&Number.isFinite(e.hits)&&e.hits>0&&Array.isArray(e.attacks)))&&Array.isArray(state.arena.reports)&&state.arena.reports.length<=10&&state.arena.reports.every(r=>typeof r.id==='string'&&Array.isArray(r.rounds)&&Array.isArray(r.criticals)&&Array.isArray(r.rewards))&&state.members.every(m=>Array.isArray(m.injuries)&&m.injuries.every(i=>typeof i.description==='string'&&(i.permanent===true?i.days===null&&typeof i.kind==='string'&&typeof i.treatment==='string'&&typeof i.label==='string'&&typeof i.disabling==='boolean':Number.isInteger(i.days)&&i.days>0)&&Number.isInteger(i.penalty)&&i.penalty>=0));
 }
 // Arena recovery is a game rule, not a claim to model every printed lasting injury.
 export function woundsFromBattle(member,battle,matchId){
@@ -109,6 +116,7 @@ export function fightArena(state,offerId,partyIds,catalog,tables,opponents=catal
   next.arena.fallen.unshift({...copy(member),death:{match:offer.name,day:next.arena.day,description:fatal?.critical.description||'Died from a mortal wound.'}});
   delete next.management.orders[member.id];delete next.ludus.selections[member.id];
  }
+ next.arena.lineup=lineupIds(next).filter(id=>next.members.some(m=>m.id===id&&!m.dead));
  next.members=next.members.filter(m=>!m.dead);
  next.arena.offers=next.arena.offers.filter(o=>o.id!==offerId);
  next.arena.reports.unshift(report);next.arena.reports=next.arena.reports.slice(0,10);
@@ -133,7 +141,7 @@ export function readArena(storage){const raw=storage.getItem(arenaSaveKey);if(!r
   const consequences=criticalConsequences(i.description);
   return consequences.length?consequences.map((c,n)=>({...i,...c,id:i.id+':persistent:'+n,permanent:true,days:null,penalty:0})):[i];
  });
- return migrateLudus(state);}
+ state.arena.lineup=lineupIds(state);return migrateLudus(state);}
 export function saveArena(storage,state,previous){
  if(previous&&JSON.stringify(readArena(storage))!==JSON.stringify(previous))throw new Error('The roster changed in another tab. Reload before continuing.');
  if(!validArena(state))throw new Error('The Coliseum could not be saved.');

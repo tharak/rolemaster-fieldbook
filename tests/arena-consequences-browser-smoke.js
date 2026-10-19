@@ -24,25 +24,25 @@ async existingPage => {
  }
  try{
   await page.goto(existingPage.url());await ready();await fixture('paralysis');
-  check(await page.locator('[data-fighter="member-1"]').isDisabled(),'paralyzed fighter cannot be selected');
-  await page.locator('[data-tab="roster"]').click();check((await page.locator('.arena-wounds').first().innerText()).includes('Paralyzed'),'paralysis visible');
-  for(let i=0;i<5;i++)await page.locator('[data-rest]').click();
+  await page.locator('[data-tab="coliseum"]').click();check((await page.locator('.lineup-summary').innerText()).includes('Unavailable: Rowan'),'unavailable selected fighter sits out');check(await page.locator('[data-fight]:disabled').count()===3,'no ready fighters');
+  await page.locator('#game-dialog [data-tab="roster"]').click();check(await page.locator('[data-fighter="member-1"]').isChecked(),'unavailable selection retained');await page.locator('[data-member="member-1"]').click();check((await page.locator('.arena-wounds').innerText()).includes('Paralyzed'),'paralysis visible');
+  await page.locator('[data-close-dialog]').click();await page.locator('[data-tab="concussion"]').click();for(let i=0;i<5;i++)await page.locator('[data-rest]').click();
   check((await saved()).members[0].injuries[0].permanent,'rest preserves paralysis');await page.reload();await ready();
-  const before=await saved();await page.locator('[data-tab="ludus"]').first().click();
+  const before=await saved();await page.locator('[data-tab="nerve"]').click();
   await page.locator('.ludus-spell').filter({has:page.locator('[data-ludus-spell="nerve:10"]')}).locator('summary').click();
   await page.locator('[data-ludus-spell="nerve:10"]').click();await page.locator('.ludus-target').first().locator('summary').click();
-  await page.locator('[name="injuryId"]').first().check();await page.locator('[data-ludus-service]').first().locator('button').click();await page.waitForFunction(()=>!document.querySelector('#game-dialog').open);const after=await saved();
+  await page.locator('[name="injuryId"]').first().check();await page.locator('[data-ludus-service]').first().locator('button').click();await page.waitForSelector('[data-upgrade-building="nerve"]');const after=await saved();
   check(after.members[0].injuries[0].suppressed,'Unparalysis temporarily suppresses paralysis');check(after.ludus.pp===before.ludus.pp-10,'Ludus pays PP');
-  await page.locator('[data-tab="coliseum"]').click();check(!await page.locator('[data-fighter="member-1"]').isDisabled(),'healed member selectable');
-  await fixture('death');await page.locator('[data-tab="roster"]').click();
-  check(await page.locator('.arena-fallen').isVisible(),'memorial visible');check((await page.locator('.arena-fallen').innerText()).includes('Rowan · Dead'),'dead fighter named');
+  await page.locator('[data-close-dialog]').click();await page.locator('[data-tab="coliseum"]').click();check(await page.locator('[data-fight]:enabled').count()===3,'treated member participates automatically');
+  await fixture('death');await page.locator('[data-tab="hall"]').click();
+  check((await page.locator('#game-dialog').innerText()).includes('Rowan'),'dead fighter in memorial');
   await page.screenshot({path:'output/playwright/arena-fallen-mobile.png',fullPage:true});
   const dead=await saved();await page.locator('[data-rest]').click();check(JSON.stringify((await saved()).arena.fallen)===JSON.stringify(dead.arena.fallen),'rest cannot resurrect');
   await page.reload();await ready();check((await saved()).members.length===1,'death persists on reload');
-  await page.locator('[data-report]').first().click();check((await page.locator('.arena-result').innerText()).includes('Dead — lost from roster'),'result reports death instead of rescue');await page.locator('[data-close-dialog]').click();
-  await fixture('last-death');await page.locator('[data-tab="coliseum"]').click();check(await page.locator('[data-recruit]').isVisible(),'replacement available after all fighters die');
+  await page.locator('[data-tab="hall"]').click();await page.locator('[data-report]').first().click();check((await page.locator('.arena-result').innerText()).includes('Dead — lost from roster'),'result reports death instead of rescue');await page.locator('[data-close-dialog]').click();
+  await fixture('last-death');await page.locator('[data-tab="coliseum"]').click();check(await page.locator('[data-fight]:disabled').count()===3,'dead lineup empty');await page.locator('#game-dialog [data-tab="roster"]').click();
   await page.locator('[data-recruit]').click();await page.locator('[name="name"]').fill('Newcomer');await page.locator('[data-hire] button').click();
-  const replacement=await saved();check(replacement.members.length===1&&replacement.members[0].id!=='member-1','replacement is a new identity');check(replacement.arena.fallen.length===1,'fallen record retained');
+  const replacement=await saved();check(replacement.members.length===1&&replacement.members[0].id!=='member-1','replacement is a new identity');check(replacement.arena.fallen.length===1,'fallen record retained');check(replacement.arena.lineup.length===0,'replacement needs explicit selection');
   check(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'mobile width');check(errors.length===0,errors.join('\n'));
   return 'PASS: paralysis disables selection, survives rest/reload, temporary Ludus suppression costs gold and PP, deaths persist in memorial, no resurrection, replacement recruitment';
  }finally{await context.close();}
