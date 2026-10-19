@@ -1,6 +1,6 @@
 {
-  "name": "Wayfarers’ Guild",
-  "short_name": "Guild",
+  "name": "Wayfarers’ Coliseum",
+  "short_name": "Coliseum",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",

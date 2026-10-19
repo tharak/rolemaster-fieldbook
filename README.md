@@ -1,18 +1,22 @@
-# Wayfarers’ Guild · mobile beta
+# Wayfarers’ Coliseum · arena beta
 
-A turn-based guild companion game. Guild and Adventures are views of the same game, with one roster, clock and treasury. The player navigation contains Guild and Adventures. Existing artwork is reused.
+Choose one of three randomly generated enemy groups, select one to six fighters, and resolve a party battle. Generate new opponents for free whenever you want. Themes include goblin raiders, undead, giant insects, wild beasts, and rival mercenaries. Enemy lineups and victory prizes are fixed when generated; changing your team only changes the estimated difficulty.
 
-Recruit a free first companion from the level-one T-5.8 profiles, then care for up to six members. Meals cost 1 gold and restore food and morale immediately. Rest includes free food, healing, energy, and morale. All orders resolve together when you tap **Next turn · 4h**; nothing changes while you are away.
+Your first level-one fighter is free. Start with 20 gold; additional recruits cost 12 gold, with six roster slots. Victory awards the displayed gold once to the company and the displayed XP to every participating fighter. Benched fighters earn nothing, and defeats or draws pay nothing. Automatic progression uses the printed level 5/10/15/20 profiles at total XP 100/300/600/1000. A completed matchup is consumed; remaining matchups stay available until rerolled.
 
-Adventures continue without a stage limit until the player chooses Recall. Low food, energy, morale, or wounds do not automatically recall a living companion. Recall returns them on the following turn. Each stage grants 5 XP and 1 gold, in addition to combat rewards. Defeated members are rescued with 1 HP. Rest brings them back into action. Companions automatically advance through the printed level 5/10/15/20 profiles at total XP of 100/300/600/1000, with no gold cost. These care, reward, rescue, and progression rules are game-specific beta choices.
+Battles resolve immediately. The result dialog features every resolved critical in order: attacker, defender, round, critical type, severity, recorded roll, description, and readable effects. Full round logs remain expandable. The ten most recent matches can be reopened without awarding rewards again.
 
-Recruiting additional members costs 12 gold. Manage guild lets you rename the guild or dismiss companions after confirmation; keep at least one member and recall away members first. Compact member cards show equipment icon buttons, bars with their labels and values inside, and Rest/Recall, Adventure, and Meal actions. Only equipped items appear; icons have accessibility labels without visible descriptions. Rename members in Manage guild. Latest adventure rewards appear above each member card, briefly flashing after a turn. Combat results have a ⚔️ button that opens their battle log. Item rewards appear only when an item was actually awarded. Returned gold is labeled banked.
+## Lasting injuries
 
-## Fresh beta saves
+Damage persists between matches. C, D, and E criticals suffered cause arena injuries with combat penalties of −10, −15, and −20, requiring 2, 3, and 4 treatment days respectively. Mortal wounds cause −20 for 4 days regardless of severity. Penalties stack. Defeated fighters are rescued with 1 HP; a rescue without another critical injury adds −15 for 3 days.
 
-The first load of this beta clears all previous `rolemaster-*` browser records, including characters, members, items, encounters, and old mode saves. No legacy progress is migrated. Unrelated browser storage is untouched. The new save is `rolemaster-guild-beta-v2`; a reset marker prevents repeating the wipe. **Manage guild → About this beta → Start a new guild** resets the current game after confirmation.
+The Fighters & infirmary view provides free one-day treatment: heal 25% maximum HP, restore power points, and advance every injury one day toward recovery. Injury penalties remain until treatment is complete. Fighters can enter while injured. These lasting injury and reward rules are game-specific abstractions, not a full simulation of the printed recovery rules. Combat still uses the existing attack and critical resolution engine. Creature special abilities and swarms are unsupported.
 
-Progress is local to this browser and device. There is no account, cloud sync, or offline cache. The web manifest supports a standalone mobile presentation. Serve the repository over HTTP or HTTPS; do not open index.html as a file.
+Food, morale, energy, travel, and idle turn orders are no longer part of the active game.
+
+## Saves
+
+The arena starts fresh under `rolemaster-coliseum-v1`, independently of the old adventure save. Existing browser records are left intact; no old roster or gold is imported. Progress is local to this browser and device. Starting a new arena company requires confirmation and resets only the arena save. Save failures and stale changes from another tab are rejected before the displayed state changes.
 
 ## Run and verify
 
@@ -21,29 +25,22 @@ python3 -m http.server 8011
 npm test
 ```
 
-Open http://localhost:8011. Static hosting and project subpaths work without a build step. Publish the repository root with GitHub Pages. Browser smoke coverage is in `tests/guild-game-browser-smoke.js`, run through Playwright CLI's `run-code --filename` against the local server.
+Open http://localhost:8011. Serve the repository root with any static HTTP host; project subpaths work without a build step. The active browser smoke test is `tests/arena-browser-smoke.js`, run using Playwright CLI's `run-code --filename` against the local site. It uses a fresh browser context. Existing adventure and older interface browser scripts are historical coverage, not smoke tests for the current entrypoint.
+
+For environments where Node subprocess test isolation is unavailable:
+
+```sh
+node --test --test-isolation=none tests/*.test.mjs
+```
 
 ## Repository layout
 
-- `src/` — game and reusable rules modules, including older interfaces.
-- `styles/` — current game and older interface stylesheets.
-- `docs/` — design notes, audits, and migration plans.
+- `src/` — application and reusable rules modules. `arena-game.js` renders the current interface; `arena-rules.js` owns generation, progression, battle commits, injury recovery, and persistence.
+- `styles/` — current arena styling and reusable older styles.
+- `docs/` — historical design notes, audits, and migration plans.
 - `references/` — source rulebook used by extraction scripts.
-- `assets/`, `data/`, and `tables/` — artwork and game data.
+- `assets/`, `data/`, and `tables/` — artwork and printed game data.
 - `scripts/` and `tests/` — maintenance tools and verification.
 - `rust/` and `wasm/` — optional Rust engine and browser bindings.
 
-The root contains the static site entrypoint, manifest, favicon, and project configuration.
-
-## Implementation
-
-- `src/browser-startup.js` performs the one-time beta reset and starts `src/guild-game.js`.
-- `src/guild-ui.js` supplies reusable stat bars and equipment icons. `src/guild-game.js` and `styles/guild-game.css` provide the mobile shell, member cards, adventures, and combat popups.
-- `src/guild-game-rules.js` implements immutable care, recruitment, progression, and turn resolution.
-- `src/guild-beta-store.js` validates and saves completed changes atomically; failed simulation does not advance the clock.
-- `src/guildmaster-rules.js`, `src/guild-rules.js`, and `src/guild-battle.js` supply the underlying adventure and combat rules.
-- `src/guild-member-results.js` renders member rewards and combat popups. `src/guild-data.js` loads printed profiles and lazy-loads combat tables.
-
-Recruits use T-5.8; opponents use T-5.8, the Monster Statistics Chart, and the Animal Statistics Chart. Each adventuring member has an independent 50% combat chance per turn, day or night (d100: 1–50 combat, 51–100 quiet travel). This beta pacing replaces T-5.1 for the guild game; the original tabletop encounter rules remain available in `src/encounter-generation-rules.js`. Assigned melee/ranged weapons, bolts, and armor retain the printed statistics. Directed spells use Fire, Ice, Lightning, Shock, or Water Bolt with A-10.9.9 adjustments, without PP spending or preparation. Creature special abilities and group/swarm attacks remain unsupported. The beta is not a complete tabletop rules implementation.
-
-Older character, encounter, Coliseum, and GM source modules remain available for rule reuse and their regression tests, but their interfaces are not loaded by the game. See `docs/CRITICAL-AUDIT.md` for combat source review and `rust/README.md` for the optional Rust libraries. The current guild entrypoint uses the JavaScript rules.
+The root contains the static site entrypoint, manifest, favicon, and configuration. Older character, adventure, Coliseum duel, and GM interfaces remain available as source for rules reuse and regression tests. They are not loaded as game screens. See `docs/CRITICAL-AUDIT.md` for the combat source review. The current party battle engine uses JavaScript.
