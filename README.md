@@ -4,7 +4,11 @@ Choose one of three randomly generated enemy groups, select one to six fighters,
 
 Your first level-one fighter is free. Start with 20 gold; additional recruits cost 12 gold, with six roster slots. Victory awards the displayed gold once to the company and the displayed XP to every participating fighter. Benched fighters earn nothing, and defeats or draws pay nothing. Automatic progression uses the printed level 5/10/15/20 profiles at total XP 100/300/600/1000. A completed matchup is consumed; remaining matchups stay available until rerolled.
 
-Battles resolve immediately. The result dialog features every resolved critical in order: attacker, defender, round, critical type, severity, recorded roll, description, and readable effects. Full round logs remain expandable. The ten most recent matches can be reopened without awarding rewards again.
+Battles play automatically on a side-view stage, one action at a time. Opposing teams show their starting health, damage, bleeding, healing, status effects, and fallen fighters. Criticals get a longer spotlight with their actual table description. Pause, advance one action, choose 1×/2×/4× speed, or skip to the result. Motion respects reduced-motion preferences; switching away from the page pauses playback.
+
+Outcomes are saved before playback begins. Reloading, closing, skipping, or watching again never rerolls the battle or awards rewards twice. New battle reports include replay snapshots; older saved reports retain their recap without a replay button.
+
+The result dialog features every resolved critical in order: attacker, defender, round, critical type, severity, recorded roll, description, and readable effects. Full round logs remain expandable. The ten most recent matches can be reopened without awarding rewards again.
 
 ## Lasting injuries
 
@@ -25,7 +29,7 @@ python3 -m http.server 8011
 npm test
 ```
 
-Open http://localhost:8011. Serve the repository root with any static HTTP host; project subpaths work without a build step. The active browser smoke test is `tests/arena-browser-smoke.js`, run using Playwright CLI's `run-code --filename` against the local site. It uses a fresh browser context. Existing adventure and older interface browser scripts are historical coverage, not smoke tests for the current entrypoint.
+Open http://localhost:8011. Serve the repository root with any static HTTP host; project subpaths work without a build step. The active browser smoke test is `tests/arena-browser-smoke.js`, run using Playwright CLI's `run-code --filename` against the local site. It uses a fresh browser context. `tests/arena-playback-browser-smoke.js` additionally checks six-fighter playback, exact HP, pause/step/speed controls, criticals, completion, replay, skip, and older reports. Existing adventure and older interface browser scripts are historical coverage, not smoke tests for the current entrypoint.
 
 For environments where Node subprocess test isolation is unavailable:
 

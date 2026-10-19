@@ -32,13 +32,19 @@ function spellChoice(u,all,r){
  }
  return null;
 }
-export function simulateGuildBattle(party,enemies,tables,random=Math.random,{roundLimit=80}={}){
+export function simulateGuildBattle(party,enemies,tables,random=Math.random,{roundLimit=80,recordPlayback=false}={}){
  if(!party.length||!enemies.length)throw new Error('A battle needs two parties.');
  const units=[...party.map(c=>[c,0]),...enemies.map(c=>[c,1])].map(([c,team])=>({id:c.id,team,creature:structuredClone(c),hits:c.damage||0,pp:c.pp??c.ppMax??0,effects:structuredClone(c.effects||[]).map(e=>({...e,starts:1})),dead:!!c.dead,pending:[]}));
+ const snapshot=round=>units.map(u=>({id:u.id,hp:Math.max(0,u.creature.hits-u.hits),pp:u.pp,standing:alive(u),dead:!!u.dead,asleep:!!u.asleep,
+  effects:u.effects.map(e=>({kind:e.kind,amount:e.amount||0,roundsLeft:e.roundsLeft,pending:e.starts>round})),
+  ...(u.deathRound!==undefined?{mortalIn:Math.max(0,u.deathRound-round)}:{})}));
+ const initial=recordPlayback?snapshot(1):null;
+ let previous=initial;
+ const changes=round=>{const current=snapshot(round),changed=current.filter((u,i)=>JSON.stringify(u)!==JSON.stringify(previous[i]));previous=current;return changed;};
  const d100=()=>Math.floor(random()*100)+1,d10=()=>Math.floor(random()*10)+1,log=[];
  for(let round=1;round<=roundLimit&&[0,1].every(team=>units.some(u=>u.team===team&&alive(u)));round++){
   const entry={round,events:[]};
-  const record=(u,kind,text,extra={})=>entry.events.push({actor:u.id,team:u.team,kind,text,...extra});
+  const record=(u,kind,text,extra={})=>entry.events.push({actor:u.id,team:u.team,kind,text,...extra,...(recordPlayback?{changes:changes(round)}:{})});
   for(const u of units){
    if(u.dead)continue;
    if(advanceCriticalDeath(u,u.creature.hits,round)){record(u,'dies',`${u.creature.name} dies from a mortal wound.`,{target:u.id,source:u.lastAttacker});continue;}
@@ -110,7 +116,7 @@ export function simulateGuildBattle(party,enemies,tables,random=Math.random,{rou
   total+=log.flatMap(r=>r.events).filter(e=>e.actor===self.id&&e.kind==='spell'&&e.success).reduce((s,e)=>s+activityExperience({kind:'spell',casterLevel:self.creature.level,spellLevel:e.spellLevel}),0);
   xp[self.id]=total;
  }
- return {winner,rounds:log.length,log,units,xp};
+ return {winner,rounds:log.length,log,units,xp,...(recordPlayback?{playback:{version:1,initial,final:snapshot(log.length)}}:{})};
  function strike(u,target,attack,round,record){
   const roll=openEndedD100(d100),db=target.creature.db+(target.ward?.until>=round?target.ward.bonus:0)-(attack.spell&&target.creature.equipment.shield?10:0);
   const woundFraction=u.hits/u.creature.hits,woundPenalty=woundFraction>.75?-30:woundFraction>.5?-20:woundFraction>.25?-10:0;
@@ -119,7 +125,7 @@ export function simulateGuildBattle(party,enemies,tables,random=Math.random,{rou
   const before=target.hits,targetState=blocked(target,round)?'stunned':'active';target.hits+=result.hits;
   const critical=result.critical?resolveCritical(target,u,attack,result.critical,tables,d100,round,{allies:units.filter(a=>a.team===u.team&&a.id!==u.id&&alive(a))}):null;
   target.lastAttacker=u.id;
-  record(u,'attack',`${u.creature.name} → ${target.creature.name}: ${attack.name}, roll ${roll.total}, OB ${attack.ob}${attack.simpleBolt?` (${attack.obModifier>=0?'+':''}${attack.obModifier} bolt)`:''}, DB ${db}, modifiers ${total-roll.total-attack.ob-(attack.obModifier||0)+db} → ${total}; ${target.hits-before} hits${critical?` · ${critical.severity} critical: ${critical.description}`:''}${!alive(target)?' · defeated':''}.`,{target:target.id,hits:result.hits,experienceHits:result.hits+(critical?.experienceHits||0),critical,targetState,melee:attack.rawKind!=='ms'&&!attack.spell&&!attack.simpleBolt,defeated:!alive(target),mortal:!!target.dead||target.deathRound!==undefined});
+  record(u,'attack',`${u.creature.name} → ${target.creature.name}: ${attack.name}, roll ${roll.total}, OB ${attack.ob}${attack.simpleBolt?` (${attack.obModifier>=0?'+':''}${attack.obModifier} bolt)`:''}, DB ${db}, modifiers ${total-roll.total-attack.ob-(attack.obModifier||0)+db} → ${total}; ${target.hits-before} hits${critical?` · ${critical.severity} critical: ${critical.description}`:''}${!alive(target)?' · defeated':''}.`,{target:target.id,attackName:attack.name,damage:target.hits-before,hits:result.hits,experienceHits:result.hits+(critical?.experienceHits||0),critical,targetState,melee:attack.rawKind!=='ms'&&!attack.spell&&!attack.simpleBolt,defeated:!alive(target),mortal:!!target.dead||target.deathRound!==undefined});
   return result;
  }
 }

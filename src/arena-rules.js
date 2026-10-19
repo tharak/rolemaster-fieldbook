@@ -1,6 +1,6 @@
 import {newGame,hireMember,levelMembers,validGame} from './guild-game-rules.js';
 import {guildContender,printedContender} from './guild-rules.js';
-import {simulateGuildBattle} from './guild-battle.js';
+import {simulateGuildBattle} from './guild-battle.js?v=20261019-playback-1';
 import {seededRandom} from './adventure-rules.js';
 
 export const arenaSaveKey='rolemaster-coliseum-v1';
@@ -70,8 +70,9 @@ export function fightArena(state,offerId,partyIds,catalog,tables){
  const members=partyIds.map(id=>state.members.find(m=>m.id===id));
  if(members.some(m=>!m||!canFight(m)))throw new Error('Every selected fighter must be able to fight.');
  const party=members.map(member=>({...guildContender(state,member),effects:injuryPenalty(member)?[{kind:'penalty',amount:injuryPenalty(member),roundsLeft:null,starts:1}]:[]}));
- const battle=simulateGuildBattle(party,copy(offer.enemies),tables,seededRandom(offer.seed));
+ const battle=simulateGuildBattle(party,copy(offer.enemies),tables,seededRandom(offer.seed),{recordPlayback:true});
  const next=copy(state),victory=battle.winner===0,report={id:offer.id,name:offer.name,day:next.arena.day,winner:battle.winner,gold:victory?offer.gold:0,rounds:copy(battle.log),criticals:[],rewards:[],enemies:offer.enemies.map(e=>({id:e.id,name:e.name})),party:members.map(m=>({id:m.id,name:m.name})),injuries:[]};
+ report.playback={...battle.playback,fighters:[...party.map(c=>({...c,team:0})),...offer.enemies.map(c=>({...c,team:1}))].map(c=>({id:c.id,name:c.name,team:c.team,maximum:c.hits,profession:c.profession||'',sourceKind:c.sourceKind||'',attacks:c.attacks.map(a=>a?{chance:a.chance,category:a.category||''}:null)}))};
  const names=new Map([...party,...offer.enemies].map(u=>[u.id,u.name]));
  for(const round of battle.log)for(const event of round.events)if(event.critical&&!event.critical.ignored)report.criticals.push({round:round.round,attacker:names.get(event.actor),defender:names.get(event.target),suffered:event.team===1,...copy(event.critical)});
  next.gold+=report.gold;

@@ -13,7 +13,7 @@ async existingPage => {
   await page.locator('[data-recruit]').click();const value=await page.locator('[name="template"] option').evaluateAll(options=>options.find(o=>o.textContent.startsWith('Fighter ·')).value);await page.locator('[name="template"]').selectOption(value);
   await page.locator('[name="name"]').fill('Rowan');await page.locator('[data-hire] button').click();check((await saved()).gold===20,'free founder');
   const first=await saved();await page.locator('[data-generate]').click();const regenerated=await saved();check(regenerated.arena.revision===first.arena.revision+1&&regenerated.gold===20,'free reroll');
-  await page.locator('[data-offer]').first().click();await page.locator('[data-fight]').click();await page.waitForSelector('.arena-result');
+  await page.locator('[data-offer]').first().click();await page.locator('[data-fight]').click();await page.waitForSelector('[data-arena-playback]');await page.locator('[data-skip]').click();await page.waitForSelector('.arena-result');
   const after=await saved();check(after.arena.reports.length===1,'one battle');check(after.arena.offers.length===2,'consumed matchup');
   check(await page.locator('.arena-rounds').count()===1,'round log available');
   check(await page.locator('.arena-critical').count()===after.arena.reports[0].criticals.length,'all recorded criticals presented');
