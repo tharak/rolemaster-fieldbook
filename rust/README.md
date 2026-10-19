@@ -1,9 +1,12 @@
 # Rust rules — browser integration
 
-Current architecture and migration scope are documented in
-[RUST-MIGRATION.md](../RUST-MIGRATION.md). Rules, generic mechanics, UI and Wasm
-bindings now live in separate crates. Run native test/check/Clippy commands with
-`--workspace` and formatting with `--all` to include every crate.
+Pure `game-rules` and `rolemaster-rules` crates are maintained in the separate
+[rolemasterCore repository](https://github.com/tharak/rolemasterCore), vendored at
+`../vendor/rolemaster-core/rust`. This workspace retains the Wasm binding and
+`fieldbook-ui` crate. See [core integration](../docs/rolemaster-core.md).
+Run `cargo test --manifest-path rust/Cargo.toml --workspace --locked` for the host
+and `cargo test --manifest-path vendor/rolemaster-core/rust/Cargo.toml --locked`
+for the extracted rules. The remaining rollout notes below are historical.
 The first new browser slice uses Rust for critical effect timing and rendering.
 The numeric-slice notes below record the earlier rollout and its evidence.
 

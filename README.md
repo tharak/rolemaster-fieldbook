@@ -44,12 +44,17 @@ Open http://localhost:8011. Serve the repository root with any static HTTP host;
 For environments where Node subprocess test isolation is unavailable:
 
 ```sh
-node --test --test-isolation=none tests/*.test.mjs
+npm run test:in-process
 ```
+
+## Shared rules engine
+
+Reusable rules now live in the private [rolemasterCore repository](https://github.com/tharak/rolemasterCore), consumed here as a pinned Git subtree under `vendor/rolemaster-core`. The game and fieldbook share that implementation through compatibility imports. UI, saves, and Ludus progression stay here. See [engine ownership, updates, and verification](docs/rolemaster-core.md).
 
 ## Repository layout
 
-- `src/` — application and reusable rules modules. `arena-game.js` renders the current interface; `arena-rules.js` owns generation, progression, battle commits, injury recovery, and persistence.
+- `vendor/rolemaster-core/` — shared rules engine, pure Rust crates, and standalone tests.
+- `src/` — application modules and compatibility imports for the shared engine. `arena-game.js` renders the current interface; `arena-rules.js` owns generation, progression, battle commits, injury recovery, and persistence.
 - `styles/` — current arena styling and reusable older styles.
 - `docs/` — historical design notes, audits, and migration plans.
 - `references/` — source rulebook used by extraction scripts.

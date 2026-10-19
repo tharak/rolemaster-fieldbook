@@ -3,7 +3,9 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "test": "node --test tests/*.test.mjs",
-    "build:wasm": "node scripts/build-wasm.mjs"
+    "test": "node --test tests/*.test.mjs && npm run test:core",
+    "build:wasm": "node scripts/build-wasm.mjs",
+    "test:core": "npm --prefix vendor/rolemaster-core test",
+    "test:in-process": "node --test --test-isolation=none tests/*.test.mjs && node --test --test-isolation=none vendor/rolemaster-core/tests/*.test.mjs"
   }
 }

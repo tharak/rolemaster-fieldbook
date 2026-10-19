@@ -1,5 +1,5 @@
 try {
- await import('./arena-game.js?v=20261019-buildings-2');
+ await import('./arena-game.js?v=20261019-core-1');
 } catch(error) {
  const root=document.querySelector('#game-app');root.replaceChildren();
  const main=document.createElement('main');main.className='game-loading';

@@ -1,9 +1,9 @@
 import {ludusConfig as C} from './ludus-config.js';
 import {upgradeBuilding,promoteLudus,castLudusSpell,selectBlessing,spellById,roundsPerMinute,blessingQuote} from './ludus-rules.js';
 import {ludusPage,serviceDialog,blessingPanel} from './ludus-ui.js';
-import {mountArenaPlayback} from './arena-playback.js?v=20261019-buildings-2';
+import {mountArenaPlayback} from './arena-playback.js?v=20261019-core-1';
 import {loadGuildMasterData,loadGuildCombat} from './guild-data.js';
-import {arenaSaveKey,newArena,recruitArena,generateOffers,fightArena,restArena,readArena,saveArena,injuryPenalty,difficulty,canFight,readyLineup,setLineup} from './arena-rules.js?v=20261019-buildings-2';
+import {arenaSaveKey,newArena,recruitArena,generateOffers,fightArena,restArena,readArena,saveArena,injuryPenalty,difficulty,canFight,readyLineup,setLineup} from './arena-rules.js?v=20261019-core-1';
 import {renameMember} from './guild-game-rules.js';
 import {statBar,memberEquipment} from './guild-ui.js';
 import {creatureProfile} from './coliseum-battle.js';

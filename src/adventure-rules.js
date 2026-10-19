@@ -1,9 +1,7 @@
 // Original adventure pacing and geography. T-5.1 and §23 remain separate rules.
 import {generateEncounter} from './encounter-generation-rules.js';
-export function seededRandom(seed){
- let n=2166136261;for(const char of String(seed)){n^=char.charCodeAt(0);n=Math.imul(n,16777619);}
- return ()=>{n+=0x6D2B79F5;let t=n;t=Math.imul(t^(t>>>15),t|1);t^=t+Math.imul(t^(t>>>7),t|61);return ((t^(t>>>14))>>>0)/4294967296;};
-}
+import {seededRandom} from '../vendor/rolemaster-core/src/random.js';
+export {seededRandom};
 export const regions=[
  {name:'The Green Marches',terrain:'Road',density:'Moderate',danger:1,color:'#b6bb83'},
  {name:'The Elderwood',terrain:'Forest',density:'Light',danger:1,color:'#829b78'},

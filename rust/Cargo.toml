@@ -5,11 +5,11 @@ edition = "2021"
 publish = false
 
 [workspace]
-members = ["crates/game-rules", "crates/rolemaster-rules", "crates/fieldbook-ui"]
+members = ["crates/fieldbook-ui"]
 resolver = "2"
 
 [dependencies]
-rolemaster-rules = { path = "crates/rolemaster-rules" }
+rolemaster-rules = { path = "../vendor/rolemaster-core/rust/crates/rolemaster-rules" }
 fieldbook-ui = { path = "crates/fieldbook-ui" }
 
 [lib]

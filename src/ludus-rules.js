@@ -1,3 +1,4 @@
+import {supportBonus as coreSupportBonus,attackElement as coreAttackElement} from '../vendor/rolemaster-core/src/combat-support.js';
 import {ludusConfig as C,validateLudusConfig} from './ludus-config.js';
 import {seededRandom} from './adventure-rules.js';
 import {resolveCritical} from './coliseum-rules.js';
@@ -231,23 +232,6 @@ export function prepareBlessings(state,partyIds,tables){
  for(const id of partyIds)delete next.ludus.selections[id];
  return {state:next,records};
 }
-// Pure helper shared by combat and tests: exact membership, range, expiry,
-// elemental restrictions and non-cumulative protection families.
-export function supportBonus(unit,units,auras,clock,stat,element){
- const x=unit.x??C.arena.partyX;
- const effects=[...(unit.creature?.supportEffects||unit.supportEffects||[]),...auras.filter(a=>{
-  const center=units.find(u=>u.id===a.targetId);return center&&!center.dead&&Math.abs(x-center.x)<=a.radius&&Math.abs(center.x-C.arena.attendantX)<=a.range;
- })];
- const groups=new Map();
- for(const e of effects){
-  if(e.until<=clock||Math.abs(x-C.arena.attendantX)>e.range||e.element&&e.element!==element)continue;
-  groups.set(e.group,Math.max(groups.get(e.group)||0,e[stat]||0));
- }
- return [...groups.values()].reduce((a,b)=>a+b,0);
-}
-
-export function attackElement(attack){
- if(attack.element)return attack.element;
- for(const [element,pattern] of Object.entries(C.arena.elementNames))if(new RegExp(pattern,'i').test(attack.name||''))return element;
- return C.arena.elementTables[attack.criticalTable];
-}
+// Keep the existing Ludus-facing interface; the generic helpers live in core.
+export const supportBonus=(unit,units,auras,clock,stat,element)=>coreSupportBonus(unit,units,auras,clock,stat,element,C.arena);
+export const attackElement=attack=>coreAttackElement(attack,C.arena);
