@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {killExperience,criticalExperience,activityExperience,combatExperience,appendExperience} from '../experience-rules.js';
-import {createFight,stepFight} from '../coliseum-rules.js';
+import {killExperience,criticalExperience,activityExperience,combatExperience,appendExperience} from '../src/experience-rules.js';
+import {createFight,stepFight} from '../src/coliseum-rules.js';
 test('printed kill chart boundaries and book examples',()=>{
  assert.equal(killExperience(9,7),300);assert.equal(killExperience(7,1),500);
  assert.equal(killExperience(8,11),130);assert.equal(killExperience(9,11),150);

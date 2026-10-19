@@ -1,9 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
-import {buildEncounterRoster} from '../encounter-roster.js';
-import {arenaWeaponStyles,characterContenders,masterCharacterCatalog,configureContender} from '../coliseum-contenders.js';
-import {createFight,stepFight,creatureCatalog,chooseAttacks} from '../coliseum-rules.js';
+import {buildEncounterRoster} from '../src/encounter-roster.js';
+import {arenaWeaponStyles,characterContenders,masterCharacterCatalog,configureContender} from '../src/coliseum-contenders.js';
+import {createFight,stepFight,creatureCatalog,chooseAttacks} from '../src/coliseum-rules.js';
 const read=code=>JSON.parse(readFileSync(new URL('../tables/'+code+'.json',import.meta.url)));
 const source=read('T-5.8'),master=masterCharacterCatalog(source);
 const tables=Object.fromEntries([...Array.from({length:8},(_,i)=>`A-10.9.${i+1}`),...Array.from({length:6},(_,i)=>`A-10.10.${i+3}`)].map(code=>[code,read(code)]));

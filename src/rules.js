@@ -30,7 +30,7 @@ export function rankCostEngineStatus() { return {backend:rustRankCost ? 'wasm' :
 let initialization;
 let engine = Object.freeze({backend:'javascript', reason:'not initialized', calls:0});
 export function rankBonusEngineStatus() { return {...engine}; }
-export function initializeRankBonusEngine({load = () => import('./wasm/rolemaster_core.js'), timeoutMs = 8000} = {}) {
+export function initializeRankBonusEngine({load = () => import('../wasm/rolemaster_core.js'), timeoutMs = 8000} = {}) {
   if (initialization) return initialization;
   initialization = (async () => {
     let timer;

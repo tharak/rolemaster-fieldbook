@@ -1,11 +1,11 @@
-import {creatureCatalog} from '../coliseum-rules.js';
-import {simulateGuildBattle} from '../guild-battle.js';
-import {seededRandom} from '../adventure-rules.js';
+import {creatureCatalog} from '../src/coliseum-rules.js';
+import {simulateGuildBattle} from '../src/guild-battle.js';
+import {seededRandom} from '../src/adventure-rules.js';
 import test from 'node:test';import assert from 'node:assert/strict';import {readFileSync,readdirSync} from 'node:fs';
-import {masterCharacterCatalog} from '../coliseum-contenders.js';
-import {newGuild,equipMember,validGuild,encounterLoot,guildContender,printedContender} from '../guild-rules.js';
-import {managementState,memberOrder,setMemberOrder,advanceGuildMaster,prepareGuildMaster,availableMemberSpells,setMemberSpells} from '../guildmaster-rules.js';
-import {knownAutomatedSpells} from '../guild-spells.js';
+import {masterCharacterCatalog} from '../src/coliseum-contenders.js';
+import {newGuild,equipMember,validGuild,encounterLoot,guildContender,printedContender} from '../src/guild-rules.js';
+import {managementState,memberOrder,setMemberOrder,advanceGuildMaster,prepareGuildMaster,availableMemberSpells,setMemberSpells} from '../src/guildmaster-rules.js';
+import {knownAutomatedSpells} from '../src/guild-spells.js';
 const json=path=>JSON.parse(readFileSync(new URL('../'+path,import.meta.url)));
 const catalog=masterCharacterCatalog(json('tables/T-5.8.json')),lists=json('data/guild/spell-lists.json');
 const tables=Object.fromEntries(readdirSync(new URL('../tables/',import.meta.url)).filter(n=>n.startsWith('A-10.')).map(n=>[n.slice(0,-5),json('tables/'+n)]));

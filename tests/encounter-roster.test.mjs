@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {buildEncounterRoster} from '../encounter-roster.js';
+import {buildEncounterRoster} from '../src/encounter-roster.js';
 
 test('saved character becomes an encounter actor with calculated skill and defense', () => {
   const character = {

@@ -1,8 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync,readdirSync} from 'node:fs';
-import {masterCharacterCatalog} from '../coliseum-contenders.js';
-import {newGame,validGame,hireMember,careForMember,assignActivity,dismissMember,levelMembers,promoteMember,advanceGame} from '../guild-game-rules.js';
+import {masterCharacterCatalog} from '../src/coliseum-contenders.js';
+import {newGame,validGame,hireMember,careForMember,assignActivity,dismissMember,levelMembers,promoteMember,advanceGame} from '../src/guild-game-rules.js';
 const json=name=>JSON.parse(readFileSync(new URL('../'+name,import.meta.url)));
 const catalog=masterCharacterCatalog(json('tables/T-5.8.json'));
 const tables=Object.fromEntries(readdirSync(new URL('../tables/',import.meta.url)).filter(n=>n.startsWith('A-10.')).map(n=>[n.slice(0,-5),json('tables/'+n)]));
@@ -69,7 +69,7 @@ test('cached clients can import the former promotion action without spending gol
  assert.equal(next.members[0].level,5);assert.equal(next.gold,s.gold);
 });
 
-import {guildCombatEncounter,departGuild} from '../guild-rules.js';
+import {guildCombatEncounter,departGuild} from '../src/guild-rules.js';
 test('exactly half the d100 outcomes cause combat in the beta',()=>{
  let combats=0;
  for(let roll=1;roll<=100;roll++){

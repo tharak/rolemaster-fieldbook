@@ -1,8 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {criticalRecoils,recoilMovement} from '../critical-recoil.js';
-import {parseCriticalSymbols} from '../rules.js';
-import {resolveCriticalEquipment} from '../critical-equipment.js';
+import {criticalRecoils,recoilMovement} from '../src/critical-recoil.js';
+import {parseCriticalSymbols} from '../src/rules.js';
+import {resolveCriticalEquipment} from '../src/critical-equipment.js';
 
 test('explicit recoil distance is recognized in either field; unrelated movement stays literal',()=>{
   for(const text of ['Foe recoils 5 feet away from your assault.','Foe recoils 10 feet from the blast.','He recoils 15 ft.']){

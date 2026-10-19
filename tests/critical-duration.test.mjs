@@ -1,10 +1,10 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {criticalDuration} from '../critical-duration.js';
-import {parseCriticalSymbols} from '../rules.js';
-import {criticalTokens,formatCriticalEffect} from '../critical-presentation.js';
-import {automaticInitiative} from '../critical-initiative.js';
-import {createFight,stepFight,parseCreatureAttack} from '../coliseum-rules.js';
+import {criticalDuration} from '../src/critical-duration.js';
+import {parseCriticalSymbols} from '../src/rules.js';
+import {criticalTokens,formatCriticalEffect} from '../src/critical-presentation.js';
+import {automaticInitiative} from '../src/critical-initiative.js';
+import {createFight,stepFight,parseCreatureAttack} from '../src/coliseum-rules.js';
 test('omitted counts use the book defaults; penalties last until healed while explicit counts win',()=>{
   for(const text of ['∑','∏','∑∏','π','(π-15)','(+10)'])assert.equal(parseCriticalSymbols(text)[0].roundsLeft,1,text);
   for(const text of ['3∑','3∏','3∑∏','3π','3(π-15)','3(-20)','3(+10)'])assert.equal(parseCriticalSymbols(text)[0].roundsLeft,3,text);

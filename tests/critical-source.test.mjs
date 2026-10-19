@@ -1,11 +1,11 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
-import {criticalSourceCorrections,normalizedCriticalCell,normalizedCriticalTable} from '../critical-source.js';
-import {parseCriticalSymbols} from '../rules.js';
-import {resolveCriticalEquipment} from '../critical-equipment.js';
-import {criticalDeath} from '../critical-death.js';
-import {reviewCell} from '../critical-review-rules.js';
+import {criticalSourceCorrections,normalizedCriticalCell,normalizedCriticalTable} from '../src/critical-source.js';
+import {parseCriticalSymbols} from '../src/rules.js';
+import {resolveCriticalEquipment} from '../src/critical-equipment.js';
+import {criticalDeath} from '../src/critical-death.js';
+import {reviewCell} from '../src/critical-review-rules.js';
 
 test('every source correction matches its original coordinate and retains the extracted source',()=>{
   assert.ok(criticalSourceCorrections.length>=53);

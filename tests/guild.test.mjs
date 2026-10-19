@@ -1,7 +1,7 @@
 import test from 'node:test';import assert from 'node:assert/strict';import {readFileSync} from 'node:fs';
-import {masterCharacterCatalog} from '../coliseum-contenders.js';
-import {newGuild,recruitMember,guildContender,equipMember,departGuild,continueGuild,returnGuild,restGuild,encounterLoot,validGuild,guildItems} from '../guild-rules.js';
-import {simulateGuildBattle} from '../guild-battle.js';import {seededRandom} from '../adventure-rules.js';
+import {masterCharacterCatalog} from '../src/coliseum-contenders.js';
+import {newGuild,recruitMember,guildContender,equipMember,departGuild,continueGuild,returnGuild,restGuild,encounterLoot,validGuild,guildItems} from '../src/guild-rules.js';
+import {simulateGuildBattle} from '../src/guild-battle.js';import {seededRandom} from '../src/adventure-rules.js';
 const json=name=>JSON.parse(readFileSync(new URL('../'+name,import.meta.url)));
 const catalog=masterCharacterCatalog(json('tables/T-5.8.json')),lists=json('data/guild/spell-lists.json');
 const tables=Object.fromEntries(['A-10.9.1','A-10.9.2','A-10.9.3','A-10.9.4','A-10.9.9','A-10.9.11',...Array.from({length:9},(_,i)=>`A-10.10.${i+1}`)].map(code=>[code,json(`tables/${code}.json`)]));

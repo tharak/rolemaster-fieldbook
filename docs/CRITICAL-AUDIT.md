@@ -6,7 +6,7 @@ review. The current derived review has 836 green and zero yellow results.
 Green means no unresolved automated source/parser issue, not human approval or
 complete automation of every narrative injury.
 
-`critical-source.js` records 58 corrections (54 PDF corrections and four user rulings) with their coordinate, printed/PDF
+`src/critical-source.js` records 58 corrections (54 PDF corrections and four user rulings) with their coordinate, printed/PDF
 page, exact extracted originals, derived description/effect, and reason. Matching
 requires both original fields, so changed source cannot receive an old correction.
 The original `tables/*.json` and embedded source-page records remain intact.

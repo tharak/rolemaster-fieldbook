@@ -4,8 +4,8 @@ import {
   statCost, basicStatBonus, fixedPotential, rolledPotential, rollStatGain,
   xpForLevel, levelForXp, strideBonus, classifySkill, developedRanks,
   spellListCostsFor, trainingSpecialAwards
-} from '../character-rules.js';
-import {equipmentLedger, parseList, parseRecord} from '../character-record.js';
+} from '../src/character-rules.js';
+import {equipmentLedger, parseList, parseRecord} from '../src/character-record.js';
 
 test('stat assignment cost and bonuses retain the table boundaries', () => {
   assert.equal(statCost(90), 90);

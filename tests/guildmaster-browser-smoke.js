@@ -19,7 +19,7 @@ async existingPage=>{
   assert(!statsText.some(text=>text.includes('Directed spell (reference)')),'Directed spell still reference only');
   assert(statsText.some(text=>text.includes('Bolt')),'Named bolt missing');
   assert(await page.locator('[data-pick-equipment],[data-pick-spells],[data-shop-buy]').count()===0,'Custom loadout UI remains');
-  const catalogs=await page.evaluate(async()=>{const {catalog,opponents}=await (await import('./guild-data.js')).loadGuildMasterData();return {members:catalog.length,monsters:opponents.filter(c=>c.group==='Monster').length,animals:opponents.filter(c=>c.group==='Animal').length};});
+  const catalogs=await page.evaluate(async()=>{const {catalog,opponents}=await (await import('./src/guild-data.js')).loadGuildMasterData();return {members:catalog.length,monsters:opponents.filter(c=>c.group==='Monster').length,animals:opponents.filter(c=>c.group==='Animal').length};});
   assert(catalogs.members===45&&catalogs.monsters>0&&catalogs.animals>0,'Missing opponent table');
   await order(id,'work');assert((await snapshot()).gold===0,'Order acted early');await advance();state=await snapshot();assert(state.gold===1&&state.hours===4,'Work failed');
   assert(await page.locator('#manager-journal-panel').isVisible(),'Advance did not open journal');
@@ -27,7 +27,7 @@ async existingPage=>{
   await page.locator('#manager-members-tab').click();
   await page.locator('#manager-recruit select').selectOption('master:bard:5');await page.locator('#manager-recruit button').click();state=await snapshot();assert(state.members.length===5&&state.members[4].spellLists.length===0,'Recruit failed');
   await page.evaluate(async id=>{
-   const {advanceGuildMaster}=await import('./guildmaster-rules.js');const {loadGuildMasterData,loadGuildCombat}=await import('./guild-data.js');const {opponents}=await loadGuildMasterData();const tables=await loadGuildCombat();
+   const {advanceGuildMaster}=await import('./src/guildmaster-rules.js');const {loadGuildMasterData,loadGuildCombat}=await import('./src/guild-data.js');const {opponents}=await loadGuildMasterData();const tables=await loadGuildCombat();
    const key='rolemaster-guildmaster-v1',state=JSON.parse(localStorage.getItem(key));state.management.orders[id].action='adventure';
    for(let i=0;i<100;i++){state.management.seed='quiet-'+i;const next=advanceGuildMaster(state,opponents,tables);if(next.management.journeys[id]&&!next.management.reports[0].results.find(r=>r.memberId===id).encounter?.rounds.length){localStorage.setItem(key,JSON.stringify(state));return;}}
    throw Error('No quiet fixture');
@@ -36,7 +36,7 @@ async existingPage=>{
   await order(id,'work');assert(await page.locator(`[data-member-id="${id}"][data-order-action="rest"]`).isDisabled(),'Return not locked');await advance();state=await snapshot();assert(!state.management.journeys[id]&&state.management.orders[id].action==='work','Return failed');
   const saved=JSON.stringify(state);await page.reload();await ready();assert(JSON.stringify(await snapshot())===saved,'Reload changed save');
   const combatFixture=await page.evaluate(async()=>{
-   const {advanceGuildMaster}=await import('./guildmaster-rules.js');const {loadGuildMasterData,loadGuildCombat}=await import('./guild-data.js');const {assignmentCatalog}=await import('./guildmaster-assignments.js');
+   const {advanceGuildMaster}=await import('./src/guildmaster-rules.js');const {loadGuildMasterData,loadGuildCombat}=await import('./src/guild-data.js');const {assignmentCatalog}=await import('./src/guildmaster-assignments.js');
    const {opponents}=await loadGuildMasterData(),tables=await loadGuildCombat(),key='rolemaster-guildmaster-v1',base=JSON.parse(localStorage.getItem(key));
    const caster=base.members.find(m=>m.profession==='Magician');base.management.orders[caster.id].action='adventure';
    const name=assignmentCatalog.find(item=>item.id===caster.assignments.slots[1]).name;

@@ -1,6 +1,6 @@
 import test from 'node:test';import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
-import {raceHealing,recoveryTables,healingFactor,woundSeverity,recoveryDays,recoveryPlan,hitRecovery,nerveDamage,permanentInjury,firstAid,soulRecovery,mentalStats,physicalStats,mentalLossDice,advanceDeath,restoreSoul} from '../healing-rules.js';
+import {raceHealing,recoveryTables,healingFactor,woundSeverity,recoveryDays,recoveryPlan,hitRecovery,nerveDamage,permanentInjury,firstAid,soulRecovery,mentalStats,physicalStats,mentalLossDice,advanceDeath,restoreSoul} from '../src/healing-rules.js';
 test('all recovery table rows preserve the source values and boundary lookups',()=>{
  const text=JSON.parse(readFileSync(new URL('../tables/T-5.4.json',import.meta.url))).tablePages[0].text.replace(/\s+/g,' ');
  for(const [type,rows] of Object.entries(recoveryTables)){let previous=-1000;for(const [max,...values] of rows){assert.ok(text.includes(values.join(' ')));for(const [i,severity] of ['Light','Medium','Severe'].entries()){assert.equal(recoveryDays(type,severity,previous,0,'Common Man'),values[i]);if(Number.isFinite(max))assert.equal(recoveryDays(type,severity,max,0,'Common Man'),values[i]);}previous=max+1;}}

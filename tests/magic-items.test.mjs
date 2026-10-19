@@ -1,5 +1,5 @@
 import test from 'node:test';import assert from 'node:assert/strict';
-import {magicPrice,createMagicItem,useMagicItem,rechargeMagicItem,useBonusItem} from '../magic-item-rules.js';
+import {magicPrice,createMagicItem,useMagicItem,rechargeMagicItem,useBonusItem} from '../src/magic-item-rules.js';
 test('T-5.3 worked examples and unsupported levels',()=>{
  for(const [v,expected] of [[{kind:'Staff',level:6,normal:.005},500.005],[{kind:'Rod',level:4,normal:.003},180.003],[{kind:'Wand',level:2,normal:.001},40.001],[{kind:'Wand',level:2,normal:.001,channeling:true},80.002],[{kind:'Daily',level:4,normal:.3,uses:2},245.3],[{kind:'Daily',level:4,normal:2,uses:2,form:'Ring'},492],[{kind:'Potion',level:6},100],[{kind:'Bonus',normal:.5,bonus:15},125]])assert.equal(magicPrice(v).priceGp,expected);
  assert.throws(()=>magicPrice({kind:'Wand',level:3}));assert.throws(()=>magicPrice({kind:'Bonus',weight:39}));

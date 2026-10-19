@@ -2,7 +2,7 @@ import { execFileSync } from 'node:child_process';
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 
-const pdf = fileURLToPath(new URL('../Rolemaster FRP - CORE Rules - OCR.pdf', import.meta.url));
+const pdf = fileURLToPath(new URL('../references/Rolemaster FRP - CORE Rules - OCR.pdf', import.meta.url));
 const armorColumns = Array.from({ length: 20 }, (_, index) => ({ label: `AT ${20 - index}`, group: ['Plate', 'Chain', 'Rigid leather', 'Soft leather', 'No armor'][index < 4 ? 0 : index < 8 ? 1 : index < 11 ? 2 : index < 16 ? 3 : 4] }));
 const spellColumns = [
   ['Metal armor', 'Essence'], ['Leather armor', 'Essence'], ['Other', 'Essence'],

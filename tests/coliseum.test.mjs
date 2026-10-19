@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
-import {ROUND_LIMIT,parseCreatureAttack,creatureCatalog,attackLookup,chooseAttacks,createFight,stepFight} from '../coliseum-rules.js';
+import {ROUND_LIMIT,parseCreatureAttack,creatureCatalog,attackLookup,chooseAttacks,createFight,stepFight} from '../src/coliseum-rules.js';
 
 const read = name => JSON.parse(readFileSync(new URL(`../tables/${name}.json`,import.meta.url)));
 const catalog = creatureCatalog(read('creatures'));

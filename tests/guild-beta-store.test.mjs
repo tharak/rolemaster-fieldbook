@@ -1,5 +1,5 @@
 import test from 'node:test';import assert from 'node:assert/strict';
-import {resetLegacyBeta,betaSaveKey,betaResetKey,readBeta,writeBeta} from '../guild-beta-store.js';
+import {resetLegacyBeta,betaSaveKey,betaResetKey,readBeta,writeBeta} from '../src/guild-beta-store.js';
 const storageFor=entries=>{const entriesMap=new Map(entries);return {get length(){return entriesMap.size;},key:index=>[...entriesMap.keys()][index],getItem:key=>entriesMap.get(key)??null,setItem:(key,value)=>entriesMap.set(key,value),removeItem:key=>entriesMap.delete(key)};};
 test('beta reset removes every old mode once and does not migrate or remove unrelated saves',()=>{
  const storage=storageFor(['rolemaster-fieldbook-characters-v1','rolemaster-guild-v1','rolemaster-guildmaster-v1','rolemaster-encounters-v2','rolemaster-coliseum-equipment-v1','rolemaster-gm-items'].map(key=>[key,'old']));storage.setItem('unrelated','keep');

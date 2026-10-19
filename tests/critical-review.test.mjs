@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
-import {criticalReferences,reviewCell,reviewTable,reviewReasons} from '../critical-review-rules.js';
+import {criticalReferences,reviewCell,reviewTable,reviewReasons} from '../src/critical-review-rules.js';
 const cell=(effect,description='A clear strike.')=>reviewCell({description,effect});
 test('review conventions do not mistake established durations for missing ones',()=>{
   for(const effect of ['+0H','+12H – ∑∏ – 4∫','π','∏','∑','2∫','(+10)','6(-20)'])assert.equal(cell(effect).status,'green',effect);

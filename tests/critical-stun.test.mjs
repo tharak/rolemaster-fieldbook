@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {accumulatedStunRounds,expireCriticalEffects,updateCriticalStunConsciousness} from '../critical-stun.js';
+import {accumulatedStunRounds,expireCriticalEffects,updateCriticalStunConsciousness} from '../src/critical-stun.js';
 
 test('stun is one cumulative pool and spends only the most severe active round',()=>{
   let effects=[{kind:'stun',roundsLeft:2,startsRound:1},{kind:'stunNoParry',roundsLeft:2,startsRound:1},{kind:'downOrOut',roundsLeft:1,startsRound:1},{kind:'penalty',amount:20,roundsLeft:null}];

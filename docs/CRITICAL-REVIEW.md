@@ -1,7 +1,7 @@
 # Critical table validation
 
 The public critical-review page has been removed. Automated validation remains in
-`critical-review-rules.js` and `tests/critical-review.test.mjs`; run it with
+`src/critical-review-rules.js` and `tests/critical-review.test.mjs`; run it with
 `node --test tests/critical-review.test.mjs`. It checks 836 coordinates across nine
 critical tables. See [the source audit](CRITICAL-AUDIT.md) for corrections and
 explicit user rulings.

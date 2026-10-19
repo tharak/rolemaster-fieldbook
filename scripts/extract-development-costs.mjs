@@ -2,7 +2,7 @@ import { execFileSync } from 'node:child_process';
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 
-const pdf = fileURLToPath(new URL('../Rolemaster FRP - CORE Rules - OCR.pdf', import.meta.url));
+const pdf = fileURLToPath(new URL('../references/Rolemaster FRP - CORE Rules - OCR.pdf', import.meta.url));
 const professions = ['Fighter', 'Thief', 'Rogue', 'Magician', 'Cleric', 'Mentalist', 'Ranger', 'Dabbler', 'Bard'];
 const isCost = value => /^(?:\d+(?:\/\d+){0,2}|[-–—])$/.test(value);
 const categoryNames = [

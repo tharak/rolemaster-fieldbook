@@ -23,15 +23,27 @@ npm test
 
 Open http://localhost:8011. Static hosting and project subpaths work without a build step. Publish the repository root with GitHub Pages. Browser smoke coverage is in `tests/guild-game-browser-smoke.js`, run through Playwright CLI's `run-code --filename` against the local server.
 
+## Repository layout
+
+- `src/` — game and reusable rules modules, including older interfaces.
+- `styles/` — current game and older interface stylesheets.
+- `docs/` — design notes, audits, and migration plans.
+- `references/` — source rulebook used by extraction scripts.
+- `assets/`, `data/`, and `tables/` — artwork and game data.
+- `scripts/` and `tests/` — maintenance tools and verification.
+- `rust/` and `wasm/` — optional Rust engine and browser bindings.
+
+The root contains the static site entrypoint, manifest, favicon, and project configuration.
+
 ## Implementation
 
-- `browser-startup.js` performs the one-time beta reset and starts `guild-game.js`.
-- `guild-ui.js` supplies reusable stat bars and equipment icons. `guild-game.js` and `guild-game.css` provide the mobile shell, member cards, adventures, and combat popups.
-- `guild-game-rules.js` implements immutable care, recruitment, progression, and turn resolution.
-- `guild-beta-store.js` validates and saves completed changes atomically; failed simulation does not advance the clock.
-- `guildmaster-rules.js`, `guild-rules.js`, and `guild-battle.js` supply the underlying adventure and combat rules.
-- `guild-member-results.js` renders member rewards and combat popups. `guild-data.js` loads printed profiles and lazy-loads combat tables.
+- `src/browser-startup.js` performs the one-time beta reset and starts `src/guild-game.js`.
+- `src/guild-ui.js` supplies reusable stat bars and equipment icons. `src/guild-game.js` and `styles/guild-game.css` provide the mobile shell, member cards, adventures, and combat popups.
+- `src/guild-game-rules.js` implements immutable care, recruitment, progression, and turn resolution.
+- `src/guild-beta-store.js` validates and saves completed changes atomically; failed simulation does not advance the clock.
+- `src/guildmaster-rules.js`, `src/guild-rules.js`, and `src/guild-battle.js` supply the underlying adventure and combat rules.
+- `src/guild-member-results.js` renders member rewards and combat popups. `src/guild-data.js` loads printed profiles and lazy-loads combat tables.
 
-Recruits use T-5.8; opponents use T-5.8, the Monster Statistics Chart, and the Animal Statistics Chart. Each adventuring member has an independent 50% combat chance per turn, day or night (d100: 1–50 combat, 51–100 quiet travel). This beta pacing replaces T-5.1 for the guild game; the original tabletop encounter rules remain available in `encounter-generation-rules.js`. Assigned melee/ranged weapons, bolts, and armor retain the printed statistics. Directed spells use Fire, Ice, Lightning, Shock, or Water Bolt with A-10.9.9 adjustments, without PP spending or preparation. Creature special abilities and group/swarm attacks remain unsupported. The beta is not a complete tabletop rules implementation.
+Recruits use T-5.8; opponents use T-5.8, the Monster Statistics Chart, and the Animal Statistics Chart. Each adventuring member has an independent 50% combat chance per turn, day or night (d100: 1–50 combat, 51–100 quiet travel). This beta pacing replaces T-5.1 for the guild game; the original tabletop encounter rules remain available in `src/encounter-generation-rules.js`. Assigned melee/ranged weapons, bolts, and armor retain the printed statistics. Directed spells use Fire, Ice, Lightning, Shock, or Water Bolt with A-10.9.9 adjustments, without PP spending or preparation. Creature special abilities and group/swarm attacks remain unsupported. The beta is not a complete tabletop rules implementation.
 
-Older character, encounter, Coliseum, and GM source modules remain available for rule reuse and their regression tests, but their interfaces are not loaded by the game. See `CRITICAL-AUDIT.md` for combat source review and `rust/README.md` for the optional Rust libraries. The current guild entrypoint uses the JavaScript rules.
+Older character, encounter, Coliseum, and GM source modules remain available for rule reuse and their regression tests, but their interfaces are not loaded by the game. See `docs/CRITICAL-AUDIT.md` for combat source review and `rust/README.md` for the optional Rust libraries. The current guild entrypoint uses the JavaScript rules.

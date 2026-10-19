@@ -1,12 +1,12 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync,readdirSync} from 'node:fs';
-import {assignmentPools,profileAssignments,assignedProfileAttacks,armorNames,armorDescription} from '../guildmaster-assignments.js';
-import {masterCharacterCatalog} from '../coliseum-contenders.js';
-import {creatureCatalog,attackLookup} from '../coliseum-rules.js';
-import {newGuild,recruitMember,printedContender} from '../guild-rules.js';
-import {prepareGuildMaster,setMemberOrder,advanceGuildMaster} from '../guildmaster-rules.js';
-import {simulateGuildBattle} from '../guild-battle.js';
+import {assignmentPools,profileAssignments,assignedProfileAttacks,armorNames,armorDescription} from '../src/guildmaster-assignments.js';
+import {masterCharacterCatalog} from '../src/coliseum-contenders.js';
+import {creatureCatalog,attackLookup} from '../src/coliseum-rules.js';
+import {newGuild,recruitMember,printedContender} from '../src/guild-rules.js';
+import {prepareGuildMaster,setMemberOrder,advanceGuildMaster} from '../src/guildmaster-rules.js';
+import {simulateGuildBattle} from '../src/guild-battle.js';
 const json=path=>JSON.parse(readFileSync(new URL('../'+path,import.meta.url)));
 const catalog=masterCharacterCatalog(json('tables/T-5.8.json'),{spellPresets:false});
 const creatures=creatureCatalog(json('tables/creatures.json'));

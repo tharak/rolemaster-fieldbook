@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {generateWorld,findRoute,createAdventure,advanceAdventure,resolveAdventureEncounter,setCourse,completeAdventure,validAdventure,connectingEdge} from '../adventure-rules.js';
+import {generateWorld,findRoute,createAdventure,advanceAdventure,resolveAdventureEncounter,setCourse,completeAdventure,validAdventure,connectingEdge} from '../src/adventure-rules.js';
 const party=[{id:'hero',name:'Mira',race:'Wood Elf',profession:'Ranger',level:1}];
 const make=(goal='5-1')=>createAdventure({id:'journey',seed:'silver-road',party,goal});
 test('seeded worlds are reproducible, varied and entirely connected',()=>{

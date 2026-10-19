@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {buyGuildItem,sellGuildItem,salePrice} from '../guild-shop.js';
+import {buyGuildItem,sellGuildItem,salePrice} from '../src/guild-shop.js';
 const base=()=>({gold:20,nextId:1,inventory:[],members:[]});
 test('shop purchases persist unique equipment and charge once without mutating input',()=>{
  const original=base(),next=buyGuildItem(original,'sword');assert.equal(next.gold,12);assert.equal(next.inventory[0].id,'item-1');assert.equal(next.inventory[0].bonus,0);assert.equal(original.gold,20);

@@ -3,8 +3,8 @@ async existingPage => {
  try{
   const base=existingPage.url();await page.goto(base);await page.waitForFunction(()=>document.documentElement.dataset.appReady==='true');
   const result=await page.evaluate(async()=>{
-   const {equipmentIcon,equipmentProfile}=await import('./equipment-art.js');
-   const {creatureProfile}=await import('./coliseum-battle.js');
+   const {equipmentIcon,equipmentProfile}=await import('./src/equipment-art.js');
+   const {creatureProfile}=await import('./src/coliseum-battle.js');
    const source=await (await fetch('assets/coliseum/equipment.svg')).text();
    const ids=[...source.matchAll(/<symbol id="([^"]+)"/g)].map(m=>m[1]);
    const items=(await(await fetch('tables/A-7-equipment.json')).json()).items;

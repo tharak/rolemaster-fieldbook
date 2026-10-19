@@ -1,11 +1,11 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {criticalDeath,applyCriticalDeath,advanceCriticalDeath,cancelCriticalDeathOnHealing} from '../critical-death.js';
-import {criticalEquipment,resolveCriticalEquipment,hasEquipment} from '../critical-equipment.js';
-import {parseCriticalSymbols} from '../rules.js';
-import {formatCriticalEffect} from '../critical-presentation.js';
-import {reviewCell} from '../critical-review-rules.js';
-import {createFight,stepFight,parseCreatureAttack} from '../coliseum-rules.js';
+import {criticalDeath,applyCriticalDeath,advanceCriticalDeath,cancelCriticalDeathOnHealing} from '../src/critical-death.js';
+import {criticalEquipment,resolveCriticalEquipment,hasEquipment} from '../src/critical-equipment.js';
+import {parseCriticalSymbols} from '../src/rules.js';
+import {formatCriticalEffect} from '../src/critical-presentation.js';
+import {reviewCell} from '../src/critical-review-rules.js';
+import {createFight,stepFight,parseCreatureAttack} from '../src/coliseum-rules.js';
 test('death countdown expires after X transitions, not during trigger round; damage representation is respected',()=>{
   for(const n of [1,3]){const target={hits:5};applyCriticalDeath(target,100,7,n);assert.equal(target.deathRound,7+n);assert.equal(advanceCriticalDeath(target,100,7),false);for(let r=8;r<7+n;r++)assert.equal(advanceCriticalDeath(target,100,r),false);assert.equal(advanceCriticalDeath(target,100,7+n),true);assert.equal(target.hits,100);assert.equal(target.dead,true);assert.equal(target.deathRound,undefined);}
   const instant={hits:2};applyCriticalDeath(instant,100,1,0);assert.equal(instant.hits,100);assert.ok(instant.statuses.includes('Dead'));

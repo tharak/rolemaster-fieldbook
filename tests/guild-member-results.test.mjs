@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {latestMemberResult,memberResultCard,combatLog} from '../guild-member-results.js';
+import {latestMemberResult,memberResultCard,combatLog} from '../src/guild-member-results.js';
 const member={id:'one',name:'Rowan'};
 const result={memberId:'one',name:'Rowan',action:'adventure',xp:12,gold:5,items:[{name:'Sword <rare>'}],summary:'Victory <script>',encounter:{winner:0,enemies:[{name:'Orc <chief>'}],rounds:[{round:1,events:[{text:'Attack <10>'}]}]}};
 const state={management:{reports:[{number:3,results:[{memberId:'one',action:'rest'}]},{number:2,results:[result]}]}};

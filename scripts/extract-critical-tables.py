@@ -11,7 +11,7 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
-PDF = ROOT / "Rolemaster FRP - CORE Rules - OCR.pdf"
+PDF = ROOT / "references" / "Rolemaster FRP - CORE Rules - OCR.pdf"
 NS = {"x": "http://www.w3.org/1999/xhtml"}
 STANDARD_ROLLS = [
     "01-05", "06-10", "11-15", "16-20", "21-35", "36-45", "46-50",

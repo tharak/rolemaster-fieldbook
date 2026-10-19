@@ -2,7 +2,7 @@
 import assert from 'node:assert/strict';
 import {spawnSync} from 'node:child_process';
 import {fileURLToPath} from 'node:url';
-import {rankBonus} from '../rules.js';
+import {rankBonus} from '../src/rules.js';
 
 const progressions = ['standard', 'category', 'limited', 'special', 'combined', 'unknown', ''];
 const inputs = [-Infinity, NaN, Infinity, -100, -0, 1e-10, 9.999, 10.001, 19.999, 20.001, 29.999, 30.001, 1000, 1e20];

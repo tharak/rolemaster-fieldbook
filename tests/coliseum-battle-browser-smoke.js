@@ -26,10 +26,10 @@ async (existingPage)=>{
     await page.waitForFunction(()=>[...document.querySelectorAll('.battle-sprite')].every(sprite=>sprite.getBBox().width>0));
     assert(await page.locator('.battle-unit').count()===2,'Missing opposing creatures');
     assert((await health()).join(',')==='10000,10000','Initial HUD health does not match contenders');
-    const rust=await page.evaluate(async()=>(await import('./rust-components.js')).rustComponentStatus());
+    const rust=await page.evaluate(async()=>(await import('./src/rust-components.js')).rustComponentStatus());
     assert(rust.battleCalls>=2,'Actual battle HUD did not use Rust');
     const parity=await page.evaluate(async()=>{
-      const ui=await import('./coliseum-battle.js'),rust=await import('./rust-components.js');let checked=0;
+      const ui=await import('./src/coliseum-battle.js'),rust=await import('./src/rust-components.js');let checked=0;
       for(const profile of ['wolf','tiger','bear','dragon','serpent','bird','insect','humanoid','warrior','ranger','rogue','mage','cleric','bard','horse','aquatic','elemental','turtle','unknown'])for(const side of [0,1])for(const [hits,maximum] of [[0,0],[1,1600],[79,150],[999,100]]){
         const view={name:`<script> & "creature" '`,attack:'<bite>',profile,side,hits,maximum,ob:-20};
         if(rust.rustBattleContender(view)!==ui.battleContenderJavaScript(view))throw new Error('Battle HUD parity mismatch: '+profile);
@@ -114,7 +114,7 @@ async (existingPage)=>{
       await fallbackPage.locator('#coliseum-step').click();
       await fallbackPage.waitForFunction(()=>document.querySelector('#coliseum-battle').dataset.playback==='idle');
       fallback=await fallbackPage.evaluate(async()=>({
-        engine:(await import('./rust-components.js')).rustComponentStatus(),
+        engine:(await import('./src/rust-components.js')).rustComponentStatus(),
         meters:[...document.querySelectorAll('#coliseum-battle [role="meter"]')].map(meter=>Number(meter.getAttribute('aria-valuenow'))),
         combat:[...document.querySelectorAll('.coliseum-fighter progress')].map(progress=>progress.value),
       }));

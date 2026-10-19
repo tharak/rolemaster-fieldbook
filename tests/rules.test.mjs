@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {rankBonus, rankCost, openEndedD100, parseCriticalSymbols} from '../rules.js';
+import {rankBonus, rankCost, openEndedD100, parseCriticalSymbols} from '../src/rules.js';
 
 const die = values => {
   const rolls = values[Symbol.iterator]();

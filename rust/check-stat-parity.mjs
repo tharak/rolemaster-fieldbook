@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import {spawnSync} from 'node:child_process';
 import {fileURLToPath} from 'node:url';
-import {basicStatBonusJavaScript} from '../rules.js';
+import {basicStatBonusJavaScript} from '../src/rules.js';
 const inputs = [-Infinity, Infinity, NaN, -0, 1e20, -1e20, Number.MAX_VALUE, -Number.MAX_VALUE];
 for (let quarter = -400; quarter <= 800; quarter++) inputs.push(quarter / 4);
 for (const boundary of [11,31,70,90,100]) inputs.push(boundary - 1e-10, boundary + 1e-10);

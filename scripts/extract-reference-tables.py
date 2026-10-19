@@ -11,7 +11,7 @@ import xml.etree.ElementTree as ET
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-PDF = ROOT / 'Rolemaster FRP - CORE Rules - OCR.pdf'
+PDF = ROOT / 'references' / 'Rolemaster FRP - CORE Rules - OCR.pdf'
 TABLES = ROOT / 'tables'
 
 # (printed page, x, y, width, height); one entry may have several sections.

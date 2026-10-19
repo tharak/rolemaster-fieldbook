@@ -1,3 +1,6 @@
 /.playwright-cli/
 /.publish-worktree/
 /output/playwright/
+
+__pycache__/
+*.pyc

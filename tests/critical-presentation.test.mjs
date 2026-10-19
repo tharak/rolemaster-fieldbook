@@ -1,8 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readdirSync,readFileSync} from 'node:fs';
-import {criticalTokens,formatCriticalEffect,criticalEffectMarkup,criticalLegend} from '../critical-presentation.js';
-import {parseCriticalSymbols} from '../rules.js';
+import {criticalTokens,formatCriticalEffect,criticalEffectMarkup,criticalLegend} from '../src/critical-presentation.js';
+import {parseCriticalSymbols} from '../src/rules.js';
 test('all real critical/fumble effects retain exact source and remove shorthand from display',()=>{
   let count=0;
   for(const name of readdirSync(new URL('../tables/',import.meta.url)).filter(n=>n.startsWith('A-10.10')||n.startsWith('A-10.11'))) {

@@ -23,7 +23,7 @@ Rules crates never import the UI, DOM, browser storage or Wasm. The UI crate nev
 evaluates rules. Native tools and future games can use the same libraries without
 running a browser or loading Rolemaster reference tables.
 
-`rust-components.js` is the browser boundary. The existing notation parser
+`src/rust-components.js` is the browser boundary. The existing notation parser
 supplies recognized labels to the Rust UI component. Original prose stays
 lossless. Typed arrays carry timing data to the Rust rule component; existing
 JavaScript records retain their identity, custom fields and storage format.
@@ -52,7 +52,7 @@ tick_effects(&mut effects, 1.0);
 ## Build and verification
 
 Use the installed Cargo and wasm-bindgen 0.2.129, as described in
-[rust/README.md](rust/README.md). Generated assets stay bundled for static hosting.
+[rust/README.md](../rust/README.md). Generated assets stay bundled for static hosting.
 
 ```sh
 cargo fmt --manifest-path rust/Cargo.toml --all -- --check

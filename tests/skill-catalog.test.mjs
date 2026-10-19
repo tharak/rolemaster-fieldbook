@@ -1,8 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
-import {createSkillCatalog, skillNames} from '../skill-catalog.js';
-import {a4Skills, raceWeaponChoices, backgroundExtraLanguages} from '../app-data.js';
+import {createSkillCatalog, skillNames} from '../src/skill-catalog.js';
+import {a4Skills, raceWeaponChoices, backgroundExtraLanguages} from '../src/app-data.js';
 const spells = JSON.parse(readFileSync(new URL('../data/guild/spell-lists.json', import.meta.url)));
 const catalog = createSkillCatalog(spells);
 test('all core spell lists have unique source identities and correct realm/profession categories', () => {

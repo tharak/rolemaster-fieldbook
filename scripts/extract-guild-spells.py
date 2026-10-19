@@ -4,7 +4,7 @@ Requires pdftotext; no network or external Python dependencies.
 import json, re, subprocess
 from pathlib import Path
 root = Path(__file__).resolve().parents[1]
-text = subprocess.check_output(['pdftotext', '-layout', str(root / 'Rolemaster FRP - CORE Rules - OCR.pdf'), '-'], text=True)
+text = subprocess.check_output(['pdftotext', '-layout', str(root / 'references' / 'Rolemaster FRP - CORE Rules - OCR.pdf'), '-'], text=True)
 pages = text.split('\f')
 result = []
 for page in range(156, 204):
@@ -14,7 +14,7 @@ for page in range(156, 204):
     assert len(names) == len(codes) == 2, (page, names, codes)
     for side in range(2):
         spells = []
-        column = subprocess.check_output(['pdftotext', '-f', str(page+1), '-l', str(page+1), '-x', str(side*306), '-y', '0', '-W', '306', '-H', '792', '-layout', str(root / 'Rolemaster FRP - CORE Rules - OCR.pdf'), '-'], text=True)
+        column = subprocess.check_output(['pdftotext', '-f', str(page+1), '-l', str(page+1), '-x', str(side*306), '-y', '0', '-W', '306', '-H', '792', '-layout', str(root / 'references' / 'Rolemaster FRP - CORE Rules - OCR.pdf'), '-'], text=True)
         for line in column.splitlines():
             for match in re.finditer(r'(\d+)\.\s+([^—\n]+?)\s+—', line):
                 if 1 <= int(match[1]) <= 10:

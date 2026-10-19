@@ -1,10 +1,10 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
-import {journalKind,journalTurns,guildMasterJournal} from '../guildmaster-journal.js';
-import {prepareGuildMaster,setMemberOrder,advanceGuildMaster,dismissGuildMember} from '../guildmaster-rules.js';
-import {newGuild,validGuild,recruitMember} from '../guild-rules.js';
-import {masterCharacterCatalog} from '../coliseum-contenders.js';
+import {journalKind,journalTurns,guildMasterJournal} from '../src/guildmaster-journal.js';
+import {prepareGuildMaster,setMemberOrder,advanceGuildMaster,dismissGuildMember} from '../src/guildmaster-rules.js';
+import {newGuild,validGuild,recruitMember} from '../src/guild-rules.js';
+import {masterCharacterCatalog} from '../src/coliseum-contenders.js';
 const catalog=masterCharacterCatalog(JSON.parse(readFileSync(new URL('../tables/T-5.8.json',import.meta.url))));
 const entry={memberId:'one',name:'Fighter <one>',action:'adventure',summary:'Travel <quiet>',hpBefore:50,hpAfter:45,ppBefore:0,ppAfter:0,xp:20,gold:2,items:[],away:true};
 const travel={...entry,encounter:{location:'Forest',encounter:{type:'none',label:'No encounter',cell:'-/-'},rounds:[]}};

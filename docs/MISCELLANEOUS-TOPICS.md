@@ -1,6 +1,6 @@
 # Core Rules §24 implementation tracker
 
-Source: `Rolemaster FRP - CORE Rules - OCR.pdf`, printed pp. 75–83.
+Source: `references/Rolemaster FRP - CORE Rules - OCR.pdf`, printed pp. 75–83.
 Each numbered topic is implemented and committed separately. The GM tools page
 keeps calculations and campaign records separate from editable character stats.
 

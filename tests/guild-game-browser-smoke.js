@@ -30,8 +30,8 @@ async existingPage => {
   check(await page.locator('.pet-card [data-member-result]').count()===1,'adventure rewards above member');
   check(await page.locator('[data-tab="journal"]').count()===0,'journal removed');
   await page.evaluate(async()=>{
-   const {advanceGame,assignActivity}=await import('/guild-game-rules.js?v=20261018-6');
-   const {loadGuildMasterData,loadGuildCombat}=await import('/guild-data.js');
+   const {advanceGame,assignActivity}=await import('/src/guild-game-rules.js?v=20261018-6');
+   const {loadGuildMasterData,loadGuildCombat}=await import('/src/guild-data.js');
    const {opponents}=await loadGuildMasterData(),tables=await loadGuildCombat();
    const key='rolemaster-guild-beta-v2',original=JSON.parse(localStorage.getItem(key));
    for(let i=0;i<100;i++){

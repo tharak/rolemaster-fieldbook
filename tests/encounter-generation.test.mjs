@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {encounterLookup,encounterRows,densities,groupSizeModifier,generateEncounter} from '../encounter-generation-rules.js';
+import {encounterLookup,encounterRows,densities,groupSizeModifier,generateEncounter} from '../src/encounter-generation-rules.js';
 import {readFileSync} from 'node:fs';
 test('all 70 T-5.1 cells agree with the preserved source and their band boundaries',()=>{
  const source=JSON.parse(readFileSync(new URL('../tables/T-5.1.json',import.meta.url))).tablePages.map(p=>p.text).join('\n').replace(/[–−]/g,'-').replace(/\s+/g,' ');

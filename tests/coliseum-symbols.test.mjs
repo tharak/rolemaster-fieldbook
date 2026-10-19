@@ -1,8 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
-import {creatureCatalog} from '../coliseum-rules.js';
-import {creatureSymbol,duelSymbol} from '../coliseum-symbols.js';
+import {creatureCatalog} from '../src/coliseum-rules.js';
+import {creatureSymbol,duelSymbol} from '../src/coliseum-symbols.js';
 test('every creature retains its original initial and full identity with an emoji', () => {
   const creatures = creatureCatalog(JSON.parse(readFileSync(new URL('../tables/creatures.json',import.meta.url))));
   for (const creature of creatures) {

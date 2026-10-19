@@ -32,18 +32,18 @@ try {
     page.on('response', response => { if (response.url().endsWith('.wasm')) wasmResponses.push({url:response.url(), status:response.status()}); });
     await page.goto(base + prefix);
     await page.waitForFunction(() => document.documentElement.dataset.appReady === 'true');
-    await page.waitForFunction(async () => (await import('./rules.js')).rankBonusEngineStatus().calls > 0);
+    await page.waitForFunction(async () => (await import('./src/rules.js')).rankBonusEngineStatus().calls > 0);
     // Drive the actual stat-sheet input handler before parity-only calls.
-    const statBefore = await page.evaluate(async () => (await import('./rules.js')).basicStatBonusEngineStatus());
+    const statBefore = await page.evaluate(async () => (await import('./src/rules.js')).basicStatBonusEngineStatus());
     await page.locator('[name="stat-temp-0"]').evaluate(input => {
       input.value = '99'; input.dispatchEvent(new Event('change', {bubbles:true}));
     });
     assert.equal(await page.locator('[name="stat-basic-0"]').inputValue(), '9');
-    const statAfterInput = await page.evaluate(async () => (await import('./rules.js')).basicStatBonusEngineStatus());
+    const statAfterInput = await page.evaluate(async () => (await import('./src/rules.js')).basicStatBonusEngineStatus());
     assert.equal(statAfterInput.backend, 'wasm');
     assert.ok(statAfterInput.calls > statBefore.calls, 'actual sheet input must invoke Rust');
     const proof = await page.evaluate(async () => {
-      const rules = await import('./rules.js');
+      const rules = await import('./src/rules.js');
       const before = rules.rankBonusEngineStatus();
       const costBefore = rules.rankCostEngineStatus();
       const statBefore = rules.basicStatBonusEngineStatus();
@@ -119,8 +119,8 @@ try {
     }
     await page.waitForFunction(() => document.documentElement.dataset.appReady === 'true');
     const result = await page.evaluate(async () => {
-      const rules = await import('./rules.js');
-      const components=await import('./rust-components.js'),clock=await import('./critical-stun.js'),ui=await import('./critical-presentation.js');
+      const rules = await import('./src/rules.js');
+      const components=await import('./src/rust-components.js'),clock=await import('./src/critical-stun.js'),ui=await import('./src/critical-presentation.js');
       const effects=clock.expireCriticalEffects([{kind:'stun',roundsLeft:2},{kind:'stunNoParry',roundsLeft:1}],1,'starts');
       const markup=ui.formatCriticalEffect('+10H');
       return {components:components.rustComponentStatus(),effects,markup,statStatus:rules.basicStatBonusEngineStatus(), stat:rules.basicStatBonus(99), status:rules.rankBonusEngineStatus(), costStatus:rules.rankCostEngineStatus(), cost:rules.rankCost([2,4,6],2), value:rules.rankBonus(21, 'combined'), roster:typeof window.RolemasterEncounter?.roster};

@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-const fresh = name => import('../rules.js?' + name);
+const fresh = name => import('../src/rules.js?' + name);
 test('initialization is shared; synchronous API uses installed engine', async () => {
   const rules = await fresh('success');
   let loads = 0;

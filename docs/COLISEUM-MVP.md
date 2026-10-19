@@ -15,7 +15,7 @@ without a dedicated family use the generic item icon. Full names remain visible.
 
 ## Rules and presentation
 
-`coliseum-rules.js` remains the combat authority. Each attack now includes its
+`src/coliseum-rules.js` remains the combat authority. Each attack now includes its
 total applied `damage`, alongside unchanged base `hits`, so the screen can show
 extra critical hits and instant death accurately. Playback consumes the completed
 round's events and never rolls dice or changes combat outcomes. Bleeding, missed
@@ -26,7 +26,7 @@ including its critical modifiers. The detailed log retains the full calculation.
 
 `fieldbook-ui::battle_contender` renders the fighter HUD and sprite through the
 existing Wasm adapter. It accepts only a presentation model and has no combat
-dependencies. `coliseum-battle.js` handles browser playback and a compatible
+dependencies. `src/coliseum-battle.js` handles browser playback and a compatible
 JavaScript rendering fallback. Generic timing and Rolemaster rules remain in
 their separate Rust libraries; see [RUST-MIGRATION.md](RUST-MIGRATION.md).
 
@@ -78,7 +78,7 @@ a selected weapon table; unspecified directed spells are not substituted.
 The T-5.1 generator lives in Encounters and can send an optional selected opponent
 to the arena. Combat XP previews and a §23 activity calculator live below the
 arena, with explicit recording into the character's existing XP history. See the
-[encounter and experience behavior](README.md#encounters-experience-and-equipment-artwork).
+[encounter and experience behavior](../README.md).
 
 New regression coverage includes all 45 printed NPC rows, all seven weapon-table
 mappings, all 70 T-5.1 cells, XP examples and caps, damage-vs-death accounting,
